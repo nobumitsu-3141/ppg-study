@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPG 波形形態からの血管トーン非侵襲推定 ― 成果物ハブ</title>
+<meta name="description" content="SpO₂/PPG 波形の形態解析による、校正不要・非侵襲的な血管トーン指標の開発。文献レビュー・図解・インタラクティブツールの入口。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F7F7;
+    --raised:#FFFFFF;
+    --ink:#15242B;
+    --ink-soft:#51636C;
+    --ink-faint:#879099;
+    --accent:#0B7A6E;
+    --accent-deep:#0A6258;
+    --accent-bright:#1FB8A6;
+    --accent-wash:#E4F2EF;
+    --accent-line:#C3E0DA;
+    --warn:#A8602E;
+    --warn-wash:#F8EEE2;
+    --warn-line:#E7D2BC;
+    --line:#DBE5E5;
+    --line-soft:#E8EFEF;
+    --sans:"Space Grotesk",sans-serif;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--serif);font-size:18px;line-height:1.66;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:60px 0 0;border-bottom:1px solid var(--line);overflow:hidden;background:linear-gradient(180deg,#EDF4F3 0%,var(--paper) 100%);}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent-deep);
+    background:var(--accent-wash);border:1px solid var(--accent-line);
+    padding:6px 13px;border-radius:100px;margin-bottom:22px;
+  }
+  .eyebrow-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-bright);flex:0 0 auto;}
+  h1{
+    font-family:var(--sans);font-weight:600;
+    font-size:clamp(30px,5.4vw,52px);line-height:1.08;letter-spacing:-.015em;
+    margin:0 0 20px;color:var(--ink);
+  }
+  .lede{
+    font-size:clamp(17px,2.2vw,21px);line-height:1.6;color:var(--ink-soft);
+    max-width:44ch;margin:0 0 6px;
+  }
+  .meta-row{
+    display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
+    margin:26px 0 0;padding-top:0;
+  }
+  .meta-row .sep{color:var(--accent-line);}
+
+  /* ---------- PPG TRACE ---------- */
+  .trace-stage{margin-top:30px;width:100%;height:132px;position:relative;}
+  #ppgSvg{width:100%;height:100%;display:block;}
+  .grid-line{stroke:var(--accent-line);stroke-width:1;opacity:.38;}
+  .trace-path{fill:none;stroke:var(--accent-bright);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(31,184,166,.55));}
+  .trace-area{fill:url(#areaGrad);opacity:0;}
+  .lead-dot{fill:#fff;stroke:var(--accent-bright);stroke-width:2.5;filter:drop-shadow(0 0 5px rgba(31,184,166,.8));}
+  .notch-line{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:3 3;opacity:.75;}
+  .notch-mark{opacity:0;}
+  .notch-text{font-family:var(--mono);font-size:11px;fill:var(--warn);letter-spacing:.02em;}
+
+  /* ---------- SECTIONS ---------- */
+  main{padding:8px 0 0;}
+  .lead-para{padding:44px 0 8px;}
+  .lead-para p{margin:0 0 18px;color:var(--ink);}
+  .lead-para p:last-child{margin-bottom:0;}
+  strong{font-weight:600;color:var(--ink);}
+  .kw{font-family:var(--mono);font-size:.9em;color:var(--accent-deep);background:var(--accent-wash);padding:1px 6px;border-radius:4px;}
+
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;
+    margin:46px 0 4px;padding-top:34px;border-top:1px solid var(--line);
+  }
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:500;letter-spacing:.08em;}
+  .sec-head h2{font-family:var(--sans);font-weight:600;font-size:26px;letter-spacing:-.01em;margin:0;}
+  .sec-sub{color:var(--ink-soft);font-size:16px;margin:8px 0 26px;}
+
+  /* ---------- GROUP LABEL ---------- */
+  .grp-label{
+    font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-faint);
+    margin:30px 0 14px;display:flex;align-items:center;gap:12px;
+  }
+  .grp-label::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+
+  /* ---------- CARDS ---------- */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card{
+    display:flex;flex-direction:column;
+    background:var(--raised);border:1px solid var(--line);border-radius:14px;
+    padding:22px 22px 18px;text-decoration:none;color:inherit;position:relative;
+    transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+  }
+  .card:hover{border-color:var(--accent-line);transform:translateY(-2px);box-shadow:0 8px 26px -14px rgba(11,122,110,.45);}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  .card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;}
+  .card-num{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);}
+  .badge{
+    font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.06em;
+    text-transform:uppercase;padding:4px 9px;border-radius:100px;white-space:nowrap;
+    background:var(--accent-wash);color:var(--accent-deep);border:1px solid var(--accent-line);
+  }
+  .badge.doc{background:var(--warn-wash);color:var(--warn);border-color:var(--warn-line);}
+  .card h3{font-family:var(--sans);font-weight:600;font-size:18.5px;line-height:1.28;letter-spacing:-.005em;margin:0 0 9px;}
+  .card p{font-size:15px;line-height:1.55;color:var(--ink-soft);margin:0 0 16px;flex:1;}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);}
+  .card-open{color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+  .card-open .arw{transition:transform .18s ease;}
+  .card:hover .card-open .arw{transform:translateX(3px);}
+  .card.span2{grid-column:1 / -1;}
+  .card.span2 .card-top{margin-bottom:14px;}
+  .card.span2 h3{font-size:21px;}
+  .card.span2 p{font-size:15.5px;max-width:64ch;}
+
+  /* ---------- PRINCIPLES ---------- */
+  .principles{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:6px;}
+  .principle{background:var(--raised);padding:20px 22px;}
+  .principle .p-n{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600;}
+  .principle h4{font-family:var(--sans);font-weight:600;font-size:16px;margin:8px 0 6px;letter-spacing:-.005em;}
+  .principle p{font-size:14.5px;line-height:1.5;color:var(--ink-soft);margin:0;}
+
+  /* ---------- CALLOUT ---------- */
+  .callout{
+    margin:34px 0 0;background:var(--accent-wash);border:1px solid var(--accent-line);
+    border-left:4px solid var(--accent);border-radius:10px;padding:22px 24px;
+  }
+  .callout h3{font-family:var(--sans);font-weight:600;font-size:16px;margin:0 0 10px;color:var(--accent-deep);display:flex;align-items:center;gap:9px;}
+  .callout h3 .ic{font-family:var(--mono);}
+  .callout p{font-size:15.5px;line-height:1.6;color:var(--ink);margin:0;}
+
+  /* ---------- FOOTER ---------- */
+  footer{margin-top:56px;border-top:1px solid var(--line);background:#EDF4F3;}
+  footer .wrap{padding-top:34px;padding-bottom:44px;}
+  .foot-note{font-size:14.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;}
+  .foot-meta{font-family:var(--mono);font-size:12px;color:var(--ink-faint);display:flex;flex-wrap:wrap;gap:8px 16px;}
+  .foot-meta a{color:var(--accent);text-decoration:none;}
+  .foot-meta a:hover{text-decoration:underline;}
+
+  @media (max-width:680px){
+    body{font-size:17px;}
+    .cards,.principles{grid-template-columns:1fr;}
+    .trace-stage{height:104px;}
+    .sec-head{flex-direction:column;gap:2px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="eyebrow-dot" id="eyebrowDot"></span>臨床文献レビュー · 波形形態解析 · 一人麻酔科</span>
+    <h1>PPG 波形形態からの<br>血管トーン非侵襲推定</h1>
+    <p class="lede">SpO₂ モニタが表示する脈波の「形」から、カテーテルを入れずに血管の緊張状態をどこまで読めるか。その臨床的・理論的根拠を文献で整理し、検証したドキュメント群。</p>
+    <div class="meta-row">
+      <span>光電容積脈波 (PPG)</span><span class="sep">/</span>
+      <span>ベースラインからの相対変化 Δ を追跡</span><span class="sep">/</span>
+      <span>成果物 5 件</span>
+    </div>
+  </div>
+  <div class="trace-stage" aria-hidden="true">
+    <svg id="ppgSvg" viewBox="0 0 1000 128" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1FB8A6" stop-opacity="0.20"/>
+          <stop offset="1" stop-color="#1FB8A6" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g id="gridG"></g>
+      <path id="areaPath" class="trace-area"/>
+      <line id="notchLine" class="notch-line"/>
+      <path id="tracePath" class="trace-path"/>
+      <circle id="leadDot" class="lead-dot" r="4" cx="0" cy="86"/>
+      <g id="notchMark" class="notch-mark">
+        <text id="notchText" class="notch-text" x="0" y="120">dicrotic notch</text>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- INTRO -->
+    <section class="lead-para">
+      <p>パルスオキシメータの脈波（<strong>PPG</strong>：photoplethysmography＝光電容積脈波）は、指先の血液量の変化を光でとらえた信号で、<strong>「圧」ではなく「容積」</strong>を映す。このありふれた信号の波形の形から、観血的なラインを入れずに<strong>血管トーン（血管の緊張）の変化</strong>を推定できないか ―― それがこのプロジェクトの中心的な問いである。</p>
+      <p>設計の核心は、血圧や血管抵抗の<strong>絶対値</strong>に対応づけるのではなく、麻酔導入前の<span class="kw">ベースラインからの相対変化（Δ）</span>を追うこと。これにより校正が不要になり、機器固有の変換式にも縛られない。離島の一人麻酔科という制約下で、手元の標準モニタから最大限の情報を引き出すことを念頭に置いている。</p>
+    </section>
+
+    <!-- DELIVERABLES -->
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>成果物</h2>
+    </div>
+    <p class="sec-sub">4 つの HTML ドキュメント（ブラウザでそのまま閲覧可）と、中核となる Word レビュー 1 件。すべて日本語・自己完結型。</p>
+
+    <div class="grp-label">中核レビュー</div>
+    <div class="cards">
+      <a class="card span2" href="SpO2_PPG_waveform_analysis_flow.html">
+        <div class="card-top">
+          <span class="card-num">01</span>
+          <span class="badge doc">HTML · 本体レビュー（§序–§8）</span>
+        </div>
+        <h3>SpO₂/PPG 波形解析の流れ ― 成り立ちから dicrotic notch まで</h3>
+        <p>本体となる文献レビュー。成り立ち → 循環因子による変化 → 目視評価 → 数値化 → 高スティフネス血管の重複切痕、という流れを文献で整理し、論理の破綻を検証したうえで、より整合的な構成を提案する。「前進波＋反射波」を土台に据え、定量指標を血管特性の軸と急性トーヌスの軸に分ける。参考文献 17 件はすべて URL 付き。</p>
+        <div class="card-foot">
+          <span>Markdown ソース同梱（.md）</span>
+          <span class="card-open">開く <span class="arw">→</span></span>
+        </div>
+      </a>
+    </div>
+
+    <div class="grp-label">レビュー・図解・エビデンス監査</div>
+    <div class="cards">
+      <a class="card" href="PPG_dicrotic_notch_resistance_review.html">
+        <div class="card-top"><span class="card-num">02</span><span class="badge">HTML · 研究史</span></div>
+        <h3>変曲点（重複切痕）を血管抵抗として読む</h3>
+        <p>「切痕の位置＝血管抵抗」という発想の起源（19世紀の脈波計）から最近（2020年代の自動検出・臨床検証）までの研究史レビュー。加速度脈波・反射指数・周術期6クラス分類まで、一次文献の URL つきで追う。</p>
+        <div class="card-foot"><span>研究レビュー</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+      <a class="card" href="PPG_LVET_six_factors_figures.html">
+        <div class="card-top"><span class="card-num">03</span><span class="badge">HTML · 図解</span></div>
+        <h3>LVET と 6 因子の波形図解</h3>
+        <p>左室駆出時間（LVET）をはじめ、6つの循環因子が波形の<strong>どの領域に・どの向きに</strong>効くかを、領域マップと各因子ごとのスパークライン（基準波形と変化後を重ねた小波形）で視覚化。</p>
+        <div class="card-foot"><span>波形図解</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+      <a class="card span2" href="PPG_fig2_factor_references_4_2.html">
+        <div class="card-top"><span class="card-num">04</span><span class="badge">HTML · エビデンス監査</span></div>
+        <h3>6 因子の検証プロベナンス（第4版）</h3>
+        <p>各図解が示す「因子↑で波形がこう動く」という主張が、<strong>実測 PPG で確認済みか、動脈圧波形・in silico モデルからの外挿か</strong>を 3 区分で監査。結論として、実測 PPG で直接裏づけられるのは前負荷と全身血管抵抗の 2 因子のみ（条件付き）であることを明示し、エビデンスの強さを均一に扱う過剰主張を戒める。</p>
+        <div class="card-foot"><span>エビデンス監査</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+    </div>
+
+    <div class="grp-label">インタラクティブ</div>
+    <div class="cards">
+      <a class="card span2" href="t2_pi_normalization.html">
+        <div class="card-top"><span class="card-num">05</span><span class="badge">HTML · インタラクティブ</span></div>
+        <h3>T₂/PI ― 血管緊張に伴う合成指標の挙動</h3>
+        <p>脈波伝播時間の遠位成分 T₂ と灌流指数 PI の比が、血管緊張の変化に対して<strong>非単調（U字型／回復する）</strong>に振る舞うことを、スライダーで操作しながら確かめられる可視化ツール。関数形式の理論的正当性とあわせて示す。</p>
+        <div class="card-foot"><span>スライダーで操作</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+    </div>
+
+    <!-- PRINCIPLES -->
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>研究の設計原則</h2>
+    </div>
+    <p class="sec-sub">各ドキュメントを貫く方法論上の 4 つの原則。</p>
+    <div class="principles">
+      <div class="principle">
+        <span class="p-n">01</span>
+        <h4>絶対値でなく個人内 Δ を追う</h4>
+        <p>ベースラインからの相対変化だけを見るため、絶対値校正も機器固有の変換式も要らない。</p>
+      </div>
+      <div class="principle">
+        <span class="p-n">02</span>
+        <h4>タイミング／形状を振幅より優先</h4>
+        <p>自動ゲイン制御は振幅を壊すが、波形内の振幅比とタイミング指標は保持される。位置情報を優先する。</p>
+      </div>
+      <div class="principle">
+        <span class="p-n">03</span>
+        <h4>PWV は原因でなく結果の指標</h4>
+        <p>脈波伝播速度は壁が硬いことの結果を測る指標であって、原因因子ではない（全文書共通の原則）。</p>
+      </div>
+      <div class="principle">
+        <span class="p-n">04</span>
+        <h4>エビデンスの強さを均一に扱わない</h4>
+        <p>観血的動脈圧で言えることと、実測 PPG で確認されたことを厳密に区別し、確信度を各主張に付す。</p>
+      </div>
+    </div>
+
+    <!-- CLOSING CALLOUT -->
+    <div class="callout">
+      <h3><span class="ic">◆</span>実務メモ（一人麻酔科の視点）</h3>
+      <p>ここで扱う指標の多くは、研究用光電計や観血ラインでの検証にとどまる。臨床パルスオキシメータの表示波形は自動ゲイン制御と帯域制限を受けており、同じ挙動が確認されているとは限らない。各ドキュメントに付した検証区分・限界の記述を、そのまま各主張の確信度として扱うのが安全である。本リポジトリは研究・教育目的の文献的整理であり、臨床上の意思決定に直接用いることを意図したものではない。</p>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-note">プロジェクト全体のまとめ・使用機器・データセット・主要参考文献（URL付き）・ロードマップは、リポジトリ直下の <strong>README</strong> を参照。</p>
+    <div class="foot-meta">
+      <span>ライセンス：CC BY 4.0</span>
+      <span class="sep">·</span>
+      <span>研究・教育目的の文献レビュー</span>
+      <span class="sep">·</span>
+      <a href="https://creativecommons.org/licenses/by/4.0/">ライセンス全文</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 1000, H = 128, baseY = 86, amp = 60, cycleW = 200, step = 2;
+
+  /* PPG waveform = systolic Gaussian + reflected (dicrotic) Gaussian.
+     Same generator used across the project's documents. */
+  function ppgValue(p){
+    var systolic = Math.exp(-Math.pow((p - 0.20)/0.085, 2));
+    var dicrotic = 0.42 * Math.exp(-Math.pow((p - 0.46)/0.10, 2));
+    return Math.min(systolic + dicrotic, 1);
+  }
+  var pts = [];
+  for(var x=0; x<=W+cycleW; x+=step){
+    var phase = (x % cycleW) / cycleW;
+    pts.push([x, baseY - amp*ppgValue(phase)]);
+  }
+  function toPath(p){
+    var d = 'M '+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1);
+    for(var i=1;i<p.length;i++){ d += ' L '+p[i][0].toFixed(1)+' '+p[i][1].toFixed(1); }
+    return d;
+  }
+  var linePath = toPath(pts);
+  var trace = document.getElementById('tracePath');
+  var area  = document.getElementById('areaPath');
+  var dot   = document.getElementById('leadDot');
+  var gridG = document.getElementById('gridG');
+  if(trace) trace.setAttribute('d', linePath);
+  if(area)  area.setAttribute('d', linePath + ' L '+W+' '+H+' L 0 '+H+' Z');
+  if(gridG){
+    var g='';
+    for(var gx=0; gx<=W; gx+=50){ g += '<line class="grid-line" x1="'+gx+'" y1="0" x2="'+gx+'" y2="'+H+'"/>'; }
+    for(var gy=0; gy<=H; gy+=32){ g += '<line class="grid-line" x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'"/>'; }
+    gridG.innerHTML = g;
+  }
+
+  /* mark the dicrotic notch on the second cycle (phase ~0.40, the inflection between systolic and dicrotic wave) */
+  var notchPhase = 0.40, notchCycle = 1;
+  var notchX = (notchCycle + notchPhase) * cycleW;
+  var notchY = baseY - amp*ppgValue(notchPhase);
+  var nm = document.getElementById('notchMark');
+  var nl = document.getElementById('notchLine');
+  var nt = document.getElementById('notchText');
+  if(nl){ nl.setAttribute('x1', notchX); nl.setAttribute('x2', notchX); nl.setAttribute('y1', notchY-2); nl.setAttribute('y2', H-4); }
+  if(nt){ nt.setAttribute('x', notchX+7); nt.setAttribute('y', H-8); }
+
+  if(trace && trace.getTotalLength){
+    var len = trace.getTotalLength();
+    if(reduce){
+      area.style.opacity = 1;
+      var ep = trace.getPointAtLength(len);
+      dot.setAttribute('cx', ep.x); dot.setAttribute('cy', ep.y);
+      if(nm) nm.style.opacity = 1;
+    } else {
+      trace.style.strokeDasharray = len;
+      trace.style.strokeDashoffset = len;
+      var dur = 2600, t0=null;
+      function ease(t){ return 1 - Math.pow(1-t, 2.2); }
+      function frame(ts){
+        if(!t0) t0 = ts;
+        var prog = Math.min((ts-t0)/dur, 1), e = ease(prog);
+        trace.style.strokeDashoffset = (len*(1-e)).toFixed(1);
+        var pt = trace.getPointAtLength(len*e);
+        dot.setAttribute('cx', pt.x.toFixed(1));
+        dot.setAttribute('cy', pt.y.toFixed(1));
+        area.style.opacity = (e*0.95).toFixed(2);
+        if(prog<1){ requestAnimationFrame(frame); }
+        else if(nm){ nm.style.transition='opacity .7s ease'; nm.style.opacity=1; }
+      }
+      requestAnimationFrame(frame);
+    }
+  }
+
+  var ed = document.getElementById('eyebrowDot');
+  if(ed && !reduce && ed.animate){
+    ed.animate([{boxShadow:'0 0 0 0 rgba(31,184,166,.55)'},{boxShadow:'0 0 0 7px rgba(31,184,166,0)'}],{duration:1900, iterations:Infinity});
+  }
+})();
+</script>
+</body>
+</html>

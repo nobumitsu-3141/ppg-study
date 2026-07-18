@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 2 の6因子 ― 波形変化の検証プロベナンス（第4版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F7F7; --raised:#FFFFFF; --ink:#15242B; --ink-soft:#51636C; --ink-faint:#879099;
+    --accent:#0B7A6E; --accent-deep:#0A6258; --accent-bright:#1FB8A6; --accent-wash:#E4F2EF; --accent-line:#C3E0DA;
+    --warn:#A8602E; --warn-deep:#8A4C20; --warn-wash:#F8EEE2; --warn-line:#E7D2BC;
+    --line:#DBE5E5; --line-soft:#E8EFEF;
+    --maxw:1120px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Newsreader",Georgia,serif; font-size:18px; line-height:1.68;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+  a{color:var(--accent-deep);}
+
+  /* ===== HERO ===== */
+  .hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#EAF3F1 0%,#F4F7F7 100%); padding:52px 0 30px;}
+  .hero-trace{position:absolute; left:0; right:0; bottom:-4px; width:100%; height:120px; opacity:.5; pointer-events:none;}
+  .hero-trace path{fill:none; stroke:var(--accent-bright); stroke-width:2;
+    stroke-dasharray:2600; stroke-dashoffset:2600; animation:draw 3.4s ease-out .2s forwards;}
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent-deep); display:flex; align-items:center; gap:9px; margin:0 0 16px;}
+  .pdot{width:9px; height:9px; border-radius:50%; background:var(--accent-bright); box-shadow:0 0 0 0 rgba(31,184,166,.5);
+    animation:pulse 2.4s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,184,166,.45);}70%{box-shadow:0 0 0 11px rgba(31,184,166,0);}100%{box-shadow:0 0 0 0 rgba(31,184,166,0);}}
+  h1{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:clamp(30px,5.2vw,50px);
+    line-height:1.08; letter-spacing:-.015em; margin:0 0 14px;}
+  h1 .em{color:var(--accent-deep);}
+  .lede{font-size:20px; color:var(--ink-soft); max-width:760px; margin:0 0 22px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px 16px; font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px; color:var(--ink-faint); align-items:center;}
+  .meta-row .tag{background:var(--accent-wash); color:var(--accent-deep); border:1px solid var(--accent-line);
+    padding:3px 9px; border-radius:20px;}
+  .meta-sep{color:var(--line);}
+
+  /* ===== LAYOUT ===== */
+  .layout{display:block; padding:40px 0 20px;}
+  @media(min-width:1000px){
+    .layout{display:grid; grid-template-columns:230px minmax(0,1fr); gap:48px; align-items:start;}
+    .toc-wrap{position:sticky; top:24px;}
+  }
+  .toc-wrap{margin-bottom:34px;}
+  .toc{border-left:2px solid var(--line); padding-left:16px;}
+  .toc h2{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0 0 14px;}
+  .toc ol{list-style:none; margin:0; padding:0;}
+  .toc li{margin:0 0 3px;}
+  .toc a{display:flex; gap:9px; text-decoration:none; color:var(--ink-soft); font-size:14.5px;
+    padding:5px 8px; border-radius:6px; line-height:1.35; transition:all .16s;}
+  .toc a .n{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--accent); padding-top:1px;}
+  .toc a:hover{background:var(--accent-wash); color:var(--ink);}
+  .toc a.active{background:var(--accent-wash); color:var(--accent-deep); font-weight:500;}
+  .toc a.active .n{color:var(--accent-deep);}
+
+  /* ===== SECTIONS ===== */
+  .sec{font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:26px; letter-spacing:-.01em;
+    margin:44px 0 4px; display:flex; align-items:baseline; gap:12px; scroll-margin-top:20px;}
+  .sec:first-child{margin-top:0;}
+  .sec-num{font-family:"IBM Plex Mono",monospace; font-size:14px; color:var(--accent); font-weight:500;}
+  .accent-rule{border:none; border-top:2px solid var(--accent-line); margin:14px 0 22px; max-width:90px;}
+  p{margin:0 0 16px;}
+  strong{font-weight:600; color:var(--ink);}
+  .sub{color:var(--ink-soft); font-size:16px; margin-top:-2px;}
+
+  /* ===== LEGEND ===== */
+  .legend{display:grid; gap:12px; margin:6px 0 8px;}
+  @media(min-width:680px){.legend{grid-template-columns:repeat(3,1fr);}}
+  .leg{border:1px solid var(--line); border-radius:12px; padding:15px 16px; background:var(--raised);}
+  .leg-top{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .leg h4{font-family:"Space Grotesk",sans-serif; font-size:15px; margin:0; font-weight:600;}
+  .leg p{font-size:14px; color:var(--ink-soft); margin:0; line-height:1.5;}
+
+  /* ===== BADGES ===== */
+  .badge{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.03em; font-weight:500;
+    padding:3px 10px; border-radius:20px; white-space:nowrap; display:inline-flex; align-items:center; gap:5px;}
+  .badge::before{content:""; width:7px; height:7px; border-radius:50%;}
+  .b-direct{background:var(--accent-wash); color:var(--accent-deep); border:1px solid var(--accent-line);}
+  .b-direct::before{background:var(--accent);}
+  .b-mixed{background:#EDF3EF; color:var(--accent-deep); border:1px solid var(--accent-line);}
+  .b-mixed::before{background:var(--accent-bright); box-shadow:inset -3px 0 0 var(--warn);}
+  .b-model{background:var(--warn-wash); color:var(--warn-deep); border:1px solid var(--warn-line);}
+  .b-model::before{background:var(--warn);}
+
+  /* ===== MASTER TABLE ===== */
+  .tbl-scroll{overflow-x:auto; margin:8px 0 8px; border:1px solid var(--line); border-radius:12px;}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:660px;}
+  thead th{background:var(--accent-deep); color:#fff; font-family:"Space Grotesk",sans-serif; font-weight:500;
+    text-align:left; padding:11px 13px; font-size:13px;}
+  tbody td{padding:11px 13px; border-top:1px solid var(--line-soft); vertical-align:top; color:var(--ink-soft);}
+  tbody td:first-child{font-family:"Space Grotesk",sans-serif; color:var(--ink); font-weight:500; white-space:nowrap;}
+  tbody tr:nth-child(even){background:#FAFCFC;}
+  .mono{font-family:"IBM Plex Mono",monospace; font-size:12.5px;}
+
+  /* ===== FACTOR CARDS ===== */
+  .fcard{border:1px solid var(--line); border-radius:14px; background:var(--raised); overflow:hidden;
+    margin:16px 0; box-shadow:0 1px 2px rgba(20,40,45,.03);}
+  .fcard-head{display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#FCFEFE,#F7FBFB); flex-wrap:wrap;}
+  .fnum{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--accent); background:var(--accent-wash);
+    border:1px solid var(--accent-line); padding:2px 8px; border-radius:5px;}
+  .fcard-head h3{font-family:"Space Grotesk",sans-serif; font-size:18px; margin:0; font-weight:600; flex:1; min-width:180px;}
+  .fcard-body{display:block; padding:16px 18px;}
+  @media(min-width:640px){.fcard-body{display:grid; grid-template-columns:186px minmax(0,1fr); gap:20px; align-items:start;}}
+  .spark{text-align:center;}
+  .spark svg{width:100%; max-width:186px; height:auto; display:block; margin:0 auto;}
+  .spark .cap{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+  .claim{font-size:16px; margin:0 0 12px;}
+  .claim .k{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent-deep); letter-spacing:.03em;}
+  .evi{background:var(--paper); border:1px solid var(--line-soft); border-radius:10px; padding:11px 14px; margin:0 0 11px;}
+  .evi-lbl{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint); display:block; margin-bottom:6px;}
+  .evi ul{margin:0; padding-left:2px; list-style:none;}
+  .evi li{font-size:14px; color:var(--ink-soft); margin:0 0 4px; padding-left:16px; position:relative; line-height:1.5;}
+  .evi li::before{content:""; position:absolute; left:2px; top:9px; width:5px; height:5px; border-radius:50%; background:var(--accent-line);}
+  .evi li.warnli::before{background:var(--warn-line);}
+  .cite{font-size:13.5px; color:var(--ink-soft); margin:0;}
+  .cite .lab{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-faint); margin-right:6px;}
+
+  /* ===== CALLOUTS ===== */
+  .callout{border-radius:14px; padding:20px 22px; margin:24px 0;}
+  .co-teal{background:var(--accent-wash); border:1px solid var(--accent-line);}
+  .co-ochre{background:var(--warn-wash); border:1px solid var(--warn-line);}
+  .callout h3{font-family:"Space Grotesk",sans-serif; font-size:17px; margin:0 0 10px; display:flex; align-items:center; gap:9px;}
+  .callout .ic{width:22px; height:22px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center;
+    font-family:"IBM Plex Mono",monospace; font-size:13px; color:#fff;}
+  .co-teal .ic{background:var(--accent);}
+  .co-ochre .ic{background:var(--warn);}
+  .callout p{font-size:15.5px; margin:0 0 10px;}
+  .callout p:last-child{margin-bottom:0;}
+  .co-teal h3{color:var(--accent-deep);}
+  .co-ochre h3{color:var(--warn-deep);}
+
+  /* ===== REFERENCES ===== */
+  .refs{margin-top:14px;}
+  .ref-item{display:grid; grid-template-columns:30px 1fr; gap:6px 12px; padding:12px 0; border-top:1px solid var(--line-soft); font-size:14px;}
+  .ref-item .rn{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent); padding-top:2px;}
+  .ref-item .rc{color:var(--ink-soft); line-height:1.55;}
+  .ref-item .rc .rt{color:var(--ink); font-weight:500;}
+  .ref-item .rc a{font-family:"IBM Plex Mono",monospace; font-size:12px; word-break:break-all;}
+  .vchip{font-family:"IBM Plex Mono",monospace; font-size:10px; padding:1px 6px; border-radius:4px; margin-left:6px; vertical-align:1px;}
+  .vok{background:var(--accent-wash); color:var(--accent-deep); border:1px solid var(--accent-line);}
+  .vfb{background:var(--warn-wash); color:var(--warn-deep); border:1px solid var(--warn-line);}
+
+  footer{border-top:1px solid var(--line); margin-top:40px; padding:26px 0 44px;}
+  footer p{font-size:13px; color:var(--ink-faint); margin:0 0 8px;}
+  footer .mono{font-family:"IBM Plex Mono",monospace; font-size:11.5px;}
+
+  @media(max-width:560px){
+    body{font-size:17px;} .wrap{padding:0 16px;} .hero{padding:40px 0 22px;}
+    .sec{font-size:22px;} .callout{padding:17px 18px;}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important;} html{scroll-behavior:auto;} .hero-trace path{stroke-dashoffset:0;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="hero-trace" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,86 L70,86 Q95,84 118,60 Q140,20 165,24 Q188,50 214,54 Q238,58 262,80 Q286,108 340,110 L360,86 Q395,84 418,60 Q440,20 465,24 Q488,50 514,54 Q538,58 562,80 Q586,108 640,110 L660,86 Q695,84 718,60 Q740,20 765,24 Q788,50 814,54 Q838,58 862,80 Q886,108 940,110 L960,86 Q995,84 1018,60 Q1040,20 1065,24 Q1088,50 1114,54 Q1138,58 1162,80 Q1186,108 1200,110"/>
+  </svg>
+  <div class="wrap">
+    <p class="eyebrow"><span class="pdot"></span>Figure 2 · Provenance Audit · v4</p>
+    <h1>Figure 2 の6因子<br><span class="em">波形変化の検証プロベナンス</span></h1>
+    <p class="lede">各パネルの「因子↑で波形がこう動く」という根拠が、<strong>実際のPPG／SpO₂波形を計測した研究</strong>に基づくのか、それとも<strong>動脈圧（Aライン）波形の理論や in silico モデルをPPGに外挿したもの</strong>なのか。6因子を3層に区分し、検証の実体（信号・比較対象・規模）と検証済み文献を対応づける。</p>
+    <div class="meta-row">
+      <span class="tag">麻酔科 / 脈波形態・血行動態</span>
+      <span class="meta-sep">/</span>
+      <span>6因子 × 検証区分</span>
+      <span class="meta-sep">/</span>
+      <span>一次文献6件・URL検証済</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+
+    <aside class="toc-wrap">
+      <nav class="toc" aria-label="目次">
+        <h2>目次</h2>
+        <ol>
+          <li><a href="#s0"><span class="n">00</span><span>この文書の目的</span></a></li>
+          <li><a href="#s1"><span class="n">01</span><span>3つの検証区分（凡例）</span></a></li>
+          <li><a href="#s2"><span class="n">02</span><span>一覧（区分マスター表）</span></a></li>
+          <li><a href="#s3"><span class="n">03</span><span>各因子の検証プロベナンス</span></a></li>
+          <li><a href="#s4"><span class="n">04</span><span>研究への含意</span></a></li>
+          <li><a href="#s5"><span class="n">05</span><span>実務メモ</span></a></li>
+          <li><a href="#refs"><span class="n">※</span><span>参考文献（URL付）</span></a></li>
+        </ol>
+      </nav>
+    </aside>
+
+    <main>
+
+      <!-- 00 -->
+      <h2 class="sec" id="s0"><span class="sec-num">00</span>この文書の目的</h2>
+      <hr class="accent-rule">
+      <p>Figure 2 は「前負荷・心収縮力・血管エラスタンス/PWV・SVR・特性インピーダンス Z<sub>c</sub>・慣性 L の6因子を単独で増やすと、脈波がどう変わるか」を示す教育図である。本文書はその各パネルの<strong>波形変化の向きを裏づける文献の「出所」</strong>を監査する。区別する軸は一つ——<strong>実測PPG（＝SpO₂型光電容積波）そのものを計測した研究か、動脈圧波形やモデルをPPGへ当てはめたものか</strong>。</p>
+      <p>結論を先に述べる。6パネルのうち、実測PPGをAラインまたは生理変化と直接比較した研究があるのは<strong>前負荷とSVRの2つのみ</strong>（いずれも条件付き）。血管エラスタンス/PWVは<strong>現象は実測・機序はモデル</strong>。残る<strong>心収縮力・Z<sub>c</sub>・慣性Lの3つは、動脈圧波形の理論と in silico モデルをPPGへ外挿したもの</strong>で、実測PPGでの直接検証は存在しない。</p>
+
+      <!-- 01 -->
+      <h2 class="sec" id="s1"><span class="sec-num">01</span>3つの検証区分（凡例）</h2>
+      <hr class="accent-rule">
+      <p class="sub">各パネルにこの3種のバッジのいずれかを付与する。</p>
+      <div class="legend">
+        <div class="leg">
+          <div class="leg-top"><span class="badge b-direct">実測PPGあり</span></div>
+          <p>実際のPPG／パルスオキシメータ波形を計測し、Aラインまたは生理的摂動と<strong>直接照合</strong>した研究が存在する。ただし規模・条件の限界は個別に明記する。</p>
+        </div>
+        <div class="leg">
+          <div class="leg-top"><span class="badge b-mixed">現象実測・機序モデル</span></div>
+          <p>波形変化の<strong>現象</strong>自体はPPGで直接観察されるが、その<strong>機序の帰属</strong>（どの因子が効くか）はモデルに依存する。</p>
+        </div>
+        <div class="leg">
+          <div class="leg-top"><span class="badge b-model">動脈圧外挿・モデル</span></div>
+          <p>根拠が<strong>観血的動脈圧波形の理論</strong>や <strong>in silico / Windkessel モデル</strong>にあり、実測PPGでの検証がない。＝「Aライン→PPG外挿」に該当。</p>
+        </div>
+      </div>
+
+      <!-- 02 -->
+      <h2 class="sec" id="s2"><span class="sec-num">02</span>一覧（区分マスター表）</h2>
+      <hr class="accent-rule">
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr><th>因子</th><th>パネルの波形変化</th><th>検証区分</th><th>検証の実体（信号・比較・規模）</th><th>主要文献</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>前負荷</td><td>振幅が全体に増大</td>
+              <td><span class="badge b-direct">実測PPG</span></td>
+              <td>パルスオキシメータ・プレス vs 観血的動脈圧を同時記録（n=22, r²=0.83）／ただし呼吸性変動経由</td>
+              <td class="mono">Cannesson 2005<br>[1]</td>
+            </tr>
+            <tr>
+              <td>SVR</td><td>反射波／切痕が上方へ</td>
+              <td><span class="badge b-direct">実測PPG</span></td>
+              <td>指・耳PPG vs 熱希釈SVR（n=14）／振幅の相関は弱く r=−0.15, 幅 r=0.56</td>
+              <td class="mono">Awad 2007<br>[2]</td>
+            </tr>
+            <tr>
+              <td>血管エラスタンス/PWV</td><td>反射波の早期帰還→一峰性化</td>
+              <td><span class="badge b-mixed">現象実測・機序モデル</span></td>
+              <td>加齢PPGコホートで一峰性化を直接観察＋DVP vs cf-PWV／機序分解はモデル</td>
+              <td class="mono">Millasseau 2002 [3]<br>Stergiopulos-Westerhof [6]</td>
+            </tr>
+            <tr>
+              <td>心収縮力</td><td>立ち上がりが鋭く・速く</td>
+              <td><span class="badge b-model">動脈圧外挿・モデル</span></td>
+              <td>観血的動脈圧 dP/dt の総説＋ in silico（動脈圧波形）。PPG実測なし</td>
+              <td class="mono">Esper-Pinsky 2014 [4]<br>Mulder 2022 [5]</td>
+            </tr>
+            <tr>
+              <td>特性インピーダンス Z<sub>c</sub></td><td>早期収縮期の増高</td>
+              <td><span class="badge b-model">動脈圧外挿・モデル</span></td>
+              <td>インピーダンス／Windkessel の圧波形概念。PPG振幅は局所因子が主因で当てはめに疑問</td>
+              <td class="mono">Stergiopulos-Westerhof 1999 [6]</td>
+            </tr>
+            <tr>
+              <td>慣性 L</td><td>重複切痕が鋭く・明瞭に</td>
+              <td><span class="badge b-model">動脈圧外挿・モデル</span></td>
+              <td>4要素Windkessel をイヌ上行大動脈圧に当てはめ（切痕再現がLで改善）。PPG実測なし</td>
+              <td class="mono">Stergiopulos-Westerhof 1999 [6]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 03 -->
+      <h2 class="sec" id="s3"><span class="sec-num">03</span>各因子の検証プロベナンス</h2>
+      <hr class="accent-rule">
+      <p class="sub">スパークラインは灰＝基準波形、色＝当該因子↑後（ティール＝PPG実測の裏づけあり／オークル＝モデル・外挿）。</p>
+
+      <!-- Preload -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 1</span>
+          <h3>前負荷（Preload / SV）</h3>
+          <span class="badge b-direct">実測PPGあり</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="前負荷↑：振幅が増大">
+              <path d="M7.00 49.69 L15.93 48.22 L24.86 43.16 L33.79 32.56 L42.72 20.47 L48.97 16.39 L49.87 16.30 L54.33 17.67 L62.37 25.45 L70.41 33.15 L79.34 35.90 L90.06 35.03 L100.77 37.23 L112.38 43.19 L125.78 48.24 L140.07 49.80 L149.00 49.97" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.61 L15.93 47.72 L24.86 41.24 L33.79 27.67 L42.72 12.20 L48.97 6.98 L49.87 6.86 L54.33 8.63 L62.37 18.60 L70.41 28.47 L79.34 32.03 L90.06 30.95 L100.77 33.75 L112.38 41.34 L125.78 47.76 L140.07 49.75 L149.00 49.96" fill="none" stroke="#0B7A6E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=基準 / 色=前負荷↑</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　1回拍出量の増加で、脈波の振幅が主に増大する（形は概ね保たれる）。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li><strong>信号</strong>：臨床パルスオキシメータのプレス（POP）——研究用光電計ではなく実機のSpO₂波形。</li>
+                <li><strong>比較対象</strong>：観血的動脈圧の脈圧をビート毎に同時記録。ΔPOP と ΔPP を照合。</li>
+                <li><strong>規模／強度</strong>：22例、r²=0.83、bias 0.8±3.5%。6因子中「SpO₂波形」との一致度が最も高い。</li>
+                <li class="warnli"><strong>限界</strong>：静的な「SV↑→振幅↑」ではなく<strong>呼吸性変動を介した動的検証</strong>（ΔPOP/PVIの文脈）。定常SV絶対値と振幅の直接対応ではない。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Cannesson M, et al. <em>Crit Care</em> 2005;9:R562 ［1］</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SVR -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 2</span>
+          <h3>全身血管抵抗（SVR）</h3>
+          <span class="badge b-direct">実測PPGあり</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="SVR↑：反射波・切痕が増高">
+              <path d="M7.00 49.62 L15.93 47.79 L24.86 41.51 L33.79 28.35 L42.72 13.35 L48.97 8.29 L49.87 8.17 L54.33 9.88 L62.37 19.54 L70.41 29.08 L74.87 31.75 L79.34 32.50 L84.70 31.97 L90.06 31.42 L100.77 34.16 L112.38 41.55 L125.78 47.81 L140.07 49.75 L149.00 49.96" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.62 L15.93 47.79 L24.86 41.49 L33.79 28.26 L42.72 12.90 L48.97 7.22 L49.87 6.97 L54.33 7.82 L62.37 15.04 L70.41 21.28 L74.87 22.15 L79.34 21.47 L84.70 20.06 L90.06 19.73 L100.77 25.60 L112.38 37.41 L125.78 46.70 L140.07 49.60 L149.00 49.92" fill="none" stroke="#0B7A6E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=基準 / 色=SVR↑</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　SVRの上昇で、反射係数を介して反射波／重複切痕が「高さ」方向に増高する。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li><strong>信号</strong>：指・耳の光電容積波（PPG）。</li>
+                <li><strong>比較対象</strong>：熱希釈由来のSVR（CABG患者、肺動脈カテーテル）。切痕位置で血管トーンを6段階に分類。</li>
+                <li class="warnli"><strong>規模／強度</strong>：n=14と小規模。指PPG<strong>振幅</strong>の相関は低く（r=−0.15）、<strong>幅</strong>の方が良好（r=0.56）。「高さ／振幅」方向の直接エビデンスとしてはむしろ弱い。</li>
+                <li class="warnli"><strong>限界</strong>：局所トーンか全身トーンかの分離は未確定（腕神経叢ブロック＋Doppler の観察研究が進行中）。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Awad AA, et al. <em>J Clin Monit Comput</em> 2007;21:365 ［2］</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stiffness -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 3</span>
+          <h3>血管エラスタンス／PWV</h3>
+          <span class="badge b-mixed">現象実測・機序モデル</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="エラスタンス↑：一峰性化">
+              <path d="M7.00 49.71 L15.93 48.30 L24.86 43.48 L33.79 33.37 L42.72 21.85 L48.97 17.96 L49.87 17.87 L54.33 19.18 L62.37 26.60 L70.41 33.94 L79.34 36.56 L90.06 35.73 L100.77 37.83 L112.38 43.51 L125.78 48.32 L140.07 49.81 L149.00 49.97" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.56 L15.93 47.82 L24.86 42.34 L33.79 31.02 L42.72 16.58 L48.97 9.12 L54.33 6.86 L55.23 6.91 L62.37 11.07 L70.41 20.60 L79.34 31.43 L90.06 40.88 L100.77 46.37 L112.38 49.02 L125.78 49.87 L140.07 49.99 L149.00 50.00" fill="none" stroke="#0B7A6E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=二峰性 / 色=一峰性化</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　PWV増大で反射波が収縮期に早期帰還し前進波と融合、拡張期ピークが消え<strong>一峰性化</strong>する。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li><strong>現象は直接実測</strong>：加齢に伴うPPGの一峰性化は多数のPPGコホートで直接観察されている。DVPのStiffness Index はcf-PWVと照合済み（PPG信号での検証）。</li>
+                <li class="warnli"><strong>機序はモデル</strong>：「PWVによる早期帰還＋Z<sub>c</sub>による前進波増幅」という二機序の分解は Stergiopulos/Westerhof 系のモデルに依存。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Millasseau SC, et al. <em>Clin Sci</em> 2002;103:371 ［3］／Stergiopulos N, et al. <em>Am J Physiol</em> 1999 ［6］</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contractility -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 4</span>
+          <h3>心収縮力（Contractility）</h3>
+          <span class="badge b-model">動脈圧外挿・モデル</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="収縮力↑：立ち上がり鋭化">
+              <path d="M7.00 49.63 L15.93 47.83 L24.86 41.65 L33.79 28.71 L42.72 13.95 L48.97 8.98 L49.87 8.86 L54.33 10.54 L62.37 20.04 L70.41 29.43 L79.34 32.79 L90.06 31.73 L100.77 34.42 L112.38 41.69 L125.78 47.85 L140.07 49.76 L149.00 49.96" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.92 L15.93 48.78 L24.86 41.41 L33.79 21.86 L40.94 7.96 L42.72 6.91 L43.62 6.86 L47.19 9.78 L54.33 25.02 L60.58 37.13 L66.84 41.69 L67.73 41.78 L73.09 40.41 L79.34 36.84 L90.06 32.32 L100.77 34.46 L112.38 41.69 L125.78 47.85 L140.07 49.76 L149.00 49.96" fill="none" stroke="#A8602E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=基準 / 色=収縮力↑</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　dP/dt増大で立ち上がりが鋭く・速くなり、収縮期ピークがやや早まる。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li class="warnli"><strong>信号</strong>：<strong>観血的動脈カテーテルの圧波形</strong>（Esper & Pinsky はpulse contour・dP/dtの総説でPPGではない）。in silico の Mulder 2022 も動脈圧波形。</li>
+                <li class="warnli"><strong>PPG実測なし</strong>：「収縮力→鋭い立ち上がり」は動脈圧 dP/dt 理論をPPGへ外挿したもの。</li>
+                <li class="warnli"><strong>なぜ外挿が危ういか</strong>：PPGは容積信号で、その立ち上がりは局所コンプライアンス・末梢灌流・モニタの自動ゲイン制御（AGC）に左右される。動脈圧 dP/dt とは別物。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Esper SA, Pinsky MR. <em>Best Pract Res Clin Anaesthesiol</em> 2014;28:363 ［4］／Mulder MP, et al. <em>Physiol Rep</em> 2022 ［5］（補助：Morimont, Piccioli ［7］［8］）</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zc -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 5</span>
+          <h3>特性インピーダンス Z<sub>c</sub></h3>
+          <span class="badge b-model">動脈圧外挿・モデル</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="Zc↑：早期収縮期増高">
+              <path d="M7.00 49.64 L15.93 47.91 L24.86 41.98 L33.79 29.54 L42.72 15.36 L48.97 10.58 L49.87 10.47 L54.33 12.08 L62.37 21.21 L70.41 30.24 L79.34 33.47 L90.06 32.44 L100.77 35.03 L112.38 42.02 L125.78 47.93 L140.07 49.77 L149.00 49.96" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.29 L15.93 45.36 L24.86 33.81 L33.79 17.88 L42.72 7.93 L46.30 6.86 L47.19 6.87 L54.33 10.85 L62.37 21.05 L70.41 30.22 L79.34 33.47 L90.06 32.44 L100.77 35.03 L112.38 42.02 L125.78 47.93 L140.07 49.77 L149.00 49.96" fill="none" stroke="#A8602E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=基準 / 色=Z<sub>c</sub>↑</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　Z<sub>c</sub>の上昇で前進波が早期収縮期に増高する（収縮期圧上昇の一機序）。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li class="warnli"><strong>信号</strong>：Windkessel／インピーダンスの<strong>圧波形</strong>概念。Z<sub>c</sub> は3要素Windkesselの後負荷素子として導入されたもの。</li>
+                <li class="warnli"><strong>PPG実測なし</strong>：「Z<sub>c</sub>↑→PPG早期増高」はモデル由来。</li>
+                <li class="warnli"><strong>当てはめ自体に疑問</strong>：PPG振幅・PI は中枢 Z<sub>c</sub> でなく局所（コンプライアンス・血管運動トーヌス・灌流圧）が主因。中枢インピーダンスの効果がPPG振幅に直結するとは限らない。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Stergiopulos N, Westerhof BE, Westerhof N. <em>Am J Physiol</em> 1999;276:H81 ［6］</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inertance -->
+      <div class="fcard">
+        <div class="fcard-head">
+          <span class="fnum">因子 6</span>
+          <h3>慣性 L（Inertance）</h3>
+          <span class="badge b-model">動脈圧外挿・モデル</span>
+        </div>
+        <div class="fcard-body">
+          <div class="spark">
+            <svg viewBox="0 0 156 58" role="img" aria-label="L↑：切痕鋭化">
+              <path d="M7.00 49.61 L15.93 47.72 L24.86 41.24 L33.79 27.68 L42.72 12.20 L48.97 6.98 L49.87 6.86 L54.33 8.62 L62.37 18.58 L70.41 28.43 L79.34 31.96 L90.06 30.84 L100.77 33.66 L112.38 41.29 L125.78 47.74 L140.07 49.75 L149.00 49.96" fill="none" stroke="#B7C4C4" stroke-width="1.4" stroke-dasharray="3 3"/>
+              <path d="M7.00 49.61 L15.93 47.72 L24.86 41.25 L33.79 27.70 L42.72 12.35 L48.97 7.37 L49.87 7.30 L54.33 9.36 L62.37 20.58 L68.62 34.79 L71.30 39.20 L72.19 39.70 L73.98 39.22 L79.34 33.49 L84.70 30.30 L90.06 28.56 L100.77 31.72 L112.38 41.70 L125.78 48.54 L140.07 49.91 L149.00 49.99" fill="none" stroke="#A8602E" stroke-width="1.9"/>
+            </svg>
+            <div class="cap">灰=基準 / 色=L↑（切痕が鋭い）</div>
+          </div>
+          <div class="fcard-text">
+            <p class="claim"><span class="k">波形変化</span>　慣性成分が重複切痕の有無・鋭さ（高周波成分）を決める。4要素Windkesselで初めて切痕が再現される。</p>
+            <div class="evi">
+              <span class="evi-lbl">エビデンスの実体</span>
+              <ul>
+                <li class="warnli"><strong>信号</strong>：イヌ7頭の<strong>上行大動脈圧</strong>への集中定数モデル当てはめ。慣性 L を Z<sub>c</sub> と並列に導入。</li>
+                <li class="warnli"><strong>PPG実測なし</strong>：原論文は「切痕と拡張期圧減衰の再現が4要素（L追加）で改善する」と示すが、これはモデルフィットの結果であり、PPGでの計測ではない。</li>
+              </ul>
+            </div>
+            <p class="cite"><span class="lab">文献</span>Stergiopulos N, Westerhof BE, Westerhof N. <em>Am J Physiol</em> 1999;276:H81 ［6］</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 -->
+      <h2 class="sec" id="s4"><span class="sec-num">04</span>研究への含意</h2>
+      <hr class="accent-rule">
+      <div class="callout co-ochre">
+        <h3><span class="ic">!</span>過剰主張を避ける</h3>
+        <p>この図は波形直観を養う教材として妥当だが、「この因子が動けばSpO₂波形がこう動く」を<strong>実測PPGで確認済み</strong>と読める書き方だと過剰主張になる。実測PPGの裏づけがあるのは前負荷（条件付き）とSVR（小規模・振幅は弱い）のみで、心収縮力・Z<sub>c</sub>・慣性Lの3パネルは<strong>動脈圧波形とモデルの外挿</strong>である。</p>
+      </div>
+      <div class="callout co-teal">
+        <h3><span class="ic">◆</span>血管トーン推定への一点</h3>
+        <p>研究の本筋（血管トーンΔの推定）に直接効くSVRパネルで、唯一の直接エビデンス（Awad）が示したのは、<strong>切痕の「深さ／高さ」より「幅・時相」の方が実測PPG–SVR相関が取れる</strong>ことだった（指振幅 r=−0.15 に対し幅 r=0.56）。この方向性は、AGCで振幅が壊れる臨床SpO₂モニタの制約とも整合する。指標設計では振幅比よりタイミング／形状の位置情報を優先するのが妥当である。</p>
+      </div>
+
+      <!-- 05 -->
+      <h2 class="sec" id="s5"><span class="sec-num">05</span>実務メモ</h2>
+      <hr class="accent-rule">
+      <div class="callout co-teal">
+        <h3><span class="ic">◆</span>実務メモ（一人麻酔科の視点）</h3>
+        <p>離島ソロ管理でこの図を臨床判断に使う際は、6因子のうち<strong>実測PPGで裏づけられた前負荷（振幅の呼吸性変動＝PVI的な見方）とSVR（切痕・幅）に限って重みを置く</strong>のが安全である。心収縮力・Z<sub>c</sub>・慣性Lのパネルは、圧波形やモデルから期待される「あるべき変化」であって、モニタのSpO₂プレスで同じ挙動が確認されているわけではない。</p>
+        <p>実装上さらに重い制約は、これらの一次文献の多くが<strong>研究用光電計や観血ラインでの検証</strong>である点である。臨床パルスオキシメータ（Nihon Kohden Life Scope）の表示プレスは自動ゲイン制御と帯域制限を受けるため、<strong>振幅ベースの読み（前負荷パネル含む）は特に脆弱</strong>で、切痕やSDPTG高周波成分も減衰しうる。Vital Recorder 経由でAGC・フィルタ前の生波形が取得できるかが、これらの因子を実際に追えるかの分水嶺になる。</p>
+        <p style="margin-bottom:0">要するに——この図は「どの因子が波形のどこに効くか」の見取り図として優れているが、各矢印の<strong>証拠の強さは均一ではない</strong>。上表の検証区分を、そのまま各因子の確信度として扱うのが実務的である。</p>
+      </div>
+
+      <!-- REFERENCES -->
+      <h2 class="sec" id="refs"><span class="sec-num">※</span>参考文献（URL付）</h2>
+      <hr class="accent-rule">
+      <div class="refs">
+        <div class="ref-item"><span class="rn">[1]</span><span class="rc"><span class="rt">Cannesson M, Besnard C, Durand PG, Bohé J, Jacques D.</span> Relation between respiratory variations in pulse oximetry plethysmographic waveform amplitude and arterial pulse pressure in ventilated patients. <em>Crit Care</em> 2005;9(5):R562–8. PMID 16277719<span class="vchip vok">URL検証済</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/16277719/">https://pubmed.ncbi.nlm.nih.gov/16277719/</a></span></div>
+
+        <div class="ref-item"><span class="rn">[2]</span><span class="rc"><span class="rt">Awad AA, Haddadin AS, Tantawy H, Badr TM, Stout RG, Silverman DG, Shelley KH.</span> The relationship between the photoplethysmographic waveform and systemic vascular resistance. <em>J Clin Monit Comput</em> 2007;21(6):365–72. PMID 17940842<span class="vchip vok">URL検証済</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/17940842/">https://pubmed.ncbi.nlm.nih.gov/17940842/</a></span></div>
+
+        <div class="ref-item"><span class="rn">[3]</span><span class="rc"><span class="rt">Millasseau SC, Kelly RP, Ritter JM, Chowienczyk PJ.</span> Determination of age-related increases in large artery stiffness by digital pulse contour analysis. <em>Clin Sci (Lond)</em> 2002;103(4):371–7. PMID 12241535<span class="vchip vok">URL検証済</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/12241535/">https://pubmed.ncbi.nlm.nih.gov/12241535/</a></span></div>
+
+        <div class="ref-item"><span class="rn">[4]</span><span class="rc"><span class="rt">Esper SA, Pinsky MR.</span> Arterial waveform analysis. <em>Best Pract Res Clin Anaesthesiol</em> 2014;28(4):363–80. PMID 25480767<span class="vchip vok">URL検証済</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/25480767/">https://pubmed.ncbi.nlm.nih.gov/25480767/</a></span></div>
+
+        <div class="ref-item"><span class="rn">[5]</span><span class="rc"><span class="rt">Mulder MP, Broomé M, Donker DW, et al.</span> Distinct morphologies of arterial waveforms reveal preload-, contractility-, and afterload-deficient hemodynamic instability: An in silico simulation study. <em>Physiol Rep</em> 2022;10(7):e15242.<span class="vchip vok">URL検証済</span><br><a href="https://physoc.onlinelibrary.wiley.com/doi/10.14814/phy2.15242">https://physoc.onlinelibrary.wiley.com/doi/10.14814/phy2.15242</a></span></div>
+
+        <div class="ref-item"><span class="rn">[6]</span><span class="rc"><span class="rt">Stergiopulos N, Westerhof BE, Westerhof N.</span> Total arterial inertance as the fourth element of the windkessel model. <em>Am J Physiol</em> 1999;276(1):H81–8. PMID 9887020<span class="vchip vok">URL検証済</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/9887020/">https://pubmed.ncbi.nlm.nih.gov/9887020/</a></span></div>
+
+        <div class="ref-item"><span class="rn">[7]</span><span class="rc"><span class="rt">Charlton PH, et al.</span> Modeling arterial pulse waves in healthy aging: a database for in silico evaluation of hemodynamics and pulse wave indexes（補助文献・in silico）.<span class="vchip vfb">PubMed検索</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/?term=Charlton+arterial+pulse+wave+database+in+silico">https://pubmed.ncbi.nlm.nih.gov/?term=Charlton+arterial+pulse+wave+database+in+silico</a></span></div>
+
+        <div class="ref-item"><span class="rn">[8]</span><span class="rc"><span class="rt">Morimont P, et al. / Piccioli F, et al.</span> dP/dt<sub>max</sub> と収縮力・in silico 脈波解析（補助文献）.<span class="vchip vfb">PubMed検索</span><br><a href="https://pubmed.ncbi.nlm.nih.gov/?term=Morimont+dP%2Fdt+contractility+pulse+contour">https://pubmed.ncbi.nlm.nih.gov/?term=Morimont+dP%2Fdt+contractility+pulse+contour</a></span></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><strong style="font-family:'Space Grotesk',sans-serif;color:var(--ink)">Figure 2 の6因子 ― 検証プロベナンス</strong> <span class="mono">v4</span></p>
+    <p class="mono">［1］〜［6］はPMID・掲載誌をURLで検証済み。［7］［8］は原典URLを本セッションで未確定のため、PubMed検索フォールバックURLを付し補助文献として扱う（従来運用に準拠）。完全自己完結・外部API不使用・オフライン動作。</p>
+    <p class="mono">検証区分＝実測PPG（Aライン/生理変化と直接照合あり）／現象実測・機序モデル／動脈圧外挿・モデル。上表の区分を各因子の確信度として解釈すること。</p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+    var map = {};
+    links.forEach(function(a){
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if(el){ map[id] = a; }
+    });
+    var ids = Object.keys(map);
+    if(!ids.length || !('IntersectionObserver' in window)) return;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('active'); });
+          var a = map[e.target.id];
+          if(a){ a.classList.add('active'); }
+        }
+      });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    ids.forEach(function(id){ obs.observe(document.getElementById(id)); });
+  })();
+</script>
+
+</body>
+</html>

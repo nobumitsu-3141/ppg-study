@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpO₂（PPG）波形解析の流れ ― 中核レビュー</title>
+<meta name="description" content="SpO₂/PPG 波形解析の流れ。成り立ちから dicrotic notch まで、文献的整理と論理の検証。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F7F7;--raised:#FFFFFF;--ink:#15242B;--ink-soft:#51636C;--ink-faint:#879099;
+    --accent:#0B7A6E;--accent-deep:#0A6258;--accent-bright:#1FB8A6;--accent-wash:#E4F2EF;--accent-line:#C3E0DA;
+    --warn:#A8602E;--warn-wash:#F8EEE2;--warn-line:#E7D2BC;--line:#DBE5E5;--line-soft:#E8EFEF;
+    --sans:"Space Grotesk",sans-serif;--serif:"Newsreader",Georgia,serif;--mono:"IBM Plex Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.72;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  a{color:var(--accent);}
+
+  /* HERO */
+  .hero{position:relative;padding:52px 0 0;border-bottom:1px solid var(--line);overflow:hidden;background:linear-gradient(180deg,#EDF4F3 0%,var(--paper) 100%);}
+  .hero .inner{max-width:1080px;margin:0 auto;padding:0 32px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-deep);background:var(--accent-wash);border:1px solid var(--accent-line);padding:6px 13px;border-radius:100px;margin-bottom:20px;}
+  .eyebrow-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-bright);}
+  h1{font-family:var(--sans);font-weight:600;font-size:clamp(27px,4.4vw,42px);line-height:1.12;letter-spacing:-.015em;margin:0 0 14px;}
+  .hero .sub{font-size:clamp(15px,2vw,19px);color:var(--ink-soft);max-width:52ch;margin:0;}
+  .trace-stage{margin-top:26px;width:100%;height:112px;}
+  #ppgSvg{width:100%;height:100%;display:block;}
+  .grid-line{stroke:var(--accent-line);stroke-width:1;opacity:.34;}
+  .trace-path{fill:none;stroke:var(--accent-bright);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(31,184,166,.55));}
+  .trace-area{fill:url(#areaGrad);opacity:0;}
+  .lead-dot{fill:#fff;stroke:var(--accent-bright);stroke-width:2.5;filter:drop-shadow(0 0 5px rgba(31,184,166,.8));}
+
+  /* LAYOUT */
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px;}
+  .layout{display:grid;grid-template-columns:232px 1fr;gap:52px;align-items:start;padding:40px 0 0;}
+  .toc-wrap{position:sticky;top:24px;}
+  .toc h2{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px;}
+  .toc ol{list-style:none;margin:0;padding:0;}
+  .toc li{margin:0;}
+  .toc a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink-soft);font-size:14px;line-height:1.35;padding:6px 10px;border-radius:7px;border-left:2px solid transparent;transition:background .15s,color .15s,border-color .15s;}
+  .toc a .n{font-family:var(--mono);font-size:11px;color:var(--accent);flex:0 0 auto;}
+  .toc a:hover{background:var(--accent-wash);color:var(--ink);}
+  .toc a.active{background:var(--accent-wash);color:var(--accent-deep);border-left-color:var(--accent);font-weight:500;}
+
+  main{min-width:0;max-width:74ch;}
+  main > p:first-child{font-size:19.5px;line-height:1.66;color:var(--ink);border-left:3px solid var(--accent-line);padding-left:18px;margin:0 0 34px;}
+  h2.sec{font-family:var(--sans);font-weight:600;font-size:25px;letter-spacing:-.01em;margin:52px 0 0;display:flex;align-items:baseline;gap:13px;scroll-margin-top:20px;}
+  h2.sec .sec-n{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:500;}
+  hr.accent-rule{border:none;height:2px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent-line) 40%,transparent 100%);margin:12px 0 22px;}
+  h3{font-family:var(--sans);font-weight:600;font-size:18.5px;letter-spacing:-.005em;margin:32px 0 10px;color:var(--ink);}
+  p{margin:0 0 18px;}
+  strong{font-weight:600;color:var(--ink);}
+  sub,sup{font-size:.72em;}
+
+  /* TABLES */
+  table{width:100%;border-collapse:collapse;margin:20px 0 26px;font-size:15px;line-height:1.5;background:var(--raised);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  thead th{background:var(--accent-wash);color:var(--accent-deep);font-family:var(--sans);font-weight:600;font-size:13.5px;text-align:left;padding:11px 14px;border-bottom:1px solid var(--accent-line);}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--ink);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#FAFCFC;}
+
+  /* REFERENCES */
+  .refp{font-size:14.5px;line-height:1.6;color:var(--ink-soft);padding:11px 0 11px 42px;text-indent:-42px;border-bottom:1px solid var(--line-soft);margin:0;}
+  .refp strong{color:var(--accent);font-family:var(--mono);font-size:13px;}
+  .refp a{word-break:break-all;font-size:13.5px;}
+
+  /* FOOTER */
+  footer{margin-top:60px;border-top:1px solid var(--line);background:#EDF4F3;}
+  footer .wrap{padding-top:30px;padding-bottom:44px;}
+  .backlink{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:13px;color:var(--accent);text-decoration:none;margin-bottom:16px;}
+  .backlink:hover{text-decoration:underline;}
+  .disclaimer{font-size:14px;color:var(--ink-soft);line-height:1.6;background:var(--warn-wash);border:1px solid var(--warn-line);border-left:4px solid var(--warn);border-radius:8px;padding:16px 18px;margin:0;}
+  .disclaimer strong{color:var(--warn);}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;gap:0;}
+    .toc-wrap{position:static;margin-bottom:26px;padding:16px;background:var(--raised);border:1px solid var(--line);border-radius:12px;}
+    main{max-width:100%;}
+    .trace-stage{height:88px;}
+  }
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="eyebrow"><span class="eyebrow-dot" id="eyebrowDot"></span>CLINICAL LITERATURE REVIEW ・ WAVEFORM MORPHOLOGY</span>
+    <h1>SpO₂（PPG）波形解析の流れ</h1>
+    <p class="sub">成り立ちから dicrotic notch まで：文献的整理と論理の検証</p>
+  </div>
+  <div class="trace-stage" aria-hidden="true">
+    <svg id="ppgSvg" viewBox="0 0 1000 128" preserveAspectRatio="none">
+      <defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1FB8A6" stop-opacity="0.20"/>
+        <stop offset="1" stop-color="#1FB8A6" stop-opacity="0"/>
+      </linearGradient></defs>
+      <g id="gridG"></g>
+      <path id="areaPath" class="trace-area"/>
+      <path id="tracePath" class="trace-path"/>
+      <circle id="leadDot" class="lead-dot" r="4" cx="0" cy="86"/>
+    </svg>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+    <aside class="toc-wrap">
+      <nav class="toc" aria-label="目次">
+        <h2>目次</h2>
+        <ol>
+<li><a href="#sec-1"><span class="n">01</span><span>序 ― 本稿の目的と構成</span></a></li>
+<li><a href="#sec-2"><span class="n">02</span><span>1. 光電容積脈波（PPG）としての成り立ち</span></a></li>
+<li><a href="#sec-3"><span class="n">03</span><span>2. 前進波と反射波 ― 波形を読むための土台</span></a></li>
+<li><a href="#sec-4"><span class="n">04</span><span>3. 循環因子の変化に伴う波形変化</span></a></li>
+<li><a href="#sec-5"><span class="n">05</span><span>4. 目視による定性的評価</span></a></li>
+<li><a href="#sec-6"><span class="n">06</span><span>5. 波形変化の定量化</span></a></li>
+<li><a href="#sec-7"><span class="n">07</span><span>6. 高スティフネス血管における dicrotic notch の検証法</span></a></li>
+<li><a href="#sec-8"><span class="n">08</span><span>7. 限界と相対変化（Δ）アプローチ</span></a></li>
+<li><a href="#sec-9"><span class="n">09</span><span>8. 論理の一貫性 ― 原案フローの検証（結論）</span></a></li>
+<li><a href="#sec-10"><span class="n">10</span><span>参考文献</span></a></li>
+        </ol>
+      </nav>
+    </aside>
+    <main>
+<p>本稿は、パルスオキシメータの脈波（PPG）を「成り立ち → 循環因子による変化 → 目視評価 → 数値化 → 高スティフネス血管の重複切痕」という流れで整理し、あわせてその流れに論理的な無理・破綻がないかを検証して、より整合的な構成を提案する文献的まとめである。麻酔科専門医向け。</p>
+<h2 id="sec-1" class="sec"><span class="sec-n">01</span>序 ― 本稿の目的と構成</h2>
+<hr class="accent-rule">
+<p>ご提示の流れは、(1) SpO₂ すなわち光電容積脈波（photoplethysmography, <strong>PPG</strong>）の<strong>成り立ち</strong>、(2) 循環因子（前負荷・全身血管抵抗・血管スティフネス・心拍数など）による<strong>波形変化</strong>、(3) <strong>目視</strong>による循環変動の予測（PMID 8934343 ほか）、(4) 波形の<strong>数値化</strong>（SI・RI・二次微分PPG）、(5) スティフネスが上昇した血管における <strong>dicrotic notch（重複切痕）</strong>の評価、という5段階からなる。</p>
+<p>本稿はこの5段階を骨格としつつ、各段階が暗黙に依拠している前提を表に出すために、順序と区分を一部組み替えている。対応関係を表1に示す。原案と本稿の構成は同じ結論に至るが、本稿では「前進波＋反射波」という土台を独立させ、定量指標を血管特性の軸と急性トーヌスの軸に分けている点が異なる。</p>
+<p><strong>表1. 原案の5段階と本稿の構成の対応</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>原案の5段階</strong></th>
+<th><strong>本稿での対応</strong></th>
+<th><strong>補強・修正の要点</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① SpO₂波形の成り立ち</td>
+<td>§1 光電容積脈波としての成り立ち</td>
+<td>「圧ではなく容積信号」であることを明示</td>
+</tr>
+<tr>
+<td>② 循環因子の変化に伴う波形変化</td>
+<td>§3 循環因子の変化に伴う波形変化</td>
+<td>因子ごとに「循環変化→波形変化」を対応づけ、PPGでの検証強度（実測／外挿）を併記。前提として §2「前進波＋反射波」を新設</td>
+</tr>
+<tr>
+<td>③ 目視で循環変動を予測（PMID 8934343 ほか）</td>
+<td>§4 目視による定性的評価</td>
+<td>トレンド読解としては妥当。絶対評価には限界（DN-less 信号・過減衰）</td>
+</tr>
+<tr>
+<td>④ 数値化（SI・RI・SDPPG）</td>
+<td>§5 波形変化の定量化</td>
+<td>反射・スティフネス軸（SI・RI・AIx・SDPPG）と急性トーヌス軸に分割。PPG-AIx の検証も付記</td>
+</tr>
+<tr>
+<td>⑤ 高スティフネス血管の dicrotic notch 検証</td>
+<td>§6 高スティフネス血管の切痕検証</td>
+<td>「切痕はむしろ消える」パラドクスを、消失の程度＋二次微分で解消</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec-2" class="sec"><span class="sec-n">02</span>1. 光電容積脈波（PPG）としての成り立ち</h2>
+<hr class="accent-rule">
+<p>パルスオキシメータが表示する脈波（PLETH）は、指尖などの組織に赤色・赤外光を照射し、拍動に伴う血液量の変化を透過光（または反射光）の強度変化として捉えたものである。信号は、拍動しない<strong>直流成分（DC</strong>；組織・静脈血・非拍動性動脈血による吸光）と、動脈拍動に同期する<strong>交流成分（AC</strong>）に分けられ、PPG波形はこの AC 成分に相当する [1]。</p>
+<p>ここで決定的に重要なのは、<strong>PPG は圧ではなく容積（血液量）を反映する信号である</strong>、という点である。局所の容積変化 ΔV は、おおむね「局所コンプライアンス × 局所脈圧」で決まる。したがって PPG 振幅は、中心大動脈圧の絶対値ではなく、測定部位の血管コンプライアンス・局所灌流・局所脈圧に強く依存する [1]。この「容積信号である」という性質が、以降の各指標の解釈可能性と限界を規定する基盤になる。</p>
+<p><strong>（記号の定義）</strong>AC＝拍動性交流成分、DC＝非拍動性直流成分、灌流指数 PI（perfusion index）＝AC/DC。PI は末梢灌流と血管運動トーヌスを反映し、中心大動脈のインピーダンスとはおおむね切り離されている [1]。</p>
+<h2 id="sec-3" class="sec"><span class="sec-n">03</span>2. 前進波と反射波 ― 波形を読むための土台</h2>
+<hr class="accent-rule">
+<p><strong>（この節は原案に明示されていないが、以降のすべての段階が依拠する前提であるため独立させた。）</strong></p>
+<p>動脈波形は、左室駆出により生じ末梢へ進む<strong>前進波（incident / forward wave）</strong>と、血管分岐・末梢抵抗・インピーダンス不整合の点で反射して中枢へ戻る<strong>反射波（reflected wave）</strong>の合成として理解される。末梢（指尖）で記録される波形の収縮期ピークは主に前進波を、その後に続く拡張期側のピークまたは変曲点（重複切痕を含む）は主に反射波の帰還を映す。</p>
+<p>古典的教科書は重複切痕を「大動脈弁閉鎖」に帰属させる。大動脈で直接記録される鋭い切れ込み（incisura）は確かに弁閉鎖を反映するが、<strong>末梢に向かうほど incisura は鋭さを失い、複数の反射波の合成である dicrotic notch へと変質する</strong>。O'Rourke／McDonald の古典的見解では、末梢の重複切痕はその形態を大動脈弁閉鎖そのものよりも末梢血管抵抗と反射波に負っている [8][10]。数値モデル研究では、選択的 α₁ 作動薬フェニレフリンで末梢血管抵抗のみを変化させると重複切痕が変化することが実測され、Navier–Stokes 方程式に基づくモデルで機序が示された [8]。</p>
+<p>要するに、「波形から血管を読む」試みの核心は、<strong>反射波の大きさ（高さ）とタイミング（時相）を読むこと</strong>に帰着する。後述の SI・RI・重複切痕は、いずれもこの反射波の別々の側面を数値化したものである。この土台を先に置くことで、各指標が何を測っているのかが一貫して理解できる。</p>
+<h2 id="sec-4" class="sec"><span class="sec-n">04</span>3. 循環因子の変化に伴う波形変化</h2>
+<hr class="accent-rule">
+<p>本節は、各循環因子の変化が PPG／SpO₂ 波形をどう変えるかを、因子ごとに追う。ねらいは「循環の変化 → 波形の変化」という向きで一つずつ対応づけることである。ただし因子によって PPG での検証の強さは大きく異なり、実測 PPG で裏づけられるもの（前負荷・SVR）と、主に観血的動脈圧波形の理論から外挿されるもの（心収縮力）が混在する。この検証強度の違いを併せて表2に示す。</p>
+<table>
+<thead>
+<tr>
+<th><strong>用語の整理 ― 本稿の「エラスタンス」</strong> 「エラスタンス」という語は少なくとも3つの異なる量を指しうる。(a) 左室収縮末期エラスタンス Ees＝<strong>心収縮力</strong>の指標、(b) 実効動脈エラスタンス Ea＝<strong>後負荷</strong>の集約指標（おおむね収縮末期圧 ÷ 1回拍出量）、(c) 動脈壁スティフネス＝脈波伝播速度 PWV に反映される<strong>壁の硬さ</strong>。PPG 形態に効くのは主に (c) の壁スティフネスであり、これが反射波の帰還時相を規定する。 <strong>本稿で「エラスタンス（スティフネス）」と書く場合は (c) を指し、Ees（収縮力）や Ea（後負荷）とは区別する。</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><strong>心拍数（HR）：</strong>まず HR 自体の変化が波形を変える。HR が上がると拡張期が短縮し、重複切痕・拡張期ピークを含む拡張期部分が圧縮・切り詰められる。反射波の到達時刻は脈波伝播時間でほぼ決まるため、心周期が短いほど反射波は収縮期ピークに相対的に近づき、収縮期の増強（オーグメンテーション）の程度が変わる。ペースメーカ例で 60→110 bpm に段階ペーシングした検討では、AIx は HR と逆相関し（およそ 10 bpm ごとに約 4% 低下）、拍出時間も HR と逆相関した（r=−0.51）[13]。この HR 依存性のため、波形形態から血管スティフネスを推定する場面では HR を補正する必要が生じ（AIx を 75 bpm に正規化した AIx@75）[13]、HR は「それ自体が波形を変える因子」であると同時に、他指標にとっては「補正すべき交絡」としても現れる。</p>
+</li>
+<li>
+<p><strong>前負荷：</strong>陽圧換気に伴う PPG 振幅の呼吸性変動（ΔPOP）が、動脈脈圧変動（ΔPP）と良好に相関することが機械換気患者22例で示された [7]。ただしこれは「1拍ごとの波形形態」ではなく「呼吸性の振幅変動」を介した指標である点に注意する。</p>
+</li>
+<li>
+<p><strong>心収縮力：</strong>dP/dt の増大で立ち上がりが鋭く・速くなる、という記述は主に観血的動脈圧波形の理論を PPG に外挿したものであり、PPG での直接検証は乏しい。PPG は容積信号で、立ち上がりは局所コンプライアンス・末梢灌流・モニタの自動ゲイン制御（AGC）にも左右されるため、外挿には慎重を要する。</p>
+</li>
+<li>
+<p><strong>全身血管抵抗（SVR）／血管トーヌス：</strong>反射波・重複切痕を主に<strong>「高さ」方向</strong>に動かす。指・耳 PPG と熱希釈 SVR を比較した研究（14例）では、指の振幅と SVR の相関は弱く（r=−0.15）、切痕を含む「幅」の相関の方が良かった（r=0.56）[6]。すなわち振幅単独では鈍感で、切痕位置・幅と組み合わせて初めて意味を持つ。</p>
+</li>
+<li>
+<p><strong>血管壁スティフネス（＝本稿の「エラスタンス」）：</strong>壁が硬くなると前進波・反射波の伝播が速まり、反射波が早期に帰還して収縮期に融合し、<strong>波形の一峰性化（拡張期ピークの消失）</strong>が起こる。加齢 PPG コホートで一峰性化が直接観察され、機序（早期反射＋特性インピーダンス Zc の増大による前進波増幅）はモデルで説明される [5][11]。なお、この伝播の速さを定量化した指標が脈波伝播速度（PWV）である。PWV はスティフネスという因子そのものではなく、その結果を測る指標であることに注意する。</p>
+</li>
+</ul>
+<p><strong>表2. 因子ごとの波形変化と PPG での検証の実体</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>因子</strong></th>
+<th><strong>波形変化</strong></th>
+<th><strong>PPG での検証の実体（信号・規模）</strong></th>
+<th><strong>主要文献</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前負荷</td>
+<td>全体の振幅が増減</td>
+<td>実測PPG。ただし呼吸性振幅変動（ΔPOP）経由。機械換気22例、ΔPP と良好に相関</td>
+<td>Cannesson 2005 [7]</td>
+</tr>
+<tr>
+<td>SVR・血管トーヌス</td>
+<td>反射波・切痕が上下（高さ方向）</td>
+<td>実測PPG。指/耳PPG vs 熱希釈SVR（14例）。振幅は弱相関（r=−0.15）、幅（r=0.56）が良好</td>
+<td>Awad 2007 [6]</td>
+</tr>
+<tr>
+<td>血管壁スティフネス（エラスタンス）</td>
+<td>反射波の早期帰還→一峰性化（PWVはこの結果を測る指標）</td>
+<td>現象（一峰性化）は実測。機序分解はモデル</td>
+<td>Millasseau 2002 [5] / Stergiopulos-Westerhof 1999 [11]</td>
+</tr>
+<tr>
+<td>心収縮力</td>
+<td>立ち上がりが鋭く・速く</td>
+<td>主に観血的動脈圧 dP/dt 理論の外挿。PPG での直接検証は乏しい</td>
+<td>（動脈圧外挿）</td>
+</tr>
+<tr>
+<td>心拍数（HR）</td>
+<td>拡張期短縮→切痕・拡張期部分の圧縮、反射波の相対位置と収縮期増強の変化</td>
+<td>ペーシング 60→110 bpm で AIx・拍出時間が HR と逆相関。自身が波形を変え、かつ AIx@75 の補正対象</td>
+<td>Wilkinson 2000 [13]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>（要点）</strong>時相（早い／遅い）を最も強く動かすのは血管スティフネス（PWV）、高さ（切痕・反射波の上下）を主に動かすのは SVR である。この対応づけが、次節で定量指標を「半ば固定的な血管特性」と「急性トーヌス」に分けて読む際の見取り図になる。</p>
+<h2 id="sec-5" class="sec"><span class="sec-n">05</span>4. 目視による定性的評価</h2>
+<hr class="accent-rule">
+<p>波形の形から循環を読む試みは古い。麻酔モニタリングの文脈で先駆けとなったのが <strong>Murray と Foster（1996）</strong> の “The peripheral pulse wave: information overlooked”（ご提示の PMID 8934343）である。彼らは PPG の振幅と重複切痕の位置がカテコラミン刺激の鋭敏な指標になりうると指摘し、切痕の上昇（＋振幅低下）が麻酔深度の浅化の早期指標になると論じた [2]。「切痕は血管トーヌスを映す」という発想を周術期に持ち込んだ点で重要である。</p>
+<p>ただし目視には固有の限界がある。重複切痕はしばしば独立した切痕ではなく単なる変曲点としてしか現れず、末梢ほど不明瞭で、トランスデューサの過減衰でも消える。したがって「目視で予想できた」という観察は、<strong>トレンド（経時変化の向き）の読み取りとしては妥当</strong>だが、絶対的な定量評価には向かない。この限界が、次段階の数値化と二次微分の動機になる。</p>
+<p>目視・輪郭ベースの発想は近年の周術期研究に引き継がれている。心臓外科15例で PPG 振幅と重複切痕の位置から血管トーヌスを6クラスに分類した観察研究（Tusman ら 2019）は、この分類が収縮期血圧・SVR・血管コンプライアンスとよく相関し、低血圧・高血圧エピソードを高い精度（正診率およそ97〜98%）で検出したと報告した [9]。さらに全身麻酔中の患者で、重複切痕の相対位置と灌流指数（PI）から平均動脈圧をリアルタイムに推定できるとしたパイロット研究もある（Joachim ら 2021）[14]。いずれも「切痕位置＝血管トーヌス／血圧の手がかり」という目視由来の着想を、定量的な形で麻酔中に持ち込もうとするものである。</p>
+<h2 id="sec-6" class="sec"><span class="sec-n">06</span>5. 波形変化の定量化</h2>
+<hr class="accent-rule">
+<p>定量指標は、大きく二群に分けて読むと混乱が少ない。一つは半ば固定的な血管特性（大動脈スティフネス・反射）を表す群、もう一つは刻々の血管トーヌスを表す群である。<strong>麻酔中に一拍ごとの変化を追う目的では、後者（急性トーヌス軸）が実務上の主軸になる</strong>。前者は術前ベースラインの特性把握に向く。以下、術中モニタリングへ発展させたい急性トーヌス側を厚めに扱う。</p>
+<h3>5.1 反射・スティフネス軸（半ば固定的な血管特性・術前特性の把握）</h3>
+<ul>
+<li>
+<p><strong>スティフネス指数 SI（stiffness index, Millasseau 2002）：</strong>指尖容積脈波（digital volume pulse, DVP）の収縮期ピークと拡張期側ピーク／変曲点の時間差 ΔT を用い、<strong>SI ＝ 被験者身長 ÷ ΔT</strong> で定義する。頸動脈–大腿動脈脈波伝播速度（cf-PWV）と相関し、加齢に伴う大動脈スティフネス増加を反映する [5]。</p>
+</li>
+<li>
+<p><strong>反射指数 RI（reflection index, Chowienczyk 1999）：</strong>DVP の反射（拡張期）ピーク高を収縮期ピーク高で除した比。圧反射波の指標であると同時に<strong>小血管トーヌス（small vessel tone）</strong>を反映し、硝酸薬投与で反射波が減じて変曲点位置が下がる [4]。「変曲点位置＝末梢トーヌス」という発想の直接の起点である。</p>
+</li>
+<li>
+<p><strong>オーグメンテーション指数 AIx（augmentation index）：</strong>収縮期後期ピーク（反射波由来の P2）高を前期ピーク（前進波由来の P1）高で除した比で、反射波が収縮期をどれだけ押し上げるかを表す。加齢・スティフネス上昇で反射波が早く強く帰還するほど AIx は上昇する。もともと動脈<strong>圧</strong>波形（多くは橈骨トノメトリ→中枢大動脈圧）で定義される指標だが、指尖容積脈波でも P1・P2 を同定して算出でき（Takazawa は PPG 上で AIx＝後期収縮期ピーク／前期収縮期ピークと定義した）[3][15]、SI・RI と並ぶ反射・スティフネス系の指標になる。ただし後述のとおり圧由来 AIx とは互換ではない。HR 依存性が強く、通常は 75 bpm に正規化した AIx@75 を用いる [13]。</p>
+</li>
+<li>
+<p><strong>二次微分PPG（SDPPG／加速度脈波）の加齢指数（Takazawa 1998）：</strong>SDPPG（second derivative of PPG）は収縮期の a・b・c・d 波と拡張期の e 波からなる。加齢で b/a が増加し、c/a・d/a・e/a が減少するため、加齢指数 <strong>AGI ＝ (b − c − d − e) / a</strong> が定義される。SDPPG 由来指標は PWV と相関することが示されている [3][12]。</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>PPG 由来 AIx の検証 ― どこまで信頼できるか</strong> <strong>導出は可能。</strong>指尖 PPG の輪郭から P1・P2（早期・後期収縮期ピーク）を同定して AIx を計算でき、単峰化で肉眼的に不明瞭なときは二次微分（SDPPG）で P1・P2 を顕在化させる [3][15]。指プレチスモグラフィ（peripheral arterial tonometry, PAT）の容積脈波から AIx を導く実装も広く用いられている。 <strong>しかし圧由来 AIx とは互換ではない。</strong>PAT／PPG 由来 AIx は橈骨トノメトリ由来 AIx と相関するが、実数値は一致せず互換使用はできない。ずれる要因は3つ：(1) 容積≠圧（PPG は光学的容積信号で、圧-径関係が非線形なため AIx が依存する振幅比が歪む）、(2) 末梢≠中枢（基準 AIx は中枢大動脈、指 PPG は末梢）、(3) 単峰化（高スティフネスで P1・P2 が融合し、生波形では取れず SDPPG が必要）[15]。 <strong>実務上の含意。</strong>絶対値としての PPG-AIx を圧 AIx の代用にするのは無理があるが、同一個体内で連続測定した AIx（または SDPPG の d/a）の<strong>相対変化（Δ）</strong>を反射・スティフネスのトレンド指標として追うのは妥当である。PPG 由来のスティフネス指標が加齢・PWV・心血管リスクと関連することは、SI の検証 [5] や大規模コホート [17] でも支持されている。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 急性血管トーヌス軸（刻々と変わる状態量・術中モニタリングの主軸）</h3>
+<p>周術期に血管トーヌスの急性変化を一拍ごとに追うのは、この軸の指標である。以下はいずれも短時間の変化に応答し、麻酔中の連続モニタリングに載せうる。</p>
+<ul>
+<li>
+<p><strong>重複切痕の位置・高さ・幅：</strong>Awad 2007 の「幅」相関（r=0.56）[6] に加え、心臓外科患者で PPG 振幅と切痕位置を組み合わせて6クラスに分類した研究がある。切痕が振幅の &gt;50%・小さな PPG＝血管収縮、切痕が &lt;20%・背の高い PPG＝血管拡張、と対応づけられた [9]。</p>
+</li>
+<li>
+<p><strong>切痕位置＋灌流指数（PI）からの平均動脈圧推定：</strong>全身麻酔中の患者で、重複切痕の相対位置と PI を組み合わせて平均動脈圧をリアルタイムに追えるとしたパイロット研究がある（Joachim ら 2021）[14]。切痕位置という「急性トーヌスの形態指標」を麻酔中の連続的な血圧推定に直接用いた例であり、本軸を術中モニタリングに載せる具体的な方向を示す。</p>
+</li>
+<li>
+<p><strong>SDPPG の d/a：</strong>昇圧薬（アンジオテンシン）で d/a が低下、ニトログリセリンで上昇するなど、血管作動薬への鋭敏な反応を示す [3]。急性のトーヌス変化を捉えうる指標であり、切痕が乏しい波形でも二次微分から d/a を取り出せる点で切痕指標を補完する。</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>注意 ― SI／RI と急性血行動態の時間スケール</strong> SI・RI は本来、<strong>安静時の被験者</strong>で大動脈スティフネスや反射（小血管トーヌス）という<strong>半ば慢性的な血管特性</strong>を評価する指標として検証された。1拍ごとの急性 SVR／前負荷変動をリアルタイムに追う指標としては未検証であり、術中の急性トーヌス変化には切痕位置・幅や SDPPG d/a の方が対応しやすい。定量化を「反射・スティフネス軸」と「急性トーヌス軸」に分けておくと、この時間スケールの取り違えを避けられる。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec-7" class="sec"><span class="sec-n">07</span>6. 高スティフネス血管における dicrotic notch の検証法</h2>
+<hr class="accent-rule">
+<p>ここに、原案が設定しつつ明示的には解いていない重要なパラドクスがある。原案は「エラスタンスが上昇した血管（高齢者など）で重複切痕が血管評価のキーになる」とするが、生理学的には次の連鎖が働く：<strong>スティフネス上昇 → 反射波の早期帰還（伝播が速まり、PWV 上昇として測定される）→ 収縮期への融合 → 一峰性化 → 重複切痕の減弱・消失</strong>（第3節）。つまり、切痕を評価したい当の集団（高齢・高スティフネス）で、切痕は最も見えにくくなる。</p>
+<p>この見かけの矛盾は、次の2通りで整合的に解ける。</p>
+<p><strong>解決A：切痕の「消失の程度」そのものを指標とする。</strong>鋭い切痕を検出するのではなく、切痕がどれだけ効果的に消えている（一峰性化している）かを、スティフネスの指標として読む。加齢に伴う一峰性化そのものが定量対象であり、これは加齢 PPG 波形の直接観察に裏づけられる [5]。</p>
+<p><strong>解決B：生波形で切痕が見えないとき、二次微分（SDPPG／加速度脈波）が潜在的な変曲点を顕在化させる。</strong>SDPPG の各波は原波形のランドマークに対応する：a・b が前期収縮期、<strong>c 波が末梢からの反射波（後期収縮期の再上昇）</strong>、d 波が収縮期末（切痕へ向かう下降）、<strong>e 波が重複切痕そのもの</strong>を表す [3][15]。したがって、単峰化で肉眼的な切痕（＝e 波領域）が消えても、反射波の情報は c 波と c–d 複合として残る。反射波由来の後期収縮期変曲点（P2）は c 波〜c–d 遷移付近に位置し、その振幅が d/a としてスティフネス・反射に応じて変化する（アンジオテンシンで d/a 低下、ニトログリセリンで上昇）[3]。SDPPG はそもそも、原波形の変曲点（前期収縮期切痕や重複切痕）を容易に取り出すために開発された手法である [3]。加齢・スティフネス上昇では b/a が増大し c/a・d/a・e/a が小さく（負に浅く）なり、AGI＝(b−c−d−e)/a が上昇する形で「切痕が消えていく過程」が定量化される。この意味で、第5節の SDPPG は<strong>第6節の「検証の方法」そのもの</strong>であり、両者は本質的に連結する。</p>
+<p>したがって、高スティフネス血管における dicrotic notch の「検証法」は、独立した第5の手技ではなく、<strong>(i) 切痕の効果（消失の程度）を定量する、(ii) 生波形で不明瞭なときは二次微分でその潜在変曲点を取り出す</strong>、という二段構えとして位置づけるのが論理的に整合する。</p>
+<p><strong>DN 欠如という状態そのものが研究対象になっている。</strong>Dawber ら（1973, Framingham）は動脈脈波を切痕の見え方で4クラスに分類した：Class 1＝明瞭な切痕、Class 2＝切痕は消えるが下降が水平化、Class 3＝下降角の明瞭な変化のみ、Class 4＝切痕の痕跡なし [16]。健常若年は Class 1 で、加齢・スティフネス上昇に伴い Class 4 へ移行する（反射波が速く帰還し前進波・反射波の位相差が縮むため切痕が目立たなくなる）。近年は UK Biobank の 169,787 例で、生 PPG 波形から「切痕消失（binary）」および連続量としての「切痕の平滑さ（notch smoothness）」を機械学習（ResNet）で定義した研究があり、この平滑さは加齢・心血管疾患と関連し、血管スティフネス関連遺伝子（15 遺伝子座）と結びつき、<strong>同一 PPG から測った動脈スティフネス指数（SI）とは独立に</strong>将来の心筋梗塞・脳卒中・心不全・大動脈弁狭窄のリスクを層別した [17]。すなわち「切痕が消えていること／その程度」は、SI とは別個の予後情報を持つ。これは本稿の解決A（消失の程度を指標化する）を疫学的に裏づけるものである。</p>
+<h2 id="sec-8" class="sec"><span class="sec-n">08</span>7. 限界と相対変化（Δ）アプローチ</h2>
+<hr class="accent-rule">
+<p>本アプローチ全体の限界を率直に挙げる。</p>
+<ul>
+<li>
+<p><strong>検出の不安定性：</strong>重複切痕が単なる変曲点としてしか現れない “DN-less” 信号が存在し、過減衰でも消える [6][9]。</p>
+</li>
+<li>
+<p><strong>加齢交絡：</strong>スティフネス上昇は急性の血行動態変化とは独立に切痕を減弱させるため、「いまの血管収縮」か「もとの硬い血管」かの切り分けを要する [5]。</p>
+</li>
+<li>
+<p><strong>局所か全身か：</strong>指で記録される切痕位置が測定部位の局所トーヌスを映すのか全身 SVR を映すのかは未解決で、上肢神経ブロック下で麻酔側／対照側を比較する観察研究（NCT04179097）が進行中である [9]。</p>
+</li>
+<li>
+<p><strong>容積≠圧：</strong>PPG は容積信号であり、振幅・PI は中心インピーダンスより局所（コンプライアンス・血管運動トーヌス・灌流圧）に支配される [1]。</p>
+</li>
+</ul>
+<p>これらの限界から導かれる実務的帰結は、絶対値の較正（キャリブレーション）を目指すのではなく、<strong>術前ベースラインからの相対変化（Δ）をトレンドとして評価する</strong>、という方針の妥当性である。個体内の相対変化に限定すれば、個体間で交絡する加齢・血管特性・プローブ条件の多くを、少なくとも短時間では定数として扱える。</p>
+<h2 id="sec-9" class="sec"><span class="sec-n">09</span>8. 論理の一貫性 ― 原案フローの検証（結論）</h2>
+<hr class="accent-rule">
+<p>結論として、原案の流れ（成り立ち → 循環因子 → 目視 → 数値化 → dicrotic notch）は、<strong>物語の弧としては一貫しており、致命的な論理破綻はない</strong>。ただし、以下の6点の緊張・欠落があり、これらを明示・補正すると整合性が明確に高まる。</p>
+<ul>
+<li>
+<p><strong>基盤の欠落（前進波＋反射波）：</strong>原案は「成り立ち」と「因子」の間に、波形＝前進波＋反射波という分解を置いていない。しかし目視・SI・RI・切痕はすべてこの分解に依拠する。 → 第2節として独立させる。</p>
+</li>
+<li>
+<p><strong>「循環因子」の検証強度の混在：</strong>前負荷・SVR・スティフネス・HR は、PPG での検証強度（実測 vs 動脈圧外挿）が大きく異なる。一括提示は「どれも同程度に波形から読める」という誤解を生む。 → 因子ごとに「循環変化→波形変化」を対応づけ、検証強度（実測／外挿）を明示して整理。</p>
+</li>
+<li>
+<p><strong>dicrotic notch のパラドクス：</strong>スティフネスが上がると切痕はむしろ消える。ゆえに高齢者で「鮮明な切痕」を探すのは逆説的。 → 「消失の程度を読む」＋「二次微分で潜在変曲点を取り出す」に再定義。</p>
+</li>
+<li>
+<p><strong>SI／RI と急性血行動態の時間スケール不一致：</strong>SI／RI は半ば慢性の血管特性の指標で、術中の急性 SVR／前負荷変動の追跡には未検証。 → 定量化を反射・スティフネス軸／急性トーヌス軸に分割。</p>
+</li>
+<li>
+<p><strong>HR の扱い：</strong>原案は HR を明示的に扱っていない。HR 自体の変化が拡張期長・反射波の相対位置を変えて波形を変える（ペーシングで AIx・拍出時間が HR と逆相関）。その帰結として、他指標では AIx@75 の補正対象にもなる。 → HR を独立の因子として記述したうえで、補正の必要性も併記する。</p>
+</li>
+<li>
+<p><strong>「エラスタンス」の多義性：</strong>Ees（収縮力）・Ea（後負荷）・壁スティフネス（硬さそのもの。PWV はその測定指標であって因子ではない）の区別が必要。PPG 形態に効くのは壁スティフネス。 → 用語を定義して統一。</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>提案する整合的な順序</strong> <strong>1 </strong>成り立ち（容積信号） → <strong>2 </strong>前進波＋反射波 → <strong>3 </strong>因子（循環変化→波形変化＋検証強度） → <strong>4 </strong>目視（Murray &amp; Foster、トレンド限定） → <strong>5 </strong>定量化（反射・スティフネス軸／急性トーヌス軸） → <strong>6 </strong>高スティフネスの切痕（消失の程度＋二次微分） → <strong>7 </strong>限界と相対変化アプローチ。 これは本稿の構成そのものであり、原案の5段階を包含しつつ、依拠する前提と時間スケールを明示した形になっている。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><strong>実務メモ（一人麻酔科の視点）</strong> 周術期では、重複切痕の位置・振幅・幅の経時変化を「血管トーヌスのトレンド」として眺めることに、Murray &amp; Foster 以来の長い裏づけがある（導入時の切痕上昇＝血管収縮／浅麻酔など）。一方、その<strong>絶対的な SVR 換算は未確立</strong>で、体温・末梢温・プローブ部位に影響される。高齢・高スティフネス症例では生波形の切痕がそもそも乏しいため、<strong>二次微分（SDPPG）指標に軸足を移す</strong>のが現実的である。いずれも「較正済みの数値」ではなく<strong>「ベースラインからの相対変化（Δ）」</strong>として運用するのが妥当である。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="sec-10" class="sec"><span class="sec-n">10</span>参考文献</h2>
+<hr class="accent-rule">
+<p class="refp"><strong>[1] </strong>Allen J. Photoplethysmography and its application in clinical physiological measurement. Physiol Meas. 2007;28(3):R1-39.  <a href="https://pubmed.ncbi.nlm.nih.gov/17322588/">https://pubmed.ncbi.nlm.nih.gov/17322588/</a></p>
+<p class="refp"><strong>[2] </strong>Murray WB, Foster PA. The peripheral pulse wave: information overlooked. J Clin Monit. 1996;12(5):365-77.  <a href="https://pubmed.ncbi.nlm.nih.gov/8934343/">https://pubmed.ncbi.nlm.nih.gov/8934343/</a></p>
+<p class="refp"><strong>[3] </strong>Takazawa K, et al. Assessment of vasoactive agents and vascular aging by the second derivative of photoplethysmogram waveform. Hypertension. 1998;32(2):365-70.  <a href="https://pubmed.ncbi.nlm.nih.gov/9719069/">https://pubmed.ncbi.nlm.nih.gov/9719069/</a></p>
+<p class="refp"><strong>[4] </strong>Chowienczyk PJ, et al. Photoplethysmographic assessment of pulse wave reflection: blunted response to endothelium-dependent β2-adrenergic vasodilation in type II diabetes mellitus. J Am Coll Cardiol. 1999;34(7):2007-14.  <a href="https://pubmed.ncbi.nlm.nih.gov/10588217/">https://pubmed.ncbi.nlm.nih.gov/10588217/</a></p>
+<p class="refp"><strong>[5] </strong>Millasseau SC, et al. Determination of age-related increases in large artery stiffness by digital pulse contour analysis. Clin Sci (Lond). 2002;103(4):371-7.  <a href="https://pubmed.ncbi.nlm.nih.gov/12241535/">https://pubmed.ncbi.nlm.nih.gov/12241535/</a></p>
+<p class="refp"><strong>[6] </strong>Awad AA, et al. The relationship between the photoplethysmographic waveform and systemic vascular resistance. J Clin Monit Comput. 2007;21(6):365-72.  <a href="https://pubmed.ncbi.nlm.nih.gov/17940842/">https://pubmed.ncbi.nlm.nih.gov/17940842/</a></p>
+<p class="refp"><strong>[7] </strong>Cannesson M, et al. Relation between respiratory variations in pulse oximetry plethysmographic waveform amplitude and arterial pulse pressure in ventilated patients. Crit Care. 2005;9(5):R562-8.  <a href="https://pubmed.ncbi.nlm.nih.gov/16277719/">https://pubmed.ncbi.nlm.nih.gov/16277719/</a></p>
+<p class="refp"><strong>[8] </strong>Politi MT, et al. The dicrotic notch analyzed by a numerical model. Comput Biol Med. 2016.  <a href="https://www.sciencedirect.com/science/article/abs/pii/S0010482516300592">https://www.sciencedirect.com/science/article/abs/pii/S0010482516300592</a></p>
+<p class="refp"><strong>[9] </strong>Tusman G, Acosta CM, Pulletz S, et al. Photoplethysmographic characterization of vascular tone mediated changes in arterial pressure: an observational study. J Clin Monit Comput. 2019;33(5):815-24.  <a href="https://link.springer.com/article/10.1007/s10877-018-0235-z">https://link.springer.com/article/10.1007/s10877-018-0235-z</a></p>
+<p class="refp"><strong>[10] </strong>Nirmalan M, Dark PM. Broader applications of arterial pressure wave form analysis. Contin Educ Anaesth Crit Care Pain (BJA Educ). 2014;14(6):285-290.  （PubMed検索リンク）<a href="https://pubmed.ncbi.nlm.nih.gov/?term=Nirmalan+Dark+broader+applications+arterial+pressure+wave+form">https://pubmed.ncbi.nlm.nih.gov/?term=Nirmalan+Dark+broader+applications+arterial+pressure+wave+form</a></p>
+<p class="refp"><strong>[11] </strong>Stergiopulos N, Westerhof BE, Westerhof N. Total arterial inertance as the fourth element of the windkessel model. Am J Physiol. 1999;276(1):H81-8.  （PubMed検索リンク）<a href="https://pubmed.ncbi.nlm.nih.gov/?term=Stergiopulos+total+arterial+inertance+fourth+element+windkessel">https://pubmed.ncbi.nlm.nih.gov/?term=Stergiopulos+total+arterial+inertance+fourth+element+windkessel</a></p>
+<p class="refp"><strong>[12] </strong>Bortolotto LA, et al. Assessment of vascular aging and atherosclerosis in hypertensive subjects: second derivative of photoplethysmogram versus pulse wave velocity. Am J Hypertens. 2000;13(2):165-71.  <a href="https://pubmed.ncbi.nlm.nih.gov/10701816/">https://pubmed.ncbi.nlm.nih.gov/10701816/</a></p>
+<p class="refp"><strong>[13] </strong>Wilkinson IB, MacCallum H, Flint L, et al. The influence of heart rate on augmentation index and central arterial pressure in humans. J Physiol. 2000;525(Pt 1):263-70.  <a href="https://pubmed.ncbi.nlm.nih.gov/10811742/">https://pubmed.ncbi.nlm.nih.gov/10811742/</a></p>
+<p class="refp"><strong>[14] </strong>Joachim J, Coutrot M, Millasseau S, et al. Real-time estimation of mean arterial blood pressure based on photoplethysmography dicrotic notch and perfusion index. A pilot study. J Clin Monit Comput. 2021;35(2):395-404.  <a href="https://link.springer.com/article/10.1007/s10877-020-00486-y">https://link.springer.com/article/10.1007/s10877-020-00486-y</a></p>
+<p class="refp"><strong>[15] </strong>Charlton PH, Paliakaitė B, Pilt K, et al. Assessing hemodynamics from the photoplethysmogram to gain insights into vascular age: a review from VascAgeNet. Am J Physiol Heart Circ Physiol. 2022;322(4):H493-H522.  <a href="https://journals.physiology.org/doi/full/10.1152/ajpheart.00392.2021">https://journals.physiology.org/doi/full/10.1152/ajpheart.00392.2021</a></p>
+<p class="refp"><strong>[16] </strong>Dawber TR, Thomas HE, McNamara PM. Characteristics of the dicrotic notch of the arterial pulse wave in coronary heart disease. Angiology. 1973;24(4):244-55.  <a href="https://pubmed.ncbi.nlm.nih.gov/4699520/">https://pubmed.ncbi.nlm.nih.gov/4699520/</a></p>
+<p class="refp"><strong>[17] </strong>Cunningham JW, Di Achille P, Morrill VN, et al. Machine learning to understand genetic and clinical factors associated with the pulse waveform dicrotic notch. Circ Genom Precis Med. 2023;16(1):e003676.  <a href="https://www.ahajournals.org/doi/10.1161/CIRCGEN.121.003676">https://www.ahajournals.org/doi/10.1161/CIRCGEN.121.003676</a></p>
+<p>URL は本稿作成時点（2026年）に到達を確認したもの。[10][11] は原著固定URLに代えて PubMed 検索リンクを付している。本資料は研究動向および論理構成の整理であり、個別の臨床判断を指示・保証するものではない。一次文献を必ず参照されたい。</p>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="backlink" href="index.html">← 成果物ハブに戻る</a>
+    <p class="disclaimer"><strong>免責</strong>：本稿は研究・教育を目的とした文献的整理および論理の検証である。臨床上の意思決定に直接用いることを意図したものではない。ここで扱う指標の多くは研究用光電計や観血ラインでの検証にとどまり、臨床パルスオキシメータの表示波形（自動ゲイン制御・帯域制限を受けたもの）で同等の挙動が確認されているとは限らない。</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W=1000,H=128,baseY=86,amp=60,cycleW=200,step=2;
+  function ppgValue(p){var s=Math.exp(-Math.pow((p-0.20)/0.085,2));var d=0.42*Math.exp(-Math.pow((p-0.46)/0.10,2));return Math.min(s+d,1);}
+  var pts=[];for(var x=0;x<=W+cycleW;x+=step){var ph=(x%cycleW)/cycleW;pts.push([x,baseY-amp*ppgValue(ph)]);}
+  function toPath(p){var d='M '+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1);for(var i=1;i<p.length;i++){d+=' L '+p[i][0].toFixed(1)+' '+p[i][1].toFixed(1);}return d;}
+  var lp=toPath(pts);
+  var trace=document.getElementById('tracePath'),area=document.getElementById('areaPath'),dot=document.getElementById('leadDot'),gridG=document.getElementById('gridG');
+  if(trace)trace.setAttribute('d',lp);
+  if(area)area.setAttribute('d',lp+' L '+W+' '+H+' L 0 '+H+' Z');
+  if(gridG){var g='';for(var gx=0;gx<=W;gx+=50)g+='<line class="grid-line" x1="'+gx+'" y1="0" x2="'+gx+'" y2="'+H+'"/>';for(var gy=0;gy<=H;gy+=32)g+='<line class="grid-line" x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'"/>';gridG.innerHTML=g;}
+  if(trace&&trace.getTotalLength){var len=trace.getTotalLength();
+    if(reduce){area.style.opacity=1;var ep=trace.getPointAtLength(len);dot.setAttribute('cx',ep.x);dot.setAttribute('cy',ep.y);}
+    else{trace.style.strokeDasharray=len;trace.style.strokeDashoffset=len;var dur=2600,t0=null;
+      function ease(t){return 1-Math.pow(1-t,2.2);}
+      function frame(ts){if(!t0)t0=ts;var pr=Math.min((ts-t0)/dur,1),e=ease(pr);trace.style.strokeDashoffset=(len*(1-e)).toFixed(1);var pt=trace.getPointAtLength(len*e);dot.setAttribute('cx',pt.x.toFixed(1));dot.setAttribute('cy',pt.y.toFixed(1));area.style.opacity=(e*0.95).toFixed(2);if(pr<1)requestAnimationFrame(frame);}
+      requestAnimationFrame(frame);}}
+  var ed=document.getElementById('eyebrowDot');
+  if(ed&&!reduce&&ed.animate){ed.animate([{boxShadow:'0 0 0 0 rgba(31,184,166,.55)'},{boxShadow:'0 0 0 7px rgba(31,184,166,0)'}],{duration:1900,iterations:Infinity});}
+  // scrollspy
+  var links=[].slice.call(document.querySelectorAll('.toc a')),map={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1),el=document.getElementById(id);if(el)map[id]=a;});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map[en.target.id];if(a)a.classList.add('active');}});},{rootMargin:'-12% 0px -75% 0px',threshold:0});
+    Object.keys(map).forEach(function(id){io.observe(document.getElementById(id));});
+  }
+})();
+</script>
+</body>
+</html>

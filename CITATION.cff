@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use or reference this work, please cite it as below."
+title: "PPG 波形形態からの血管トーン非侵襲推定 (Non-invasive vascular tone estimation from PPG waveform morphology)"
+abstract: >-
+  SpO₂（光電容積脈波, PPG）波形の形態解析により、校正不要・非侵襲的な血管トーン指標を
+  開発することを目的とした、文献的整理と理論的検討のドキュメント群。麻酔導入前ベースライン
+  からの相対変化（Δ）の追跡を設計思想とし、離島の一人麻酔科という制約下での実装可能性を軸に
+  据える。加速度脈波（SDPTG）指標、esCCO の全身血管抵抗依存性バイアス、重複切痕と血管抵抗の
+  関係、脈波伝播時間の分解などを扱う。
+type: dataset
+authors:
+  - family-names: "（著者名を記入してください）"
+    given-names: "Nobumitsu"
+keywords:
+  - photoplethysmography
+  - PPG
+  - vascular tone
+  - SpO2
+  - second derivative photoplethysmogram
+  - SDPTG
+  - dicrotic notch
+  - systemic vascular resistance
+  - anesthesiology
+  - VitalDB
+license: CC-BY-4.0
+date-released: 2026-07-18
