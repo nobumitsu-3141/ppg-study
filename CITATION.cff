@@ -9,7 +9,7 @@ abstract: >-
   関係、脈波伝播時間の分解などを扱う。
 type: dataset
 authors:
-  - family-names: "（著者名を記入してください）"
+  - family-names: "Kawazoe"
     given-names: "Nobumitsu"
 keywords:
   - photoplethysmography
