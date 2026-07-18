@@ -173,7 +173,7 @@
     <div class="meta-row">
       <span>光電容積脈波 (PPG)</span><span class="sep">/</span>
       <span>ベースラインからの相対変化 Δ を追跡</span><span class="sep">/</span>
-      <span>成果物 5 件</span>
+      <span>成果物 9 件</span>
     </div>
   </div>
   <div class="trace-stage" aria-hidden="true">
@@ -202,7 +202,7 @@
     <!-- INTRO -->
     <section class="lead-para">
       <p>パルスオキシメータの脈波（<strong>PPG</strong>：photoplethysmography＝光電容積脈波）は、指先の血液量の変化を光でとらえた信号で、<strong>「圧」ではなく「容積」</strong>を映す。このありふれた信号の波形の形から、観血的なラインを入れずに<strong>血管トーン（血管の緊張）の変化</strong>を推定できないか ―― それがこのプロジェクトの中心的な問いである。</p>
-      <p>設計の核心は、血圧や血管抵抗の<strong>絶対値</strong>に対応づけるのではなく、麻酔導入前の<span class="kw">ベースラインからの相対変化（Δ）</span>を追うこと。これにより校正が不要になり、機器固有の変換式にも縛られない。離島の一人麻酔科という制約下で、手元の標準モニタから最大限の情報を引き出すことを念頭に置いている。</p>
+      <p>設計の核心は、血圧や血管抵抗の<strong>絶対値</strong>に対応づけるのではなく、麻酔導入前の<span class="kw">ベースラインからの相対変化（Δ）</span>を追うこと。これにより校正が不要になり、機器固有の変換式にも縛られない。離島の一人麻酔科という制約下で、手元の標準モニタから最大限の情報を引き出すことを念頭に置いている。近年はこれに、脈波の<strong>時間区間</strong>（PWTT ＝ 前駆出期 PEP ＋ 血管内伝播時間 VTT）から心拍出量を推定する esCCO の構造と限界、そして周術期アウトカムという時間軸・臨床軸の系統が加わった。</p>
     </section>
 
     <!-- DELIVERABLES -->
@@ -210,7 +210,7 @@
       <span class="sec-num">01</span>
       <h2>成果物</h2>
     </div>
-    <p class="sec-sub">4 つの HTML ドキュメント（ブラウザでそのまま閲覧可）と、中核となる Word レビュー 1 件。すべて日本語・自己完結型。</p>
+    <p class="sec-sub">9 つの HTML ドキュメント（ブラウザでそのまま閲覧可）。中核レビューほか一部は編集用の Markdown ソースも同梱する。すべて日本語・自己完結型。</p>
 
     <div class="grp-label">中核レビュー</div>
     <div class="cards">
@@ -247,6 +247,38 @@
         <h3>6 因子の検証プロベナンス（第4版）</h3>
         <p>各図解が示す「因子↑で波形がこう動く」という主張が、<strong>実測 PPG で確認済みか、動脈圧波形・in silico モデルからの外挿か</strong>を 3 区分で監査。結論として、実測 PPG で直接裏づけられるのは前負荷と全身血管抵抗の 2 因子のみ（条件付き）であることを明示し、エビデンスの強さを均一に扱う過剰主張を戒める。</p>
         <div class="card-foot"><span>エビデンス監査</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+    </div>
+
+    <div class="grp-label">PWTT と esCCO ― 時間軸の系統</div>
+    <div class="cards">
+      <a class="card span2" href="PWTT_esCCO_structure_and_limits.html">
+        <div class="card-top"><span class="card-num">06</span><span class="badge">HTML · 時間軸</span></div>
+        <h3>PWTT と esCCO ― 時間区間としての脈波、その構造と限界</h3>
+        <p>モニタが表示する PWTT の正体は脈波到達時間（PAT ＝ 前駆出期 PEP ＋ 血管内伝播時間 VTT）であることを構造から解説する。esCCO が後負荷上昇時に一回拍出量を系統的に誤る機序、誤差率およそ 47% という精度の限界、そして限界の根源が「大動脈弁開放を捉えていない」一点にあることまでを、実測研究の数値とともに追う。</p>
+        <div class="card-foot"><span>技術レビュー</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+      <a class="card" href="esCCO_K_correction_hypothesis.html">
+        <div class="card-top"><span class="card-num">07</span><span class="badge doc">HTML · 仮説</span></div>
+        <h3>esCCO の後負荷交絡を波形形態で補正する</h3>
+        <p>較正係数 K に血管情報が入っていないという構造的欠陥を、同一の光電容積脈波から得る形態指標（d/a・e/a）で動的に補正するという<strong>未検証の作業仮説</strong>。反証可能な検証設計とともに提示する。</p>
+        <div class="card-foot"><span>未検証の提案</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+    </div>
+
+    <div class="grp-label">加速度脈波の予後・周術期アウトカム</div>
+    <div class="cards">
+      <a class="card" href="SDPPG_prognostic_evidence_and_diastolic_gap.html">
+        <div class="card-top"><span class="card-num">08</span><span class="badge">HTML · 予後＋仮説</span></div>
+        <h3>加速度脈波の予後エビデンスと拡張期側の空白</h3>
+        <p>b/a・d/a 比が実際に何を予測したか（心血管死の前向きコホートを含む）という予後エビデンスと、2024–2026 年の装置化動向。さらに、拡張期ピークに対応する「f 点」が SDPPG 上でまだ名前も検証済み指標も持たないという空白を仮説として提示する。</p>
+        <div class="card-foot"><span>レビュー＋仮説</span><span class="card-open">開く <span class="arw">→</span></span></div>
+      </a>
+      <a class="card" href="perioperative_stiffness_outcomes.html">
+        <div class="card-top"><span class="card-num">10</span><span class="badge">HTML · 臨床</span></div>
+        <h3>周術期アウトカムと血管スティフネス</h3>
+        <p>術前の血管スティフネスは麻酔導入時低血圧や術後合併症を予測するか。取得が容易な指標ほど周術期エビデンスが乏しいという不都合な構造を軸に、cfPWV・baPWV・PPG 由来 ASI の周術期研究を整理する。</p>
+        <div class="card-foot"><span>臨床レビュー</span><span class="card-open">開く <span class="arw">→</span></span></div>
       </a>
     </div>
 
