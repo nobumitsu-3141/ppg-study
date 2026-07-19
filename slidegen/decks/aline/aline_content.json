@@ -1,0 +1,836 @@
+{
+  "slides": [
+    {
+      "id": "s1_1",
+      "title": "1.1 直接測定の夜明け",
+      "headline": "血圧を直接見た原点",
+      "bullets": [
+        "Hales: 血柱の高さで血圧を可視化",
+        "Poiseuille: 水銀圧力計でmmHg化",
+        "Ludwig: kymographで連続記録",
+        "点の測定→連続波形が源流"
+      ],
+      "diagram": {
+        "type": "timeline",
+        "spec": "横タイムライン。ゴールドの基線に3ノード。左から1733 Hales(馬頸動脈+ガラス管、血柱高で可視化)→1828 Poiseuille(水銀圧力計でmmHg化・小型化)→1847 Ludwig(kymographで連続記録)。各ノード下に人名と一言。右向き矢印で「点→連続」への発展を示す。",
+        "labels": [
+          "1733 Hales: 血柱の高さで可視化",
+          "1828 Poiseuille: 水銀圧力計・mmHg化",
+          "1847 Ludwig: kymographで連続記録"
+        ],
+        "values": {
+          "n1": "1733",
+          "n2": "1828",
+          "n3": "1847"
+        }
+      },
+      "citations": [
+        "Hales 1733",
+        "Poiseuille 1828",
+        "Ludwig 1847"
+      ],
+      "notes": "年号は医学史の定番。⚠️各原典の年は二次史料により前後することがある(Halesの測定は1720年代、Haemastaticks刊行が1733)。三つの発明が「圧の可視化→定量化(mmHg)→連続記録」と積み上がった流れを強調する。\n\n[簡略化前の本文（オンスライドから移動）]\n・Stephen Hales(1733): 馬頸動脈にガラス管、血柱の高さで圧を初めて可視化\n・Poiseuille(1828): 水銀圧力計(hemodynamometer)で小型化・mmHg表示へ\n・Carl Ludwig(1847): kymographで圧を連続波形として記録\n・「点の測定」から「連続波形」への流れが臨床観血圧の源流"
+    },
+    {
+      "id": "s1_2",
+      "title": "1.2 臨床モニタリングへ",
+      "headline": "実験室から手術室へ",
+      "bullets": [
+        "非観血は間欠、観血は拍動ごと",
+        "ストレインゲージ式で連続記録",
+        "1950〜70年代に橈骨カテが普及",
+        "適応: 大手術・循環不安定・採血"
+      ],
+      "diagram": {
+        "type": "compare",
+        "spec": "非観血 vs 観血の2列対比表。行=連続性/拍動情報/精度/侵襲・合併症/採血。非観血列: 間欠(数分毎)/なし/カフ・部位で誤差/非侵襲・安全/不可。観血列: 連続(拍動ごと)/波形で豊富/較正次第で正確/侵襲・血栓や感染リスク/繰り返し採血可。",
+        "labels": [
+          "連続性",
+          "拍動情報",
+          "精度",
+          "侵襲・合併症",
+          "採血"
+        ],
+        "values": {
+          "noninvasive": [
+            "間欠(数分毎)",
+            "なし",
+            "部位・カフで誤差",
+            "非侵襲",
+            "不可"
+          ],
+          "invasive": [
+            "連続(拍動ごと)",
+            "波形で豊富",
+            "較正次第で正確",
+            "侵襲・血栓/感染",
+            "繰り返し可"
+          ]
+        }
+      },
+      "citations": [
+        "Riva-Rocci 1896",
+        "Korotkoff 1905",
+        "Lambert & Wood 1947"
+      ],
+      "notes": "⚠️Lambert & Wood による抵抗線ストレインゲージ血圧計の導入は1940年代後半とされるが正確な年は要確認。観血の本質的優位は「連続・拍動ごと・波形情報」で、非観血に対する対比軸として提示する。\n\n[簡略化前の本文（オンスライドから移動）]\n・非観血(Riva-Rocci 1896 / Korotkoff 1905)は間欠・音、観血は連続・拍動ごと・正確だが侵襲\n・ストレインゲージ式トランスデューサ(Lambert & Wood, 1940年代)が電気的連続記録を実現\n・1950〜70年代に橈骨動脈カニュレーションが手術室・ICUへ普及\n・適応: 大手術・大出血予想・循環不安定・昇圧薬使用・頻回採血"
+    },
+    {
+      "id": "s2_1",
+      "title": "2.1 測定系の構成",
+      "headline": "流体–電気の連結系",
+      "bullets": [
+        "カニューレ→活栓→モニタ",
+        "ゼロ校正: 大気開放でゼロ設定",
+        "レベリング: 活栓を右房レベルに",
+        "高さ10cmのズレ≈7.4mmHg誤差"
+      ],
+      "diagram": {
+        "type": "chain",
+        "spec": "測定チェーンを左→右で横並び。カニューレ→非伸展チューブ→三方活栓→トランスデューサ→モニタ。トランスデューサ(活栓の大気開放面)を破線の水平基準線=右房レベル(第4肋間・中腋窩線)に合わせる注記。加圧バッグ約300mmHg・持続フラッシュ約3mL/hを吹き出しで。高さ10cm=約7.4mmHgの誤差を矢印で示す。",
+        "labels": [
+          "動脈カニューレ",
+          "非伸展チューブ",
+          "三方活栓",
+          "トランスデューサ",
+          "モニタ",
+          "右房レベル(第4肋間・中腋窩線)"
+        ],
+        "values": {
+          "flush_rate": "約3 mL/h",
+          "pressure_bag": "約300 mmHg",
+          "height_error": "10 cm ≒ 7.4 mmHg",
+          "level": "phlebostatic axis"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Miller's Anesthesia"
+      ],
+      "notes": "ゼロ校正(大気圧基準)とレベリング(静水圧基準)は別物であることを口頭で強調。1 cmH2O≒0.735 mmHgなので10cmで約7.4mmHg。持続フラッシュは血栓予防目的で約3mL/h。加圧バッグは約300mmHgで維持。\n\n[簡略化前の本文（オンスライドから移動）]\n・構成: 動脈カニューレ→硬い非伸展チューブ→三方活栓→加圧バッグ(約300mmHg)+持続フラッシュ(約3mL/h)→トランスデューサ→モニタ\n・ゼロ校正: 活栓を大気開放し電気的ゼロを設定\n・レベリング: 活栓を phlebostatic axis(第4肋間・中腋窩線=右房レベル)に合わせる\n・高さ誤差の影響: 10cmのズレで約7.4mmHgの系統誤差"
+    },
+    {
+      "id": "s2_2",
+      "title": "2.2 圧→電気信号",
+      "headline": "ストレインゲージ",
+      "bullets": [
+        "たわみ→抵抗変化→出力電圧",
+        "出力は圧に直線的、2点で較正",
+        "共振は主に流体系が支配"
+      ],
+      "diagram": {
+        "type": "circuit",
+        "spec": "簡易模式図。左に動脈圧を受けるダイヤフラム、それに貼付したストレインゲージ、右にWheatstoneブリッジ(4抵抗の菱形)と出力電圧。圧→ダイヤフラムのたわみ→抵抗変化→ブリッジ不平衡→出力電圧、の流れを矢印で。注記「共振は流体系(チューブ+気泡)が支配」。",
+        "labels": [
+          "ダイヤフラム",
+          "ストレインゲージ",
+          "Wheatstoneブリッジ",
+          "出力電圧"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Gardner 1981",
+        "Miller's Anesthesia"
+      ],
+      "notes": "臨床上のポイント: 波形の忠実性を損なう共振・減衰は電気系ではなく流体連結系(チューブ長・硬さ・気泡・活栓)で決まる。次スライドの二次系動特性へ橋渡し。\n\n[簡略化前の本文（オンスライドから移動）]\n・ダイヤフラムのたわみ→ストレインゲージの抵抗変化→ブリッジの不平衡電圧\n・出力は圧に直線的、2点(大気ゼロと既知圧)で較正\n・共振を決めるのは主に流体系(チューブ・気泡・活栓)で、トランスデューサ自体の固有振動数は十分高い"
+    },
+    {
+      "id": "s2_3",
+      "title": "2.3 動特性：fnとζ",
+      "headline": "減衰二次系＝fnとζ",
+      "bullets": [
+        "動脈波=基本波+高調波",
+        "fnは信号帯域より十分高く",
+        "最適ζ≈0.6〜0.7、過小で振動",
+        "fn↑: チューブ短く硬く"
+      ],
+      "diagram": {
+        "type": "regions",
+        "spec": "fn–ζ平面(横軸=自然周波数 fn Hz, 0〜40; 縦軸=減衰係数 ζ, 0〜1.1)を領域分け。fn<約7.5Hzは全ζで「不適(波形歪む)」。ζ<約0.45は「underdamped(SBP過大)」、ζ>約0.8は「overdamped(SBP過小)」。中央のζ0.5〜0.7帯は「optimal/adequate」で、fnが高いほどζ許容幅が広がる(右に開くくさび形)。最適点をfn≈25, ζ≈0.65にゴールドで強調。",
+        "labels": [
+          "optimal (ζ0.5〜0.7)",
+          "underdamped (ζ<0.45→SBP過大)",
+          "overdamped (ζ>0.8→SBP過小)",
+          "不適 (fn<約7.5Hz)"
+        ],
+        "values": {
+          "x_axis": "fn (Hz) 0〜40",
+          "y_axis": "ζ 0〜1.1",
+          "optimal_point": "fn≈25, ζ≈0.65",
+          "optimal_band": "ζ0.5〜0.7",
+          "underdamped": "ζ<0.45",
+          "overdamped": "ζ>0.8",
+          "inadequate": "fn<約7.5Hz"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Kleinman 1992"
+      ],
+      "notes": "⚠️fnの「望ましい下限」は教科書で幅がある(>8, >10, >12, >24 Hzなど)。本質はGardnerの領域図の趣旨=「fnが高い(>約24Hz)ほどζの許容幅が広い; fnが低いとζが最適から外れると誤差が急増」。実臨床の系はfn 10〜20Hz程度で高心拍では帯域と近接するためζがほぼ最適である必要がある。断定を避け範囲で提示。最適ζ0.6〜0.7、平坦(Butterworth)応答は0.707。\n\n[簡略化前の本文（オンスライドから移動）]\n・動脈波は基本波+高調波の和(臨床上おおむね〜第10高調波まで有意)\n・忠実再現には fn が信号帯域より十分高いこと: 目安 fn>10〜15 Hz、できれば>20〜25 Hz\n・最適減衰係数 ζ≈0.6〜0.7(平坦応答=0.707付近); 過小で振動、過大でなまり\n・fn↑の作り方: チューブを短く硬く、気泡・活栓・延長を減らす"
+    },
+    {
+      "id": "s2_4",
+      "title": "2.4 fast-flush（方形波）テスト",
+      "headline": "方形波テストでfnζ",
+      "bullets": [
+        "フラッシュ→方形波→振動を観察",
+        "fn=紙送り速度÷振動間隔",
+        "ζは振幅比から算出",
+        "under→SBP過大、over→SBP過小"
+      ],
+      "diagram": {
+        "type": "flush",
+        "spec": "3連の方形波フラッシュ波形を横並び。(1)optimal: 方形波の解放後1〜2回の小さなovershoot/undershootで速やかに基線波形へ復帰。(2)underdamped: 解放後に振幅の大きい振動が多数(3回以上)続きovershoot顕著。(3)overdamped: overshootなく、なだらかに(だらだら)基線へ戻る。各図に短ラベルと「SBP/DBPへの帰結」注記。fnは振動間隔、ζは振幅比A2/A1で読む旨を1点注記。",
+        "labels": [
+          "optimal: 1〜2振動で復帰",
+          "underdamped: 多数振動・overshoot",
+          "overdamped: 振動なくだらだら復帰"
+        ],
+        "values": {
+          "fn_example": "25mm/s ÷ 1.7mm ≈ 15 Hz",
+          "underdamp_effect": "SBP過大/DBP過小",
+          "overdamp_effect": "SBP過小/DBP過大",
+          "map": "MAPは比較的保たれる"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Kleinman 1992"
+      ],
+      "notes": "定量: fn=紙送り速度/1周期の波長。ζは対数減衰法で、連続する振幅比 D=A2/A1 から ζ = −ln(D)/√(π²+ln²(D))。⚠️振幅比とζの対応は表現に幅があり、概念として提示(参考: D≈0.1でζ≈0.6、D≈0.05でζ≈0.7)。ζ0.6〜0.7では振動はほぼ1回に見える点が「1〜2振動で復帰」の根拠。\n\n[簡略化前の本文（オンスライドから移動）]\n・加圧フラッシュ→急峻な方形波→解放後の振動を観察\n・fn = 紙送り速度 ÷ 隣接する振動の間隔(例: 25mm/s ÷ 1.7mm ≈ 15 Hz)\n・ζ は連続する振幅比から算出(1〜2回の小振動で戻れば最適)\n・帰結: underdamp→SBP過大/DBP過小、overdamp→SBP過小/DBP過大(MAPは比較的保たれる)"
+    },
+    {
+      "id": "s3_1",
+      "title": "3.1 動脈圧波形の解剖",
+      "headline": "動脈圧波形の解剖",
+      "bullets": [
+        "急峻な立ち上がり→SBP",
+        "notch=大動脈弁閉鎖",
+        "拡張期なだらか下降→DBP",
+        "PP=SBP−DBP、MAP≈DBP+PP/3"
+      ],
+      "diagram": {
+        "type": "waveform",
+        "spec": "1拍の動脈圧波形に注釈。急峻な立ち上がり(upstroke)→鋭い収縮期ピーク(SBP)→下降脚の途中に明瞭なdicrotic notch→拡張期のなだらかな下降(runoff)→最低点の拡張末期DBP。縦の両矢印でPP(SBP−DBP)、水平点線でMAP(DBPからPPの約1/3上)を図示。notchは必ず下降脚(SBPより後、DBPより上)に置く。",
+        "labels": [
+          "anacrotic upstroke",
+          "SBP",
+          "dicrotic notch(大動脈弁閉鎖)",
+          "diastolic runoff",
+          "DBP",
+          "PP",
+          "MAP"
+        ],
+        "values": {
+          "pp": "PP=SBP−DBP",
+          "map": "MAP≈DBP+PP/3"
+        }
+      },
+      "citations": [
+        "Miller's Anesthesia",
+        "Nichols McDonald's"
+      ],
+      "notes": "MAP≈DBP+PP/3は安静・正常心拍での近似で、頻脈では収縮期の割合が増え(SBP+DBP)/2に近づく。モニタの真のMAPは波形の面積平均。⚠️中枢と末梢でSBP・PPが異なるためMAP近似式の当てはまりも部位で変わる。dicrotic notchは大動脈弁閉鎖に対応するが、末梢では反射波の影響で位置・形が変わる。\n\n[簡略化前の本文（オンスライドから移動）]\n・急峻な立ち上がり(anacrotic upstroke)→収縮期ピーク SBP\n・重複切痕(dicrotic notch)=大動脈弁閉鎖、下降脚に位置\n・拡張期なだらか下降(diastolic runoff)→拡張末期 DBP\n・PP=SBP−DBP、MAP≈DBP+PP/3(末梢近似; 高心拍では(SBP+DBP)/2寄り)"
+    },
+    {
+      "id": "s3_2",
+      "title": "3.2 前進波＋反射波",
+      "headline": "前進波+反射波",
+      "bullets": [
+        "前進波: 左室駆出による圧波",
+        "反射波: 末梢から戻る波",
+        "若年: 反射波が拡張期を支持",
+        "加齢: 反射波が収縮期に重畳"
+      ],
+      "diagram": {
+        "type": "decomp",
+        "spec": "合成波(太実線)=前進波(青破線)+反射波(橙破線)の分解図。若年パターン: 反射波のピークが拡張期側にあり合成波の拡張期を持ち上げる。加齢パターン(小さく併置or注記): 反射波が前方(収縮期)に移動しSBP・PPを増強、収縮期後半のショルダー(AIx)を作る。dicrotic notchの位置も示す。",
+        "labels": [
+          "合成波(実測)",
+          "前進波(左室駆出)",
+          "反射波(末梢からの帰還)",
+          "重複切痕",
+          "AIx(収縮期後半のショルダー)"
+        ],
+        "values": {
+          "young": "反射波は拡張期に帰還→拡張期圧を支持",
+          "aged": "反射波が収縮期に前進→SBP・PP↑、AIx↑"
+        }
+      },
+      "citations": [
+        "Nichols McDonald's",
+        "O'Rourke 2007"
+      ],
+      "notes": "PPGデッキ1.2と同意匠。反射波の帰還タイミングはPWV(動脈スティフネス)と反射点までの距離で決まる。加齢で早期帰還→収縮期増強(isolated systolic hypertension, wide PPの一因)。dicrotic notch自体は弁閉鎖由来だが、下降脚の形状は反射波が修飾する。\n\n[簡略化前の本文（オンスライドから移動）]\n・前進波: 左室駆出による圧波\n・反射波: 分岐部・細動脈から戻る波\n・若年: 反射波が拡張期に戻り拡張期圧を支持(冠灌流に有利)\n・加齢・スティフネス(PWV↑): 反射波が早く戻り収縮期に重畳→SBP・PP上昇、AIx↑"
+    },
+    {
+      "id": "s3_3",
+      "title": "3.3 中枢→末梢の変化",
+      "headline": "末梢ほど尖鋭化する",
+      "bullets": [
+        "末梢ほどSBP↑・DBP↓・PP拡大",
+        "notch遅延・減弱",
+        "MAPはほぼ保たれる",
+        "橈骨SBPは中枢と一致しない"
+      ],
+      "diagram": {
+        "type": "overlay",
+        "spec": "大動脈・橈骨・足背の3波形を時間軸を揃えて重ね描き。末梢ほど(足背>橈骨>大動脈)ピークが高く尖鋭、立ち上がりが急、dicrotic notchが遅れて浅くなる。DBPは末梢ほど低い。3波形のMAP(点線)がほぼ同じ高さに揃うことを注記。",
+        "labels": [
+          "大動脈",
+          "橈骨動脈",
+          "足背動脈",
+          "MAPほぼ一定"
+        ],
+        "values": {
+          "trend": "末梢→SBP↑ DBP↓ PP↑ 立ち上がり急 notch遅延",
+          "map": "MAPはほぼ保たれる"
+        }
+      },
+      "citations": [
+        "O'Rourke 2007",
+        "Nichols McDonald's"
+      ],
+      "notes": "末梢増幅は波の反射と管の先細り(テーパリング)による。臨床含意: 橈骨で測るSBPは大動脈基部より高いのが正常。逆に人工心肺直後は末梢血管拡張で一過性に橈骨<中枢となりうる(8.3)。\n\n[簡略化前の本文（オンスライドから移動）]\n・大動脈→橈骨→足背: SBP上昇・DBP低下・PP拡大\n・立ち上がり急峻化、dicrotic notch遅延・減弱\n・MAPはほぼ保たれる(全長でごくわずかに低下)\n・含意: 橈骨SBPは中枢と一致しない; 人工心肺後は一過性に逆転(8章)"
+    },
+    {
+      "id": "s3_4",
+      "title": "3.4 波形から得られる指標",
+      "headline": "波形が運ぶ情報",
+      "bullets": [
+        "MAP: 臓器灌流圧の代表値",
+        "dP/dt max: 収縮性の代用",
+        "収縮期面積∝SV",
+        "PPV/SVV: 動的前負荷指標へ"
+      ],
+      "diagram": {
+        "type": "indices",
+        "spec": "1拍波形に2指標を重ねて図示。(1)立ち上がり脚の接線でdP/dt max(勾配)を示す。(2)収縮期(立ち上がり〜dicrotic notch)の下の面積を塗りつぶしsystolic area∝SVと注記。横にMAP(点線)とPP(両矢印)も小さく。",
+        "labels": [
+          "dP/dt max(立ち上がり勾配)",
+          "systolic area(∝SV)",
+          "MAP",
+          "PP"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Wesseling 1993",
+        "Michard 2005"
+      ],
+      "notes": "dP/dt maxは収縮性の代用だが前負荷・後負荷に依存し絶対値の解釈は慎重に。収縮期面積からのSV推定はpulse contour法の原理(8.1)。動的指標(PPV/SVV)は次章で前提条件込みに扱う。\n\n[簡略化前の本文（オンスライドから移動）]\n・MAP: 臓器灌流圧の代表値\n・dP/dt max: 収縮性の代用(前・後負荷依存で定量性に限界)\n・収縮期面積 ∝ 一回拍出量(pulse contour COの土台)\n・脈圧・PPV/SVV: 呼吸性変動は動的前負荷指標へ(5章へ橋渡し)"
+    },
+    {
+      "id": "s4_1",
+      "title": "4.1 正常値と正常波形",
+      "headline": "正常値・正常波形",
+      "bullets": [
+        "成人目安: SBP100〜130mmHg",
+        "橈骨SBPは大動脈より高い",
+        "良質波形: 鋭い立ち上がり",
+        "呼吸性変動: 正常は<10mmHg"
+      ],
+      "diagram": {
+        "type": "waveform",
+        "spec": "正常橈骨動脈波形を複数拍(3〜4拍)。各拍に鋭い立ち上がり・明瞭なdicrotic notch・滑らかなrunoff。右または上に正常値レンジ(SBP100〜130, DBP60〜80, MAP70〜105, PP30〜50)を併記。呼吸性のSBP微変動(<10mmHg)を包絡線で控えめに示す。",
+        "labels": [
+          "SBP 100〜130",
+          "DBP 60〜80",
+          "MAP 70〜105",
+          "PP 30〜50",
+          "呼吸性変動<10mmHg"
+        ],
+        "values": {
+          "sbp": "約100〜130",
+          "dbp": "約60〜80",
+          "map": "約70〜105",
+          "pp": "約30〜50",
+          "resp_var": "<10 mmHg(正常)"
+        }
+      },
+      "citations": [
+        "Miller's Anesthesia",
+        "Nichols McDonald's"
+      ],
+      "notes": "⚠️正常値の範囲は年齢・集団・測定部位で変動するため「目安」として提示。呼吸性SBP低下が>10mmHgになると奇脈(6.3)。橈骨での高めのSBPは末梢増幅による正常現象で機器異常ではない。\n\n[簡略化前の本文（オンスライドから移動）]\n・成人の目安: SBP約100〜130 / DBP約60〜80 / MAP約70〜105 / PP約30〜50 mmHg\n・部位差: 橈骨SBPは大動脈基部より数〜20mmHg高い(末梢増幅)\n・良質波形: 鋭い立ち上がり・明瞭なnotch・滑らかな下降\n・生理的呼吸性変動: 自発吸気でSBPがわずかに低下(正常は<10mmHg)"
+    },
+    {
+      "id": "s4_2",
+      "title": "4.2 ゼロレベリングとダンピング",
+      "headline": "整えて信用できる",
+      "bullets": [
+        "ゼロ校正: 大気開放で電気的ゼロ",
+        "レベリング: 体位変換再実施",
+        "最適ダンピング: 1〜2振動",
+        "3点揃って数値が信頼できる"
+      ],
+      "diagram": {
+        "type": "chain",
+        "spec": "左に正しいレベリング図: 患者の第4肋間・中腋窩線(右房レベル)に破線の水平基準、そこにトランスデューサ(活栓)を合わせる。右下に小さくinsetで最適ダンピングのfast-flush波形(1〜2振動で復帰)。上部に「ゼロ→高さ→ダンピング」の3チェックを並べる。",
+        "labels": [
+          "ゼロ(大気開放)",
+          "高さ(右房レベル)",
+          "ダンピング(1〜2振動)",
+          "phlebostatic axis"
+        ],
+        "values": {
+          "level": "第4肋間・中腋窩線=右房レベル",
+          "optimal_flush": "1〜2振動で復帰"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Miller's Anesthesia"
+      ],
+      "notes": "ゼロ・レベリング・ダンピングの3点が全ての数値・波形解釈の前提。特に体位変換(側臥位・頭高位)後の再レベリング忘れは系統誤差の常連。最適ダンピングの確認はfast-flushが最も簡便。\n\n[簡略化前の本文（オンスライドから移動）]\n・ゼロ校正: 活栓を大気開放し電気的ゼロを設定\n・レベリング: 活栓を phlebostatic axis(右房レベル)に; 体位変換ごとに再レベリング\n・最適ダンピング: fast-flushで1〜2振動が「正常な見え方」\n・3点(ゼロ・高さ・ダンピング)が揃って初めて数値が信頼できる"
+    },
+    {
+      "id": "s5_1",
+      "title": "5.1 拍動ごとのBPとMAP",
+      "headline": "拍動ごとに即応",
+      "bullets": [
+        "連続測定で急変を即時把握",
+        "MAPで脳・腎灌流を目標管理",
+        "トレンドで治療効果を評価"
+      ],
+      "diagram": {
+        "type": "events",
+        "spec": "横軸=時間の連続血圧トレンド(SBP/MAP/DBPの3ライン)。イベント縦線とラベル: 麻酔導入(低下)→喉頭鏡・挿管(急峻な上昇)→安定→出血(段階的低下)→輸液・昇圧(回復)。MAPライン上に目標帯(例: MAP≧65)を薄く帯表示。",
+        "labels": [
+          "導入",
+          "喉頭鏡・挿管",
+          "出血",
+          "輸液・昇圧",
+          "MAP目標帯"
+        ],
+        "values": {
+          "map_target_example": "MAP≧65 mmHg(症例で個別化)"
+        }
+      },
+      "citations": [
+        "Miller's Anesthesia"
+      ],
+      "notes": "MAP目標値は患者・手術で個別化(例: 平時MAP≧65、脳灌流や大血管では別基準)。連続測定の主眼は「トレンドと急変への即応」。NIBPの間欠性(数分毎)では喉頭展開や大出血の瞬間を逃す。\n\n[簡略化前の本文（オンスライドから移動）]\n・連続測定で導入・喉頭鏡/挿管・出血・体位変換・遮断解除の変化を即時把握\n・MAPで脳・腎の灌流を目標管理(NIBPは間欠で急変を捉え損ねる)\n・トレンドで昇圧薬・輸液・麻酔深度の効果を評価"
+    },
+    {
+      "id": "s5_2",
+      "title": "5.2 PPV/SVV と輸液反応性",
+      "headline": "輸液反応性を予測",
+      "bullets": [
+        "PPV=ΔPP/PPmean×100",
+        "目安: >12〜13%で反応性が高い",
+        "前提: 調節換気・TV≧8mL/kg",
+        "不成立: 自発呼吸・不整脈"
+      ],
+      "diagram": {
+        "type": "ppv",
+        "spec": "上段: 気道内圧波形(陽圧換気の山)。下段: 同期した動脈圧波形で、吸気相にPPが最大(PPmax)、呼気相にPPが最小(PPmin)になる周期変動を示す。PPmax/PPminを両矢印で図示し、式 PPV=(PPmax−PPmin)/PPmean×100 を併記。閾値バー(>12〜13%で反応性、グレーゾーン9〜13%)。",
+        "labels": [
+          "気道内圧",
+          "動脈圧",
+          "PPmax(吸気相)",
+          "PPmin(呼気相)",
+          "PPV=(PPmax−PPmin)/PPmean×100"
+        ],
+        "values": {
+          "threshold": ">12〜13%で輸液反応性",
+          "gray_zone": "約9〜13%",
+          "tv": "≧8 mL/kg 予測体重"
+        }
+      },
+      "citations": [
+        "Michard 2005",
+        "Marik 2009",
+        "Cannesson 2011"
+      ],
+      "notes": "⚠️安全上の核心=前提条件。前提を外すと偽陰性・偽陽性を生む。閾値は文献で幅: Michard 2000は13%、Marik 2009メタ解析は約11.5〜13%、Cannesson 2011は9〜13%を「グレーゾーン」と提唱。低TV(<8mL/kg)・自発呼吸・不整脈・開胸・右心不全・高PEEP・腹腔内圧上昇では解釈不可。数値だけでなく前提充足を必ず確認する。PPmean=(PPmax+PPmin)/2。\n\n[簡略化前の本文（オンスライドから移動）]\n・PPV=(PPmax−PPmin)/PPmean×100、SVVも同様(陽圧換気の心拍出変動を利用)\n・目安: PPV/SVVがおおむね>12〜13%で輸液反応性が高い(グレーゾーン約9〜13%)\n・必須前提: 調節換気・一回換気量≧8mL/kg(予測体重)・洞調律・閉胸\n・不成立: 自発呼吸・不整脈・低TV・高PEEP・開胸/開腹・右心不全・腹圧上昇"
+    },
+    {
+      "id": "s5_3",
+      "title": "5.3 収縮期圧変動（SPV）",
+      "headline": "収縮期圧変動 SPV",
+      "bullets": [
+        "SPV=1呼吸内のSBP最大−最小",
+        "ΔUp: 呼気終末からの上昇",
+        "ΔDown: 基準からの下降",
+        "ΔDownが低容量に鋭敏"
+      ],
+      "diagram": {
+        "type": "ppv",
+        "spec": "1呼吸サイクルの動脈圧波形にSBPの上包絡線を描く。呼気終末のSBPを基準(点線)とし、そこから上のピークまでをΔUp、下の谷までをΔDownとして両矢印で図示。SPV=ΔUp+ΔDown(=最大−最小)を全体の縦幅で示す。基準線=呼気終末(apnea相)を明記。",
+        "labels": [
+          "SBP上包絡線",
+          "基準(呼気終末)",
+          "ΔUp",
+          "ΔDown",
+          "SPV=ΔUp+ΔDown"
+        ],
+        "values": {
+          "spv_normal": "約7〜10 mmHg",
+          "delta_down": "低容量で拡大"
+        }
+      },
+      "citations": [
+        "Perel 1987",
+        "Coriat 1994"
+      ],
+      "notes": "SPV=ΔUp+ΔDown。ΔUpは吸気で肺血管床の血液がLVへ押し出される前負荷一過性増加、ΔDownは静脈還流低下による前負荷減少で低容量に鋭敏(Coriat 1994)。⚠️絶対閾値は条件で幅があり、現在の実務ではPPV/SVVが主流。歴史的・機序的理解として提示。\n\n[簡略化前の本文（オンスライドから移動）]\n・SPV = 1呼吸内のSBP最大−最小(正常はおおむね7〜10mmHg程度)\n・ΔUp: 呼気終末(基準)からの上昇(吸気時のLV前負荷一過性増加を反映)\n・ΔDown: 基準からの下降(前負荷減少を反映、低容量で拡大)\n・PPV/SVVの先駆で、ΔDownが低容量に鋭敏"
+    },
+    {
+      "id": "s5_4",
+      "title": "5.4 波形の質的読み",
+      "headline": "形から血管トーヌス",
+      "bullets": [
+        "立ち上がり勾配: 収縮性の目安",
+        "低SVR: notch低位・PP拡大",
+        "高SVR: notch高位・なだらか",
+        "あくまで定性的な目安"
+      ],
+      "diagram": {
+        "type": "svr",
+        "spec": "低SVR波形 vs 高SVR波形の対比(2波形)。低SVR: 急峻な立ち上がり、dicrotic notchが低い位置、拡張期が急落しDBP低め・PP拡大。高SVR: dicrotic notchが高い位置、拡張期がなだらかに下降しDBP高め。各波形にnotch位置を矢印で示す。",
+        "labels": [
+          "低SVR(notch低位・拡張期急落)",
+          "高SVR(notch高位・拡張期なだらか)"
+        ],
+        "values": {
+          "low_svr": "notch低位・PP拡大・拡張期急落",
+          "high_svr": "notch高位・拡張期なだらか"
+        }
+      },
+      "citations": [
+        "Miller's Anesthesia",
+        "Nichols McDonald's"
+      ],
+      "notes": "⚠️波形形状からのSVR推定は定性的な目安であり定量指標ではない。dicrotic notchの位置(下降脚の高さ)は末梢血管トーヌスと相関する傾向があるが、心拍数・収縮性・波形品質にも影響される。確度が要る場面はパルスコンター等の定量指標や他モニタで裏取り。\n\n[簡略化前の本文（オンスライドから移動）]\n・立ち上がり勾配: 収縮性・大動脈駆出の目安\n・低SVR(distributive/敗血症様): notch低位・拡張期急落・PP拡大\n・高SVR: notch高位・拡張期なだらか\n・昇圧薬・輸液・麻酔深度で形が変化; あくまで定性的な目安"
+    },
+    {
+      "id": "s6_1",
+      "title": "6.1 オーバーダンピング",
+      "headline": "オーバーダンピング",
+      "bullets": [
+        "原因: 気泡・凝血・長いチューブ",
+        "波形: 立ち上がり鈍・notch消失",
+        "圧: SBP過小・DBP過大",
+        "fast-flush: だらだら復帰"
+      ],
+      "diagram": {
+        "type": "waveform",
+        "spec": "上に正常波形(参照)、下にオーバーダンプ波形を並置。オーバーダンプ側は立ち上がりが鈍く、ピークが低く丸まり、dicrotic notchが消失、全体になまる。右にfast-flush応答を小さく: 方形波解放後にovershootなくだらだらと基線へ戻る単調復帰。SBP↓/DBP↑・MAPほぼ保持を注記。",
+        "labels": [
+          "正常(参照)",
+          "オーバーダンプ(なまり・notch消失)",
+          "fast-flush: 単調復帰",
+          "SBP過小/DBP過大"
+        ],
+        "values": {
+          "effect": "SBP過小・DBP過大",
+          "map": "MAPは比較的保たれる",
+          "flush": "overshootなくだらだら復帰"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Miller's Anesthesia"
+      ],
+      "notes": "オーバーダンプの落とし穴=見かけのSBPが低く「低血圧」と誤認して不要な昇圧をしうる。MAPは比較的正しいのでMAPを頼りにしつつ、原因(気泡・凝血・キンク)を除去してfast-flushで再評価。\n\n[簡略化前の本文（オンスライドから移動）]\n・原因: 気泡・凝血・フィブリン・キンク・活栓過多・柔らかい/長いチューブ・カテ先の血管壁接触\n・波形: 立ち上がり鈍・dicrotic notch消失・全体になまる\n・圧: SBP過小・DBP過大(MAPは比較的保たれる)\n・fast-flush: overshootなくだらだら復帰(ζ大)"
+    },
+    {
+      "id": "s6_2",
+      "title": "6.2 アンダーダンピング・共振",
+      "headline": "アンダーダンピング",
+      "bullets": [
+        "原因: 長いチューブ・頻脈",
+        "波形: 収縮期スパイク",
+        "圧: SBP過大・DBP過小",
+        "リスク: 過大SBPで不要な降圧"
+      ],
+      "diagram": {
+        "type": "waveform",
+        "spec": "上に正常波形(参照)、下にアンダーダンプ波形を並置。アンダーダンプ側は収縮期に鋭いスパイク(overshoot)と、その後の小さな付加振動(リンギング)。SBPが偽性に高く、DBPが低い。右にfast-flush応答を小さく: 方形波解放後に多数の減衰振動(3回以上)。SBP↑/DBP↓を注記。",
+        "labels": [
+          "正常(参照)",
+          "アンダーダンプ(スパイク・リンギング)",
+          "fast-flush: 多数振動",
+          "SBP過大/DBP過小"
+        ],
+        "values": {
+          "effect": "SBP過大・DBP過小(偽の高血圧)",
+          "flush": "多数の減衰振動"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Kleinman 1992"
+      ],
+      "notes": "⚠️臨床的に危険。アンダーダンプの偽高血圧を真の高血圧と誤認して降圧すると医原性低血圧を招く。fast-flushの多振動所見・MAP・NIBPとの照合で鑑別。対策はチューブ短縮・延長/活栓削減・気泡除去、必要時ダンピングデバイス。\n\n[簡略化前の本文（オンスライドから移動）]\n・原因: 長いチューブ・頻脈/高dP/dt・カテーテルwhip・硬い連結の共振\n・波形: 収縮期スパイク・overshoot・付加的な振動\n・圧: SBP過大・DBP過小(偽の高血圧)\n・リスク: 過大なSBPで不要な降圧; fast-flushで多数の振動(ζ小)"
+    },
+    {
+      "id": "s6_3",
+      "title": "6.3 奇脈・交互脈",
+      "headline": "奇脈と交互脈",
+      "bullets": [
+        "奇脈: 吸気時SBP>10mmHg低下",
+        "機序: LV充満・SVが低下",
+        "交互脈: 振幅が大小交互",
+        "重症LV不全のサイン"
+      ],
+      "diagram": {
+        "type": "abnormal_grid",
+        "spec": "2波形。(1)奇脈: 複数拍にSBPの上包絡線を描き、吸気相で包絡が>10mmHg沈む呼吸性の大きな変動(自発呼吸想定)。呼吸相を下に併記。(2)交互脈: 心拍ごとにピーク高が大・小・大・小と交互になる規則的な振幅交代(RR間隔は一定)。",
+        "labels": [
+          "pulsus paradoxus(吸気時SBP>10mmHg低下)",
+          "pulsus alternans(1拍毎に大小)"
+        ],
+        "values": {
+          "paradoxus": "吸気時SBP低下>10mmHg",
+          "alternans": "振幅が1拍毎に交互(RR一定)"
+        }
+      },
+      "citations": [
+        "Miller's Anesthesia",
+        "Nichols McDonald's"
+      ],
+      "notes": "奇脈は自発吸気で胸腔内圧が低下しRV充満増→心室中隔偏位でLV充満低下(心室相互依存)。心タンポナーデ・収縮性心膜炎・重症気道閉塞・緊張性気胸で顕著。陽圧換気下ではむしろ逆位相(reverse pulsus paradoxus)になりうる点に注意。交互脈(RR一定で振幅交代)は重症LV機能不全を示唆し、期外収縮による交互(bigeminy)と区別。\n\n[簡略化前の本文（オンスライドから移動）]\n・pulsus paradoxus: 吸気時SBP>10mmHg低下; 心タンポナーデ・重症喘息/COPD・緊張性気胸\n・機序: 心室相互依存と胸腔内圧変動で吸気時のLV充満・SVが低下\n・pulsus alternans: 1拍ごとに振幅が大小交互; 重症LV不全のサイン\n・観血波形で連続的に定量・検出できる"
+    },
+    {
+      "id": "s6_4",
+      "title": "6.4 弁膜症の特徴波形",
+      "headline": "弁膜症の特徴波形",
+      "bullets": [
+        "AS: 立ち上がり遅く低振幅",
+        "bisferiens: 収縮期に2峰",
+        "wide PP: AR・高齢のスティフネス",
+        "HOCM: スパイク後にドーム"
+      ],
+      "diagram": {
+        "type": "abnormal_grid",
+        "spec": "2×2の小波形グリッド。(1)parvus et tardus: 立ち上がりが遅く緩やか・ピーク低く、上行脚にanacrotic notch。(2)pulsus bisferiens: 収縮期に2つのピーク(percussion+tidal)。(3)wide PP: SBP高・DBP著低でPPが大きく拡張期急落。(4)spike-and-dome(HOCM): 鋭い初期スパイク→中間の陥凹→後半のドーム。各図に病態ラベル。",
+        "labels": [
+          "parvus et tardus(AS)",
+          "pulsus bisferiens(重症AR/HOCM)",
+          "wide PP(AR・高齢)",
+          "spike-and-dome(HOCM)"
+        ],
+        "values": {
+          "as": "立ち上がり遅く低振幅・anacrotic",
+          "bisferiens": "収縮期2峰",
+          "wide_pp": "SBP高・DBP低でPP拡大",
+          "hocm": "spike→dome"
+        }
+      },
+      "citations": [
+        "Nichols McDonald's",
+        "Miller's Anesthesia"
+      ],
+      "notes": "⚠️これらは補助所見で確定は心エコー等。橈骨(末梢)動脈では末梢増幅によりASのparvus et tardusがマスクされ得るので中枢波形(大腿など)や頸動脈触診と併せて判断。bisferiensは重症AR単独・AR+AS・HOCMで見られる。spike-and-domeは動的左室流出路狭窄(HOCM)の特徴。\n\n[簡略化前の本文（オンスライドから移動）]\n・parvus et tardus(AS): 立ち上がり遅く低振幅、anacrotic notchを伴う\n・pulsus bisferiens(重症AR/AR+AS/HOCM): 収縮期に2峰\n・wide PP: AR・高齢の動脈スティフネス(拡張期の急落)\n・spike-and-dome(HOCM): 初期スパイク後にドーム状の第2峰"
+    },
+    {
+      "id": "s7_1",
+      "title": "7.1 ダンピング異常への対応",
+      "headline": "ダンピングの対処",
+      "bullets": [
+        "fast-flushで系を評価",
+        "チューブ短く硬く、再ゼロ校正",
+        "ダンピング補正デバイスを追加",
+        "NIBPと乖離: 波形品質で判断"
+      ],
+      "diagram": {
+        "type": "cards",
+        "spec": "3枚のカード(原因→対処)を横並び。(1)オーバーダンプ: 原因=気泡/凝血/キンク/柔長チューブ → 対処=吸引・フラッシュ・チューブ短硬化。(2)アンダーダンプ: 原因=長チューブ/共振/頻脈 → 対処=延長削減・活栓削減・ダンピングデバイス。(3)a-line/NIBP乖離: 判断=fast-flushで波形品質確認・末梢増幅/末梢循環不全を考慮・MAP優先で照合。上部に共通の第一手「fast-flushで系を評価→再ゼロ・再レベリング」。",
+        "labels": [
+          "オーバーダンプ→吸引・フラッシュ・短硬チューブ",
+          "アンダーダンプ→延長/活栓削減・ダンピングデバイス",
+          "a-line/NIBP乖離→波形品質とfast-flushで判断"
+        ],
+        "values": {
+          "first_step": "fast-flushで評価→再ゼロ・再レベリング"
+        }
+      },
+      "citations": [
+        "Gardner 1981",
+        "Miller's Anesthesia"
+      ],
+      "notes": "乖離時にどちらを信じるかは「波形品質」次第: fast-flushで系が良好なら観血値を、系に問題があればNIBP・MAPを参照しつつ系を是正。末梢循環不全(ショック・強い昇圧薬)では逆にNIBPが不正確になり観血の方が信頼できる場面もある。Accudynamic/ROSEはアンダーダンプ補正用のデバイス。\n\n[簡略化前の本文（オンスライドから移動）]\n・まずfast-flushで系を評価→気泡/凝血の除去・フラッシュ\n・チューブを短く硬く、活栓・延長を最小化、再ゼロ・再レベリング\n・必要ならダンピング補正デバイス(例: Accudynamic/ROSE)を追加\n・a-lineとNIBPが乖離: 波形品質・fast-flush・末梢循環で判断(末梢増幅も考慮)"
+    },
+    {
+      "id": "s7_2",
+      "title": "7.2 合併症と安全",
+      "headline": "合併症と安全",
+      "bullets": [
+        "合併症: 虚血・感染・出血",
+        "薬剤誤注入は遠位虚血の危険",
+        "予防: 部位選択・無菌・圧迫止血",
+        "Allen test: 虚血予測能は乏しい"
+      ],
+      "diagram": {
+        "type": "cards",
+        "spec": "上段に合併症アイコン列(虚血・感染・出血/血腫・薬剤誤注入・神経障害・空気塞栓)を横並び。下段に予防キーワードの帯(部位選択/細径カテ/無菌・閉鎖式/ライン識別/抜去時圧迫)。右端に「Allen test=虚血を確実には予測しない」の注記カードを強調配置。",
+        "labels": [
+          "虚血",
+          "感染",
+          "出血/血腫",
+          "薬剤誤注入",
+          "神経障害",
+          "空気塞栓",
+          "予防: 部位・細径・無菌・識別・圧迫",
+          "Allen testの限界"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Slogoff 1983",
+        "Scheer 2002"
+      ],
+      "notes": "⚠️Allen testの限界を正確に: Slogoff 1983は約1,700例で、Allen test異常でも橈骨カニュレーションによる手の虚血合併症を認めず、Allen testが虚血を予測しないことを示した。よってAllen test正常/異常で安全性を断定しない。ただし重度末梢動脈疾患・側副が乏しい症例では臨床判断で部位を再考。重篤合併症は稀だが遠位虚血・血流感染が重要(Scheer 2002)。動注薬剤の誤注入は壊死のリスクがあり、ラインの色分け・ラベル・注入前確認で予防。\n\n[簡略化前の本文（オンスライドから移動）]\n・合併症: 血栓・遠位虚血、感染/血流感染、出血/血腫、神経障害、薬剤誤注入、空気塞栓\n・動注薬剤の誤注入は重篤な遠位虚血の危険 → ラインの明確な識別と注入前の確認を徹底\n・予防: 部位選択・細径カテ・無菌・閉鎖式; 抜去時は十分な圧迫止血\n・Allen test: 側副評価の目安だが虚血予測能は乏しく、正常でも過信しない"
+    },
+    {
+      "id": "s8_1",
+      "title": "8.1 パルスコンター心拍出量",
+      "headline": "動脈波形からSV/CO",
+      "bullets": [
+        "原理: 収縮期面積法でSV算出",
+        "較正あり: PiCCO・LiDCO",
+        "較正なし: トーヌス急変に弱い",
+        "限界: 不整脈・AR・IABP"
+      ],
+      "diagram": {
+        "type": "convert",
+        "spec": "変換概念図を左→右。動脈圧波形 → 収縮期部分の面積(塗り)を抽出 → コンプライアンス/インピーダンスモデルで換算 → 拍出量SV → ×心拍数 → CO。下に小さく「較正あり(PiCCO/LiDCO)= 熱/色素希釈で個別較正」vs「較正なし(FloTrac)= 人口統計推定」の対比帯。",
+        "labels": [
+          "動脈圧波形",
+          "収縮期面積",
+          "SV",
+          "CO=SV×HR",
+          "較正あり(PiCCO/LiDCO)",
+          "較正なし(FloTrac)"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Wesseling 1993",
+        "Marik 2013"
+      ],
+      "notes": "⚠️較正なし型(FloTrac等)は末梢血管トーヌスの急変(敗血症・大量昇圧薬・肝移植無肝期など)で誤差が増大するため、絶対値よりトレンド利用が基本。AR(拡張期逆流)・重症不整脈・IABP・過度のダンピングでは面積–SV関係が崩れ不正確。原理はWesseling 1993のModelflow法などに基づく。\n\n[簡略化前の本文（オンスライドから移動）]\n・原理: 収縮期面積法/コンプライアンスモデルでSVを拍動ごとに算出\n・較正あり: PiCCO(経肺熱希釈)・LiDCO(リチウム希釈)で個別較正\n・較正なし: FloTrac/Vigileo(人口統計から推定); 血管トーヌス急変に弱い\n・限界: 波形品質不良・重症不整脈・AR・IABP・過度のダンピングで不正確"
+    },
+    {
+      "id": "s8_2",
+      "title": "8.2 目標指向的循環管理（GDT）",
+      "headline": "目標指向的循環管理",
+      "bullets": [
+        "PPV/SVV高値→SV↑10〜15%",
+        "SV最適化で過不足ない輸液",
+        "Ea_dyn=PPV/SVV: 圧反応性予測",
+        "周術期GDTは合併症減の報告"
+      ],
+      "diagram": {
+        "type": "gdt",
+        "spec": "SV最適化フローチャート。開始→動的指標(PPV/SVV)高い?→YESならフルイドチャレンジ(例250〜500mL)→SV↑≧10〜15%?→YES(反応性: 再評価ループへ)/NO(非反応: 輸液中止・昇圧/強心を検討)。横にEa_dyn=PPV/SVVのボックスを添え「圧反応性の予測=昇圧薬か輸液かの判断補助」と注記。",
+        "labels": [
+          "動的指標(PPV/SVV)高値",
+          "フルイドチャレンジ",
+          "SV↑≧10〜15%?",
+          "反応性/非反応性",
+          "Ea_dyn=PPV/SVV"
+        ],
+        "values": {
+          "responder": "SV↑10〜15%で反応性",
+          "eadyn": "Ea_dyn=PPV/SVV"
+        }
+      },
+      "citations": [
+        "Monge García 2011",
+        "Cannesson 2011",
+        "Pearse 2014"
+      ],
+      "notes": "⚠️GDTのアウトカム改善は一様でない: OPTIMISE(Pearse 2014, JAMA)は主要評価項目で統計的有意差に達しなかったが、同試験を含むメタ解析では合併症減少の傾向が示された。Ea_dyn(=PPV/SVV)は前負荷反応性のある患者で昇圧薬/輸液に対する圧応答を予測する概念で、報告される閾値は概ね0.8〜0.9付近だが研究で幅がある(Monge García 2011)。SV増加の反応性カットオフは10〜15%が一般的。\n\n[簡略化前の本文（オンスライドから移動）]\n・動的指標(PPV/SVV)高値→フルイドチャレンジ→SV↑10〜15%で反応性ありと判定\n・SV最適化アルゴリズムで過不足のない輸液を目指す\n・Ea_dyn = PPV/SVV: 昇圧薬による血圧応答性(圧反応性)の予測に\n・周術期GDTは一部で合併症減の報告(効果は集団・プロトコルに依存)"
+    },
+    {
+      "id": "s8_3",
+      "title": "8.3 特殊状況",
+      "headline": "特殊状況での注意点",
+      "bullets": [
+        "CPB後: 一過性に中枢>橈骨",
+        "厳密血圧管理: 拍動ごとの制御",
+        "頻回採血: ABG・電解質・乳酸",
+        "小児: 細径カテ・部位選択"
+      ],
+      "diagram": {
+        "type": "cards",
+        "spec": "4枚のカード。(1)CPB後乖離: 橈骨<中枢(大腿)、一過性→大腿/上腕測定。(2)厳密血圧管理: 脳動脈瘤/CEA/大血管、拍動ごとの制御・脳灌流。(3)頻回採血: ABG・電解質・乳酸を連続に。(4)小児・特殊集団: 細径カテ・部位選択・合併症配慮。各カードにアイコンと1行。",
+        "labels": [
+          "CPB後の橈骨-大腿乖離",
+          "厳密血圧管理(脳・大血管)",
+          "頻回採血(ABG/電解質/乳酸)",
+          "小児・特殊集団"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Stern 1985",
+        "Miller's Anesthesia"
+      ],
+      "notes": "⚠️CPB離脱直後は橈骨動脈圧が中枢(大動脈/大腿)より低く出る乖離が知られ(Stern 1985)、通常は数十分〜1時間程度で概ね解消。機序は末梢血管拡張・動静脈シャント・前腕血流再分布などが示唆される。重要な低血圧の判断を誤らないよう、疑わしければ大腿/上腕での確認を。厳密管理が要る術式では目標帯を狭く設定。\n\n[簡略化前の本文（オンスライドから移動）]\n・人工心肺後: 一過性に中枢>橈骨(橈骨で過小評価)→大腿/上腕測定を考慮\n・厳密血圧管理: 脳動脈瘤・頸動脈内膜剥離・大血管手術で拍動ごとの制御\n・頻回採血: ABG・電解質・乳酸の連続モニタリングに有用\n・小児・特殊集団: 細径カテ・部位選択・合併症配慮"
+    },
+    {
+      "id": "summary",
+      "title": "まとめ",
+      "headline": "Take-home：整える・読む・応用",
+      "bullets": [
+        "数値の信頼はゼロ・レベリング・最適ダンピングから",
+        "波形は前進波+反射波の合成; 末梢ほど尖鋭化しMAPは保たれる",
+        "PPV/SVVは前提条件を満たして初めて有効",
+        "ダンピング異常: underdamp→SBP過大、overdamp→SBP過小",
+        "合併症と安全; Allen testは虚血を確実には予測しない",
+        "応用: パルスコンターCO・GDT(較正の有無と前提の理解が鍵)"
+      ],
+      "diagram": {
+        "type": "cards",
+        "spec": "6本柱のキーワードカードを並べる(要約用)。各カードに1語+短句。",
+        "labels": [
+          "正しい校正",
+          "前進波+反射波",
+          "動的指標の前提",
+          "ダンピング異常の判読",
+          "合併症と安全",
+          "パルスコンター・GDT"
+        ],
+        "values": {}
+      },
+      "citations": [
+        "Gardner 1981",
+        "Michard 2005",
+        "Slogoff 1983"
+      ],
+      "notes": "1枚で通しの復習ができるように、各章の核(校正/波形生理/動的指標の前提/ダンピング方向/安全/応用)を1行ずつ。特にダンピングの血圧方向とPPV前提は試験・実務の頻出安全ポイント。\n\n[簡略化前の本文（オンスライドから移動）]\n・数値の信頼はゼロ・レベリング・最適ダンピング(fast-flushで1〜2振動)から\n・波形は前進波+反射波の合成; 末梢ほど尖鋭化しMAPは保たれる\n・PPV/SVVは前提(調節換気・TV≧8mL/kg・洞調律・閉胸)を満たして初めて有効\n・ダンピング異常: underdamp→SBP過大、overdamp→SBP過小(MAPは比較的保たれる)\n・合併症と安全; Allen testは虚血を確実には予測しない\n・応用: パルスコンターCO・GDT(較正の有無と前提の理解が鍵)"
+    }
+  ],
+  "references": [
+    "1. Hales S. 1733. Statical Essays, vol II: Haemastaticks(馬の動脈圧測定の古典).",
+    "2. Poiseuille JLM. 1828. 水銀圧力計(hémodynamomètre)による動脈圧測定・mmHg化(学位論文).",
+    "3. Ludwig C. 1847. キモグラフ(kymograph)による血圧の連続記録.",
+    "4. Riva-Rocci S. 1896. Un nuovo sfigmomanometro. Gazz Med Torino(非観血カフ法).",
+    "5. Korotkoff NS. 1905. 聴診法(コロトコフ音)による血圧測定.",
+    "6. Lambert EH, Wood EH. 1947頃. 抵抗線ストレインゲージ式血圧トランスデューサ(⚠️正確な年は要確認).",
+    "7. Gardner RM. 1981. Direct blood pressure measurement—dynamic response requirements. Anesthesiology 54:227-236.",
+    "8. Kleinman B, Powell S, Kumar P, Gardner RM. 1992. The fast flush test measures the dynamic response of the entire blood pressure monitoring system. Anesthesiology 77:1215-1220.",
+    "9. Nichols WW, O'Rourke MF, Vlachopoulos C. McDonald's Blood Flow in Arteries(教科書, 波形・反射波・末梢増幅).",
+    "10. O'Rourke MF, Hashimoto J. 2007. Mechanical factors in arterial aging: a clinical perspective. J Am Coll Cardiol 50:1-13.",
+    "11. Wesseling KH, Jansen JR, Settels JJ, Schreuder JJ. 1993. Computation of aortic flow from pressure in humans using a nonlinear, three-element model(Modelflow). J Appl Physiol 74:2566-2573.",
+    "12. Michard F, Boussat S, Chemla D, et al. 2000. Relation between respiratory changes in arterial pulse pressure and fluid responsiveness in septic patients. Am J Respir Crit Care Med 162:134-138(PPV閾値13%).",
+    "13. Michard F. 2005. Changes in arterial pressure during mechanical ventilation. Anesthesiology 103:419-428(総説).",
+    "14. Marik PE, Cavallazzi R, Vasu T, Hirani A. 2009. Dynamic changes in arterial waveform derived variables and fluid responsiveness in mechanically ventilated patients: a systematic review. Crit Care Med 37:2642-2647.",
+    "15. Cannesson M, Le Manach Y, Hofer CK, et al. 2011. Assessing the diagnostic accuracy of pulse pressure variations for the prediction of fluid responsiveness: a gray zone approach. Anesthesiology 115:231-241(グレーゾーン9-13%).",
+    "16. Perel A, Pizov R, Cotev S. 1987. Systolic blood pressure variation is a sensitive indicator of hypovolemia in ventilated dogs subjected to graded hemorrhage. Anesthesiology 67:498-502.",
+    "17. Coriat P, Vrillon M, Perel A, et al. 1994. A comparison of systolic blood pressure variations and echocardiographic estimates of end-diastolic left ventricular size in patients after aortic surgery. Anesth Analg 78:46-53.",
+    "18. Slogoff S, Keats AS, Arlund C. 1983. On the safety of radial artery cannulation. Anesthesiology 59:42-47(Allen testは虚血を予測しない).",
+    "19. Scheer BV, Perel A, Pfeiffer UJ. 2002. Clinical review: complications and risk factors of peripheral arterial catheters used for haemodynamic monitoring. Crit Care 6:199-204.",
+    "20. Marik PE. 2013. Noninvasive cardiac output monitors: a state-of-the-art review. J Cardiothorac Vasc Anesth 27:121-134.",
+    "21. Monge García MI, Gil Cano A, Gracia Romero M. 2011. Dynamic arterial elastance to predict arterial pressure response to volume loading in preload-dependent patients. Crit Care 15:R15.",
+    "22. Pearse RM, Harrison DA, MacDonald N, et al. 2014. Effect of a perioperative, cardiac output-guided haemodynamic therapy algorithm on outcomes following major gastrointestinal surgery (OPTIMISE): a randomized clinical trial. JAMA 311:2181-2190.",
+    "23. Stern DH, Gerson JI, Allen FB, Parker FB. 1985. Can we trust the direct radial artery pressure immediately following cardiopulmonary bypass? Anesthesiology 62:557-561.",
+    "24. Gropper MA, et al.(eds). Miller's Anesthesia(動脈圧モニタリングの章; 構成・正常値・合併症の総合参照)."
+  ]
+}

@@ -1,0 +1,41 @@
+[
+  {"code":"6.1","chapter":6,"title":"系統的判読","type":"figure","caption":"上から順に7項目を確認する",
+   "figure":{"id":"fig_6_1_read_order","kind":"schematic","spec":"読影の順路を縦型7ステップのフローチャートで。各ステップに正常値を併記し、右側に『異常なら→該当スライドへ』の分岐矢印。①レート(300÷R-R大マス数、または6秒間×10)②調律(規則性・P-QRSの関係)③P波(有無・向き=II誘導で陽性か・形)④PR間隔(0.12〜0.20秒)⑤QRS幅(<0.12秒)⑥ST/T(基線に対する上昇/低下・T波の向き)⑦QT/QTc(Bazett補正、目安<0.44秒)。全体を『まず律・次に波・最後に間隔と再分極』の流れとして示す。"},
+   "cite":null,"cite_url":null,"verify":false},
+
+  {"code":"6.2","chapter":6,"title":"徐脈性不整脈","type":"figure","caption":"PR漸増と脱落の型で判別する",
+   "figure":{"id":"fig_6_2_brady","kind":"ecg_compare","spec":"II誘導の代表ストリップを6段で縦並び。①洞徐脈:HR約45、P-QRS 1:1、PR一定0.16秒、規則的。②洞停止/洞房ブロック:長いポーズ、洞停止=ポーズがPP間隔の非整数倍、洞房ブロックII度=基本PPの整数倍。矢印『P波が脱落』。③I度房室ブロック:PRが一定して延長(例0.28秒)、QRS脱落なし。矢印『PR一定に延長』。④II度Mobitz I(Wenckebach):PRが拍ごとに漸増→1拍QRS脱落→リセット、群拍。矢印『PR漸増→脱落』。⑤II度Mobitz II:PR一定のまま突然QRS脱落(3:2等)、QRS幅広傾向。矢印『PR一定・突然脱落』。⑥III度(完全):房室解離、P規則的で速く・QRS規則的で遅い補充調律、PR無関係。矢印『PとQRSが独立』。"},
+   "cite":"2018 ACC/AHA/HRS 徐脈・伝導遅延ガイドライン (Kusumoto).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/30586772/","verify":false},
+
+  {"code":"6.3","chapter":6,"title":"幅の狭い頻脈","type":"figure","caption":"RRの整・不整とP/f/F波で鑑別",
+   "figure":{"id":"fig_6_3_narrow","kind":"ecg_compare","spec":"narrow-QRS頻脈の代表4段(II誘導)。①洞頻脈:HR110〜150、P-QRS 1:1、P波II誘導で陽性、PR正常、規則的。矢印『先行Pあり・規則的』。②心房細動:基線に細かく不規則なf波、明瞭なP波なし、RR絶対性不整、QRS幅狭。矢印『P波なし・RR不整』。③心房粗動:II/III/aVFに鋸歯状F波(心房約300/分)、房室伝導2:1で心室約150。矢印『鋸歯状F波・2:1』。④AVNRT(発作性上室頻拍):HR150〜220で規則的、P波はQRSに埋没または直後の偽性波、突然発症・停止。矢印『P波見えず・規則的』。"},
+   "cite":"2015 ACC/AHA/HRS 上室頻拍ガイドライン (Page).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/26409259/","verify":false},
+
+  {"code":"6.4","chapter":6,"title":"幅の広い頻脈","type":"figure","caption":"房室解離・融合波あればVT",
+   "figure":{"id":"fig_6_4_wide","kind":"ecg_compare","spec":"wide-QRS頻脈の鑑別3段。①心室頻拍(VT):QRS≧0.12秒で単形性・規則的、房室解離(合間に独立した遅いP波)、捕捉収縮(capture=突然の幅狭QRS)と融合収縮(fusion=中間形)を矢印で明示。矢印『房室解離・融合/捕捉』。②SVT+変行伝導:幅広だが典型的RBBB/LBBB型QRS、先行P波あり・規則的。矢印『脚ブロック型・先行P』。③WPW:PR短縮<0.12秒、QRS立ち上がりが緩やかなδ波、QRS幅広、二次性ST-T変化。矢印『δ波・PR短縮』。欄外の鑑別:房室解離・融合/捕捉・全胸部誘導でRS欠如→VTを強く支持。"},
+   "cite":"Brugada P, et al. Circulation 1991 (wide-QRS鑑別).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/2022022/","verify":false},
+
+  {"code":"6.5","chapter":6,"title":"期外収縮","type":"figure","caption":"PACは幅狭P先行、PVCは幅広",
+   "figure":{"id":"fig_6_5_pac_pvc","kind":"ecg_strip","spec":"II誘導の1本のストリップに洞調律を基調とし、PACとPVCを混在させ矢印で対比。PAC:洞P波と形の異なる異所性P波が早期に出現(先行T波に重なることあり)、続くQRSは幅狭、ポーズは非代償性。矢印『異所性P先行・幅狭・非代償性』。PVC:先行P波なし、QRS幅広≧0.12秒で主棘が反対向き、T波もQRSと逆向き、完全代償性ポーズ。矢印『P波なし・幅広・代償性』。欄外注:単源/多源、二段脈(bigeminy)、2連発(couplet)・3連以上はVT、R on T(先行T頂点にPVC)はVF誘発リスク。"},
+   "cite":null,"cite_url":null,"verify":false},
+
+  {"code":"6.6","chapter":6,"title":"致死的不整脈","type":"figure","caption":"除細動可はVF/無脈性VTのみ",
+   "figure":{"id":"fig_6_6_lethal","kind":"ecg_compare","spec":"致死的不整脈4波形を縦並び、赤系で強調し各波形の右に対応(除細動可/不可)。①心室細動(VF):基線が完全に不規則な粗大〜細かい振動、P/QRS/T判別不能。ラベル『波形バラバラ/除細動可』。②無脈性VT:単形性の幅広QRS頻拍(規則的180〜250)だが無脈。ラベル『VT波形だが無脈/除細動可』。③無脈性電気活動(PEA):整った電気活動(QRSあり)なのに脈・拍出なし。ラベル『波形あるが脈なし/CPR・可逆原因(H&T)』。④心静止(asystole):ほぼ平坦線、電気活動なし。ラベル『平坦/CPR(非除細動)』。VF・無脈性VTと、PEA・asystoleを色分け。"},
+   "cite":"2020 AHA CPR・ECCガイドライン Part3 ACLS (Panchal).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/33081529/","verify":false},
+
+  {"code":"6.7","chapter":6,"title":"脚ブロック","type":"figure","caption":"QRS≧0.12秒、V1とV6で判別",
+   "figure":{"id":"fig_6_7_bbb","kind":"ecg_compare","spec":"V1とV6を対比した比較図。共通:QRS幅≧0.12秒(完全型)。右脚ブロック(RBBB):V1はrsR′のM型(2峰・兎耳)、V6・I誘導は幅広くslurしたS波、V1〜V3に二次性ST低下・T陰転。ラベル『V1=rsR′、V6=幅広S』。左脚ブロック(LBBB):V1は幅広い陰性QS/rS、V6・I・aVLは切れ込みを伴う幅広い単一R波でq波を欠く、ST-TはQRSと逆方向(discordant)。ラベル『V6=幅広ノッチR、V1=QS』。欄外:新規LBBBは心筋虚血・梗塞を示唆しうる、LBBB下では通常のST虚血判読が困難。"},
+   "cite":"AHA/ACCF/HRS 心電図標準化 Part III 心室内伝導障害 (Surawicz).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/19228822/","verify":false},
+
+  {"code":"6.8","chapter":6,"title":"心筋虚血","type":"figure","caption":"術中はII・V5でST低下を監視",
+   "figure":{"id":"fig_6_8_ischemia","kind":"schematic","spec":"誘導と冠灌流領域の対応マップに小さなECG波形を添える。領域対応:下壁=II・III・aVF(右冠動脈系)、前壁中隔=V1〜V4(左前下行枝LAD)、側壁=I・aVL・V5〜V6(回旋枝LCx)。ミニ波形の3型:(a)ST上昇=貫壁性虚血・梗塞、J点上昇し上に凸のドーム状、対側に鏡像ST低下。(b)ST低下=心内膜下・需要型虚血、水平型〜下降傾斜でJ点後0.08秒に≧0.1mV低下。(c)冠性T=対称性の深い陰性T波。欄外:術中は需給ミスマッチによる心内膜下虚血が多く、ST上昇より水平型ST低下・T変化が主体。II・V5のST監視が有用。"},
+   "cite":"第4版 心筋梗塞の普遍的定義 (Thygesen 2018).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/30571511/","verify":false},
+
+  {"code":"6.9","chapter":6,"title":"電解質異常","type":"figure","caption":"高K=テント状T→サインカーブ",
+   "figure":{"id":"fig_6_9_electrolyte","kind":"ecg_compare","spec":"電解質異常の代表波形。①高K血症を進行順に3段階:(a)約5.5〜6.5mEq/L=基部の狭い尖鋭なテント状T波、(b)約6.5〜8=P波平低〜消失・PR延長・QRS幅増大、(c)>8〜9=QRSとTが融合したサインカーブ様→VF/心静止の前兆。矢印で段階。②低K血症:T波の平低化、U波の増高(TとUが融合しQTが見かけ延長=実はQU)、軽度ST低下。矢印『T平低・U波出現』。③低Ca血症:ST部分の延長によりQT延長(T波の形は保たれる)、高Caでは逆にST・QT短縮。矢印『ST延長でQT延長』。欄外にTdP:著明なQT延長を背景にQRS主軸が基線を中心にねじれる多形性VT。矢印『基線を軸にねじれる』。"},
+   "cite":"Diercks DB, et al. J Emerg Med 2004 (電解質と心電図).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/15261358/","verify":false},
+
+  {"code":"6.10","chapter":6,"title":"波形の乱れ","type":"column",
+   "column":{"heading":"本物の不整脈か見分ける","body":["脈・観血圧・SpO₂波が保たれれば致死性を疑う。","他誘導と一致するか照合(体動は誘導限局が多い)。","まず患者を見る。波形より臨床所見を優先。"],"accent":"GOLD"},
+   "cite":null,"cite_url":null,"verify":false}
+]
