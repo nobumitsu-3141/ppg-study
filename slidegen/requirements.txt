@@ -11,7 +11,8 @@ python-pptx>=1.0.2        # Mac 基準環境: 1.0.2  … pptx の生成本体
 Pillow>=12.2.0            # Mac 基準環境: 12.3.0 … 画像の寸法取得・幅計測 (PIL)
 matplotlib>=3.10.9        # Mac 基準環境: 3.11.0 … figs/*.png の作図
 numpy>=2.2.6              # Mac 基準環境: 2.5.1  … 作図の数値計算
-PyYAML>=6.0.3             # ★ Mac 基準環境に未導入。defib デックの content/ch*.md 読込に必須
+PyYAML>=6.0.1             # defib デックの content/ch*.md 読込に必須。6.0.1(Debian既定)で動作確認済み
+                          #   （>=6.0.3 だと Debian 管理の 6.0.1 を pip が上書きできず setup が中断する）
 
 # 備考:
 # - lxml は python-pptx の推移的依存 (基準環境 6.1.1)。直接指定は不要。

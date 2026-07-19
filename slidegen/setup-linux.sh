@@ -4,10 +4,17 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 echo "[1/4] Python 依存"
-python3 -m pip install --quiet --break-system-packages -r "$HERE/requirements.txt" 2>/dev/null \
+python3 -m pip install --quiet --break-system-packages -r "$HERE/requirements.txt" \
   || python3 -m pip install --quiet -r "$HERE/requirements.txt"
 
 echo "[2/4] Meiryo → Noto Sans CJK JP の対応づけ"
+# 目視QA(render_check)用に日本語 Noto を用意する。build/lint には不要なので非致命。
+if ! fc-match Meiryo 2>/dev/null | grep -q "CJK JP"; then
+  (apt-get install -y fonts-noto-cjk >/dev/null 2>&1 \
+     || sudo apt-get install -y fonts-noto-cjk >/dev/null 2>&1) \
+     && echo "      fonts-noto-cjk を導入" \
+     || echo "      ⚠ fonts-noto-cjk 未導入（目視QAのみ影響。build/lint は可）"
+fi
 mkdir -p "$HOME/.config/fontconfig"
 cp "$HERE/fontconfig/meiryo-alias.conf" "$HOME/.config/fontconfig/fonts.conf"
 fc-cache -f >/dev/null 2>&1 || true
