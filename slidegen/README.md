@@ -65,8 +65,12 @@ pip install -r requirements.txt
 bash slidegen/setup-linux.sh
 ```
 
-Python 依存に加え、**メイリオの対応づけ**を入れる（第 5 節）。これを省くと
-漢字が**中国語字体で描画される**。所要 1 分。以降は Mac と同じ手順で動く。
+Python 依存に加え、**メイリオの対応づけ**（第 5 節）と**出力先ディレクトリの作成**を行う。
+所要 1 分。以降は Mac と同じ手順で動く。
+
+`out/` と `figs/` は `.gitignore` で除外しているためクローン直後に存在せず、
+**これを作らずに build すると `FileNotFoundError` で落ちる。**
+`setup-linux.sh` を使わない場合は手で `mkdir -p decks/*/out decks/*/figs` すること。
 
 `requirements.txt` の実体は `python-pptx` / `Pillow` / `matplotlib` / `numpy` / `PyYAML` の 5 つ。
 **`PyYAML` は Mac の基準 venv に入っていなかったが、defib デックのビルドに必須**である
