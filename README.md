@@ -208,8 +208,15 @@ ppg-study/
 ├── esCCO_K_correction_hypothesis.html / .md      … ⑦ esCCO の後負荷交絡を波形形態で補正する（仮説）
 ├── SDPPG_prognostic_evidence_and_diastolic_gap.html / .md … ⑧ 加速度脈波の予後エビデンスと拡張期側の空白
 ├── perioperative_stiffness_outcomes.html / .md   … ⑩ 周術期アウトカムと血管スティフネス
-└── PPG_code_development_context.md               … 今後のコード作業向けの開発コンテキスト（新規事項メモ）
+├── PPG_code_development_context.md               … 今後のコード作業向けの開発コンテキスト（新規事項メモ）
+└── slides/                                       … 講演スライド（既存成果物からの派生物）
+    ├── README.md                                 …  スライドの構成・書式・再生成手順
+    ├── PPG_SI_RI_reflected_wave_slides.pptx      …  SI・RI と反射波同定の数学（16:9・39枚）
+    ├── build_slides.py                           …  スライド本体の生成スクリプト
+    └── deck_kawazoe.py                           …  組版ヘルパ（書式ルールの実装）
 ```
+
+> `slides/` は既存レビューからの派生物であり、通し番号つきの成果物（①〜⑩）には含めない。オンスライドの主張はすべて既存成果物と PMID 検証済みの一次文献に由来し、未検証の作業仮説はその旨をスライド面に明記している。
 
 > ⑨「心拍数は PPG 波形の『形』を変えるか」（エビデンス監査）は準備中で未収録。原稿が揃い次第、`heart_rate_PPG_morphology_audit.html` / `.md` として追加し、通し番号を 1–10 に揃える。
 
