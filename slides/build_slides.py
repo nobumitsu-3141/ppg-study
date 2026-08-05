@@ -468,6 +468,37 @@ axis(s, 7.3, GY, GW, GH)
 textbox(s, 7.3, GY + GH + 0.06, 4.9, 0.42, [("硬い血管：山がひとつに融合", 22, RED, True)],
         space_after=0)
 
+s = d.add("第2ピークの正体", 3,
+          source="出典: Epstein S, et al. Annu Int Conf IEEE EMBC 2014;2014:1969-72（PMID 25570367）",
+          notes="ここで、より根本的な問題を一つ挟んでおく。"
+                "我々は「第2ピーク＝末梢からの反射波」と当然のように呼んでいるが、"
+                "この物理的な帰属自体が数値モデルからは支持されていない。"
+                "Epstein らは、手の主要動脈を含む 75 本の動脈網を表現した非線形 1 次元の脈波伝播モデルで、"
+                "動脈壁スティフネス・末梢抵抗・末梢コンプライアンス・末梢反射を個別に変化させ、"
+                "模擬した指尖の面積波形からスティフネス指数 SI を算出した。"
+                "結論は二つある。第一に、大動脈脈波伝播速度は大動脈スティフネスに支配されるが、"
+                "SI は全ての導管血管のスティフネスに支配される。したがって SI は大動脈 PWV の直接の代用ではない。"
+                "第二に、そしてこちらが重要だが、"
+                "指尖容積脈波の第 2 ピークは末梢反射ではなく、"
+                "75 本の動脈区間の内部で生じるインピーダンス不整合が主因である。"
+                "上肢の末梢反射はむしろ第 1 ピークの到達時刻を遅らせる方向に働く。"
+                "この指摘は本講演の手法にそのまま効く。"
+                "波形をどれだけ上手く分解できても、二番目の山に「末梢反射波」というラベルを貼ってよいかは"
+                "数学の外側の問題であり、この帰属が誤っていれば、そこから作った SI・RI の生理学的意味は変わってしまう。"
+                "だからこそ、生成条件が既知の仮想被験者による検証を先に置く必要がある。")
+panel(s, 0.7, 2.0, 11.9, 1.1, fill=FAINT, line="8A8A8A",
+      paras=[("75 本の動脈網の数値モデルで検証（Epstein 2014）", 26, INK, True)])
+panel(s, 0.7, 3.3, 5.8, 1.9, fill=BLUE_BG, line=BLUE, anchor=MSO_ANCHOR.TOP,
+      paras=[("SI は PWV の代用ではない", 24, BLUE, True), ("", 8, INK),
+             ("PWV は大動脈の硬さ", 22, INK),
+             ("SI は導管血管全体の硬さ", 22, INK)], align=PP_ALIGN.LEFT, space_after=6)
+panel(s, 6.8, 3.3, 5.8, 1.9, fill=VERM_BG, line=VERM, anchor=MSO_ANCHOR.TOP,
+      paras=[("第2ピークの主因", 24, VERM, True), ("", 8, INK),
+             ("末梢反射ではなく", 22, INK),
+             ("動脈網内部のインピーダンス不整合", 22, INK)], align=PP_ALIGN.LEFT, space_after=6)
+panel(s, 0.7, 5.4, 11.9, 0.95, fill=RED_BG, line=RED,
+      paras=[("「2番目の山＝末梢反射波」は自明ではない", 26, RED, True)])
+
 s = d.add("同定が壊れる四条件", 3,
           source="出典: 本リポジトリ中核レビュー §7 ／ Suboh MZ, et al. Front Public Health 2022;10:920946（PMID 35844894）",
           notes="拡張期ピークの同定が破綻する条件は四つに整理できる。"
@@ -523,7 +554,7 @@ panel(s, 0.7, 4.7, 11.9, 1.55, fill=RED_BG, line=RED,
 
 # ================================================================ 第5章 数学的推定
 s = d.add("点から波へ", 4,
-          source="提案手法。以降の第 5 章は本プロジェクトの作業仮説であり、臨床検証は未了である",
+          source="手法自体は既報（Rubins 2008・Goswami 2010・Couceiro 2015）。未検証なのは周術期での成立性",
           notes="発想の転換はここにある。"
                 "これまでは、観測された波形の上で『拡張期ピークという点はどこか』を探していた。"
                 "これからは、『前進波と反射波を足すとこの波形になるはずだ』というモデルを立て、"
@@ -791,7 +822,7 @@ panel(s, 0.7, 4.85, 11.9, 1.4, fill=RED_BG, line=RED,
              ("検出できなかった症例を除くと選択バイアスが必ず入る", 24, INK, True)])
 
 s = d.add("SI・RIを再定義", 4,
-          source="提案手法（未検証）。時間パラメータの定義は Couceiro 2015 の T1_2 に対応する",
+          source="この再定義は既報。Rubins 2008 が RI を、Goswami 2010 が SI・RI を分解から導出している",
           notes="モデルが当てはまれば、SI と RI は波形上の点ではなくモデルのパラメータから定義できる。"
                 "SI は身長を μ₂ − μ₁ で割ったもの、RI は a₂ を a₁ で割ったものになる。"
                 "この再定義の意味は大きい。"
@@ -811,7 +842,43 @@ textbox(s, 0.7, 3.85, 11.9, 1.5,
         [("波形に山が見えなくても、モデルの山は存在する", 26, TEAL, True),
          ("→ 一峰性化した高スティフネス例でも値が出る", 26, INK, True)], space_after=12)
 panel(s, 0.7, 5.4, 11.9, 0.9, fill=RED_BG, line=RED,
-      paras=[("「値が出る」ことと「値が正しい」ことは別である", 26, RED, True)])
+      paras=[("この再定義自体は、既に提案されている", 26, RED, True)])
+
+s = d.add("既に試されている", 4,
+          source="出典: 本リポジトリ「反射波の数学的分離から SI・RI を再計算する ― 先行技術調査」",
+          notes="ここは本講演でいちばん正直に述べるべきところである。"
+                "「点を探すのをやめ、波を当てはめる」という発想の転換も、"
+                "そこから SI・RI を作り直すことも、血圧・血管抵抗と対比することも、すべて既に行われている。"
+                "Rubins（2008）は指と耳の PPG を収縮期波・拡張期波に分け、"
+                "それぞれを 2 つのガウス関数の和で当てはめ、"
+                "直達波と 3 つの反射波の時刻から反射指数 RI とオーグメンテーション指数 AI を算出し、微分法と比較した。"
+                "健常者 40 名。分解由来の RI はここが最初期である。"
+                "Goswami ら（2010）は Rayleigh 関数による 2 波合成モデルから、"
+                "反射指数 RI・スティフネス指数 SI・脈波伝播速度を明示的に導出し、"
+                "健常者と治療中高血圧者の 113 信号で従来法と比較した。分解由来の SI もここで揃っている。"
+                "Couceiro ら（2015）は 5 ガウス分解から SI・RI に加えて時間差 T1_2 と振幅比 R1_2 を算出し、"
+                "循環動態が不安定な 43 名で血圧と総末梢血管抵抗係数に対比した。"
+                "さらに Grabovskis ら（2015）はカフ圧で局所血管抵抗を段階的に上げ、"
+                "分解由来の遅延と振幅比が応答することを示し、"
+                "Wang ら（2018）は運動負荷で、Park ら（2022）は血管年齢で同様の解析を行い、"
+                "Baruch らの Pulse Decomposition Analysis は中心動脈圧との対比を経て製品化されている。"
+                "つまり、本講演の第 5 章で述べた手法は新しい提案ではない。"
+                "この事実を伏せて話を進めるのは誠実ではないので、ここで明示する。"
+                "詳細は本リポジトリの先行技術調査文書に PICO 形式で一覧化してある。")
+rows_pa = [("2008", "Rubins", "ガウス当てはめから RI を算出", VERM),
+           ("2010", "Goswami", "2 波合成から SI と RI を導出", VERM),
+           ("2015", "Couceiro", "血圧・総末梢血管抵抗と対比", RED),
+           ("2015〜", "Grabovskis ほか", "血管抵抗・運動負荷・血管年齢へ展開", SUB)]
+for i, (yr_, au_, wt_, col_) in enumerate(rows_pa):
+    yy = 2.02 + i * 0.92
+    panel(s, 0.7, yy, 1.75, 0.78, fill=None, line=col_, line_pt=1.5,
+          paras=[(yr_, 22, col_, True)])
+    panel(s, 2.60, yy, 3.5, 0.78, fill=None, line=col_, line_pt=1.5,
+          paras=[(au_, 22, INK, True)])
+    panel(s, 6.25, yy, 6.35, 0.78, fill=None, line=col_, line_pt=1.5,
+          paras=[(wt_, 22, INK, False)])
+panel(s, 0.7, 5.78, 11.9, 0.85, fill=RED_BG, line=RED,
+      paras=[("分解して SI・RI を作り直すことは、既出である", 26, RED, True)])
 
 s = d.add("先行研究の成績", 4,
           source="出典: Couceiro R, et al. Physiol Meas 2015;36:1801-25（PMID 26235798）",
@@ -840,7 +907,7 @@ panel(s, 6.8, 3.35, 5.8, 1.85, fill=VERM_BG, line=VERM, anchor=MSO_ANCHOR.TOP,
              ("前進波と反射波の振幅比", 22, INK),
              ("参照値すべてと低相関", 24, INK, True)], align=PP_ALIGN.LEFT, space_after=6)
 panel(s, 0.7, 5.4, 11.9, 0.9, fill=GOLD_BG, line=GOLD,
-      paras=[("時間の軸のほうが、振幅の軸より有望である", 26, INK, True)])
+      paras=[("時間の軸のほうが有望 ―― ただし ρ = 0.45", 26, INK, True)])
 
 s = d.add("圧だけで分ける法", 4,
           source="出典: Westerhof BE, et al. Hypertension 2006;48:595-601（PMID 16940207）／ Kips JG, et al. Hypertension 2009;53:142-9（PMID 19075098）",
@@ -898,6 +965,43 @@ for i, (h, t, col) in enumerate(vs):
     panel(s, 0.7 + i * 4.05, 4.75, 3.75, 1.5, fill=None, line=col, line_pt=2.0,
           anchor=MSO_ANCHOR.TOP,
           paras=[(h, 24, col, True), (t, 22, INK, False)], space_after=6)
+
+s = d.add("新規性はどこか", 4,
+          source="出典: 本リポジトリ「反射波の数学的分離から SI・RI を再計算する ― 先行技術調査」§9",
+          notes="では、この研究に何が残っているのか。新規性は指標の定義ではなく、検証の条件の側にしかない。"
+                "第一に、周術期・全身麻酔下という設定である。"
+                "先行研究の対象は健常者・傾斜台・カフ圧迫・運動負荷・高血圧外来・血管年齢コホートであり、"
+                "麻酔導入時や昇圧薬投与時に分解由来指標が観血血圧と較正済み全身血管抵抗の変化を追随するかは未検証である。"
+                "PubMed で分解手法と麻酔・周術期を掛け合わせて検索しても該当は 3 件のみで、"
+                "分解由来の SI・RI を全身血管抵抗と対比した研究は 1 件も無かった。"
+                "第二に、退化した波形における救済という仮説そのものである。"
+                "一峰性化・shoulder 化してランドマーク法が破綻する拍において、"
+                "モデル法が値を返し、かつその値が血管抵抗と関連するかを"
+                "主要評価項目として事前規定した研究は見当たらない。"
+                "年齢層・スティフネス層別の検出成功率を主要アウトカムに置き、"
+                "pyPPG などのランドマーク法と同一の拍で直接対決させる設計にすれば、"
+                "第 4 章で述べた第 2 ピークの帰属問題にも同時に答えられる。"
+                "第三に、AGC と帯域制限のある実機モニタ波形での成立性。"
+                "先行研究はすべて研究用 PPG か観血動脈圧を使っており、"
+                "臨床パルスオキシメータの表示波形で分解が安定に解けるかは誰も確認していない。"
+                "これは構想全体の必要条件であり、否定されれば構想は成立しない。"
+                "第四に、絶対値の相関ではなく変化の追随性としての評価。"
+                "先行研究はプールした相関係数を報告しているが、"
+                "昇圧薬で血管抵抗を動かしたときの変化方向の一致率という評価軸は未実施である。"
+                "第五に、拍ごとの識別可能性を出力として報告すること。"
+                "推定値と一緒に不確かさを出し、識別不能な拍を事前規定で除外する運用は標準になっていない。"
+                "そして重要な但し書きとして、Couceiro の成績を踏まえれば事前確率は低めに見積もるべきであり、"
+                "陰性結果でも情報価値が出るように設計しておく必要がある。")
+gaps = [("① 周術期・全身麻酔下での検証", TEAL),
+        ("② 退化波形での救済という仮説", TEAL),
+        ("③ AGC・帯域制限のある実機波形", BLUE),
+        ("④ 相関ではなく、変化の追随性", BLUE),
+        ("⑤ 拍ごとの識別可能性の報告", BLUE)]
+for i, (t_, col_) in enumerate(gaps):
+    panel(s, 0.7, 1.95 + i * 0.76, 11.9, 0.66, fill=None, line=col_, line_pt=1.75,
+          paras=[(t_, 24, INK, True)], align=PP_ALIGN.LEFT)
+panel(s, 0.7, 5.80, 11.9, 0.82, fill=GOLD_BG, line=GOLD,
+      paras=[("新規性は定義ではなく、検証の条件の側にある", 26, INK, True)])
 
 # ================================================================ 第6章 活用
 s = d.add("Δとして使う", 5,
@@ -1071,8 +1175,8 @@ s = d.add("まとめ", 5,
 summary = [("SI は反射波の時間、RI は反射波の高さ", BLUE),
            ("どちらも反射波の同定を前提にしている", VERM),
            ("硬い血管ほど、その前提が壊れる", RED),
-           ("点を探すのをやめ、波を当てはめる", TEAL),
-           ("生理学で縛り、正解つきの波形で検証する", TEAL),
+           ("点を探すのをやめ、波を当てはめる（既報）", TEAL),
+           ("新規性は定義でなく、検証の条件の側にある", RED),
            ("読むのは絶対値ではなく、導入前からの Δ", GOLD)]
 for i, (t, col) in enumerate(summary):
     panel(s, 0.7, 1.98 + i * 0.75, 11.9, 0.64, fill=None, line=col, line_pt=1.75,
@@ -1093,9 +1197,18 @@ REFS1 = [
 ]
 REFS2 = [
     "Yamada T, et al. Noninvasive continuous cardiac output using pulse wave transit time. Anesth Analg. 2012;115(1):82-7. PMID 22467885",
+    "Goswami D, et al. A new two-pulse synthesis model for digital volume pulse signal analysis. Cardiovasc Eng. 2010;10(3):109-17. PMID 20734136",
+    "Epstein S, et al. Numerical assessment of the stiffness index. Annu Int Conf IEEE EMBC. 2014;2014:1969-72. PMID 25570367",
     "Couceiro R, et al. Cardiovascular function from multi-Gaussian fitting of a finger photoplethysmogram. Physiol Meas. 2015;36(9):1801-25. PMID 26235798",
+    "Grabovskis A, et al. Two-stage multi-Gaussian fitting of conduit artery photoplethysmography waveform. J Biomed Opt. 2015;20(3):035004. PMID 25751027",
+    "Baruch MC, et al. Validation of the pulse decomposition analysis algorithm using central arterial blood pressure. Biomed Eng Online. 2014;13:96. PMID 25005686",
+    "Wang A, et al. Gaussian modelling characteristics changes derived from finger photoplethysmographic pulses. Microvasc Res. 2018;117:15-21. PMID 28347756",
+    "Park J, et al. Vascular aging estimation using photoplethysmogram waveform decomposition. JMIR Med Inform. 2022;10(3):e33439. PMID 35297776",
     "Tusman G, et al. Photoplethysmographic characterization of vascular tone mediated changes in arterial pressure. J Clin Monit Comput. 2019;33(5):815-24",
     "Coutrot M, et al. Noninvasive continuous detection of arterial hypotension during induction of anaesthesia. Br J Anaesth. 2019;122(5):605-12. PMID 30916032",
+    "Aguet C, et al. Blood pressure monitoring during anesthesia induction using PPG morphology features. PLoS One. 2023;18(2):e0279252. PMID 36735652",
+    "Lee QY, et al. Multivariate classification of systemic vascular resistance using photoplethysmography. Physiol Meas. 2011;32(8):1117-32. PMID 21693795",
+    "Manoj R, et al. Arterial pressure pulse wave separation analysis using a multi-Gaussian decomposition model. Physiol Meas. 2022;43(5). PMID 35537402",
     "Charlton PH, et al. Modeling arterial pulse waves in healthy aging: a database for in silico evaluation. Am J Physiol. 2019;317(5):H1062-85. PMID 31442381",
     "Md Lazin Md Lazim MR, et al. Is Heart Rate a Confounding Factor for Photoplethysmography Markers? IJERPH. 2020;17(7):2591. PMID 32290168",
     "Suboh MZ, et al. Four derivative waveforms of photoplethysmogram for fiducial point detection. Front Public Health. 2022;10:920946. PMID 35844894",
@@ -1103,6 +1216,7 @@ REFS2 = [
     "Goda MA, Charlton PH, Behar JA. pyPPG: a Python toolbox for photoplethysmography signal analysis. Physiol Meas. 2024;45(4). PMID 38478997",
     "Basso G, et al. A skewed-Gaussian model for pulse decomposition analysis of photoplethysmography. Physiol Meas. 2024;45(11). PMID 39577084",
     "Chen H, et al. PPG-derived arterial stiffness index and cardiovascular prevention (UK Biobank). J Clin Hypertens. 2025;27(5):e70058. PMID 40346852",
+    "先行技術調査の全一覧（PICO・PMID・URL）は本リポジトリ PPG_wave_decomposition_prior_art.html を参照",
 ]
 from deck_kawazoe import text_w_in as _tw, line_h_in as _lh
 
