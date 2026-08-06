@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PPG波形に影響する因子 — 文献リスト（PICO）</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#262626; --muted:#6b6b6b; --line:#e3e3e3; --card:#fafafa;
+  --gold:#BF9000; --blue:#0072B2; --verm:#D55E00; --teal:#00807F; --red:#C00000;
+  --blue-bg:#DDEBF7; --verm-bg:#FBE5D6; --gold-bg:#F5EBD0; --gray-bg:#ececec;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16171a; --fg:#e8e8e6; --muted:#9a9a98; --line:#2e3036; --card:#1d1f24;
+         --gold:#D9AE3A; --blue:#4FA8DC; --verm:#F08A47; --teal:#3EC7C4; --red:#E86B6B;
+         --blue-bg:#1c3446; --verm-bg:#42291a; --gold-bg:#3a3018; --gray-bg:#2a2c31; }
+}
+:root[data-theme="dark"]{ --bg:#16171a; --fg:#e8e8e6; --muted:#9a9a98; --line:#2e3036; --card:#1d1f24;
+  --gold:#D9AE3A; --blue:#4FA8DC; --verm:#F08A47; --teal:#3EC7C4; --red:#E86B6B;
+  --blue-bg:#1c3446; --verm-bg:#42291a; --gold-bg:#3a3018; --gray-bg:#2a2c31; }
+:root[data-theme="light"]{ --bg:#ffffff; --fg:#262626; --muted:#6b6b6b; --line:#e3e3e3; --card:#fafafa;
+  --gold:#BF9000; --blue:#0072B2; --verm:#D55E00; --teal:#00807F; --red:#C00000;
+  --blue-bg:#DDEBF7; --verm-bg:#FBE5D6; --gold-bg:#F5EBD0; --gray-bg:#ececec; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,sans-serif;
+  line-height:1.75;font-size:16px;-webkit-text-size-adjust:100%}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+
+header{border-bottom:4px solid var(--gold);padding-bottom:18px;margin-bottom:24px}
+h1{font-size:1.75rem;margin:0 0 6px;color:var(--gold);letter-spacing:.01em}
+.sub{color:var(--muted);font-size:.92rem;margin:0}
+.scope{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);
+  border-radius:8px;padding:14px 18px;margin:22px 0;font-size:.94rem}
+.scope b{color:var(--gold)}
+
+h2{font-size:1.18rem;margin:42px 0 6px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+h2 .n{color:var(--gold);margin-right:.5em}
+.lead{color:var(--muted);font-size:.9rem;margin:0 0 16px}
+
+.filters{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;
+  border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px}
+.filters button{font:inherit;font-size:.86rem;padding:6px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--fg);transition:.15s}
+.filters button:hover{border-color:var(--gold)}
+.filters button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:18px 20px;margin:14px 0}
+.card.hidden{display:none}
+.chead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:2px}
+.num{font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.cite{font-weight:700;font-size:1.02rem}
+.jrnl{color:var(--muted);font-size:.88rem}
+.title-en{color:var(--muted);font-size:.85rem;margin:2px 0 12px;line-height:1.5}
+
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.tag{font-size:.76rem;font-weight:700;padding:3px 10px;border-radius:5px;white-space:nowrap}
+.t-int{background:var(--blue-bg);color:var(--blue)}
+.t-obs{background:var(--gray-bg);color:var(--muted)}
+.t-conf{background:var(--verm-bg);color:var(--verm)}
+.t-neg{background:var(--gold-bg);color:var(--gold)}
+.t-sr{background:var(--gray-bg);color:var(--teal)}
+.t-ex{background:var(--gray-bg);color:var(--red)}
+
+.pico{display:grid;grid-template-columns:76px 1fr;gap:2px 14px;font-size:.92rem;margin:0 0 14px}
+.pico dt{font-weight:700;color:var(--gold);font-size:.82rem;padding-top:3px}
+.pico dd{margin:0 0 8px}
+.pico dd:last-of-type{margin-bottom:0}
+.hl{background:linear-gradient(transparent 62%,var(--gold-bg) 62%);font-weight:700}
+
+.ids{display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  border-top:1px dashed var(--line);padding-top:11px;font-size:.84rem}
+.pmid{font-variant-numeric:tabular-nums;background:var(--gray-bg);color:var(--fg);
+  padding:3px 9px;border-radius:5px;font-weight:700}
+.ids a{color:var(--blue);text-decoration:none;border-bottom:1px solid transparent;padding:2px 0}
+.ids a:hover{border-bottom-color:var(--blue)}
+.ids .sep{color:var(--line)}
+
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:8px 0 6px}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--card);font-size:.84rem;white-space:nowrap}
+td.c{text-align:center;white-space:nowrap;font-weight:700}
+
+.ex li{margin-bottom:7px;font-size:.9rem}
+.ex code{background:var(--gray-bg);padding:1px 6px;border-radius:4px;font-size:.85em;
+  font-variant-numeric:tabular-nums}
+footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.83rem}
+@media (max-width:640px){
+  .pico{grid-template-columns:1fr;gap:0}
+  .pico dt{padding-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>PPG波形に影響する因子 — 文献リスト</h1>
+  <p class="sub">SpO₂(PPG)波形解析の流れ 6.0 の 3章「波形への影響：循環」の裏取り／2026-08-06 作成</p>
+</header>
+
+<div class="scope">
+  <b>選定条件：</b>PPG（光電容積脈波）波形そのものを測定・記録している研究に限定。動脈圧波形からの外挿、
+  in-silico モデル、speckle plethysmography などは除外欄にまとめた。
+  検索は PubMed（MCP 経由）と Consensus。抄録は全件確認済み、数値は抄録記載のもの。<br>
+  <b>判定タグ：</b><span class="tag t-int">介入</span> その因子を操作した研究
+  <span class="tag t-obs">観察</span> 横断・相関のみ
+  <span class="tag t-conf">交絡あり</span> 他因子と分離できない
+  <span class="tag t-neg">否定的所見</span> 反証・限界を示す
+  <span class="tag t-sr">SR</span> システマティックレビュー
+</div>
+
+<div class="tscroll">
+<table>
+  <thead><tr><th>因子</th><th>PPG実測の一次文献</th><th>介入の質</th><th>デックでの判定</th></tr></thead>
+  <tbody>
+    <tr><td>末梢血管トーヌス</td><td>あり（薬理学的・双方向・用量依存・局所対照あり）</td><td class="c">★★★</td><td class="c">実測（介入）</td></tr>
+    <tr><td>心拍数</td><td>あり（ペースメーカーで HR を単独操作）</td><td class="c">★★★</td><td class="c">実測（介入）</td></tr>
+    <tr><td>前負荷</td><td>あり（LBNP で段階的脱血）</td><td class="c">★★☆</td><td class="c">実測（交絡）</td></tr>
+    <tr><td>大血管スティフネス</td><td>あり（年齢・PWV との相関のみ）</td><td class="c">★☆☆</td><td class="c">観察のみ</td></tr>
+    <tr><td>心収縮力</td><td><b>なし</b></td><td class="c">—</td><td class="c">外挿</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="filters" id="filters">
+  <button data-f="all" aria-pressed="true">すべて（20件）</button>
+  <button data-f="tone" aria-pressed="false">末梢トーヌス</button>
+  <button data-f="stiff" aria-pressed="false">大血管スティフネス</button>
+  <button data-f="hr" aria-pressed="false">心拍数</button>
+  <button data-f="inot" aria-pressed="false">心収縮力</button>
+  <button data-f="pre" aria-pressed="false">前負荷</button>
+</div>
+
+<!-- ============ 1. トーヌス ============ -->
+<h2 data-sec="tone"><span class="n">1</span>末梢血管トーヌス（SVR）→ 反射波の高さ</h2>
+<p class="lead" data-sec="tone">機序：反射係数 Γ =(Z_load − Z_c)/(Z_load + Z_c)。細動脈の収縮で末梢入力インピーダンスが上がり Γ が増える → 反射波が大きくなる → RI = P2/P1 上昇。</p>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">1</span><span class="cite">Chowienczyk PJ, et al. 1999</span>
+    <span class="jrnl">J Am Coll Cardiol 1999;34:2007-14</span></div>
+  <p class="title-en">Photoplethysmographic assessment of pulse wave reflection: blunted response to endothelium-dependent β2-adrenergic vasodilation in type II diabetes mellitus.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-int">局所 vs 全身の対照あり</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>2型糖尿病患者と対照（各 n=20）、健常者</dd>
+    <dt>I / E</dt><dd>サルブタモール（吸入 400 µg）・GTN（舌下 500 µg）の<b>全身投与</b>、および同薬の<b>上腕動脈内局所投与</b>。L-NMMA 前処置あり／なし</dd>
+    <dt>C</dt><dd>局所投与（前腕血流を3倍以上に増やす量）vs 全身投与／2型DM vs 対照</dd>
+    <dt>O</dt><dd>指尖 DVP の変曲点高 IP<sub>DVP</sub>（最大振幅に対する%）。<span class="hl">局所投与では不変、全身投与では用量依存的に低下</span>＝局所の指血管ではなく全身の波反射が変化している証拠。サルブタモール反応は対照 −11.8±1.8% に対し 2型DM −5.9±1.8%（p&lt;0.02）、GTN は両群保たれ −18.6±1.9% vs −18.3±1.2%（p=0.88）。第1・第2ピーク間隔は大動脈 transit time と r=0.75。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 10588217</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/10588217/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1016/s0735-1097(99)00441-6">DOI 10.1016/s0735-1097(99)00441-6</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">2</span><span class="cite">Gordon SE, et al. 2009</span>
+    <span class="jrnl">Br J Clin Pharmacol 2009;68:630-3</span></div>
+  <p class="title-en">Investigation of endothelial function by pulse contour analysis: a protocol for drug administration and timing of pulse contour assessment.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-int">用量・時間反応</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常ボランティア 16名、重症冠動脈疾患患者 9名</dd>
+    <dt>I</dt><dd>吸入サルブタモール 100–400 µg、舌下ニトログリセリン 25–400 µg</dd>
+    <dt>C</dt><dd>用量間・時間点間の比較、健常 vs 重症CAD</dd>
+    <dt>O</dt><dd>RI（変曲点高／最大DVP）。健常で<span class="hl">用量依存的に低下</span>（サルブタモール p=0.05、NTG p&lt;0.001）。最大反応までの時間はサルブタモール 10.73±0.41 分、NTG 3.66±0.21 分。重症CADでは有意な変化なし。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 19843066</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/19843066/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1111/j.1365-2125.2009.03482.x">DOI 10.1111/j.1365-2125.2009.03482.x</a></div>
+</div>
+
+<div class="card" data-cat="tone stiff">
+  <div class="chead"><span class="num">3</span><span class="cite">Millasseau SC, et al. 2003</span>
+    <span class="jrnl">Am J Hypertens 2003;16:467-72</span></div>
+  <p class="title-en">The vascular impact of aging and vasoactive drugs: comparison of two digital volume pulse measurements.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-int">双方向</span><span class="tag t-int">2軸の解離を実証</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常男性 124名（うち 10名で薬物負荷）</dd>
+    <dt>I</dt><dd>アンジオテンシンII 75–300 µg/min 静注、ニトログリセリン 3–300 µg/min 静注（別日）</dd>
+    <dt>C</dt><dd>生理食塩水。RI<sub>DVP</sub>・SI<sub>DVP</sub> と二次微分指標（a/b, a/c, a/d, a/e）の比較</dd>
+    <dt>O</dt><dd><span class="hl">RI<sub>DVP</sub> は AngII で用量依存的に上昇、GTN で低下</span>。一方 <span class="hl">SI<sub>DVP</sub> は年齢と強く相関（R=0.63）するが AngII/GTN でほとんど動かない</span>＝「高さ＝急性トーヌス／時相＝慢性の硬さ」という2軸分離を同一実験内で示した。d/a は年齢と R=−0.66 だが GTN への反応は用量依存的でない。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 12799095</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/12799095/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1016/s0895-7061(03)00569-7">DOI 10.1016/s0895-7061(03)00569-7</a></div>
+</div>
+
+<div class="card" data-cat="tone stiff">
+  <div class="chead"><span class="num">4</span><span class="cite">Takazawa K, et al. 1998</span>
+    <span class="jrnl">Hypertension 1998;32:365-70</span></div>
+  <p class="title-en">Assessment of vasoactive agents and vascular aging by the second derivative of photoplethysmogram waveform.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-obs">大規模横断 n=600</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>研究1：患者 39名（54±11歳、上行大動脈圧を同時記録）／研究2：健常 600名（30〜80代 各100名）</dd>
+    <dt>I</dt><dd>研究1：アンジオテンシンII 2.5 µg 静注、ニトログリセリン 0.3 mg 舌下</dd>
+    <dt>C</dt><dd>投与前後、年代間、既往歴あり群 vs 年齢マッチ対照</dd>
+    <dt>O</dt><dd>SDPPG の <span class="hl">d/a が AngII で −0.40±0.13 → −0.62±0.19、NTG で −0.25±0.12</span>（いずれも p&lt;0.001）。−d/a は指尖 AI と r=0.79、上行大動脈 AI と r=0.80。研究2：b/a は加齢で上昇、c/a・d/a・e/a は低下。加齢指数 (b−c−d−e)/a は年齢と r=0.80。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 9719069</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/9719069/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1161/01.hyp.32.2.365">DOI 10.1161/01.hyp.32.2.365</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">5</span><span class="cite">Awad AA, et al. 2007</span>
+    <span class="jrnl">J Clin Monit Comput 2007;21:365-72</span></div>
+  <p class="title-en">The relationship between the photoplethysmographic waveform and systemic vascular resistance.</p>
+  <div class="tags"><span class="tag t-obs">観察</span><span class="tag t-obs">術中</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>CABG を受ける成人 14名</dd>
+    <dt>E</dt><dd>術中の SVR 変動（熱希釈カテーテルで連続 CO 測定）</dd>
+    <dt>C</dt><dd>指 vs 耳、振幅 vs 脈波幅</dd>
+    <dt>O</dt><dd>SVR との相関は指の振幅 r=−0.15 に対し <span class="hl">指の脈波幅 r=0.56、耳の脈波幅 r=0.62</span>。ROC でも耳の幅が最良。Bland-Altman のバイアス 29.8 dyn·s·cm⁻⁵、一致限界 −1144.8〜1204.5 と広い。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 17940842</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/17940842/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s10877-007-9097-5">DOI 10.1007/s10877-007-9097-5</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">6</span><span class="cite">Tusman G, et al. 2019</span>
+    <span class="jrnl">J Clin Monit Comput 2019;33:815-24</span></div>
+  <p class="title-en">Photoplethysmographic characterization of vascular tone mediated changes in arterial pressure: an observational study.</p>
+  <div class="tags"><span class="tag t-obs">観察</span><span class="tag t-obs">術中</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>心臓外科手術患者 15名、190 データセット（高血圧 61・正常 84・低血圧 45 エピソード）</dd>
+    <dt>E</dt><dd>切痕位置（PPG振幅の何%か）× 振幅による目視6分類。Class I–II＝血管収縮、III＝正常、IV–VI＝血管拡張</dd>
+    <dt>C</dt><dd>SAP、SVR、血管コンプライアンス（SV/PP）</dd>
+    <dt>O</dt><dd>分類は <span class="hl">SAP と r=−0.90、SVR と r=−0.72、Cvasc と r=0.82</span>。低血圧検出 感度 100%・特異度 97.9%、高血圧 94.9%・99.2%。190中7例で誤分類。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 30554338</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/30554338/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s10877-018-0235-z">DOI 10.1007/s10877-018-0235-z</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">7</span><span class="cite">Middleton PM, et al. 2011</span>
+    <span class="jrnl">Med Biol Eng Comput 2011;49:859-66</span></div>
+  <p class="title-en">Fingertip photoplethysmographic waveform variability and systemic vascular resistance in intensive care unit patients.</p>
+  <div class="tags"><span class="tag t-obs">観察</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>心臓術後 ICU 患者 48名</dd>
+    <dt>E</dt><dd>指尖 PPG 波形変動（PPGV）の低周波成分 LF<sub>nu</sub></dd>
+    <dt>C</dt><dd>熱希釈 CO と観血的動脈圧から算出した SVR</dd>
+    <dt>O</dt><dd>LF<sub>nu</sub> と SVR が <span class="hl">r=0.54（p&lt;0.0001）</span>。LF<sub>nu</sub>&lt;52.5 で SVR&lt;900 dyn·s·cm⁻⁵ を感度 59%・特異度 95% で同定＝血管拡張の特異的（感度は低い）マーカー。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 21340639</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/21340639/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s11517-011-0749-8">DOI 10.1007/s11517-011-0749-8</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">8</span><span class="cite">Kim WJ, et al. 2017</span>
+    <span class="jrnl">Medicine (Baltimore) 2017;96:e7045</span></div>
+  <p class="title-en">The photoplethysmographic amplitude to pulse pressure ratio can track sudden changes in vascular compliance and resistance during liver graft reperfusion: a beat-to-beat analysis.</p>
+  <div class="tags"><span class="tag t-obs">観察</span><span class="tag t-obs">拍毎</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>肝移植レシピエント 10名</dd>
+    <dt>E</dt><dd>グラフト再灌流直後（SBP 低下開始〜最低値）の PPG振幅/脈圧比（PPGamp/PP）</dd>
+    <dt>C</dt><dd>Modelflow 由来の総末梢抵抗 TPR、Windkessel コンプライアンス Cwk</dd>
+    <dt>O</dt><dd>再灌流後 PPGamp/PP +41.5%、Cwk +42.0%、TPR −46.4%。拍毎に <span class="hl">TPR と r=−0.80、Cwk と r=0.86</span>。急な低血圧の鑑別に使える可能性。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 28562562</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/28562562/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1097/MD.0000000000007045">DOI 10.1097/MD.0000000000007045</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">9</span><span class="cite">Thiele RH, et al. 2011</span>
+    <span class="jrnl">J Cardiothorac Vasc Anesth 2011;25:1044-50</span></div>
+  <p class="title-en">Relationship between plethysmographic waveform changes and hemodynamic variables in anesthetized, mechanically ventilated patients undergoing continuous cardiac output monitoring.</p>
+  <div class="tags"><span class="tag t-neg">否定的所見</span><span class="tag t-obs">観察</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>CABG を受ける患者 18名（耳朶 PPG ＋ Swan-Ganz CCOmbo）</dd>
+    <dt>E</dt><dd>PPG の振幅・最大傾き・曲線下面積・幅</dd>
+    <dt>C</dt><dd>観血的に測定した血行動態変数（CO、SV、SVR 等）、および先行研究の報告値</dd>
+    <dt>O</dt><dd><span class="hl">SV と PPG 幅のみ有意（中央値 r=0.29、CI 0.01–0.46）で、一致率 53%</span>。他の相関はすべて非有意。「先行研究の結果を再現できなかった。相関も一致率も臨床的に有用な水準にない」と結論。<b>Awad 2007 に対する反証として重要。</b></dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 21924629</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/21924629/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1053/j.jvca.2011.07.004">DOI 10.1053/j.jvca.2011.07.004</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">10</span><span class="cite">Colquhoun D, et al. 2013</span>
+    <span class="jrnl">J Clin Monit Comput 2013;27:689-96</span></div>
+  <p class="title-en">The relationship between the area of peripherally-derived pressure volume loops and systemic vascular resistance.</p>
+  <div class="tags"><span class="tag t-neg">否定的所見</span><span class="tag t-obs">観察</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>肝移植患者 10名、計 1728 分のデータ</dd>
+    <dt>E</dt><dd>観血的動脈圧（圧）× PPG（容積）から作る末梢 pressure-volume ループ面積 PVA</dd>
+    <dt>C</dt><dd>SVR、MAP</dd>
+    <dt>O</dt><dd>PVAi と SVRi が r=0.67（MAP–SVR は r=0.71）。しかし <span class="hl">分毎の変化量では ΔPVA と ΔSVR に意味ある相関なし</span>。「現状では MAP 以上の付加価値はない」と結論。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 23881417</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/23881417/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s10877-013-9493-y">DOI 10.1007/s10877-013-9493-y</a></div>
+</div>
+
+<div class="card" data-cat="tone">
+  <div class="chead"><span class="num">11</span><span class="cite">Iketani T, et al. 2000</span>
+    <span class="jrnl">Hypertens Res 2000;23:451-8</span></div>
+  <p class="title-en">The influence of the peripheral reflection wave on left ventricular hypertrophy in patients with essential hypertension.</p>
+  <div class="tags"><span class="tag t-obs">観察</span><span class="tag t-obs">アウトカム関連</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>未治療の本態性高血圧 60名</dd>
+    <dt>E</dt><dd>指尖 PTG の augmentation index（後期収縮期ピーク／前期収縮期ピーク）と SDPTG の −d/a</dd>
+    <dt>C</dt><dd>低AI群（AI&lt;1.6）vs 高AI群（AI≥1.6）</dd>
+    <dt>O</dt><dd>左室心筋重量係数 LVMI は <span class="hl">AI と r=0.60、−d/a と r=0.63</span>（ともに p&lt;0.0001）。高AI群で LVMI 有意高値＝反射波の増大が左室肥大の一因。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 11016799</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/11016799/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1291/hypres.23.451">DOI 10.1291/hypres.23.451</a></div>
+</div>
+
+<!-- ============ 2. 大血管スティフネス ============ -->
+<h2 data-sec="stiff"><span class="n">2</span>大血管スティフネス → 反射波の時相</h2>
+<p class="lead" data-sec="stiff">上記 3・4 も該当。この因子を単独で変えた介入研究は検出できず、年齢・PWV との横断相関にとどまる。</p>
+
+<div class="card" data-cat="stiff">
+  <div class="chead"><span class="num">12</span><span class="cite">Millasseau SC, et al. 2002</span>
+    <span class="jrnl">Clin Sci (Lond) 2002;103:371-7</span></div>
+  <p class="title-en">Determination of age-related increases in large artery stiffness by digital pulse contour analysis.</p>
+  <div class="tags"><span class="tag t-obs">観察</span><span class="tag t-int">GTN 負荷あり</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>無症候の成人 87名（21–68歳、女性 29名）</dd>
+    <dt>E</dt><dd>指尖 DVP 由来 SI<sub>DVP</sub> ＝ 身長 ÷（前進波–反射波の時間差）</dd>
+    <dt>C</dt><dd>アプラネーショントノメトリによる cf-PWV。別に 9名で GTN 3/30/300 µg/min 静注（各15分）</dd>
+    <dt>O</dt><dd><span class="hl">SI<sub>DVP</sub> と cf-PWV が r=0.65（p&lt;0.0001）</span>。年齢・MAP への回帰係数がほぼ一致（SI=0.63+0.086×age+0.042×MAP／PWV=0.76+0.080×age+0.053×MAP）。GTN で両者が同様に変化。週間隔の被験者内変動係数 9.6%。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 12241535</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/12241535/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1042/cs1030371">DOI 10.1042/cs1030371</a></div>
+</div>
+
+<div class="card" data-cat="stiff hr">
+  <div class="chead"><span class="num">13</span><span class="cite">Hashimoto J, et al. 2002</span>
+    <span class="jrnl">J Hypertens 2002;20:2415-22</span></div>
+  <p class="title-en">Pulse wave velocity and the second derivative of the finger photoplethysmogram in treated hypertensive patients: their relationship and associating factors.</p>
+  <div class="tags"><span class="tag t-neg">否定的所見</span><span class="tag t-obs">観察 n=294</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>治療中の高血圧患者 294名（32–91歳、平均 61.4±10.5歳）</dd>
+    <dt>E</dt><dd>指尖 SDPTG（b/a、d/a、加齢指数 AGI）と cf-PWV を同時測定</dd>
+    <dt>C</dt><dd>二変量・多変量解析による相互比較</dd>
+    <dt>O</dt><dd>PWV には年齢・SBP・<b>HR</b> が独立に正相関。SDPTG 指標は年齢・BP と関連し、<span class="hl">HR は d/a・AGI と負、b/a と正に相関</span>。ただし <span class="hl">PWV と SDPTG 指標の相互相関は弱く</span>、「中枢と末梢で異なる情報を与える」と結論＝PPG で大動脈スティフネスを代替すると言い切れない根拠。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 12473866</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/12473866/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1097/00004872-200212000-00021">DOI 10.1097/00004872-200212000-00021</a></div>
+</div>
+
+<!-- ============ 3. 心拍数 ============ -->
+<h2 data-sec="hr"><span class="n">3</span>心拍数 → PPG 指標</h2>
+<p class="lead" data-sec="hr">上記 13 も該当。HR を単独操作した介入研究が存在するのがこの因子の強み。</p>
+
+<div class="card" data-cat="hr">
+  <div class="chead"><span class="num">14</span><span class="cite">Aminuddin A, et al. 2018</span>
+    <span class="jrnl">PLoS One 2018;13:e0207301</span></div>
+  <p class="title-en">Effect of increasing heart rate on finger photoplethysmography fitness index (PPGF) in subjects with implanted cardiac pacemakers.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-int">HR を単独操作</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>恒久ペースメーカー／ICD 植込み例 20名（78±8歳、女性 3名）</dd>
+    <dt>I</dt><dd><span class="hl">ペーシングで HR を 60→100 bpm、10 bpm 刻み・ランダム順に変更</span></dd>
+    <dt>C</dt><dd>各 HR 間の比較、血圧による層別</dd>
+    <dt>O</dt><dd>HR 上昇で拡張期BP・平均BP・CO が有意上昇（p&lt;0.01）、<span class="hl">PPG fitness index と SV が有意低下（p&lt;0.001）</span>。効果の大きさは BP 依存。「HR は PPGF の有意な交絡因子であり、HR 差が大きいときは補正が必要」と結論。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 30485318</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/30485318/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1371/journal.pone.0207301">DOI 10.1371/journal.pone.0207301</a></div>
+</div>
+
+<div class="card" data-cat="hr">
+  <div class="chead"><span class="num">15</span><span class="cite">Md Lazim MR, et al. 2020</span>
+    <span class="jrnl">Int J Environ Res Public Health 2020;17:2591</span></div>
+  <p class="title-en">Is Heart Rate a Confounding Factor for Photoplethysmography Markers? A Systematic Review.</p>
+  <div class="tags"><span class="tag t-sr">システマティックレビュー</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>ヒトを対象に HR と PPG 指標の関係を扱った研究。1960編をスクリーニングし 6編を採用</dd>
+    <dt>E</dt><dd>安静時心拍数</dd>
+    <dt>C</dt><dd>RI・SI・SDPPG（b/a、d/a、AGI、RAGI）それぞれとの関連を比較</dd>
+    <dt>O</dt><dd><span class="hl">RI は HR と相当な関連あり。SI の関連は弱い。SDPPG は結論不能</span>。「安静時 HR の個体差が PPG 由来 CVD マーカーの妥当性を脅かしうるため、介入研究が必要」と提言。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 32290168</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/32290168/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.3390/ijerph17072591">DOI 10.3390/ijerph17072591</a></div>
+</div>
+
+<!-- ============ 4. 心収縮力 ============ -->
+<h2 data-sec="inot"><span class="n">4</span>心収縮力 → PPG 波形（該当研究なし）</h2>
+<p class="lead" data-sec="inot">PubMed（photoplethysmography × contractility / inotropic / dobutamine / ejection fraction）と Consensus のいずれでも、<b>ヒトで収縮力を単独に変えて PPG 波形を記録した研究は検出できなかった</b>。デックの「外挿」判定は妥当。</p>
+
+<div class="card" data-cat="inot">
+  <div class="chead"><span class="num">16</span><span class="cite">Wang A, et al. 2017</span>
+    <span class="jrnl">Microvasc Res 2017;116:20-25</span></div>
+  <p class="title-en">Gaussian modelling characteristics changes derived from finger photoplethysmographic pulses during exercise and recovery.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-conf">交絡あり</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常者 65名（女性 18・男性 47）</dd>
+    <dt>I</dt><dd>運動負荷 0/50/75/100/125 W、および各負荷後 4分間の回復期</dd>
+    <dt>C</dt><dd>負荷間・回復相間の比較（波形は幅・振幅とも正規化）</dd>
+    <dt>O</dt><dd>指尖 PPG を3つのガウス波に分解。負荷増で H₁↑・N₁–N₃↑・W₁/W₃↑・H₃↓。T₁₋₂ 10.6±1.2→14.4±2.3、T₁₋₃ 36.0±4.4→45.1±6.5（100W）。R₁₋₂ 1.07→1.22、R₁₋₃ 1.10→0.42（125W）。回復期は逆方向。
+    <b>ただし運動は心拍数・収縮力・血管トーヌスを同時に変えるため、収縮力の単独効果は取り出せない。</b></dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 28347756</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/28347756/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1016/j.mvr.2017.03.008">DOI 10.1016/j.mvr.2017.03.008</a></div>
+</div>
+
+<!-- ============ 5. 前負荷 ============ -->
+<h2 data-sec="pre"><span class="n">5</span>前負荷 → PPG 波形</h2>
+<p class="lead" data-sec="pre">LBNP による介入研究が複数あるが、LBNP は交感神経性の末梢血管収縮も同時に起こす。指と耳の乖離がその証拠。</p>
+
+<div class="card" data-cat="pre">
+  <div class="chead"><span class="num">17</span><span class="cite">Alian AA, et al. 2011（Part 1）</span>
+    <span class="jrnl">J Clin Monit Comput 2011;25:377-85</span></div>
+  <p class="title-en">Impact of central hypovolemia on photoplethysmographic waveform parameters in healthy volunteers. Part 1: time domain analysis.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-conf">交感神経性収縮が交絡</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常ボランティア 11名（自発呼吸）</dd>
+    <dt>I</dt><dd>下半身陰圧 LBNP 0 / 30 / 75 / 90 mmHg（または症候発現まで）＝循環血液量減少の再現</dd>
+    <dt>C</dt><dd>指 PPG vs 耳 PPG、および血圧・HRV（RMSSD）</dd>
+    <dt>O</dt><dd><span class="hl">指 PPG の高さ・面積・width50・最大傾きは LBNP 30 mmHg の時点で既に有意低下</span>（血圧はまだ不変）。症候期には −59.4 / −76.9 / −27.4 / −51.6%。
+    <span class="hl">耳 PPG は LBNP 75 mmHg まで不変</span>、症候期でも −39.3 / −61.0 / −21.4 / −34.9% にとどまる。この部位差は中枢皮膚血流が相対的に保たれること＝<b>指の低下には交感神経性の血管収縮が含まれる</b>ことを示す。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 22051898</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/22051898/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s10877-011-9316-y">DOI 10.1007/s10877-011-9316-y</a></div>
+</div>
+
+<div class="card" data-cat="pre">
+  <div class="chead"><span class="num">18</span><span class="cite">Alian AA, et al. 2011（Part 2）</span>
+    <span class="jrnl">J Clin Monit Comput 2011;25:387-96</span></div>
+  <p class="title-en">Impact of central hypovolemia on photoplethysmographic waveform parameters in healthy volunteers part 2: frequency domain analysis.</p>
+  <div class="tags"><span class="tag t-int">介入</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>同コホート（健常 11名）</dd>
+    <dt>I</dt><dd>同じ LBNP プロトコル</dd>
+    <dt>C</dt><dd>PPG の低周波・中間周波・呼吸性・心拍成分、および HRV-LF / HRV-HF</dd>
+    <dt>O</dt><dd>指 PPG の心拍成分が脈圧低下に一致して減少。耳 PPG では心拍成分 → 呼吸成分へ振幅密度がシフト。LBNP 75 で <span class="hl">耳 PPG-IF が +140% 超、同時に HRV-HF が −89%</span>。「PPG は心臓・静脈・自律神経・呼吸の混合信号であり、中枢由来部位を扱う際は自律神経の変調を考慮すべき」と結論。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 22057245</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/22057245/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1007/s10877-011-9317-x">DOI 10.1007/s10877-011-9317-x</a></div>
+</div>
+
+<div class="card" data-cat="pre">
+  <div class="chead"><span class="num">19</span><span class="cite">Hoff IE, et al. 2019</span>
+    <span class="jrnl">PLoS One 2019;14:e0223071</span></div>
+  <p class="title-en">Respiratory variations in pulse pressure and photoplethysmographic waveform amplitude during positive expiratory pressure and continuous positive airway pressure in a model of progressive hypovolemia.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-int">自発呼吸下</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常ボランティア 20名（自発呼吸。うち 10名で CVP 測定）</dd>
+    <dt>I</dt><dd>LBNP による段階的脱血 × PEP 0/5/10 cmH₂O（呼気抵抗）または CPAP 0/5/10 cmH₂O（フェイスマスク）</dd>
+    <dt>C</dt><dd>PEP/CPAP レベル間の比較。dPP（volume clamp 法）vs dPOP（パルスオキシメータ）</dd>
+    <dt>O</dt><dd><span class="hl">dPOP は PEP 5・PEP 10 と全 CPAP レベルで LBNP 進行とともに増加</span>。dPP は全条件で増加し、PEP 10 でその増加が増幅された。dPOP には PEP/CPAP レベルの追加効果なし。自発呼吸下でも胸腔内圧変動を増幅すれば PPG で容量反応性を追える可能性。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 31560715</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/31560715/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1371/journal.pone.0223071">DOI 10.1371/journal.pone.0223071</a></div>
+</div>
+
+<div class="card" data-cat="pre">
+  <div class="chead"><span class="num">20</span><span class="cite">Puyana JC, et al. 2013</span>
+    <span class="jrnl">J Trauma Acute Care Surg 2013;75(2 Suppl 2):S190-6</span></div>
+  <p class="title-en">Model-based prediction of autoregulatory exhaustion in response to lower-body negative pressure-induced shock.</p>
+  <div class="tags"><span class="tag t-int">介入</span><span class="tag t-obs">n=10</span></div>
+  <dl class="pico">
+    <dt>P</dt><dd>健常者 10名（男女各 5名）</dd>
+    <dt>I</dt><dd>LBNP チャンバで中心血液量減少を誘発</dd>
+    <dt>C</dt><dd>心エコー由来の循環血液量指標、連続 SBP（&lt;90 mmHg を autoregulatory exhaustion と定義）</dd>
+    <dt>O</dt><dd>前額部の反射型パルスオキシメータ PPG から求めた脈拍数・脈波強度の周波数指標で、LBNP 進行に伴う自律神経ストレスの漸増を全例で検出。<span class="hl">3名で生じた autoregulatory exhaustion の 1段階前で指標が急増</span>＝低血圧に先行する予測指標になりうる。</dd>
+  </dl>
+  <div class="ids"><span class="pmid">PMID 23883907</span>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/23883907/">PubMed</a><span class="sep">|</span>
+    <a href="https://doi.org/10.1097/TA.0b013e318299d5b7">DOI 10.1097/TA.0b013e318299d5b7</a></div>
+</div>
+
+<!-- ============ 除外 ============ -->
+<h2><span class="n">6</span>検索で拾ったが除外したもの</h2>
+<ul class="ex">
+  <li><b>Wilkinson IB, et al. J Physiol 2000;525:263-70</b> — HR と augmentation index の関係を示した古典だが、<b>橈骨動脈トノメトリ由来の圧波形</b>。PPG ではないため HR の根拠から外した（旧デックの 3.6 脚注はこれを引いていた）。</li>
+  <li><b>Charlton PH, et al. Am J Physiol Heart Circ Physiol 2019;317:H1062</b> — <b>in-silico</b> の血行動態データベース。デックの 3.6 の図の出典なので脚注には残し、「（in-silico）」と明記した。</li>
+  <li><b>Piccioli F, et al. Int J Numer Method Biomed Eng 2022;38:e3658</b>（<code>PMID 36286406</code>）／<b>Pagoulatou S, et al. PLoS One 2021;16:e0255561</b> — 心収縮力の影響を扱うが、いずれも<b>数値モデル</b>。</li>
+  <li><b>Ghijsen M, et al. Biomed Opt Express 2018</b>（<code>PMID 30338166</code>）— speckle plethysmography であり PPG ではない。</li>
+  <li><b>Hickey M, et al. J Clin Monit Comput 2015</b>（<code>PMID 26318315</code>）／<b>Jagomägi K, et al. Clin Physiol Funct Imaging 2005</b>（<code>PMID 16268987</code>）— 手の挙上による静水圧変化の研究で、循環因子の検討ではない。</li>
+  <li><b>Koppula A, et al. Physiol Meas 2022</b>（<code>PMID 35512706</code>）— インスリン抵抗性の推定。<b>Pelaez-Coca MD, et al. 2021</b>（<code>PMID 32870804</code>）— 高気圧環境。<b>Małecki R, et al. Microvasc Res 2017</b>（<code>PMID 28495449</code>）— 本態性血小板血症。いずれも目的外。</li>
+</ul>
+
+<h2><span class="n">7</span>参考：1.2 スライドの PWV 数値の裏取り</h2>
+<p class="lead">「圧波（脈波）5–10 m/s」「血流の10倍以上速い」の根拠。こちらは PubMed メタデータではなく web 検索で確認した。</p>
+<ul class="ex">
+  <li><b>Diaz A, et al. J Clin Hypertens 2018</b> — 9–87歳の健常集団における cf-PWV の基準値・パーセンタイル。
+    <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/jch.13251">onlinelibrary.wiley.com/doi/full/10.1111/jch.13251</a></li>
+  <li><b>ELSA-Brasil（Baldo MP, et al. 2017）</b>（<code>PMID 29111104</code>）— 健常成人の cf-PWV。男性 8.74±1.15 vs 女性 8.31±1.13 m/s。
+    <a href="https://pubmed.ncbi.nlm.nih.gov/29111104/">PubMed</a></li>
+  <li>臓器障害の閾値としての <b>cf-PWV 10 m/s</b>（従来の 12 m/s から引き下げ）は上記いずれにも記載。</li>
+</ul>
+
+<footer>
+  検索日 2026-08-06。検索は PubMed（E-utilities 経由）と Consensus。掲載した数値・相関係数はすべて各論文の抄録に記載されたもので、全件抄録を確認済み。本文（Full text）までは参照していないため、抄録に載らない詳細（測定条件の細部、サブグループ解析など）は各リンクから原著をご確認ください。<br>
+  文献情報の取得元：PubMed（米国国立医学図書館）。
+</footer>
+
+</div>
+<script>
+(function(){
+  var btns=document.querySelectorAll('#filters button');
+  var cards=document.querySelectorAll('.card');
+  var secs=document.querySelectorAll('h2[data-sec], p.lead[data-sec]');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var f=b.dataset.f;
+      btns.forEach(function(x){x.setAttribute('aria-pressed', x===b?'true':'false');});
+      cards.forEach(function(c){
+        var show = (f==='all') || c.dataset.cat.split(' ').indexOf(f)>=0;
+        c.classList.toggle('hidden', !show);
+      });
+      secs.forEach(function(s){
+        s.style.display = (f==='all'||s.dataset.sec===f) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

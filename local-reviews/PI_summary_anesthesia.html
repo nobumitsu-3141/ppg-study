@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PI（末梢灌流指数）— 麻酔科医のための包括的解説</title>
+<style>
+  :root {
+    --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-600: #185FA5; --blue-800: #0C447C; --blue-900: #042C53;
+    --teal-50: #E1F5EE; --teal-200: #5DCAA5; --teal-600: #0F6E56; --teal-800: #085041;
+    --amber-50: #FAEEDA; --amber-200: #EF9F27; --amber-600: #854F0B; --amber-800: #633806;
+    --coral-50: #FAECE7; --coral-200: #F0997B; --coral-600: #993C1D; --coral-800: #712B13;
+    --purple-50: #EEEDFE; --purple-200: #AFA9EC; --purple-600: #534AB7; --purple-800: #3C3489;
+    --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-200: #B4B2A9; --gray-600: #5F5E5A;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --border: #e0ddd6;
+    --bg: #ffffff;
+    --bg-secondary: #f8f7f4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    background: #fff;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  /* ヘッダー */
+  .doc-header {
+    border-left: 5px solid var(--blue-600);
+    padding: 0 0 0 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+  .doc-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--blue-600);
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .doc-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--blue-900);
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+  }
+  .doc-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* セクションヘッダー */
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--blue-800);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1.5px solid var(--blue-200);
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 0.6rem;
+  }
+
+  p { margin-bottom: 0.85rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: 0.85rem; }
+  li { margin-bottom: 0.35rem; }
+
+  /* カード */
+  .card {
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    margin-bottom: 1rem;
+    background: var(--bg);
+  }
+  .card-blue { background: var(--blue-50); border-color: var(--blue-200); }
+  .card-teal { background: var(--teal-50); border-color: var(--teal-200); }
+  .card-amber { background: var(--amber-50); border-color: var(--amber-200); }
+  .card-coral { background: var(--coral-50); border-color: var(--coral-200); }
+  .card-purple { background: var(--purple-50); border-color: var(--purple-200); }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .card-blue .card-title { color: var(--blue-800); }
+  .card-teal .card-title { color: var(--teal-800); }
+  .card-amber .card-title { color: var(--amber-800); }
+  .card-coral .card-title { color: var(--coral-800); }
+  .card-purple .card-title { color: var(--purple-800); }
+
+  /* メタカード（著者情報など） */
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .meta-card {
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .meta-label { font-size: 11px; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .meta-value { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* PIフォーミュラ */
+  .formula-box {
+    background: var(--blue-50);
+    border: 1.5px solid var(--blue-200);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    margin: 1.25rem 0;
+  }
+  .formula {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--blue-800);
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .formula-note {
+    font-size: 12px;
+    color: var(--blue-600);
+  }
+
+  /* 結果ハイライト */
+  .result-highlight {
+    background: var(--teal-50);
+    border-left: 4px solid var(--teal-600);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.1rem;
+    margin: 1rem 0;
+  }
+  .result-highlight strong { color: var(--teal-800); }
+
+  /* テーブル */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 1rem 0 1.5rem;
+  }
+  th {
+    background: var(--blue-800);
+    color: #fff;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 0.55rem 0.9rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+  tr:nth-child(even) td { background: var(--bg-secondary); }
+  tr:hover td { background: var(--blue-50); }
+
+  /* 指の比較ビジュアル */
+  .finger-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.6rem;
+    margin: 1.25rem 0;
+  }
+  .finger-card {
+    text-align: center;
+    border-radius: 8px;
+    padding: 0.75rem 0.4rem;
+    border: 1.5px solid transparent;
+  }
+  .finger-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .finger-desc {
+    font-size: 10px;
+    margin-top: 0.25rem;
+  }
+  .finger-best {
+    background: var(--teal-50);
+    border-color: var(--teal-600);
+  }
+  .finger-best .finger-name { color: var(--teal-800); }
+  .finger-best .finger-desc { color: var(--teal-600); }
+  .finger-good {
+    background: var(--blue-50);
+    border-color: var(--blue-200);
+  }
+  .finger-good .finger-name { color: var(--blue-800); }
+  .finger-good .finger-desc { color: var(--blue-600); }
+  .finger-poor {
+    background: var(--gray-50);
+    border-color: var(--gray-100);
+  }
+  .finger-poor .finger-name { color: var(--gray-600); }
+  .finger-poor .finger-desc { color: var(--gray-600); }
+
+  /* アイコン付きポイント */
+  .point-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+  }
+  .point-icon {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 0.05rem;
+  }
+  .icon-blue { background: var(--blue-600); color: #fff; }
+  .icon-teal { background: var(--teal-600); color: #fff; }
+  .icon-amber { background: var(--amber-200); color: var(--amber-800); }
+  .icon-coral { background: var(--coral-200); color: var(--coral-800); }
+  .point-text { font-size: 14px; line-height: 1.6; }
+
+  /* 文献リスト */
+  .ref-list {
+    list-style: none;
+    padding: 0;
+    counter-reset: ref-counter;
+  }
+  .ref-list li {
+    counter-increment: ref-counter;
+    display: flex;
+    gap: 0.75rem;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.7rem;
+    line-height: 1.55;
+  }
+  .ref-list li::before {
+    content: counter(ref-counter);
+    min-width: 22px;
+    height: 22px;
+    background: var(--blue-50);
+    border: 0.5px solid var(--blue-200);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-800);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* クリニカルパールボックス */
+  .pearl {
+    border: 1.5px solid var(--amber-200);
+    background: var(--amber-50);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  .pearl-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--amber-600);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+  }
+  .pearl p { font-size: 14px; margin-bottom: 0.35rem; }
+  .pearl p:last-child { margin-bottom: 0; }
+
+  /* ディバイダー */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2rem 0;
+  }
+
+  /* バッジ */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+  }
+  .badge-blue { background: var(--blue-50); color: var(--blue-800); border: 0.5px solid var(--blue-200); }
+  .badge-teal { background: var(--teal-50); color: var(--teal-800); border: 0.5px solid var(--teal-200); }
+  .badge-amber { background: var(--amber-50); color: var(--amber-800); border: 0.5px solid var(--amber-200); }
+
+  /* 注釈 */
+  .footnote {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    border-top: 0.5px solid var(--border);
+    padding-top: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 600px) {
+    body { padding: 1.5rem 1rem 3rem; }
+    .finger-grid { grid-template-columns: repeat(3, 1fr); }
+    .meta-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-label">麻酔科医向け論文解説 · 2025年</div>
+  <div class="doc-title">パルスオキシメータ由来 PI（末梢灌流指数）の<br>指間差に関する探索的研究</div>
+  <div class="doc-subtitle">周辺知識を含む包括的解説 — 長崎大学麻酔集中治療医学</div>
+</div>
+
+<!-- 論文情報 -->
+<div class="meta-grid">
+  <div class="meta-card">
+    <div class="meta-label">筆頭著者</div>
+    <div class="meta-value">新谷 亮祐（長崎大学麻酔科 助手）</div>
+  </div>
+  <div class="meta-card">
+    <div class="meta-label">掲載誌・DOI</div>
+    <div class="meta-value">Cureus 2025; 17(4): e82131</div>
+  </div>
+  <div class="meta-card">
+    <div class="meta-label">デザイン</div>
+    <div class="meta-value">前向き探索的単施設研究（健常ボランティア30名）</div>
+  </div>
+  <div class="meta-card">
+    <div class="meta-label">使用機器</div>
+    <div class="meta-value">日本光電 Life Scope PT（PAI / pulse-amplitude index）</div>
+  </div>
+</div>
+
+<!-- ─────────────── Section 1: PIとは ─────────────── -->
+<h2>1. PI（末梢灌流指数）の基礎知識</h2>
+
+<h3>定義と測定原理</h3>
+<p>PI（Peripheral Perfusion Index / 末梢灌流指数）は、パルスオキシメータの光電容積脈波（PPG）信号から算出される非侵襲的な末梢循環指標である。製品・メーカーによってPPI（peripheral perfusion index）やPAI（pulse-amplitude index）とも呼ばれるが、いずれも同一概念を指す。</p>
+
+<div class="formula-box">
+  <div class="formula">PI（%）= 拍動性成分（AC）÷ 非拍動性成分（DC）× 100</div>
+  <div class="formula-note">AC：動脈拍動による光吸収変化量　DC：静脈・毛細血管・組織などの非拍動性光吸収量</div>
+</div>
+
+<div class="card card-blue">
+  <div class="card-title">📡 PPG信号の内訳</div>
+  <ul style="font-size:13.5px; margin-bottom:0;">
+    <li><strong>ACコンポーネント（拍動性）</strong>：心周期ごとの動脈血量変化を反映。心拍出量・末梢血管抵抗・血管緊張度に依存</li>
+    <li><strong>DCコンポーネント（非拍動性）</strong>：静脈血、毛細血管血、皮膚・皮下組織・骨からの恒常的な光吸収。体温・浮腫・組織厚の影響を受ける</li>
+    <li>PIはAC/DCの比であるため、DC変化のみでもPIは変動する（例：浮腫によるDC増加 → PI低下）</li>
+  </ul>
+</div>
+
+<h3>正常値と影響因子</h3>
+<table>
+  <thead><tr><th>項目</th><th>概要</th></tr></thead>
+  <tbody>
+    <tr><td>成人健常者の正常範囲</td><td>概ね 0.5〜10%（機器・環境温により大きく変動）</td></tr>
+    <tr><td>低灌流の目安</td><td>PI &lt; 1.0（一部研究では &lt; 0.6）</td></tr>
+    <tr><td>PIを低下させる因子</td><td>低体温、血管収縮（NE等）、ショック、疼痛・不安、高い交感神経緊張</td></tr>
+    <tr><td>PIを上昇させる因子</td><td>体温上昇、局所・脊椎麻酔、血管拡張（敗血症初期）、鎮静・鎮痛</td></tr>
+    <tr><td>マシモ社機器の表示</td><td>PI（%）として0.01〜20%を表示</td></tr>
+    <tr><td>日本光電機器の表示</td><td>PAI（pulse-amplitude index）として表示（本研究で使用）</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────── Section 2: 主論文要約 ─────────────── -->
+<h2>2. 新谷ら(2025)の論文詳細</h2>
+
+<h3>研究背景と問題意識</h3>
+<p>PIは末梢循環のモニタリングに有用であるが、測定部位（指）によって値が異なることが臨床上の課題である。また、パルスオキシメータプローブを同一部位に長時間装着すると熱傷のリスクがあるため、定期的な装着部位の交換が推奨されている。しかし、プローブ交換による測定値の変動が、臨床評価や研究における信頼性を損なうという問題があった。</p>
+<p><strong>本研究の問いかけ：</strong>「5本の指のうち、プローブを交換しても最もPI値の変化が少ない（等価な）指の組み合わせはどれか？」</p>
+
+<h3>方法</h3>
+<div class="card card-blue">
+  <div class="card-title">研究デザイン・対象</div>
+  <ul style="font-size:13.5px; margin-bottom:0;">
+    <li>単施設前向き探索的研究（長崎大学病院）</li>
+    <li>健常ボランティア30名を対象</li>
+    <li>利き手の5指すべてにテープ型ディスポーザブルプローブを同時装着</li>
+    <li>3種の室温環境（16°C / 22°C / 28°C）で測定：体温調節反応を誘発し広域のPAI値を取得</li>
+    <li>主要評価項目：10組の指ペアそれぞれのPAI差</li>
+    <li>統計：ボンフェローニ補正付き対応t検定（有意水準 p &lt; 0.005）</li>
+  </ul>
+</div>
+
+<h3>主要結果</h3>
+<div class="result-highlight">
+  <strong>最小の指間差は示指（人差し指）—薬指の組み合わせ</strong><br>
+  PAI差の平均：0.07% ± 1.89%　（p = 0.74、有意差なし）<br>
+  次いで中指—薬指（0.45% ± 1.93%、p = 0.03）、示指—中指（0.52% ± 2.05%、p = 0.02）
+</div>
+
+<div class="finger-grid">
+  <div class="finger-card finger-poor">
+    <div class="finger-name">母指（拇指）</div>
+    <div style="font-size:22px; margin:4px 0;">👍</div>
+    <div class="finger-desc">他の指と有意差あり（p &lt; 0.001）</div>
+  </div>
+  <div class="finger-card finger-best">
+    <div class="finger-name">示指 ★</div>
+    <div style="font-size:22px; margin:4px 0;">☝️</div>
+    <div class="finger-desc">薬指と最小差（推奨ペア）</div>
+  </div>
+  <div class="finger-card finger-good">
+    <div class="finger-name">中指</div>
+    <div style="font-size:22px; margin:4px 0;">🖕</div>
+    <div class="finger-desc">薬指との差は有意（参考値）</div>
+  </div>
+  <div class="finger-card finger-best">
+    <div class="finger-name">薬指 ★</div>
+    <div style="font-size:22px; margin:4px 0;">💍</div>
+    <div class="finger-desc">示指と最小差（推奨ペア）</div>
+  </div>
+  <div class="finger-card finger-poor">
+    <div class="finger-name">小指</div>
+    <div style="font-size:22px; margin:4px 0;">🤙</div>
+    <div class="finger-desc">他の指と有意差あり（p &lt; 0.001）</div>
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>指の組み合わせ</th><th>PAI差 平均 ± SD（%）</th><th>p値</th><th>評価</th></tr></thead>
+  <tbody>
+    <tr><td>示指—薬指</td><td>0.07 ± 1.89</td><td>0.74</td><td style="color:#085041; font-weight:600;">有意差なし ★推奨</td></tr>
+    <tr><td>中指—薬指</td><td>0.45 ± 1.93</td><td>0.03</td><td>参考（補正後は非有意でない）</td></tr>
+    <tr><td>示指—中指</td><td>0.52 ± 2.05</td><td>0.02</td><td>参考</td></tr>
+    <tr><td>その他全組み合わせ</td><td>—</td><td>&lt; 0.001</td><td style="color:#712B13;">有意差あり</td></tr>
+  </tbody>
+</table>
+
+<h3>結論と臨床への提言</h3>
+<div class="pearl">
+  <div class="pearl-label">🔑 臨床への提言</div>
+  <p>プローブを交換せざるを得ない場面では、<strong>示指（人差し指）と薬指を交互に使用する</strong>ことで、PI値の連続性・信頼性を最大限維持できる。</p>
+  <p>この所見は、ICUでの長時間モニタリングや術中の連続的末梢循環評価において、測定値の一貫性を保つための実践的ガイダンスとなる。</p>
+</div>
+
+<h3>研究の限界</h3>
+<ul>
+  <li>健常ボランティアのみを対象（患者集団への外挿が必要）</li>
+  <li>使用機器が日本光電 Life Scope PTに限定（マシモ・フィリップス等との互換性は未確認）</li>
+  <li>利き手のみの測定（両手間差・非利き手のデータなし）</li>
+  <li>単施設・探索的研究であり、検証コホートが必要</li>
+  <li>日本光電機器では、異なる機器ブランドとの互換性について今後の検討が求められる</li>
+</ul>
+
+<!-- ─────────────── Section 3: 周辺知識（PubMed文献） ─────────────── -->
+<h2>3. PIの臨床応用 — PubMed文献による周辺知識</h2>
+
+<h3>3-1. PIの物理的原理と決定因子</h3>
+<p>Coutrot ら（2021, Anaesth Crit Care Pain Med）のレビューは、PIの決定因子が「中枢性」と「末梢性」の両方にまたがることを示している。心拍出量・一回拍出量といった中枢性因子と、末梢血管緊張・自律神経緊張といった局所性因子の積が最終的なPI値を決める。したがって、PIが低い場合には①心拍出量低下、②末梢血管収縮、③または両方、と複数の病態生理を想定する必要がある。</p>
+
+<div class="card card-purple">
+  <div class="card-title">PIに影響する中枢・末梢因子（Coutrot 2021より整理）</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:13px; margin-top:0.5rem;">
+    <div>
+      <strong style="color:#3C3489;">中枢性因子（ACを変化）</strong>
+      <ul style="margin:0.3rem 0 0 1rem;">
+        <li>心拍出量・一回拍出量</li>
+        <li>脈圧</li>
+        <li>大動脈コンプライアンス</li>
+      </ul>
+    </div>
+    <div>
+      <strong style="color:#3C3489;">末梢性因子（AC・DCを変化）</strong>
+      <ul style="margin:0.3rem 0 0 1rem;">
+        <li>末梢血管抵抗（交感神経緊張）</li>
+        <li>体温・皮膚温度</li>
+        <li>局所組織の状態（浮腫・皮膚厚）</li>
+        <li>薬剤（血管収縮薬・血管拡張薬）</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>3-2. 術中モニタリングにおけるPI</h3>
+
+<p><strong>CRTの代替として</strong>：Okuda ら（2023, PMC:PMC10077788）の前向き研究（127例）では、全身麻酔中にCRTを直接評価することが困難であるが、PI &lt; 1.8がCRT &gt; 3秒（低灌流状態）を高精度に予測できることを示した。PIとCRTには強い負の相関（r = −0.706）があり、術中CRTの代替指標としてPIが有用である。</p>
+
+<div class="card card-teal">
+  <div class="card-title">術中PIのカットオフと意義</div>
+  <table style="margin:0.5rem 0 0; font-size:13px;">
+    <thead><tr><th>PI値</th><th>解釈</th><th>推奨アクション</th></tr></thead>
+    <tbody>
+      <tr><td>&gt; 1.8</td><td>適切な末梢灌流</td><td>現状維持</td></tr>
+      <tr><td>1.0〜1.8</td><td>注意域（低灌流リスク）</td><td>原因検索・輸液評価</td></tr>
+      <tr><td>&lt; 1.0</td><td>末梢低灌流（異常PP）</td><td>積極的介入を検討</td></tr>
+      <tr><td>&lt; 0.6</td><td>重度低灌流</td><td>ショック評価・昇圧薬検討</td></tr>
+    </tbody>
+  </table>
+  <div class="footnote">Okuda et al. (2023): PI &lt; 1.8 → CRT &gt; 3秒予測; Sekino et al. (2023): PAI &lt; 1 を異常PPと定義</div>
+</div>
+
+<p><strong>麻酔導入とPI</strong>：プロポフォール・揮発性麻酔薬による交感神経抑制は末梢血管拡張をもたらし、PI値を上昇させる。脊椎麻酔では、ブロックレベル以下の交感神経遮断によりPI上昇が認められ、ブロック成功の指標として応用される。一方、術前のベースラインPIが高い（> 3.5）妊婦では、脊椎麻酔後低血圧の発生率が高いとする報告もある。</p>
+
+<h3>3-3. 敗血症・ICU領域でのPI</h3>
+
+<p>PIは敗血症における末梢循環不全の評価において、乳酸値と並ぶ実用的な指標として注目されている。Lima ら（2002, Crit Care Med）の先駆的研究以降、PIと末梢循環評価の臨床的有用性が系統的に検証されてきた。</p>
+
+<div class="card card-coral">
+  <div class="card-title">敗血症におけるPIの予後予測能力（主要報告）</div>
+  <ul style="font-size:13.5px; margin-bottom:0;">
+    <li><strong>PI &lt; 0.6：</strong>蘇生後30日死亡率の予測（Sun et al., Eur J Med Res 2024）</li>
+    <li><strong>PI ≤ 0.2：</strong>ICU死亡率・28日死亡率の独立予測因子</li>
+    <li><strong>PIと乳酸の逆相関：</strong>β = −0.57（95% CI −0.95〜0.19）— Guo et al.（2024, J Intensive Care Med）</li>
+    <li><strong>PIは凝固マーカー（PT、APTT）・心筋傷害マーカー（cTnI）と相関</strong>し、臓器障害評価に寄与（Guo et al. 2024）</li>
+  </ul>
+</div>
+
+<p>特筆すべきは、Hernández ら（2019, JAMA）のANDROMEDA-SHOCK試験である。CRTを指標とした末梢循環標的蘇生戦略が、乳酸標的戦略に比べ28日死亡率の改善傾向を示した。PIはCRTと密接に相関するため、この概念をPI主導の管理に拡張する研究が進行中である。</p>
+
+<h3>3-4. 長崎大学グループのPMX-DHP研究との関連</h3>
+
+<p>新谷先生が共著者として参加した関野ら（Sci Rep 2023）の研究では、敗血症性ショック患者122名を対象に、PMX-DHP（ポリミキシンB直接血液吸着）前後のPAI（= PI）変化を検討した。</p>
+
+<div class="result-highlight">
+  <strong>PAI &lt; 1（異常末梢灌流群、n=67）：</strong>PMX-DHP開始24時間後・48時間後にPAIが有意に上昇し、昇圧薬スコア（VIS）が有意に低下した。正常PAI群では有意な変化を認めなかった。<br><br>
+  → PAIによる末梢灌流評価がPMX-DHP介入の効果判定に有用である可能性を示唆
+</div>
+
+<p>この研究は「PIが治療介入の効果モニタリングに使用できる」ことを長崎大学から示した重要なエビデンスであり、新谷先生の今回のPI指間差研究の臨床的文脈に直接つながる。</p>
+
+<!-- ─────────────── Section 4: 麻酔科での実践 ─────────────── -->
+<h2>4. 麻酔科・ICUにおける実践的活用法</h2>
+
+<h3>4-1. 術中モニタリングへの組み込み方</h3>
+
+<div class="point-row">
+  <div class="point-icon icon-blue">1</div>
+  <div class="point-text"><strong>ベースライン確認：</strong>麻酔導入前のPI値を記録。これが全身状態のベースラインとなる（低値の場合は脱水・不安・高交感神経緊張の可能性）</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-blue">2</div>
+  <div class="point-text"><strong>導入後の変化を確認：</strong>プロポフォール・吸入麻酔薬投与後はPI上昇が期待される。上昇しない場合は循環不全の早期サインとなりうる</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-blue">3</div>
+  <div class="point-text"><strong>術中低灌流の検出：</strong>PI &lt; 1.8（Okuda 2023のカットオフ）を監視。低値が持続する場合は輸液反応性評価・昇圧薬使用を検討</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-blue">4</div>
+  <div class="point-text"><strong>プローブ交換時のルール：</strong>新谷ら(2025)の知見に基づき、<strong>示指↔薬指</strong>の交互装着を標準化する</div>
+</div>
+
+<h3>4-2. ICU管理での活用</h3>
+
+<div class="point-row">
+  <div class="point-icon icon-teal">◆</div>
+  <div class="point-text"><strong>敗血症蘇生ターゲットとして：</strong>PI値をCRTと並行モニタリング。ANDROMEDA-SHOCK的コンセプトを応用し、末梢循環改善を蘇生ゴールに組み込む</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-teal">◆</div>
+  <div class="point-text"><strong>昇圧薬タイトレーション：</strong>ノルエピネフリン増量時にPI低下を確認（末梢血管収縮の指標）。過剰投与の回避に役立つ可能性</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-teal">◆</div>
+  <div class="point-text"><strong>PMX-DHPの効果確認（長崎大学式）：</strong>PMX-DHP前後のPAI変化を追跡。24・48時間後のPAI改善が治療効果の指標となりうる（関野ら 2023）</div>
+</div>
+<div class="point-row">
+  <div class="point-icon icon-teal">◆</div>
+  <div class="point-text"><strong>熱傷予防と測定値信頼性の両立：</strong>本研究の示指—薬指ルールを採用することで、長時間ICUモニタリング中のPI連続性を担保する</div>
+</div>
+
+<h3>4-3. PIと他の末梢循環指標の比較</h3>
+
+<table>
+  <thead><tr><th>指標</th><th>特徴</th><th>PIとの関係</th></tr></thead>
+  <tbody>
+    <tr><td>CRT（毛細血管再充満時間）</td><td>非侵襲・間欠的・主観的</td><td>PI &lt; 1.8 でCRT延長を予測（r = −0.706）</td></tr>
+    <tr><td>乳酸</td><td>組織低酸素の全身指標</td><td>PIと逆相関（β = −0.57）</td></tr>
+    <tr><td>ScvO₂</td><td>中枢的酸素需給バランス指標</td><td>PI補完的。PI正常でScvO₂低下 → 心拍出量問題</td></tr>
+    <tr><td>皮膚温度勾配</td><td>中央—末梢温度差</td><td>相関あり。低体温時はPI低下と並行</td></tr>
+    <tr><td>PVI（Pleth Variability Index）</td><td>PPG振幅変動から輸液反応性を予測</td><td>PIが低い場合PVIの精度が低下する点に注意</td></tr>
+  </tbody>
+</table>
+
+<div class="pearl">
+  <div class="pearl-label">⚠️ PIの落とし穴</div>
+  <p>PIは「末梢循環」を反映するが、臓器循環（内臓・腎臓）との乖離がある。敗血症の配分性ショックでは、PIが高値（末梢拡張）でも内臓循環不全が共存することがある。PIは補完的指標であり、乳酸・ScvO₂・尿量と組み合わせて評価することが重要。</p>
+  <p>また、体温低下（16°C環境など本研究の設定）では末梢血管収縮によりPIが著しく低下するため、手術室の室温管理もPI解釈に影響する。</p>
+</div>
+
+<!-- ─────────────── Section 5: 今後の研究動向 ─────────────── -->
+<h2>5. 今後の研究動向</h2>
+
+<div class="card card-purple">
+  <div class="card-title">長崎大学グループの進行中・今後の研究</div>
+  <ul style="font-size:13.5px; margin-bottom:0;">
+    <li><strong>競争的資金研究（2024〜2027）：</strong>「全身麻酔下外科手術患者におけるPI（PAI）とCRT（capillary refill index）の相関」— 日本光電工業との共同研究</li>
+    <li><strong>AACA 2026発表（2026年2月）：</strong>"Correlation of peripheral perfusion index with CRT, fingertip blood flow, and systemic hemodynamic parameters" — 健常者での前向き観察研究</li>
+    <li><strong>日本臨床麻酔学会2025発表：</strong>PI・CRT・指尖血流・体循環指標の相関 — 麻酔領域への展開</li>
+  </ul>
+</div>
+
+<p>世界的なトレンドとして、PIをCRTと組み合わせた「末梢循環多変量評価」や、PIによる輸液反応性・昇圧薬需要予測に関する研究が進んでいる。ANDROMEDA-SHOCKの概念を拡張した、PI目標値に基づく蘇生プロトコルの確立が期待される。</p>
+
+<!-- ─────────────── 参考文献 ─────────────── -->
+<div class="divider"></div>
+<h2>参考文献</h2>
+
+<ol class="ref-list">
+  <li><strong>Shintani R, Sekino M, Sato S, et al.</strong> Interfinger differences in pulse oximetry signal-derived peripheral perfusion index: a single-center exploratory study. <em>Cureus</em> 2025; 17(4): e82131. doi: 10.7759/cureus.82131 <span class="badge badge-blue">主論文</span></li>
+  <li><strong>Sekino M, Murakami Y, Sato S, Shintani R, et al.</strong> Modifications of peripheral perfusion in patients with vasopressor-dependent septic shock treated with polymyxin B-direct hemoperfusion. <em>Sci Rep</em> 2023; 13: 7295. doi: 10.1038/s41598-023-34084-0 <span class="badge badge-teal">関連論文</span></li>
+  <li><strong>Lima AP, Beelen P, Bakker J.</strong> Use of a peripheral perfusion index derived from the pulse oximetry signal as a noninvasive indicator of perfusion. <em>Crit Care Med</em> 2002; 30(6): 1210–1213. <span class="badge badge-amber">古典的文献</span></li>
+  <li><strong>Coutrot M, Dudoignon E, Joachim J, et al.</strong> Perfusion index: physical principles, physiological meanings and clinical implications in anaesthesia and critical care. <em>Anaesth Crit Care Pain Med</em> 2021; 40(6): 101144. <span class="badge badge-blue">レビュー</span></li>
+  <li><strong>Sun X, He H, Xu M, Long Y.</strong> Peripheral perfusion index of pulse oximetry in adult patients: a narrative review. <em>Eur J Med Res</em> 2024; 29(1): 457. doi: 10.1186/s40001-024-02048-3 <span class="badge badge-blue">レビュー</span></li>
+  <li><strong>Guo Q, Lian H, Wang G, Zhang H, Wang X.</strong> Prospective evaluation of the peripheral perfusion index in assessing the organ dysfunction and prognosis of adult patients with sepsis in the ICU. <em>J Intensive Care Med</em> 2024; 39(11): 1109–1119. doi: 10.1177/08850666241252758</li>
+  <li><strong>Okuda N, et al.</strong> A low peripheral perfusion index can accurately detect prolonged capillary refill time during general anesthesia: a prospective observational study. PMC10077788. <em>Front Med</em> 2023.</li>
+  <li><strong>Hernández G, Ospina-Tascón GA, Damiani LP, et al.</strong> Effect of a resuscitation strategy targeting peripheral perfusion status vs serum lactate levels on 28-day mortality among patients with septic shock: The ANDROMEDA-SHOCK randomized clinical trial. <em>JAMA</em> 2019; 321(7): 654–664. <span class="badge badge-amber">RCT</span></li>
+  <li><strong>Chi C, Gong H, Yang K, et al.</strong> Early peripheral perfusion index predicts 28-day outcome in patients with septic shock. <em>World J Emerg Med</em> 2024; 15(5): 372–378. doi: 10.5847/wjem.j.1920-8642.2024.081</li>
+  <li><strong>Swain SM, Lata M, Kumar S, et al.</strong> A cross-sectional study on the agreement of perfusion indexes measured on different fingers by a portable pulse oximeter in healthy adults. <em>Cureus</em> 2022; 14(5): e24853.</li>
+  <li><strong>Broch O, Bein B, Gruenewald M, et al.</strong> Accuracy of the pleth variability index to predict fluid responsiveness depends on the perfusion index. <em>Acta Anaesthesiol Scand</em> 2011; 55(6): 686–693.</li>
+  <li><strong>Rasmussen P, Aasvang E, Olsen R, et al.</strong> Continuous peripheral perfusion index in patients admitted to hospital wards – an observational study. <em>Acta Anaesthesiol Scand</em> 2021; 65(3): 257–265.</li>
+</ol>
+
+<div class="footnote" style="margin-top:2rem;">
+  本資料は新谷亮祐先生（長崎大学麻酔集中治療医学）の論文（Cureus 2025）をもとに、PubMedおよびオープンアクセス文献の周辺知識を加えて麻酔科医向けに作成した教育資料です。臨床判断は個別患者の状態に基づいて行ってください。
+</div>
+
+</body>
+</html>
