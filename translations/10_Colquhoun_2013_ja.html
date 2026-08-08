@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>末梢由来の圧容積ループ面積と全身血管抵抗の関係（Colquhoun 2013）日本語全訳</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="title-block">
+<p class="cite">ORIGINAL RESEARCH／<em>Journal of Clinical Monitoring and Computing</em> (2013) — DOI 10.1007/s10877-013-9493-y</p>
+<h1>末梢由来の圧容積ループの面積と<br>全身血管抵抗の関係</h1>
+<p class="orig-title">原題：The relationship between the area of peripherally-derived pressure volume loops and systemic vascular resistance</p>
+<p class="authors">Douglas Colquhoun・Lauren K. Dunn・Timothy McMurry・Robert H. Thiele</p>
+<p class="affil">バージニア大学、PO Box 800710, Charlottesville, VA 22908-0710, 米国<br>
+e-mail: rht7w@virginia.edu; thiele@virginia.edu（R. H. Thiele、連絡先著者）／DC5VP@hscmail.mcc.virginia.edu（D. Colquhoun）／lak3r@virginia.edu（L. K. Dunn）／tlm6w@eservices.virginia.edu（T. McMurry）</p>
+<p class="cite">受付：2013年3月2日／受理：2013年6月25日<br>&copy; Springer Science+Business Media New York 2013<br>
+本報告の一部は以前に ASA 2012 で発表された。</p>
+</div>
+
+<div class="note">
+<p><strong>凡例</strong>：本文書は上記論文の日本語全訳である。本文・図1〜6のキャプション・表1・数式・引用文献を、省略や要約なしに訳出した。原文の節構成と節番号をそのまま保持している。原文中の文献引用番号（[1] など）は原文どおりに残した。</p>
+</div>
+
+<div class="abstract">
+<h3>抄録</h3>
+<p>動脈波形とフォトプレチスモグラフィ（PPG）波形は、脈波輪郭から一回拍出量を非侵襲的に推定するために利用されてきた。これらの脈波輪郭装置が一回拍出量を正確に予測する能力は、後負荷が有意に変化すると低下する。血管トーヌスがいつ変化したかを同定できる非侵襲的装置が必要である。Shelley らは以前、末梢の圧容積（PV）ループ（動脈内カテーテルからの圧波形を PPG 波形からの容積波形と組み合わせたもの）と血管トーヌスの変化との定性的な関係を記述した。本研究の目的は、大手術を受ける患者集団において、末梢 PV ループの面積の変化と全身血管抵抗（SVR）の変化を定量的に比較することであった。肝移植を受ける10名の患者の生理学的データを血行動態データベースから抽出した。動脈波形と PPG 波形の両方にピーク検出アルゴリズムを適用し、谷が同一の時点で生じるよう手動で位置合わせした。各心拍について PV ループ面積（PVA）を算出し、各分について PVA の中央値を記録した。各患者の PVA は最初の5分間の平均値に対して指数化し（PPG 振幅には標準がなく患者間で比較できないため）、SVR が利用可能なすべての時点における指数化 SVR と比較した。SVR と PVA を時間の関数としてプロットし、外れ値（3.1%）を除去した。PVAi と SVRi の関係を記述する Pearson 相関係数は 0.67（1728分のデータ、<var>p</var> = 0.0020、10名の患者にわたる符号検定）、MAP と SVR の間では 0.71 であった。ΔSVR と ΔPVA あるいは ΔMAP のいずれとの間にも（分ごとの変化に基づく）意味のある相関はなかった。PVA の指数化値は SVR の指数化値と相関し、後負荷の変化についての有用なモニタとなりうるが、現在の形では MAP の測定を上回る付加価値を提供しない。異なる部位（たとえば指、額）や冗長な部位（たとえば両側）を組み込むことで、この手法の正確性が有意に改善する可能性がある。</p>
+<p><strong>キーワード</strong>　モニタリング・後負荷・フォトプレチスモグラフィ・血管トーヌス・コンプライアンス・非侵襲的</p>
+</div>
+
+<h2>1　序論</h2>
+
+<p>心拍出量と一回拍出量は、目標指向型治療レジメンの一般的なエンドポイントである [1, 2]。近年、低侵襲あるいは非侵襲的な心拍出量モニタの開発に大きな関心が寄せられている [3]。動脈波形の形状に基づいて一回拍出量を測定しようとする脈波輪郭装置 [4] は広く用いられている。残念ながら、非較正の脈波輪郭装置は較正されたものより正確性が劣ると考えられ [5, 6]、その正確性は負荷条件が変化すると低下すると考えられる [7]。現在利用可能な較正済み脈波輪郭装置は、リチウム希釈法あるいは経肺熱希釈法のいずれかを必要とし、そのいずれも間欠的に実施される。したがって、血管抵抗の連続モニタが必要である。</p>
+
+<p>フォトプレチスモグラフィ（PPG）波形の形状は、被検組織の容積変化（それが赤色および赤外スペクトルの電磁放射の吸光度に影響する）に対する応答である。したがって、末梢組織の血液量の変化は PPG 波形の検討によって解析できる。Shelley ら [8] は以前、PPG 波形と動脈圧波形を同じグラフ上にプロットして末梢の圧「容積」ループを作成し、そうすることで PVA と血管トーヌスの変化の間の定性的な関係を発見した。本研究の目的は、末梢 PVA と全身血管抵抗（SVR）の関係を定量的に記述することであった。</p>
+
+<h2>2　方法</h2>
+
+<p>本研究はバージニア大学の施設審査委員会（Health Sciences Research）の承認を得た。肝移植を受ける10名の患者の生理学的データを、一回拍出量を測定する脈波輪郭法を開発するために当初作成された血行動態データベースから抽出した（表1）。</p>
+
+<h3>2.1　データ収集</h3>
+
+<p>血行動態波形データベースのデータは、患者と麻酔科医が使用するトランスデューサの間に配置した追加の圧トランスデューサ（Transpac<sup>&reg;</sup>, ICU Medical, San Clemente, CA）の電圧出力を記録することにより収集した。電圧と圧の関係は、実験室で Omega Engineering（Stamford, CT）DPI 605 圧力校正器を用いて測定した。このシステムの共振周波数は、in vivo で試験したとき 35 Hz であった [9]。電圧データは National Instruments USB-9239 アナログ入力モジュール（National Instruments, Austin, TX）により 2000 Hz で収集し、ローパスフィルタ処理（50 Hz カットオフ）を行い、保存のため 200 Hz にダウンサンプリングし、線形補間を用いて解析のため 75 Hz に変換した。</p>
+
+<p>赤外吸光度波形は、耳に装着した Nonin（Nonin Medical, Plymouth MN）OEM III オキシメータから収集した。Nonin OEM III は16ビット分解能を提供し、75 Hz でサンプリングする。標準的な指プローブと比較して末梢血管トーヌスの変化の影響を受けにくいため、耳が選択された [10, 11]。</p>
+
+<p>当施設の標準的診療として、CCOmbo 肺動脈カテーテル（Edwards Lifesciences, Irvine, CA）を、全身麻酔導入後・手術切開前に右内頸静脈に留置したマルチアクセスカテーテルを通じて進め、その出力を1分間隔で麻酔情報管理システム（AIMS）にエクスポートした。</p>
+
+<h3>2.2　アルゴリズム</h3>
+
+<p>著者の一人（DAC）が MATLAB（Mathworks, Natick, MA）で作成したピーク・谷検出アルゴリズムを、動脈波形と PPG 波形の両方に適用した。2つの波形は、谷が同一の時点で生じるよう手動で位置合わせした（これは、波形を照合するための心電図同期が利用できなかったため必要であり、圧と容積の変化がほぼ同時に生じるという仮定に基づく。ドリフトの可能性を除くため、位置合わせは毎分実施した）。1心拍にわたる PV 面積（PVA）は、谷から開始し台形法を用いて算出した。</p>
+
+<div class="eq">
+PVA = &Sigma; ± 0.5 × (P<sub><var>i</var>+1</sub> + P<sub><var>i</var></sub>) × (A<sub><var>i</var>+1</sub> − A<sub><var>i</var></sub>)
+</div>
+
+<p>ここで P<sub>x</sub> は圧、A<sub>x</sub> は吸光度を表し（図1）、± は吸光度が増加している（+）か減少している（−）かによって決まる。各分について PVA の中央値を算出した。PPG 吸光度は各患者に固有であり患者間で比較できないため、各患者の PVA は、各時点における PVA を記録データの最初の5分間の平均 PVA（PVA<sub>1–5</sub>）で割ることにより、（肺動脈カテーテル留置後の）最初の5分間の平均値に対して指数化した。SVR も同様に指数化した（指数化 SVR = [SVR<sub>時刻 = t</sub>]/[SVR<sub>1–5</sub>]）。SVR と PVA を時間の関数としてプロットし、外れ値を除去した。</p>
+
+<div class="figcap">
+<p><span class="lbl">図1</span>　PVA の算出。明るい色の領域は減算され、暗い領域は加算される（図示のため、信号は 75 Hz から 15 Hz にダウンサンプリングされていることに注意）。</p>
+</div>
+
+<h3>2.3　統計解析</h3>
+
+<p>指数化 PVA（PVAi）と指数化 SVR（SVRi）は、当初線形回帰を用いて比較した。データが反復測定の性質をもつため、データの独立性は仮定できなかった。データの時間依存性を検定したところ、PVA と SVR の双方が実質的な系列相関を示した。したがって、最良適合線（すべての患者のすべてのデータ点を含む）の傾きがゼロでない確率を、伝統的な手法で推定することはできなかった。</p>
+
+<p>データの時間依存的な性質にもかかわらず、異なる患者からの標本は独立と仮定できる。したがって我々の解析は、10名の患者にわたって最良適合線を比較することによって進められた。帰無仮説（PVAi と SVRi の間の相関が 0 であること）を、符号検定を用いて両側対立仮説に対して検定した。追加の仮定を必要としないため符号検定が選択された。</p>
+
+<p>ΔPVAi のトレンド追従能を評価するため、ΔPVAi と ΔSVRi を1分、5分、10分の間隔で比較した。最後に、PVAi と SVRi の間の一致限界を算出するため、反復測定 Bland–Altman 法を用いた [12, 13]。異なるレベルの血管収縮における本手法の信頼性を検討するため、等しい大きさの3分位（低、中、高の SVRi）について解析を繰り返した。</p>
+
+<table>
+<caption>表1　血行動態および人口統計学的情報</caption>
+<thead><tr><th class="num">患者</th><th class="num">年齢</th><th class="num">性別</th><th class="num">体重</th><th class="num">分数</th><th class="num">初回 CO</th><th class="num">平均 CO</th><th class="num">初回 SVR</th><th class="num">平均 SVR</th><th class="num">初回 CVP</th><th class="num">平均 CVP</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td class="num">57</td><td class="num">M</td><td class="num">94</td><td class="num">192</td><td class="num">5.4</td><td class="num">6.0</td><td class="num">1,026</td><td class="num">976</td><td class="num">13</td><td class="num">8.2</td></tr>
+<tr><td class="num">2</td><td class="num">66</td><td class="num">F</td><td class="num">73</td><td class="num">174</td><td class="num">10.5</td><td class="num">8.2</td><td class="num">642</td><td class="num">723</td><td class="num">14</td><td class="num">8.4</td></tr>
+<tr><td class="num">3</td><td class="num">46</td><td class="num">M</td><td class="num">84</td><td class="num">170</td><td class="num">7</td><td class="num">7.4</td><td class="num">594</td><td class="num">591</td><td class="num">17</td><td class="num">14.6</td></tr>
+<tr><td class="num">4</td><td class="num">62</td><td class="num">F</td><td class="num">68</td><td class="num">142</td><td class="num">5</td><td class="num">6.5</td><td class="num">678</td><td class="num">916</td><td class="num">14</td><td class="num">8.1</td></tr>
+<tr><td class="num">5</td><td class="num">66</td><td class="num">M</td><td class="num">95</td><td class="num">91</td><td class="num">4.1</td><td class="num">5.7</td><td class="num">1,938</td><td class="num">964</td><td class="num">5</td><td class="num">7.4</td></tr>
+<tr><td class="num">6</td><td class="num">34</td><td class="num">M</td><td class="num">72</td><td class="num">124</td><td class="num">16.3</td><td class="num">12.4</td><td class="num">150</td><td class="num">376</td><td class="num">13</td><td class="num">5.3</td></tr>
+<tr><td class="num">7</td><td class="num">60</td><td class="num">M</td><td class="num">97</td><td class="num">131</td><td class="num">5.5</td><td class="num">8.3</td><td class="num">882</td><td class="num">683</td><td class="num">15</td><td class="num">6.5</td></tr>
+<tr><td class="num">8</td><td class="num">51</td><td class="num">M</td><td class="num">71.2</td><td class="num">217</td><td class="num">6.8</td><td class="num">8.2</td><td class="num">618</td><td class="num">551</td><td class="num">13</td><td class="num">7.4</td></tr>
+<tr><td class="num">9</td><td class="num">52</td><td class="num">M</td><td class="num">109.8</td><td class="num">248</td><td class="num">7.4</td><td class="num">9.5</td><td class="num">978</td><td class="num">522</td><td class="num">9</td><td class="num">4.1</td></tr>
+<tr><td class="num">10</td><td class="num">65</td><td class="num">F</td><td class="num">84.8</td><td class="num">185</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">474</td><td class="num">575</td><td class="num">15</td><td class="num">4.6</td></tr>
+<tr><td class="num">平均</td><td class="num">55.9</td><td class="num">–</td><td class="num">84.9</td><td class="num">167.4</td><td class="num">7.7</td><td class="num">8.1</td><td class="num">798</td><td class="num">688</td><td class="num">13</td><td class="num">7.5</td></tr>
+</tbody>
+</table>
+
+<h2>3　結果</h2>
+
+<p>10名の患者から1728分のデータが利用可能であった。1分間で 50% 増加したデータ点を除去するフィルタを適用した結果、54の外れ値（データ点の 3.13%）が除去された。PVAi と SVRi の関係を記述する Pearson 相関係数は 0.67 であり（図2）、最良適合線は以下のとおりであった。</p>
+
+<div class="eq">SVRi = 1.2121(PVAi) − 0.1154</div>
+
+<p>比較として、平均動脈圧と SVR の関係を記述する Pearson 相関係数は 0.71 であった。個別の散布図を図3に示す。各被験者について PVAi と SVRi を時間の関数としてプロットしたものを図4に示す。個人レベルでは、PVAi と SVRi の相関は 0.3453（患者8）から 0.8369（患者9）にわたった。これらの値により、PVA と SVR の間の相関が 0 であるという仮説を両側対立仮説に対して検定することができた。得られた（符号検定に基づく）<var>p</var> 値は 0.0020 であり、観察された相関が強く統計学的に有意であることを示した。</p>
+
+<div class="figcap">
+<p><span class="lbl">図2</span>　10名すべての被験者について PVAi と SVRi を比較した線形回帰。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図3</span>　PVAi と SVRi を比較した個別の散布図。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図4</span>　10名の個々の被験者について時間の関数として示した PVAi と SVRi。</p>
+</div>
+
+<p>全体の一致限界は −0.63 から 0.63 であり、これは一般に用いられる 30% の精度という閾値によれば臨床的に受け入れられないとみなされる [14]。SVRi の3分位についての一致限界は、SVRi の低・中・高群についてそれぞれ −0.11 〜 0.41、−0.35 〜 0.34、−1.05 〜 0.27 であった（図5）。ΔSVRi と ΔPVAi の間の Pearson 相関係数は、1分、5分、10分でそれぞれ 0.00、0.29、0.42 であった（図6）。</p>
+
+<div class="figcap">
+<p><span class="lbl">図5</span>　PVAi と SVRi を比較した一致限界プロット（SVRi によって3分位に分けたもの）。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図6</span>　1分、5分、10分の時間区間にわたる ΔPVAi と ΔSVRi を比較した散布図。</p>
+</div>
+
+<h2>4　考察</h2>
+
+<p>我々は初めて、フォトプレチスモグラフィから導出される圧容積ループの面積（PVAi）と血管トーヌスの定量的指標（SVRi）の間の統計学的に有意な相関を示した。長時間（5〜10分）にわたって、SVRi と PVAi は同じ方向に動くと考えられる。しかしながら、臨床的有用性についての Critchley の広く受け入れられた 30% の精度という閾値に基づけば、SVRi と PVAi の間の一致が不良であることが、現在の形での PVAi を血管運動トーヌスの信頼できる指標として使用することを妨げている。加えて、PVAi と SVRi の関係は MAP と SVR の関係より優れてはいなかったが（PVAi を単独で測定することに付加価値がないことを示唆する）、PVAi と MAPi の間の相関はとくに弱く（<var>r</var> = 0.50）、両者を組み合わせることで SVR を非侵襲的に予測する能力が改善しうることを示唆している。</p>
+
+<p>Shelley ら [8] は以前、直接作用型血管収縮薬であるフェニレフリンの投与後に PPG 由来の圧容積ループに生じる定性的変化を記述した。PVA はこの論文において PV ループ形態の「重要な特徴」として言及され（そしてより最近には血管コンプライアンスと定性的に関連することが認識されている [15]）ているが、正式に算出されて SVR と比較されたことはなかった。とはいえ、Shelley の論文の図1、2、6を検討すると、フェニレフリン投与後の PVA の増加が明瞭に示されている。我々も同じ現象を観察した（図1）。なお、我々の位置合わせ手法（谷の検出と位置合わせに基づく）は、PPG 信号からの 25 ms の処理遅延を仮定した Shelley らのアプローチとは異なっていた。これが、Shelley らが「フィッシュテール（fishtail）」現象を観察したのに対し、我々が観察しなかった理由を説明する。</p>
+
+<p>指の PPG 振幅が血管トーヌスの増加とともに低下することは知られているが、PVA は容積の変化と圧の変化の双方の関数である。容積変化の減少（たとえば極度の血管収縮の際に生じるような）は、脈圧の増加によって相殺されない場合にのみ PVA の減少をもたらす。両者の関係は複雑であり、単に ΔV/ΔP として適切に記述することはできない。むしろ、血管運動トーヌスの変化によって誘発される PPG 波形と動脈圧波形の双方の形状の変化を完全に説明するには、PV ループ全体にわたる積分が必要である。血管収縮に対する異なる組織床の応答の違いが、この現象をさらに説明しうる。すなわち、神経支配の豊富な組織（たとえば指）から血液が移動するにつれて、交感神経刺激への反応性が低い血管床（たとえば耳）へ移行し、PVA の増加をもたらしうる [10]。</p>
+
+<p>図3、4、6を検討すると、単一部位（耳）から導出される PPG に基づく PVA は、血管運動トーヌスの臨床モニタとして使用するには十分な信頼性がないことが示唆される。とくに、PVA の予測能には個人差が大きいと考えられる。これらは抵抗、動脈あるいは静脈のトーヌス、温度、プローブ位置、あるいは他の未解明の現象の違いによるかもしれない。</p>
+
+<p>いくつかの単純な改善によって本手法の臨床的有用性が高まるかもしれない。第1に、パルスオキシメータのプローブは日常の麻酔管理や ICU ケアの間に不用意に動かされることがある。複数のプローブ（たとえば両側の耳プローブ）を用いて出力を平均することで、結果の安定性が改善するかもしれない。耳に加えて、独特の血管運動特性をもつ追加の部位（たとえば額、指。いずれも指とは異なる形態をもつ）を含めることで、血管運動トーヌスの変化を検出する PVA の能力が改善するかもしれない。最後に、現在のパルスオキシメータのノイズ除去アルゴリズムは誤った SpO<sub>2</sub> の読み値を最小化するよう設計されているが、誤った PVA の読み値も除去するよう修正することが可能であろう。</p>
+
+<p>本論文で記述した PVA が臨床使用に対して明らかに準備が整っていない一方で、その可能性については楽観的である理由がある。図4を検討すると、PVAi が SVRi を著しくよく追従している時間帯が明瞭に示されている。PVAi が時に SVRi を追従できない理由（たとえば体動アーチファクト、信号処理）を明らかにすることが、この技術の発展における重要な次の段階である。</p>
+
+<p>末期肝不全の血管拡張作用が我々の知見の一般化可能性を制限しており、血管トーヌスが一般集団により近い心臓外科患者における今後の研究が計画されている。本研究の他の限界には、（これらの患者のモニタリングに用いた TRAM システムのアナログ出力の制限のため）指から PPG 情報を抽出できなかったこと、ゴールドスタンダードとして連続心拍出量モニタを用いたこと（間欠的熱希釈法のほうがより正確でありラグが少ないかもしれない [16]。ただしこれは装置に依存する [17]）、そして PPG 波形と動脈波形の測定に2つの別々の記録システムを必要としたこと（谷の位置合わせを必要とし、血管トーヌスにも関係する脈波伝播時間の測定を複雑にする [18]）が含まれる。</p>
+
+<p>統計解析に関して——反復測定データの関係を記述する相関係数は、被験者内相関と被験者間相関の両方の関数である。被験者内と被験者間の一致を分離するために特別に設計された反復測定 Bland–Altman 法 [13] とは異なり、回帰分析ではこれら2つの現象を数学的に分離できない。我々の回帰分析は、被験者間の一致（あるいは相関）が被験者内の一致より顕著であることを示唆しており、PVAi の変化と SVRi の変化（これらは定義上、被験者内で測定される）の間の相関が不良であることの可能な説明を提供する。</p>
+
+<h2>5　結論</h2>
+
+<p>PPG 波形と動脈圧波形から導出される平均動脈圧と PVA の変化は、肝移植を受ける患者において肺動脈カテーテルで測定される SVR の変化と有意に相関する。しかしながら、MAP に（現在の形での）PVAi を加えても、臨床医が SVRi を非侵襲的に推定する能力は向上しない。代替部位の追加、信号処理アルゴリズムの実装、そして（心電図トレースの利用可能性に基づく）正確な位相の位置合わせが、患者を医原性の合併症のリスクに曝すことなく臨床医に SVR の連続モニタを提供しうるかどうかを判定するには、追加の研究が必要である。</p>
+
+<h3>謝辞</h3>
+<p>著者らに報告すべき財務上の開示事項はない。本論文の内容の一部は、バージニア大学 Innovation Group により2012年9月21日に出願された米国仮特許出願番号 61/704,376 に含まれていた。</p>
+
+<h3>利益相反</h3>
+<p>著者らは利益相反を報告しない。本論文の内容の一部は、バージニア大学 Innovation Group により2012年9月21日に出願された米国仮特許出願番号 61/704,376 に含まれていた。</p>
+
+<h2>引用文献</h2>
+<div class="refs">
+<ol>
+<li>Gurgel ST, do Nascimento P Jr. Maintaining tissue perfusion in high-risk surgical patients: a systematic review of randomized clinical trials. Anesth Analg. 2011;112:1384–91.</li>
+<li>Hamilton MA, Cecconi M, Rhodes A. A systematic review and meta-analysis on the use of preemptive hemodynamic intervention to improve postoperative outcomes in moderate and high-risk surgical patients. Anesth Analg. 2011;112:1392–402.</li>
+<li>Funk DJ, Moretti EW, Gan TJ. Minimally invasive cardiac output monitoring in the perioperative setting. Anesth Analg. 2009;108:887–97.</li>
+<li>Thiele RH, Durieux ME. Arterial waveform analysis for the anesthesiologist: past, present, and future concepts. Anesth Analg. 2011;113:766–76.</li>
+<li>Cooper ES, Muir WW. Continuous cardiac output monitoring via arterial pressure waveform analysis following severe hemorrhagic shock in dogs. Crit Care Med. 2007;35:1724–9.</li>
+<li>Johansson A, Chew M. Reliability of continuous pulse contour cardiac output measurement during hemodynamic instability. J Clin Monit Comput. 2007;21:237–42.</li>
+<li>Meng L, Tran NP, Alexander BS, Laning K, Chen G, Kain ZN, Cannesson M. The impact of phenylephrine, ephedrine, and increased preload on third-generation Vigileo-FloTrac and esophageal doppler cardiac output measurements. Anesth Analg. 2011;113:751–7.</li>
+<li>Shelley KH, Murray WB, Chang D. Arterial-pulse oximetry loops: a new method of monitoring vascular tone. J Clin Monit. 1997;13:223–8.</li>
+<li>Kleinman B. Understanding natural frequency and damping and how they relate to the measurement of blood pressure. J Clin Monit. 1989;5:137–47.</li>
+<li>Awad A, Ghobashy MA, Ouda W, Stout RG, Silverman DG, Shelley KH. Different responses of ear and finger pulse oximeter wave form to cold pressor test. Anesth Analg. 2001;92:1483–6.</li>
+<li>Awad AA, Stout RG, Ghobashy MA, Rezkanna HA, Silverman DG, Shelley KH. Analysis of the ear pulse oximeter waveform. J Clin Monit Comput. 2006;20:175–84.</li>
+<li>Bland JM, Altman DG. Statistical methods for assessing agreement between two methods of clinical measurement. Lancet. 1986;1:307–10.</li>
+<li>Bland JM, Altman DG. Measuring agreement in method comparison studies. Stat Methods Med Res. 1999;8:135–60.</li>
+<li>Critchley LA, Critchley JA. A meta-analysis of studies using bias and precision statistics to compare cardiac output measurement techniques. J Clin Monit Comput. 1999;15:85–91.</li>
+<li>Hengy B, Gazon M, Schmitt Z, Benyoub K, Bonnet A, Viale JP, Aubrun F. Comparison between respiratory variations in pulse oximetry plethysmographic waveform amplitude and arterial pulse pressure during major abdominal surgery. Anesthesiology. 2012;117:973–80.</li>
+<li>Aranda M, Mihm FG, Garrett S, Mihm MN, Pearl RG. Continuous cardiac output catheters: delay in in vitro response time after controlled flow changes. Anesthesiology. 1998;89:1592–5.</li>
+<li>Goldstein LJ. Response time of the Opti-Q continuous cardiac output pulmonary artery catheter in the urgent mode to a step change in cardiac output. J Clin Monit Comput. 1999;15:435–9.</li>
+<li>Greene ES, Gerson JI. Arterial pulse wave velocity: a limited index of systemic vascular resistance during normotensive anesthesia in dogs. J Clin Monit. 1985;1:219–26.</li>
+</ol>
+</div>
+
+</body>
+</html>
