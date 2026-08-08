@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ガウス関数フィッティングによる指および耳のフォトプレチスモグラム波形解析（Rubins 2008）日本語全訳</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="title-block">
+<p class="cite">テクニカルノート／<em>Medical &amp; Biological Engineering &amp; Computing</em> (2008) 46:1271–1276 — DOI 10.1007/s11517-008-0406-z</p>
+<h1>ガウス関数によるフィッティングを用いた<br>指および耳のフォトプレチスモグラム波形解析</h1>
+<p class="orig-title">原題：Finger and ear photoplethysmogram waveform analysis by fitting with Gaussians</p>
+<p class="authors">Uldis Rubins</p>
+<p class="affil">ラトビア大学 原子物理学・分光学研究所、Raina Blvd. 19, Riga 1586, Latvia<br>
+e-mail: uldis.rubins@lu.lv</p>
+<p class="cite">受理：2007年12月26日受付／2008年8月14日受理／2008年10月15日オンライン公開<br>
+&copy; International Federation for Medical and Biological Engineering 2008</p>
+</div>
+
+<div class="note">
+<p><strong>凡例</strong>：本文書は上記論文の日本語全訳である。本文・図キャプション・数式・引用文献を省略や要約なしに訳出した。原文の節番号・段落構成をそのまま保持している。原文中の文献引用番号（[1] など）は原文どおりに残した。</p>
+</div>
+
+<div class="abstract">
+<h3>抄録</h3>
+<p>血液容積脈波（volume pulse: VP）の輪郭の解析は、心血管系の活動に関する多くの情報を含んでいるため重要になってきている。従来、脈波輪郭解析には1次あるいはそれ以上の高次の導関数を計算することが必要であった。本論文では、同時に測定した耳および指のフォトプレチスモグラフィ（photoplethysmography: PPG）信号を解析するための新規アルゴリズムについて述べる。本アルゴリズムは VP の収縮期波と拡張期波を分離し、それぞれを2つのガウス関数の和でフィッティングする。VP は、40名の健常被験者から取得した PPG 信号から、各心拍周期ごとに求めた。評価された VP から、直達波および3つの反射波の時間値と、augmentation index（AI）および reflection index（RI）を算出した。評価されたパラメータを導関数法によって得られたものと比較し、新しい方法が VP 波形の解析に使用できることを実証した。</p>
+<p><strong>キーワード</strong>　デジタル容積脈波（Digital volume pulse）・フォトプレチスモグラフィ・脈波輪郭解析（Pulse contour analysis）・脈波形解析（Pulse waveform analysis）・動脈スティフネス</p>
+</div>
+
+<h2>1　序論</h2>
+
+<p>動脈血行力学の発展により、ヒトの動脈圧波形が、血圧計法（sphygmomanometry）やフォトプレチスモグラフィ（PPG）から得られる以上の情報を含んでいることが示されてきた。この情報には、左室収縮機能、動脈スティフネス、および末梢動脈分岐部における波の反射の性質を記述する指標が含まれる。動脈のトポロジーが複雑であるために、末梢部位（耳、指、足趾）での脈波形は互いに異なっている [1]。それにもかかわらず、それらはすべて身体の全般的な血管状態についての情報を含んでいる。</p>
+
+<p>動脈圧波形は、心室収縮によって生成される前進圧波と反射波との合成である [6–8]。波は主として分岐点（インピーダンス不整合部位）で末梢から反射される。末梢の容積脈波（VP）の輪郭を詳細に解析すると、波形が複数のピークから構成されていることが明らかになる。VP の第1のピークは前進波に関係し、他のピークは末梢の各部位から反射された対応する波に関係する。</p>
+
+<p>近年、VP の輪郭を記述するための2つのアプローチが開発されてきた。第1の方法は、VP 波形を記述するもので、その2次導関数の解析である [2, 4, 9]。2次導関数のピーク位置は VP に関する情報を与え、脈波パラメータを与える。第2の方法は、VP の1次 [7, 8] または3次 [5] の導関数を用いて、VP のピークから直接に脈波パラメータを抽出するものである。これらの方法の利点は、単純であることと、実時間計算に使用できる可能性があることである。両方法の欠点は、VP の信号が微弱でノイズが多い場合、とくに VP の拡張期部分が減衰して消えている場合に、適用が限られることである。</p>
+
+<p>本研究の目的は、VP 波形から脈波パラメータを抽出するための、単純かつ効果的なアルゴリズムを開発することであった。本研究では計算の信頼性を高めるために、耳と指で検出した PPG から同時に脈波パラメータを抽出した。</p>
+
+<h2>2　方法</h2>
+
+<h3>2.1　被験者</h3>
+
+<p>既知の心血管疾患をもたない合計40名のボランティアが本研究に参加した。ボランティアは2群に分けられた。すなわち、若年被験者20名（24〜35歳）と高齢被験者20名（60〜76歳）である。測定前に、被験者には座位で3分間安静にするよう求めた。測定は被験者が座位のまま、1分間連続して行った。</p>
+
+<h3>2.2　データ収集システム</h3>
+
+<p>赤外光源とフォトディテクタを内蔵したパルスオキシメータの接触プローブ（DS-100A, Nellcor, USA）を使用した。PPG 信号の AC 成分を抽出した。これは動脈血の拍動を反映している。PPG 接触プローブからのアナログ信号は15ビットのアナログ－デジタル変換器（サンプリングレート 200 Hz）でデジタル化され、コンピュータに転送された。PPG 信号は各測定の後にデータファイルに保存された。</p>
+
+<h3>2.3　信号処理</h3>
+
+<p>測定された PPG 信号は、Matlab で書かれた自作のコンピュータプログラムによって処理された。第1に、DC 成分および緩慢に変動する成分（0〜0.1 Hz）を、信号から平均化した PPG を差し引くことによって除去した（図1）。第2に、ランダムノイズ（&gt;15 Hz）を Savitsky-Golay 平滑化フィルタ（次数3、フレームサイズ25）によって信号から除去した。PPG 脈波のすべての足部（信号の極小点）を検出し、各心拍周期について正規化された VP を算出した。異所性収縮（ectopic beats）は除外した。耳と指の VP の足部は、常に時刻 <var>t</var> = 0 から始まるように時間軸上でオフセットした（図2a）。</p>
+
+<p>典型的には、VP は心臓から指および耳へと伝播する直達圧波と、末梢動脈（主に下半身）から後方へ反射される遅れた成分とによって形成される [7, 8]。VP 波形は、incisura（切痕）によって隔てられる2つの部分に分けることができる。incisura とは、大動脈弁の閉鎖に起因して左心室で生じる逆流に関連した、短い時間的ギャップである（図2a）。直達波は VP の収縮期部分に現れる。我々の計算では、反射波の一部も収縮期に現れ、別の一部が VP の拡張期に現れると仮定した。VP の拡張末期部分にはさらに追加のピークも含まれており、これは末梢から反射された二次的な波によって説明されうる。要するに、モデル計算では1つの直達波と3つの反射波を考慮した。</p>
+
+<p>指 VP の特徴点は、3次導関数法 [5] を用いて抽出した。直達波および反射波のピークの位置は、VP の3次導関数の符号が負から正へ変化する変曲点から評価した。より良い結果を得るために、3次導関数信号は3次平滑化スプラインでフィルタ処理した。この特徴点抽出法を参照法（reference method）とし、以下に述べる他の方法と比較した。</p>
+
+<p>以下の計算は耳と指の両方の VP について行った。第1に、VP の2次導関数を算出した（図2a）。次に、局所最大値の近傍（時間区間 0.2〜0.4 s）で2次導関数がゼロを横切る2つの変曲点を求めた。VP 波形は2つの部分に分離された。すなわち、VP の足部から第1の変曲点までの収縮期部分と、第2の変曲点から VP の終わりまでの拡張期部分である。第2に、VP の各部分を、2つのガウス関数の和を含むモデルでフィッティングした（図2b）。これらのガウス関数の振幅は耳と指の VP について独立に評価したが、ガウス関数の位置は耳と指の VP で同一とした。</p>
+
+<p>モデルパラメータは、以下の和の最小二乗最小化によって評価した。</p>
+
+<div class="eq"><span class="num">(1)</span>
+&sum;<sub><var>j</var>=1</sub><sup><var>N</var></sup> ( VP<sub><var>j</var>,<var>n</var></sub> &minus; <var>p</var><sub><var>j</var></sub> )<sup>2</sup> &rarr; min
+</div>
+
+<p>ここで VP は収縮期部分（<var>n</var> = 1）または拡張期部分（<var>n</var> = 2）について測定された VP、<var>p</var> はデータにフィッティングされたモデル、<var>N</var> は VP に含まれるデータ点の数である。</p>
+
+<p>モデルは以下の方程式系を解くことによってデータにフィッティングされる。</p>
+
+<div class="eq"><span class="num">(2)</span>
+<var>p<sub>m</sub></var> = &sum;<sub><var>k</var>=1</sub><sup>2</sup> <var>P</var><sub>(<var>k</var>+2<var>n</var>&minus;2),<var>m</var></sub> exp[ &minus; ( <var>t</var> &minus; <var>&tau;</var><sub>(<var>k</var>+2<var>n</var>&minus;2)</sub> )<sup>2</sup> / ( 2<var>b</var><sup>2</sup><sub>(<var>k</var>+2<var>n</var>&minus;2),<var>m</var></sub> ) ] ,　<var>m</var> = 1, 2
+</div>
+
+<p>ここで <var>b</var> はガウス関数の幅、<var>&tau;</var> はガウス関数の時間シフト、<var>P</var> はガウス関数のピーク振幅であり、<var>m</var> = 1 は耳、<var>m</var> = 2 は指の VP を表し、<var>k</var> は VP のその部分のフィッティング関数に属するガウス関数を指す。</p>
+
+<p>式1と式2を解くことにより、4つのピーク位置 <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub>、<var>&tau;</var><sub>4</sub> における時間値が得られた。これらはガウス関数の対応する時間値であり、耳と指の VP で共通であると仮定される（図2b）。augmentation index（AI）と reflection index（RI）は VP の3つのピークの振幅から算出した。</p>
+
+<div class="eq"><span class="num">(3)</span>
+AI = 1 &minus; VP(<var>&tau;</var><sub>1</sub>) / VP<sub>max</sub>　（type A の脈波の場合）<br>
+AI = VP(<var>&tau;</var><sub>2</sub>) / VP<sub>max</sub> &minus; 1　（type C の脈波の場合）
+</div>
+
+<div class="eq"><span class="num">(4)</span>
+RI = VP(<var>&tau;</var><sub>3</sub>) / VP<sub>max</sub>
+</div>
+
+<p>ここで VP(<var>&tau;</var><sub>1</sub>)、VP(<var>&tau;</var><sub>2</sub>)、VP(<var>&tau;</var><sub>3</sub>) は3つのピーク位置における VP の値に対応し、VP<sub>max</sub> は VP の最大値に対応する。「A」型の脈波は第1のピークよりも第2のピークが高いもので、主に高齢の被験者でみられる。「C」型の脈波は若年被験者でみられ、第2のピークが第1のピークより小さい [5]。</p>
+
+<h2>3　結果</h2>
+
+<p>図3は、耳と指から同時に検出され、4つのガウス関数の和でフィッティングされた VP 波形を示している。耳と指の波形の間には明瞭な差がみられる。年齢の異なる被験者の波形は形状に差を示すが、いずれもガウス関数によって良好にフィッティングされている。測定された VP とフィッティングされた和関数との残差は10%を超えなかった。</p>
+
+<p>すべての脈波パラメータ値は、各心拍周期の VP から評価した。AI と RI は式3および式4から、耳と指の脈波について独立に算出した。図4a は、35歳の被験者1名における、パラメータ AI<sub>ear</sub> と指の AI<sub>finger</sub> の相関を示している。AI<sub>ear</sub> と AI<sub>finger</sub> の両者の値は線形相関を示した（<var>r</var> = 0.81, <var>p</var> &lt; 0.0001）。図4b では RI<sub>ear</sub> の値が RI<sub>finger</sub> に対してプロットされている。RI<sub>ear</sub> と RI<sub>finger</sub> の値もまた線形相関を示した（<var>r</var> = 0.82, <var>p</var> &lt; 0.0001）。</p>
+
+<p>ガウス関数フィッティング法によって評価された脈波パラメータ（AI<sub>G</sub>, RI<sub>G</sub>）と、参照法によるもの（AI<sub>Ref</sub>, RI<sub>Ref</sub>）を比較した。図5a は35歳の被験者1名における AI<sub>G</sub> と AI<sub>Ref</sub> の相関を示す。AI<sub>G</sub> と AI<sub>Ref</sub> の両者の値は線形相関を示した（<var>r</var> = 0.95, <var>p</var> &lt; 0.0001）。図5b は RI<sub>G</sub> と RI<sub>Ref</sub> の相関を示す。RI<sub>G</sub> と RI<sub>Ref</sub> の両者の値もまた線形相関を示した（<var>r</var> = 0.98, <var>p</var> &lt; 0.0001）。両方の相関とも良好な一致を示した。</p>
+
+<p>VP のピーク時間値 <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub>、<var>&tau;</var><sub>4</sub> は各心拍周期について評価し、これら各パラメータの分布の標準偏差（SD）を、60心拍からなる各測定の間について評価した。図6は、20名の若年被験者群と20名の高齢被験者群について、参照法（最初の3つのピーク）およびガウス関数フィッティング法（4つのピーク）によって得られたピーク時間値の標準偏差の箱ひげ図を示している。参照法によって得られた SD は、ガウス関数フィッティング法と比較して全般に高い値を示した。若年被験者について評価された SD は、高齢被験者から得られたものと比較して低い値を示した。</p>
+
+<h2>図の説明（原文キャプション全訳）</h2>
+
+<div class="figcap">
+<p><span class="lbl">図1</span>　耳および指から測定された PPG 信号。点は信号の極小点（足部）の位置を示す。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図2</span>　2次導関数のゼロ交差点による収縮期部分と拡張期部分の分離（a）、およびガウス関数フィッティングによる VP の変曲点の評価（b）。太い点は VP を、点線はガウス関数を表す。</p>
+<p><em>［図中の表記］</em> a：縦軸 Amplitude (a.u.)＝振幅（任意単位）、横軸 Time (s)＝時間（秒）。上段 Ear volume pulse＝耳の容積脈波、下段 Finger volume pulse＝指の容積脈波。Systolic＝収縮期、Diastolic＝拡張期、2nd derivative＝2次導関数。b：右列は同じ耳・指の容積脈波にガウス関数（点線）を重ねたもので、横軸に <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub>、<var>&tau;</var><sub>4</sub> のピーク時間位置が示されている。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図3</span>　35歳男性（a）および76歳女性（b）の、4つのガウス関数によってフィッティングされた耳と指の VP。太い点は VP を、点線はガウス関数を表す。各パネルの下部は、測定された VP とフィッティングされた和関数との間の対応する誤差（残差）を示している。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図4</span>　AI<sub>ear</sub> と AI<sub>finger</sub> の相関（a）、RI<sub>ear</sub> と RI<sub>finger</sub> の相関（b）。各点は個々の心拍を表す。直線は回帰を示す。35歳男性のデータ。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図5</span>　ガウス関数フィッティング法によって評価されたパラメータと参照法によるものとの相関。AI について（a）、RI について（b）。各点は個々の心拍を表す。直線は回帰を示す。35歳男性のデータ。</p>
+</div>
+
+<div class="figcap">
+<p><span class="lbl">図6</span>　参照法によって評価された <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub> の標準偏差（塗りつぶしの箱）と、ガウス関数フィッティング法によって評価された <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub>、<var>&tau;</var><sub>4</sub> の標準偏差（白抜きの箱）の箱ひげ図。ひげの外側にある点はアスタリスクで表示している。データは若年被験者群（a）および高齢被験者群（b）について示す。</p>
+</div>
+
+<h2>4　考察と結論</h2>
+
+<p>Millasseau ら [7, 8] によれば、VP は2つの波、すなわち収縮期の1つの直達波と、拡張期に現れる1つの反射波から成る。PPG 波形のより詳細な解析により、VP は4つのピークから成り、それらは必ずしも目視では区別できないことが示された。VP のすべてのピーク位置が1次あるいはより高次の導関数の使用によって抽出できるわけではない。VP のピーク位置を抽出するには、より感度の高い方法が必要である。</p>
+
+<p>心拍出量によって生じる心室圧は、その性質上ガウス関数に非常に近い [11]。したがって直達波はガウス関数によってほぼ近似できる。VP 波形は1つの直達波と3つの反射波の和から成るので、4つのガウス関数の重ね合わせとして表すことができる。ガウス関数によるフィッティングは、脈波形解析の有望な新しい方法であることが示された。</p>
+
+<p>年齢群の異なる被験者の VP 波形は互いに異なるが、4つのガウス関数の重ね合わせによって適切にフィッティングできる（図3）。測定された VP とフィッティングされたガウス関数との差（残差）は、良好なフィッティング結果を示した。</p>
+
+<p>1名の被験者についての相関解析は、AI<sub>G</sub> と AI<sub>Ref</sub> の間（図5a）、および RI<sub>G</sub> と RI<sub>Ref</sub> の間（図5b）に良好な一致を示した。これらの結果は、VP が強くかつ安定である場合には両方法が同等であることを示している。</p>
+
+<p>参照法によって得られたパラメータ <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub> の偏差は、ガウス関数フィッティング法と比較して高い値を示した（図6）。これは、単一患者における複数心拍から得られたパラメータの SD がより低いことから、ガウス関数フィッティング法のほうが精密であることを意味する。VP に目に見えるピークが含まれない場合（高齢被験者に典型的である）にも、ガウス関数フィッティング法は参照法と比較してより良好な結果を示した。典型的には VP の拡張末期部分には目に見えるピークが含まれず、したがって時間値 <var>&tau;</var><sub>4</sub> は参照法によっては抽出できなかった。それにもかかわらず、ガウス関数法は VP における4番目のピークを得るために使用できる。</p>
+
+<p>末梢灌流が不良な場合、末梢の PPG 信号は微弱でノイズが多い。VP 波形は適応的 PPG 信号フィルタリング技術 [3] を用いて抽出できる。しかし、信号が微弱な場合でも、VP 波形の特徴点はガウス関数フィッティング法によって抽出できる。なぜならこの方法は標準的な方法 [5, 7, 8] と比較してより精密だからである。さらに、この方法は、異なる身体部位からの2つ以上の VP をガウス関数の重ね合わせでフィッティングする場合により魅力的になる。なぜなら異なる身体部位の VP は、身体の全般的な血管状態に関する同一の情報を含んでいるからである。このことは図4からも見てとれる。図4では、AI<sub>ear</sub> と AI<sub>finger</sub> の間（<var>r</var> = 0.81, <var>p</var> &lt; 0.0001）、および RI<sub>ear</sub> と RI<sub>finger</sub> の間（<var>r</var> = 0.82, <var>p</var> &lt; 0.0001）に、相関が良好な一致を示している。なお、異なる身体部位で測定された VP のピーク位置は、振幅は異なるものの、時間的には共通であると仮定されている点に注意すべきである。したがって、測定を追加することによって、ピーク位置の所在についてより高い確実性が得られる。</p>
+
+<p>我々は VP 波形が末梢の圧波形と同一であると仮定した。実際には VP 波形は圧脈波とまったく同じではない。これは圧－容積（P–V）関係が線形ではないためである [10]。それにもかかわらず、時間パラメータ <var>&tau;</var><sub>1</sub>、<var>&tau;</var><sub>2</sub>、<var>&tau;</var><sub>3</sub>、<var>&tau;</var><sub>4</sub> は P–V 関係の非線形性の影響を受けない。さらに、末梢動脈における圧の拍動は小さく、そこでは P–V 関係は線形と仮定できるので、振幅に依存するパラメータ AI と RI も VP から評価することができる。</p>
+
+<p>結論として、同時に測定した耳と指の PPG を解析するこの新規アルゴリズムによって、従来の手法では脈波輪郭の解析が困難な患者においても脈波パラメータの評価が可能となる。</p>
+
+<h3>謝辞</h3>
+<p>本研究は欧州社会基金（European Social Fund）の支援を受けた。</p>
+
+<h2>引用文献</h2>
+<div class="refs">
+<ol>
+<li>Allen J, Murray A (2002) Age-related changes in peripheral pulse timing characteristics at the ears, fingers and toes. J Hum Hypertens 16:711–717. doi:10.1038/sj.jhh.1001478</li>
+<li>Bortolotto LA, Blacher J, Kondo T, Takazawa K, Safar ME (2000) Assessment of vascular aging and atherosclerosis in hypertensive subjects: second derivative of photoplethysmogram versus pulse wave velocity. Am J Hypertens 13:165–171. doi:10.1016/S0895-7061(99)00192-2</li>
+<li>Foo JY, Wilson SJ (2006) A computational system to optimise noise rejection in photoplethysmography signals during motion or poor perfusion states. Med Biol Eng Comput 44(1–2):140–145. doi:10.1007/s11517-005-0008-y</li>
+<li>Imanaga I, Hara H, Koyanagi S, Tanaka K (1998) Correlation between wave components of the second derivative of plethysmogram and arterial distensibility. Jpn Heart J 39:775–784</li>
+<li>Karamanoglu M (1997) A system for analysis arterial blood pressure waveforms in humans. Comput Biomed Res 30:244–255. doi:10.1006/cbmr.1997.1450</li>
+<li>Laurent S, Cockcroft J, Bortel LV, Boutouyrie P, Giannattasio C, Hayoz D et al (2007) Abridged version of the expert consensus document on arterial stiffness. Artery Res 1:2–12. doi:10.1016/j.artres.2007.03.003</li>
+<li>Millaseau SC, Kelly RP, Ritter JM, Chowienczyk PJ (2002) Determination of age-related increases in large artery stiffness by digital pulse contour analysis. Clin Sci 103:371–377</li>
+<li>Millaseau SC, Ritter JM, Takazawa K, Chowienczyk PJ (2006) Contour analysis of the photoplethysmographic pulse measured at the finger. J Hypertens 24:1449–1456. doi:10.1097/01.hjh.0000239277.05068.87</li>
+<li>Takazawa K, Tanaka N, Fujita M, Matsuoka O, Saiki T, Aikawa M et al (1998) Assessment of vascoactive agents and vascular aging by the second derivative of photoplethysmogram waveform. Hypertension 32:365–370</li>
+<li>Talts J, Raamat R, Jagomägi K (2006) Asymmetric time-dependent model for the dynamic finger arterial pressure-volume relationship. Med Biol Eng Comput 44(9):829–834. doi:10.1007/s11517-006-0090-9</li>
+<li>Westerhof N, Stergiopulos N, Noble MNM (2005) Snapshots of hemodynamics. Springer 15:69–70</li>
+</ol>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+@page {
+  size: A4;
+  margin: 20mm 18mm 20mm 18mm;
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Serif CJK JP", serif;
+    font-size: 9pt;
+    color: #555;
+  }
+}
+
+html {
+  font-family: "Noto Serif CJK JP", "Noto Serif", serif;
+  font-size: 10.5pt;
+  line-height: 1.75;
+  color: #111;
+}
+
+body { margin: 0; }
+
+/* ---- 見出し ---- */
+h1 {
+  font-size: 17pt;
+  line-height: 1.45;
+  font-weight: bold;
+  margin: 0 0 4mm 0;
+  padding-bottom: 3mm;
+  border-bottom: 2px solid #1a3a5c;
+  color: #10283f;
+}
+h2 {
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 8mm 0 3mm 0;
+  padding: 1.2mm 0 1.2mm 3mm;
+  border-left: 4px solid #1a3a5c;
+  background: #eef2f6;
+  color: #10283f;
+  break-after: avoid;
+}
+h3 {
+  font-size: 11.5pt;
+  font-weight: bold;
+  margin: 6mm 0 2mm 0;
+  color: #10283f;
+  break-after: avoid;
+}
+h4 {
+  font-size: 10.5pt;
+  font-weight: bold;
+  margin: 4.5mm 0 1.5mm 0;
+  color: #24486d;
+  break-after: avoid;
+}
+
+p { margin: 0 0 2.6mm 0; text-align: justify; }
+
+/* ---- 扉ページ ---- */
+.title-block {
+  margin-bottom: 7mm;
+}
+.orig-title {
+  font-size: 10pt;
+  font-style: italic;
+  color: #444;
+  margin: 0 0 1.5mm 0;
+}
+.cite {
+  font-size: 9.5pt;
+  color: #333;
+  margin: 0 0 1mm 0;
+}
+.authors {
+  font-size: 10pt;
+  margin: 3mm 0 1mm 0;
+}
+.affil {
+  font-size: 8.5pt;
+  color: #444;
+  line-height: 1.55;
+  margin: 0 0 2mm 0;
+}
+
+/* ---- 抄録・注記ボックス ---- */
+.abstract {
+  background: #f4f7fa;
+  border: 1px solid #c9d6e2;
+  border-radius: 2mm;
+  padding: 4mm 5mm;
+  margin: 5mm 0 6mm 0;
+  font-size: 10pt;
+}
+.abstract h3 { margin-top: 0; }
+
+.note {
+  background: #fdf7ec;
+  border-left: 4px solid #c8922a;
+  padding: 3mm 4mm;
+  margin: 4mm 0;
+  font-size: 9.3pt;
+  line-height: 1.65;
+  color: #3a2f18;
+}
+.note p:last-child { margin-bottom: 0; }
+
+/* ---- 図表キャプション ---- */
+.figcap {
+  background: #f2f5f2;
+  border-left: 4px solid #4a7a52;
+  padding: 3mm 4mm;
+  margin: 4mm 0;
+  font-size: 9.6pt;
+  line-height: 1.7;
+  break-inside: avoid;
+}
+.figcap p { margin: 0 0 1.8mm 0; }
+.figcap p:last-child { margin-bottom: 0; }
+.figcap .lbl { font-weight: bold; color: #2f5636; }
+
+/* ---- 数式 ---- */
+.eq {
+  margin: 3.5mm 0;
+  text-align: center;
+  font-family: "Noto Serif", "Noto Serif CJK JP", serif;
+  font-size: 10.5pt;
+  break-inside: avoid;
+}
+.eq .num { float: right; font-size: 10pt; }
+.frac {
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+}
+.frac > .n { display: block; border-bottom: 1px solid #111; padding: 0 2px; }
+.frac > .d { display: block; padding: 0 2px; }
+
+var, .var { font-style: italic; }
+
+/* ---- 表 ---- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 3mm 0 4mm 0;
+  font-size: 8.8pt;
+  line-height: 1.5;
+  break-inside: avoid;
+}
+caption {
+  caption-side: top;
+  break-after: avoid;
+  break-inside: avoid;
+  text-align: left;
+  font-weight: bold;
+  font-size: 9.8pt;
+  padding-bottom: 1.6mm;
+  color: #10283f;
+}
+th, td {
+  border: 0.4pt solid #98a8b6;
+  padding: 1.1mm 1.6mm;
+  vertical-align: top;
+}
+thead th {
+  background: #dfe7ee;
+  text-align: center;
+  font-weight: bold;
+}
+td.num, th.num { text-align: center; }
+td.lbl { text-align: left; }
+.tfoot-note {
+  font-size: 8.4pt;
+  color: #444;
+  line-height: 1.6;
+  margin: -2mm 0 4mm 0;
+}
+
+ul, ol { margin: 0 0 2.6mm 0; padding-left: 6mm; }
+li { margin-bottom: 1.2mm; text-align: justify; }
+
+/* ---- 引用文献 ---- */
+.refs { font-size: 8.6pt; line-height: 1.55; }
+.refs p, .refs li { margin-bottom: 1.3mm; text-align: left; }
+.refs ol { padding-left: 7mm; }
+
+.pagebreak { break-before: page; }
+
+sub, sup { line-height: 0; font-size: 76%; }
+
+/* ---- 原文レイアウトを保持した文献リスト ---- */
+.reflist { font-size: 8.3pt; line-height: 1.5; }
+.reflist p {
+  margin: 0 0 1.1mm 0;
+  padding-left: 5mm;
+  text-indent: -5mm;
+  text-align: left;
+}
