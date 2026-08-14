@@ -99,6 +99,8 @@ def collect_sub2(prs, title_text):
     """デック内の 3 階層見出し（2.1.1 など）を 2.1 ごとにまとめる"""
     sub2 = {}
     for s in prs.slides:
+        if s.element.get('show') == '0':      # 非表示スライドは目次に載せない
+            continue
         m = re.match(r'^(\d+\.\d+)\.(\d+)\s+(.*)$', title_text(s).strip())
         if not m:
             continue
