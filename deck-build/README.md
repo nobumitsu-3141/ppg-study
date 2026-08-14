@@ -46,3 +46,34 @@ python3 <slide-format skill>/scripts/slide_lint.py deck_v67f.pptx
 ```
 
 実寸の目視確認は本番の PowerPoint（メイリオ）で行うこと。
+
+
+---
+
+## v6.8 → v6.9（第2ラウンド）
+
+```bash
+cp <v6.8 の pptx> deck_v68.pptx
+python3 r2_stage1.py    # 章立て再編（6章廃止・限界=6章・PDA=7章）＋26/27の復元 → r2_s1.pptx
+python3 r2_stage2.py    # PDA 章の序盤解説と文献一覧表、用語「山」→「成分波」   → r2_s2a.pptx
+python3 r2_stage3.py    # 5・66 の図解版、60 の要約補完と改善案スライド        → r2_s3.pptx
+python3 r2_stage4.py    # 参考文献を登場順に再採番、参考文献ページ再構成        → r2_s4.pptx
+python3 fixup.py r2_s4.pptx deck_v69.pptx
+python3 r2_merged.py    # 2〜4章を1章にまとめた別バージョン → deck_v69_merged.pptx
+```
+
+| ファイル | 役割 |
+|---|---|
+| `r2_common.py` | 新章立ての定義、章ナビ帯の文言書き換え、章扉・メニューの再構成 |
+| `r2_stage1.py` 〜 `r2_stage4.py` | 上表のとおり |
+| `r2_merged.py` | 2・3・4 章を「波形への影響」1章に統合し、2.1.1 形式の3階層番号に振り直す |
+
+### 参考文献の再採番について（`r2_stage4.py`）
+
+スライド本文に実際に現れる引用だけを集め、**初出順**に 1 から振り直す。
+
+- 走査対象は各ページの `Source` テキストボックスと、本文中の文献チップ・出典列。
+- **除外**：参考文献ページ自身、章扉とメニュー（「7. PDA（波形分解）」が
+  文献表記と同じ形になるため）、章ナビ帯の番号（1〜7）。
+- 出典行は再採番後に番号の昇順へ並べ替える。
+- スピーカーノート中の「N. 著者」表記も同じ対応表で置き換える。

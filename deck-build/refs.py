@@ -54,6 +54,7 @@ REFS = {
 49: "Sološenko A, Petrėnas A, Marozas V, Sörnmo L. Modeling of the photoplethysmogram during atrial fibrillation. Comput Biol Med 2017;81:130–8.",
 50: "Shin H, Noh G, Choi BM. Photoplethysmogram based vascular aging assessment using the deep convolutional neural network. Sci Rep 2022;12:11377.",
 51: "Vargas JM, et al. Assessment of pulse wave velocity through weighted visibility graph metrics from photoplethysmographic signals. Sci Rep 2025;15:31128.",
+53: "Ahmed A, et al. Hemoglobin oxygen saturation discrepancy using various methods in patients with sickle cell vaso-occlusive painful crisis. Eur J Haematol 2005;74:309–14.",
 52: "Grabovskis A, et al. Two-stage multi-Gaussian fitting of conduit artery photoplethysmography waveform during induced unilateral hemodynamic events. J Biomed Opt 2015;20:035004.",
 }
 
@@ -70,7 +71,7 @@ SHORT = {
 37: "Fry 2017", 38: "Pal 2024", 39: "Rubins 2008", 40: "Goswami 2010",
 41: "Couceiro 2015", 42: "Tigges 2017", 43: "Fleischhauer 2020", 44: "Basso 2024",
 45: "Baruch 2014", 46: "Epstein 2014", 47: "Attivissimo 2023", 48: "Domínguez-Hernández 2026",
-49: "Sološenko 2017", 50: "Shin 2022", 51: "Vargas 2025", 52: "Grabovskis 2015",
+49: "Sološenko 2017", 50: "Shin 2022", 51: "Vargas 2025", 52: "Grabovskis 2015", 53: "Ahmed 2005",
 }
 
 
