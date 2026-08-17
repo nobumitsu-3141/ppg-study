@@ -1,0 +1,57 @@
+[
+  {"code":"7.1","chapter":7,"title":"対応の原則","type":"figure","caption":"まず患者、次に波形",
+   "figure":{"id":"fig_7_1_principle","kind":"schematic","spec":"判断フロー(縦): ①患者を診る(脈拍・血圧・SpO2・EtCO2・意識)→②脈なし?→はいならCPR/ACLSへ分岐。③脈ありなら安定/不安定を判断(低血圧・意識障害・胸痛・急性心不全=不安定)→不安定なら応援要請+ABC確保+即対応、安定なら12誘導で波形を分類し原因検索(電解質・低酸素・薬剤・虚血)。全経路に『応援要請』『ABC』『原因是正』を横串で配置。要点=波形より先に患者の循環を評価。"},
+   "cite":"JRC蘇生ガイドライン2020.","cite_url":"https://www.jrc-cpr.org/jrc-guideline-2020/","verify":false},
+
+  {"code":"7.2","chapter":7,"title":"徐脈への対応","type":"bullets",
+   "bullets":[{"text":"原因除去：低酸素・迷走刺激・薬剤","color":"INK"},{"text":"アトロピン0.5mg、3-5分毎、総量3mgまで","color":"GOLD"},{"text":"0.5mg未満は逆説的徐脈のため不可","color":"RED"},{"text":"AHA/ACLSでは初回1mg（成人）","color":"GRAY"},{"text":"昇圧：エフェドリン・アドレナリン","color":"INK"},{"text":"難治はアドレナリン2-10μg/分持続","color":"GOLD"},{"text":"無効なら経皮/経静脈ペーシング","color":"INK"}],
+   "cite":"JRC蘇生ガイドライン2020 徐脈アルゴリズム.","cite_url":"https://www.jrc-cpr.org/jrc-guideline-2020/","verify":false},
+
+  {"code":"7.3","chapter":7,"title":"頻脈への対応","type":"figure","caption":"安定か不安定かで分岐",
+   "figure":{"id":"fig_7_3_tachy","kind":"schematic","spec":"頻脈アルゴリズム(分岐図): 脈あり頻脈→【不安定】(低血圧・意識障害・胸痛・急性心不全)なら鎮静し同期電気ショック[二相性: narrow規則50-100J / narrow不規則(AF)120-200J / wide規則(脈ありVT)100J。AHAは機種推奨エネルギー参照]→【安定】ならQRS幅で分岐: narrow規則=迷走刺激→アデノシン6mg急速静注(生食後押し)→無効なら12mg; AF/AFL(narrow不規則)=レート管理(β遮断薬・Ca拮抗薬)/リズム管理; wide=専門医相談・抗不整脈を考慮。注: アデノシンは不規則調律には使わない。"},
+   "cite":"AHA ACLS 2020 成人頻拍アルゴリズム.","cite_url":"https://cpr.heart.org/-/media/cpr-files/cpr-guidelines-files/algorithms/algorithmacls_tachycardia_200612.pdf","verify":false},
+
+  {"code":"7.4","chapter":7,"title":"VF/無脈性VT","type":"figure","caption":"ショックとCPRの反復",
+   "figure":{"id":"fig_7_4_vf","kind":"schematic","spec":"ショック-CPRサイクル(円環): ①質の高いCPR(圧迫中断を最小化)→②非同期除細動 二相性120-200J(機種推奨、不明なら最大量。以後は同等以上／単相性は360J)→③直後から2分間CPR→④リズム確認→VF/pVT継続なら再ショック。薬剤: アドレナリン1mgを3-5分毎に静注、難治性にアミオダロン初回300mg静注・追加150mg(代替:リドカイン1-1.5mg/kg)。並行して可逆的原因(5H5T)を是正。"},
+   "cite":"JRC蘇生ガイドライン2020 / AHA ACLS 2020.","cite_url":"https://www.jrc-cpr.org/jrc-guideline-2020/","verify":false},
+
+  {"code":"7.5","chapter":7,"title":"PEA・心静止","type":"column",
+   "column":{"heading":"PEA・心静止と5H5T","body":["非ショック調律：CPR＋アドレナリン1mg/3-5分、原因是正。","5H5T：低酸素・循環血液量減少・高/低K等(詳細ノート)。","術中誘因：低酸素/出血/迷走反射/LAST等、名指しし即是正。"],"accent":"BLUE"},
+   "notes":"PEA・心静止と5H5T\n・非ショック調律。良質なCPRとアドレナリン1mgを3-5分毎、そして原因是正が鍵。\n・5H5T=低酸素・循環血液量減少・アシドーシス・低/高K・低体温／緊張性気胸・心タンポナーデ・中毒・肺塞栓・冠動脈血栓。\n・術中に多い誘因：低換気/低酸素、出血、迷走反射、LAST、アナフィラキシー、緊張性気胸。原因を名指しして即是正。",
+   "cite":"JRC蘇生ガイドライン2020 / AHA ACLS 2020.","cite_url":"https://www.jrc-cpr.org/jrc-guideline-2020/","verify":false},
+
+  {"code":"7.6","chapter":7,"title":"術中心筋虚血","type":"bullets",
+   "bullets":[{"text":"心拍数を下げ心筋酸素需要を減らす","color":"INK"},{"text":"血圧を保ち冠灌流圧を維持する","color":"INK"},{"text":"貧血・低酸素・発熱を是正する","color":"INK"},{"text":"浅麻酔・シバリング等の誘因を除去","color":"INK"},{"text":"循環器へ相談、12誘導・トロポニン","color":"INK"},{"text":"状況により硝酸薬・β遮断薬を追加","color":"GOLD"},{"text":"低血圧時は硝酸薬・β遮断を慎重に","color":"RED"}],
+   "cite":"周術期心筋虚血のマネジメント (総説).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=intraoperative+myocardial+ischemia+management","verify":false},
+
+  {"code":"7.7","chapter":7,"title":"高K/TdP等","type":"column",
+   "column":{"heading":"高K・TdP・LASTの緊急薬","body":["高K：グルコン酸Ca10%10mL静注＋GI療法、難治は透析。","TdP：硫酸Mg1-2g静注、原因薬中止・K/Mg補正。","LAST：20%脂肪乳剤1.5mL/kgボーラス→0.25mL/kg/分持続。"],"accent":"GOLD"},
+   "notes":"高K・TdP・LASTの緊急薬\n・高K：グルコン酸Ca10%10mL静注(膜保護、必要時5-10分で反復)＋GI療法(レギュラーインスリン10単位+50%ブドウ糖50mL)、β2刺激吸入、難治は透析。\n・TdP：硫酸Mg1-2g静注、原因薬中止、K/Mg補正、徐脈依存ならoverdrive/一時ペーシング。\n・LAST：20%脂肪乳剤1.5mL/kg(除脂肪体重)を2-3分でボーラス→0.25mL/kg/分持続、不安定なら反復・持続倍加、上限≈12mL/kg。",
+   "cite":"ASRA LAST Checklist 2020 / 高K・TdP標準治療.","cite_url":"https://www.asra.com/guidelines-articles/original-articles/article-item/asra-news/2020/11/11/checklist-for-treatment-of-local-anesthetic-systemic-toxicity","verify":true},
+
+  {"code":"8.1","chapter":8,"title":"PM心電図","type":"figure","caption":"スパイク→捕捉のQRS",
+   "figure":{"id":"fig_8_1_pacemaker","kind":"ecg_strip","spec":"心室ペーシング波形: 各拍の直前に鋭い縦のペーシングスパイク→続いて幅広QRS(左脚ブロック様、T波はQRSと逆向き)。様式ラベル: AAI(心房のみペース)、VVI(心室のみ)、DDD(心房→心室を順次ペース/センス)。不具合の例も小図で: fusion(自己興奮とペースが融合)、pseudofusion(スパイクが自己QRSに重なるが捕捉せず)、キャプチャ不全(スパイク後にQRSが続かない)、センシング不全(不適切なタイミングでスパイク)。"},
+   "cite":"ペースメーカ心電図の判読 (総説).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=pacemaker+electrocardiogram+interpretation","verify":false},
+
+  {"code":"8.2","chapter":8,"title":"CIEDとEMI","type":"column",
+   "column":{"heading":"CIEDと電気メス(EMI)","body":["電気メスのEMIでオーバーセンシングに注意。","磁石応答：PM=非同期固定、ICD=頻拍治療を一時停止。","術前にデバイス設定を確認、除細動パッドを準備。"],"accent":"BLUE"},
+   "notes":"CIEDと電気メス(EMI)\n・電気メスのEMIでオーバーセンシング→PMはペーシング抑制、ICDは不適切な頻拍治療を起こしうる。\n・磁石応答：PM=非同期固定ペーシング、ICD=頻拍治療を一時停止(除細動は待機)。機種で応答が異なる。\n・術前にデバイス設定を確認、双極電気メスを優先し短時間通電、体外式除細動パッドを準備。",
+   "cite":"周術期CIED管理 (HRS/ASA).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=perioperative+cardiac+implantable+electronic+device+management","verify":false},
+
+  {"code":"8.3","chapter":8,"title":"移植心の波形","type":"figure","caption":"P波が2つ見える",
+   "figure":{"id":"fig_8_3_transplant","kind":"ecg_strip","spec":"2つのP波: ①ドナー洞結節由来のP波(各QRSに先行し心拍を規定)、②レシピエント遺残心房由来のP波(独立して出るが吻合部を越えず房室伝導しない=QRSと無関係)。脱神経のためアトロピン無効、運動時のレート応答が鈍い。無症候性が多い拒絶反応・移植後冠動脈血管症による虚血の監視に注意。"},
+   "cite":"移植心の心電図・脱神経 (総説).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=cardiac+transplant+electrocardiogram+denervation","verify":false},
+
+  {"code":"8.4","chapter":8,"title":"食道・心外膜","type":"column",
+   "column":{"heading":"食道・心外膜電極","body":["食道誘導・心房電極はP波を大きく捉える。","心臓外科術後は一時ペーシングワイヤで診断・治療が可能。","微小電流でも心筋刺激のため接続・接地・絶縁に注意。"],"accent":"TEAL"},
+   "notes":"食道・心外膜電極\n・食道誘導や心房電極は心房活動(P波)を大きく捉え、房室関係が不明な頻拍の鑑別に有用。\n・心臓外科術後は一時ペーシングワイヤ(心房/心室)で診断と治療の両方が可能。\n・微小電流でも心筋を刺激しうるため、接続・接地とアイソレーションに注意。",
+   "cite":"心房・心外膜電位図による不整脈診断.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=atrial+epicardial+electrogram+arrhythmia+diagnosis","verify":false},
+
+  {"code":"8.5","chapter":8,"title":"小児のモニタ","type":"figure","caption":"年齢で正常HRが違う",
+   "figure":{"id":"fig_8_5_peds","kind":"table","spec":"年齢別 安静時正常心拍数(目安・覚醒時, /分)を表で: 新生児(0-1か月) 100-160、乳児(1-12か月) 100-150、幼児(1-3歳) 90-140、未就学(3-6歳) 80-120、学童(6-12歳) 70-110、思春期(12歳-) 60-100。注記: 出典により幅があり目安。右室優位のため乳幼児はV1でR優勢、V1-3のT波陰転は正常。成人サイズ電極は重なりやすくアーチファクトの原因に。"},
+   "cite":"小児の年齢別正常バイタル (PALS等).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=pediatric+normal+heart+rate+by+age","verify":true},
+
+  {"code":"8.6","chapter":8,"title":"特殊病態","type":"figure","caption":"術中に現れる特徴波形",
+   "figure":{"id":"fig_8_6_special","kind":"ecg_compare","spec":"4病態の特徴波形を並置比較: ①WPW=短いPR＋δ波(QRS立ち上がりの緩やかなスラー)。②Brugada=V1-2でcoved型ST上昇＋陰性T(発熱・Na遮断薬・一部麻酔薬で顕在化)。③早期再分極=下壁/側壁誘導のJ点上昇(notch/slur)。④たこつぼ心筋症=広範な深い陰性T波＋著明なQT延長。各波形に短い所見ラベル。"},
+   "cite":"WPW/Brugada/早期再分極/たこつぼの心電図.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=Brugada+WPW+early+repolarization+ECG+pattern","verify":false}
+]

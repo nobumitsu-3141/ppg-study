@@ -1,0 +1,30 @@
+[
+  {"code":"5.1","chapter":5,"title":"監視項目","type":"grid2",
+   "grid":[{"h":"心拍数","d":"徐脈・頻脈と誘因"},{"h":"調律","d":"洞調律・期外・AF"},{"h":"虚血(ST)","d":"ST偏位のトレンド"},{"h":"伝導・QRS","d":"幅・ブロック・軸"},{"h":"電解質","d":"T/U波でK・Ca"},{"h":"QT・薬剤","d":"QTc延長→TdP"}],
+   "cite":null,"cite_url":null,"verify":false},
+
+  {"code":"5.2","chapter":5,"title":"誘導選択","type":"figure","caption":"II+V5で虚血の約8割",
+   "figure":{"id":"fig_5_2_leads","kind":"schematic","spec":"上段に冠動脈灌流域(LAD前壁・LCx側壁・RCA下壁)、下段に監視誘導を対応づける。II=下壁虚血に加えP波が明瞭で調律監視に最適、V5=前側壁の心内膜下虚血を最もよく反映。感度の帯グラフ: 単一誘導はV5=75%が最良、V4=61%、II=33%。組合せはV4+V5=90%、標準のII+V5=80%、II+V4+V5=96%。矢印で『3誘導(II+V5相当)ではST検出に限界→可能ならV4を足す』。虚血基準の注記=水平/下降型ST低下≧1mm、非Q誘導のST上昇。"},
+   "cite":"London MJ, et al. Anesthesiology 1988;69:232-241.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/3407971/","verify":false},
+
+  {"code":"5.3","chapter":5,"title":"ST自動解析","type":"figure","caption":"J点後60/80msで計測",
+   "figure":{"id":"fig_5_3_st","kind":"schematic","spec":"1拍のPQRST波形を拡大。等電位基準=PRセグメント(またはTP)を水平線で提示。J点(QRS終末)を明示し、計測点をJ点+60msまたは+80msにマーク、基準線からの垂直距離をST偏位量として表示。水平/下降型≧1mm低下、非Q誘導で≧1mm上昇を有意と色分け。右側にST値の連続トレンド曲線を小さく併置し経時監視を示す。下部に限界の注記=心拍数依存・脚ブロック/伝導異常・体位変化・基線動揺で誤警報が生じうる。"},
+   "cite":"Drew BJ, et al. AHA Scientific Statement. J Cardiovasc Nurs 2005;20:76-106.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/15855856/","verify":false},
+
+  {"code":"5.4","chapter":5,"title":"フィルタ","type":"column",
+   "column":{"heading":"フィルタの落とし穴","body":["モニタモードは高域遮断が高くSTを歪める。","虚血監視は診断/STモード(下限0.05Hz)へ切替える。","基線動揺の抑制とST正確さはトレードオフ。"],"accent":"BLUE"},
+   "cite":"Drew BJ, et al. AHA Scientific Statement. J Cardiovasc Nurs 2005;20:76-106.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/15855856/","verify":false},
+
+  {"code":"5.5","chapter":5,"title":"波形の乱れ","type":"figure","caption":"乱れは非心原性を先に除外",
+   "figure":{"id":"fig_5_5_artifact","kind":"ecg_compare","spec":"代表的アーチファクトを短冊で並置し各々に鑑別点を注記。(1)電気メス=不規則な高振幅ノイズ/飽和、通電に同期。(2)シバリング/振戦=細かい基線の揺れ、心房粗動様だが下を真のQRSが行進。(3)50/60Hz交流=規則的な細かい鋸歯状、接地/電源由来。(4)体動=大きく不規則な振れ、動作に一致。(5)電極接触不良=基線漂動・信号途絶、1誘導のみ異常。(6)胸骨圧迫=圧迫レートに一致する幅広い規則的な振れ。共通の見分け方=SpO2脈波や観血動脈圧波形と照合し、規則的なQRSが貫通しているか確認。"},
+   "cite":"Drew BJ, et al. AHA Scientific Statement. J Cardiovasc Nurs 2005;20:76-106.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/15855856/","verify":false},
+
+  {"code":"5.6","chapter":5,"title":"セットアップ","type":"bullets",
+   "bullets":[{"text":"導入前にベースラインを記録し比較の基準に","color":"GOLD"},{"text":"皮膚を清拭し新しい電極で接触を良くする","color":"INK"},{"text":"V5位置を正確に、体位/ドレープのずれに注意","color":"INK"},{"text":"虚血監視は診断/STモードとトレンドで","color":"GOLD"}],
+   "notes":"セットアップの実務（全項目）\n・導入前にベースラインを記録し比較の基準に\n・皮膚を清拭し新しい電極で接触を良くする\n・アラーム閾値を患者に合わせ疲労を防ぐ\n・V5位置を正確に、体位/ドレープのずれに注意\n・電気メスの対極板・配線を電極から離す\n・虚血監視は診断/STモードとトレンドで",
+   "cite":"Drew BJ, et al. AHA Scientific Statement. J Cardiovasc Nurs 2005;20:76-106.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/15855856/","verify":false},
+
+  {"code":"5.7","chapter":5,"title":"術中の調律","type":"figure","caption":"刺激と自律神経で調律が動く",
+   "figure":{"id":"fig_5_7_rhythm","kind":"schematic","spec":"『刺激→自律神経→心電図反応→対処』の対応表。(a)喉頭鏡・挿管/浅麻酔/疼痛→交感↑→洞頻脈・高血圧・心室期外収縮→鎮痛/麻酔深度。(b)気腹(腹腔鏡)・腸間膜牽引→迷走↑→洞徐脈・房室ブロック→送気/牽引の解除。(c)眼球圧迫・外眼筋牽引=眼心反射(三叉-迷走)→高度徐脈・洞停止/心停止→刺激中止+アトロピン。(d)オピオイド(フェンタニル/レミフェンタニル)→迷走↑→徐脈。(e)抗コリン薬・パンクロニウム→頻脈。安全上のハイライトは(c)眼心反射の徐脈/心停止。"},
+   "cite":"Lübbers HT, et al. J Oral Maxillofac Surg 2010;68:1317-1321.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/20347202/","verify":false}
+]

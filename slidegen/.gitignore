@@ -1,0 +1,26 @@
+# --- 大容量バイナリ: 意図的に未コミット (README「除外したもの」参照) ---
+figs/
+out/
+assets/
+render/
+
+# 生成された pptx は追跡しない。ただしテンプレートは機構の一部なので必ず追跡する。
+*.pptx
+!**/_template_kawazoe.pptx
+
+# 図の生成物・中間物
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS / R
+.DS_Store
+.Rhistory

@@ -1,0 +1,21 @@
+# 川副式スライド組版機構 — Python 依存
+#
+# 基準環境: Mac ローカルの uv 仮想環境 (decks/monitor-ecg/.venv) = CPython 3.12
+# 検証環境: Linux aarch64 / CPython 3.10 でも下記の下限版でビルド成功を確認済み
+#           (defib / etco2 / aline / monitor-ecg の 4 デックが lint 0 違反)
+#
+# 版の読み方: 「==」は Mac 基準環境の実測版、「>=」は Linux で実証済みの下限。
+# 共有リポジトリでは Python 版が揃わないため >= 指定を既定とする。
+
+python-pptx>=1.0.2        # Mac 基準環境: 1.0.2  … pptx の生成本体
+Pillow>=12.2.0            # Mac 基準環境: 12.3.0 … 画像の寸法取得・幅計測 (PIL)
+matplotlib>=3.10.9        # Mac 基準環境: 3.11.0 … figs/*.png の作図
+numpy>=2.2.6              # Mac 基準環境: 2.5.1  … 作図の数値計算
+PyYAML>=6.0.1             # defib デックの content/ch*.md 読込に必須。6.0.1(Debian既定)で動作確認済み
+                          #   （>=6.0.3 だと Debian 管理の 6.0.1 を pip が上書きできず setup が中断する）
+
+# 備考:
+# - lxml は python-pptx の推移的依存 (基準環境 6.1.1)。直接指定は不要。
+# - fontTools / kiwisolver / contourpy / cycler / pyparsing / python-dateutil /
+#   six / packaging は matplotlib の推移的依存。直接指定は不要。
+# - xlsxwriter は基準 venv に存在するが本機構は使用しない。除外した。
