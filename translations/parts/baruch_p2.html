@@ -1,0 +1,91 @@
+<h2>結果<span class="en">Results</span></h2>
+<p>Table 1に患者データとカテーテル検査の適応をまとめる。合計63名の患者が研究に組み入れられ、患者1名につき1回のデータランが収集された。カテーテル検査の主要な適応は、冠動脈疾患(28.5%)、胸痛(28.5%)、呼吸困難(15.8%)、および移植関連評価(11%)であった。4名の患者のデータは解析できなかった。1例では、中心ラインカテーテルが不具合を起こし、データが記録されなかった。別の1例では、カテーテルデータ中の対応するオーバーラップ区間がデータ保存エラーのために失われたため、拍動間間隔のオーバーラップを得ることができなかった。2例では、CareTakerシステムがデータの取得に失敗した。1例は電池残量低下の状態によるものであり、もう1例はCareTakerセンサハウジングと指カフとを接続するホースの外れによるものであった。カテーテル検査手技の間に、患者側およびCareTaker関連のいかなる不具合を是正することも、医療手技中には選択肢とならなかった。残りの患者については、90秒間のデータすべてが解析された。</p>
+
+<table>
+<caption>Table 1(表1) 患者データとカテーテル検査適応の要約</caption>
+<tr><th colspan="2">患者情報(Patient information)</th></tr>
+<tr><td>年齢</td><td>62.7 ± 11.5</td></tr>
+<tr><td>性別</td><td>男性38名/女性25名</td></tr>
+<tr><td>身長 (cm)</td><td>172.3 ± 9.7</td></tr>
+<tr><td>体重 (kg)</td><td>86.8 ± 20.1</td></tr>
+<tr><td>平均動脈圧 (mmHg)</td><td>91.3 ± 13.4</td></tr>
+<tr><td>心拍数 (拍/分)</td><td>67.9 ± 13.8</td></tr>
+<tr><th>カテーテル検査の適応(Indication for catheterization)</th><th>該当カテゴリの患者数(Patients in category)</th></tr>
+<tr><td>僧帽弁逆流</td><td>3</td></tr>
+<tr><td>慢性閉塞性肺疾患</td><td>5</td></tr>
+<tr><td>冠動脈疾患</td><td>18</td></tr>
+<tr><td>移植関連評価</td><td>7</td></tr>
+<tr><td>冠動脈バイパスグラフト</td><td>5</td></tr>
+<tr><td>動脈瘤修復関連評価</td><td>2</td></tr>
+<tr><td>大動脈弁狭窄</td><td>3</td></tr>
+<tr><td>胸痛</td><td>18</td></tr>
+<tr><td>心筋梗塞</td><td>4</td></tr>
+<tr><td>呼吸困難</td><td>10</td></tr>
+<tr><td>レイノー現象</td><td>1</td></tr>
+<tr><td>心室細動/心停止</td><td>1</td></tr>
+<tr><td>心房細動</td><td>1</td></tr>
+<tr><td>ペースメーカー交換関連</td><td>1</td></tr>
+</table>
+
+<h3>PDAパラメータと中心血圧のオーバーラップエピソードの比較<span class="en">Comparisons of overlap episodes of PDA parameters and central blood pressures</span></h3>
+<p>CareTakerデータストリームと中心カテーテルデータストリームのオーバーラップは、データ収集システムの時計に基づく初期アラインメントの後、両データストリームからの脈波検出を介して得られた拍動間間隔スペクトルを照合することによって、確定された。加えて、心拍の脱落(skipped heartbeat)などの特異なイベントも、利用可能な場合には、オーバーラップを確定するために使用された。</p>
+<p>Figure 4に、患者31における生信号および導出信号のオーバーラップの一例を提示する。最上段のグラフ4Aは、中心ライン血圧データのプリントアウトを提示し、一方、4Bおよび4Cは、それぞれ、CareTaker生信号とデジタル積分された信号を表示する。グラフ4Dは、関連する抽出パラメータ、具体的には、Aライン(動脈ライン)収縮期血圧、Aライン脈圧、そして記述のとおりいずれもCareTaker信号から導出されたP2P1比およびT13時間間隔の、オーバーレイを表示する。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 4(図4)</span> 患者31における生信号と導出信号のオーバーラップ。<b>(A)</b> 中心ライン血圧データのプリントアウト。<b>(B)</b> CareTaker生理学的モニタで得られた動脈圧脈波の微分信号。<b>(C)</b> (B)に表示された信号のデジタル積分から得られた動脈圧脈波。<b>(D)</b> Aライン収縮期血圧、Aライン脈圧、P2P1比、およびT13時間間隔のオーバーレイ。
+<div class="labels">図中ラベル訳: CareTaker Signal=CareTaker信号 / CT signal=CT信号 / Integrated=積分信号 / P2/P1 ratio=P2/P1比 / Central Systolic Pressure=中心収縮期血圧 / Central Pulse Pressure=中心脈圧 / T13 (millisec.)=T13(ミリ秒) / Central Pressure (mmHg)=中心圧(mmHg) / P2P1 Ratio (unitless)=P2P1比(無次元) / Time (2 seconds/division)=時間(2秒/目盛)</div>
+</div>
+
+<p>Figure 5、6および7に、3年前に冠動脈バイパスグラフト(CABG)手術を受けた元喫煙者である患者38について、90秒間のスキャン長全体にわたる、このような抽出パラメータのオーバーラップの一例を提示する。具体的には、Figure 5、6および7は、それぞれ、拍動間間隔、中心収縮期血圧とP2P1パラメータ、ならびに中心脈圧とT13の相対的なオーバーラップを表示する。Figure 8および9は、患者38についての、PDAパラメータと中心脈波血圧との対応する相関を表示する。</p>
+<p>患者38については、P2P1パラメータから収縮期血圧への変換の実行に使用された線形モデルは(100 × P2P1(無次元比)+ 0.945)であり、一方、T13パラメータから脈圧への対応する線形変換は(0.2 × T13(ミリ秒)+ 0.0025)であった。この患者に対する各式の傾き係数は、全患者の変換に使用されたものと同一の傾き係数であり、患者データセット全体の全体的線形フィット解析を通じて得られたものである。対照的に、変換式のオフセット係数は患者固有のものであり、両データストリームのフィットのカイ二乗最小化によって得られた。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 5(図5)</span> 患者38における、中心ラインカテーテルから得られた拍動間間隔系列(赤)と、CareTaker生理学的モニタで得られたデータ(黒)のオーバーラップ。
+<div class="labels">図中ラベル訳: Interbeat Interval (Seconds)=拍動間間隔(秒) / Time (Seconds)=時間(秒)</div>
+</div>
+
+<h3>全体の結果<span class="en">Overall results</span></h3>
+<p>研究の全体の結果は、血圧相関およびBland-AltmanグラフとしてFigure 10、11、12および13に提示される。相関は、各患者について、PDAパラメータP2P1およびT13を、それぞれ収縮期および拡張期血圧に変換することによって確立された。ゲインについては、前述の値である100および0.2が全体を通して使用された。各患者の線形オフセットは線形フィットから得られた。Bland-Altmanグラフは、同じデータを、対となる測定値の平均の関数としての差、という形式で表示する。相関は統計学的に有意であった(PDA収縮期/中心収縮期: R二乗: 0.92 (p &lt; 0.0001)、PDA拡張期/中心拡張期: R二乗: 0.78 (p &lt; 0.0001))。Bland-Altman比較は、米国医療機器振興協会(AAMI)SP-10の限界値である8 mmHgの範囲内の標準偏差をもたらした(PDA収縮期/中心収縮期: 5.87 mmHg (p &lt; 0.0035)、PDA拡張期/中心拡張期: 5.69 mmHg (p &lt; 0.001))。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 6(図6)</span> 患者38における、カテーテル信号から得られた中心収縮期血圧(赤)と、非侵襲的に得られた動脈信号のPDA解析から得られたP2P1比(黒)のオーバーラップ。
+<div class="labels">図中ラベル訳: P2/P1 Ratio (unitless)=P2/P1比(無次元) / Catheter Systole (mmHg)=カテーテル収縮期血圧(mmHg) / Time (Seconds)=時間(秒)</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 7(図7)</span> 患者38における、カテーテル信号から得られた中心脈圧(赤)と、非侵襲的に得られた動脈信号のPDA解析から得られたT13遅延時間(黒)のオーバーラップ。
+<div class="labels">図中ラベル訳: T13 (milliseconds)=T13(ミリ秒) / Catheter Pulse Pressure (mmHg)=カテーテル脈圧(mmHg) / Time (Seconds)=時間(秒)</div>
+</div>
+
+<h3>パルス分解解析(PDA)変換係数<span class="en">Pulse decomposition analysis (PDA) conversion factors</span></h3>
+<p>Figure 14および15は、それぞれ、各患者についての、P2P1と収縮期血圧、およびT13と拡張期血圧の相関の傾きの、ヒストグラム分布グラフを提示する。分布のピーク振幅は、以前の研究から得られた傾き係数に近い。注目すべきは、両係数について分布の裾がより高ゲイン側へ伸びているという事実であり、これは、これらの患者においては、動脈拡張(P2P1)および脈波伝播時間(T13)のより小さな変化が、血圧のより大きな変化と関連していることを示している。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 8(図8)</span> 患者38における、Figure 5に示したような、P2P1パラメータと中心ライン収縮期血圧との相関。
+<div class="labels">図中ラベル訳: Central Systolic Pressure (mmHg)=中心収縮期血圧(mmHg) / P2P1 Ratio (unitless)=P2P1比(無次元) / R = 0.88, p &lt;0.001=R = 0.88、p &lt; 0.001</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 9(図9)</span> 患者38における、Figure 7に示したような、T13パラメータと中心ライン脈圧との相関。<span class="note">(訳注: 原文キャプションは "as shown if Figure 7" と誤植)</span>
+<div class="labels">図中ラベル訳: Central Pulse Pressure (mmHg)=中心脈圧(mmHg) / T13 (milliseconds)=T13(ミリ秒) / R = 0.88, p &lt;0.001=R = 0.88、p &lt; 0.001</div>
+</div>
+
+<h3>定性的データ評価<span class="en">Qualitative data assessments</span></h3>
+<p>Figure 16は、カテーテルで得られた、2名の患者(#2および#6)の中心脈圧プロファイルのオーバーラップを提示する。患者#2は、心不全および心室機能不全と診断されていた。患者コホートのうち5名の患者が、同様の中心脈圧プロファイルを示した。</p>
+<p>他方、患者#6から得られた圧脈波プロファイルは、「典型的な」中心脈圧プロファイル[23]に対応する。この場合、左室駆出時間(LVET)は十分に長く、そのため、戻ってくる腎反射脈波(P2)と腸骨反射脈波(P3)は重なり合い、融合する。この場合、一次駆出脈波は約310ミリ秒の持続時間を有しており、これは脈波立ち上がりと重複切痕(dichrotic notch)との間の時間差を測定することによって決定された。</p>
+<p>他方、患者#2の脈圧プロファイルは、著しく短縮したLVETを示している。彼の中心圧プロファイルにおける一次特徴の幅に基づくと、LVETは約140ミリ秒である。一次駆出脈波(P1)の持続時間が短いため、同じ時間幅を特徴とするその2つの反射脈波P2およびP3の持続時間も短い。さらに、患者#6とは対照的に、反射が戻ってくる前に駆出が終了するため、3つの一次成分脈波は明瞭に分離される。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 10(図10)</span> 非侵襲的に得られた動脈脈波信号からのPDAパラメータの変換を通じて得られた収縮期血圧と、中心収縮期血圧との全体的相関。
+<div class="labels">図中ラベル訳: PDA Systole (mmHg)=PDA収縮期血圧(mmHg) / Central Line Systole (mmHg)=中心ライン収縮期血圧(mmHg) / R = 0.95, p&lt; 0.0001=R = 0.95、p &lt; 0.0001</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 11(図11)</span> 非侵襲的に得られた動脈脈波信号からのPDAパラメータの変換を通じて得られた拡張期血圧と、中心拡張期血圧との全体的相関。
+<div class="labels">図中ラベル訳: PDA-based Diastole (mmHg)=PDAに基づく拡張期血圧(mmHg) / Central Diastole (mmHg)=中心拡張期血圧(mmHg) / R = 0.88, p&lt; 0.0001=R = 0.88、p &lt; 0.0001</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 12(図12)</span> 収縮期血圧差 対 収縮期血圧平均のBland-Altman比較。標準偏差: 5.87 mmHg。
+<div class="labels">図中ラベル訳: Systole Difference (mmHg)=収縮期血圧差(mmHg) / Average Systolic Blood Pressure (mmHg)=平均収縮期血圧(mmHg) / AAMI SP-10=AAMI SP-10規格限界線 / CareTaker=CareTakerの標準偏差線</div>
+</div>
