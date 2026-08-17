@@ -1,0 +1,58 @@
+<div class="figure">
+<span class="figtitle">Figure 10(図10)</span> <b>(a)</b> <i>SBP</i>測定のためのRReliefFアルゴリズムでソートされた特徴量重要度スコア。<b>(b)</b> <i>SBP</i>測定のためのCFSアルゴリズムでソートされた特徴量重要度スコア。<b>(c)</b> <i>SBP</i>測定のためのMRMRアルゴリズムでソートされた特徴量重要度スコア。特徴量ラベルは以下のように注記される: (*) <i>x<sub>FILT</sub></i> 上で計算(すなわちMODWT強調前)、(°) <i>x<sub>MODWT</sub></i> 上で計算(すなわちMODWT強調後)、(-) 正規化信号 <i>x<sub>NORM</sub></i> 上で計算、(+) 新規特徴量、および (#) 既知特徴量。
+<div class="labels">凡例訳: X<sub>FILT</sub> and known feature=X<sub>FILT</sub>かつ既知特徴量 / X<sub>MODWT</sub> and new feature=X<sub>MODWT</sub>かつ新規特徴量 / X<sub>MODWT</sub> and known feature=X<sub>MODWT</sub>かつ既知特徴量 / X<sub>NORM</sub> and known feature=X<sub>NORM</sub>かつ既知特徴量 / X<sub>FILT</sub> and new feature=X<sub>FILT</sub>かつ新規特徴量 / Importance scores=重要度スコア<br>
+<b>(a) RReliefF(SBP)のスコア:</b> Mean of tb1 *# 0.0263 / Mean of tb2 *# 0.01 / Mean of (tb1−tb2)/p2pi *# 0.0074 / Area from 2 to 5 *# 0.0062 / Mean of TP/p2pi *# 0.006 / Mean of TDN/p2pi *# 0.006 / Mean of tb1/p2pi *# 0.0058 / Freq1 *# 0.0056 / SF °+ 0.0055 / Area from 0 to 2 *# 0.0054 / Peak1 *# 0.0053 / TDN °# 0.0046 / CIF °+ 0.0044 / Freq1/Freq3 *# 0.0044 / Mean of tb2/p2pi *# 0.0043 / T2 °+ 0.0042 / T1 °+ 0.0041 / STD -# 0.0041 / Mean of ta1/p2pi *# 0.004 / Freq1/Freq2 *# 0.004<br>
+<b>(b) CFS(SBP)のスコア:</b> Mean of tb2/p2pi *# 0.22124 / Mean of tb2 *# 0.20996 / Area from ft to MSP *# 0.16622 / 75-per *# 0.14954 / 1/(TDN−TSP) *# 0.1493 / IQR *# 0.14697 / 1/(TIP-TSP) *# 0.14696 / Area from 2 to 5 *# 0.14541 / ADP -# 0.14317 / a1 *# 0.14069 / ADP/(PI-TDN) *# 0.13866 / AMS -# 0.1382 / 1/TP *# 0.13127 / T1 °+ 0.12899 / Area from DP to end *# 0.12746 / Mean of TDN/p2pi *# 0.12336 / ADN/(PI-TDN) *# 0.12227 / Area from IP to DP *# 0.12149 / STD -# 0.1212 / TDN °# 0.12041<br>
+<b>(c) MRMR(SBP)のスコア:</b> Mean of tb1 *# 0.1348 / ADN/(PI-TDN) *# 0.1308 / SPL *+ 0.0584 / AMS -# 0.0067 / Mean of tb2 *# 0.0067 / ADP °# 0.0055 / 75-per *# 0.0047 / Mean of b1/a1 *# 0.0044 / Mean of PPG before normalization *# 0.0034 / TDP/p2pi *# 0.0034 / diaw66 *# 0.0033 / T1 °+ 0.0032 / Mean of tb2/p2pi *# 0.003 / T2 °+ 0.003 / Fmax *# 0.0028 / ADN °# 0.0028 / Mean of tb1/p2pi *# 0.0027 / Peak1 *# 0.0025 / Area from DP to end *# 0.0025 / Mean of ta2 *# 0.0024</div>
+</div>
+
+<p>結果は、3つの手法が、最良の特徴量の中に、MODWT強調信号から抽出された新しい特徴量のいくつかを選択していることを示しており、これは、次節で考察するとおり、それらの有意性を確認するものである。</p>
+<p><i>DBP</i>測定に関連する最も有意な特徴量を同定するためにも、同じ手続きが実施されている(Figure 11に示す)。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 11(図11)</span> <b>(a)</b> <i>DBP</i>測定のためのRReliefFアルゴリズムでソートされた特徴量重要度スコア。<b>(b)</b> <i>DBP</i>測定のためのCFSアルゴリズムでソートされた特徴量重要度スコア。<b>(c)</b> <i>DBP</i>測定のためのMRMRアルゴリズムでソートされた特徴量重要度スコア。特徴量ラベルはFigure 10と同様に注記される。
+<div class="labels"><b>(a) RReliefF(DBP)のスコア:</b> Mean of tb1 *# 0.0271 / Mean of tb2 *# 0.0095 / Area from 2 to 5 *# 0.0079 / Mean of (tb1−tb2)/p2pi *# 0.0076 / Freq1 *# 0.0073 / Area from 0 to 2 *# 0.0068 / Freq1/Freq3 *# 0.0067 / Mean of TDN/p2pi *# 0.0066 / Freq1/Freq2 *# 0.0064 / Mean of TP/p2pi *# 0.0063 / Mean of tb1/p2pi *# 0.0062 / Peak1 *# 0.006 / SF °+ 0.0055 / STD of PPG before normalization *# 0.0047 / Mean of ta1/p2pi *# 0.0046 / Mean of tb2/p2pi *# 0.0045 / ADN/ASP *# 0.0045 / A0-2/A2-5 *# 0.0044 / CIF °+ 0.0044 / Mean of a2 *# 0.0043 / TDN °# 0.0043 / ADN -# 0.0043 / Sk *# 0.0042 / T2 °+ 0.0042 / Freq2 *# 0.0041<br>
+<b>(b) CFS(DBP)のスコア:</b> HB °+ 0.29929 / MedF °+ 0.29769 / MeaF °+ 0.29264 / OB °+ 0.27692 / OB *+ 0.27623 / MeaF *+ 0.27366 / MedF *+ 0.27282 / HB *+ 0.27164 / PI *# 0.24878 / TDP °# 0.23609 / TP °# 0.22742 / T2 °+ 0.22596 / TDP *# 0.21776 / TIP *# 0.21262 / Logarithm IP *# 0.2072 / diaw75 *# 0.19984 / TP *# 0.1987 / TDN *# 0.19848 / diaw66 *# 0.19748 / Mean of a2 *# 0.19584 / a1 *# 0.18753 / Logarithm of DN *# 0.18683 / diaw50 *# 0.18324 / 1/TP *# 0.17516 / diaw33 *# 0.16808<br>
+<b>(c) MRMR(DBP)のスコア:</b> Mean of tb1 *# 0.1111 / SINAD °+ 0.1083 / SPL *+ 0.1036 / ADN/(PI-TDN) *# 0.0344 / ta1 *# 0.03 / HB °+ 0.03 / Mean of tb2 *# 0.0296 / Area from ft to MSP *# 0.0261 / SPL °+ 0.0248 / SINAD *+ 0.0228 / T2 °+ 0.0213 / SF -+ 0.0208 / a1 *# 0.0197 / SF °+ 0.0194 / Mean of PPG before normalization *# 0.019 / Mean of ta2/p2pi *# 0.0189 / sysw33 *# 0.0176 / Mean of b1/a1 *# 0.0169 / PSA *+ 0.0157 / RP °# 0.0156 / 1/(TDN−TSP) *# 0.0156 / Mean of a2 *# 0.0154 / Mean of (tb1−tb2)/p2pi *# 0.0151 / TP °# 0.0146 / Mean of ta1/p2pi *# 0.0137(凡例に X<sub>NORM</sub> and new feature=X<sub>NORM</sub>かつ新規特徴量 を追加)</div>
+</div>
+
+<p>したがって、拡張期値が取られる場合についても同様に、3つの手法は、MODWT強調PPG信号とフィルタリングされた信号(<i>x<sub>FILT</sub></i>)の両方について、新たに定義されたいくつかの特徴量を選択している。</p>
+
+<h2>6. 考察<span class="en">Discussion</span></h2>
+<p>本節では、3つの手法を用いて選択された特徴量が、収縮期と拡張期の両方の場合において、MODWT強調後に計算された既知の特徴量と新規のものを含むことを強調するために、特徴選択の段階で得られた結果をまとめる。したがって、以下の観察を行うことができる。</p>
+<p>実際、いくつかの特徴量がPPG信号から抽出され、3つの選択手法を用いて検討されている。特に、多くの既知の特徴量がMODWT強調の前後の両方で計算されており、MODWTの使用のみで改善がもたらされることを示している。これは以下の特徴量について生じている: TDN。これは<i>SBP</i>についてCFSにより、また<i>SBP</i>(スコア0.0046)と<i>DBP</i>(スコア0.0043)の両方についてRReliefFにより選択されている<span class="note">(訳注: 原文 "an DBP" のまま、"and" の誤植)</span>。<i>SBP</i>についてMRMRにより選択されたADPおよびADN。<i>DBP</i>についてCFSにより選択されたTDP。そして<i>DBP</i>についてCFSとMRMRの両方により選択されたTPである。</p>
+<p>他方、MODWT強調信号から抽出されていない場合でも、いくつかの新しい特徴量が選択されている: SPLは<i>SBP</i>についてMRMRにより選択されている。OB、MeaF、MedFおよびHBは<i>DBP</i>についてCFSにより選択されている。そして、SPL、SINAD、SFおよびPSAは<i>DBP</i>についてMRMRにより選択されている。</p>
+<p>さらに、すべての選択基準は、提案されたいくつかの新規特徴量が、MODWT強調の活用において既知の特徴量よりも有用であることを示している。例えば、<i>SBP</i>についてのRReliefFによれば、SFはTDNよりも優れている。<i>SBP</i>についてのCFSによれば、T1(Figure 10bにおけるスコア0.12899)はTDN(スコア0.12041)よりも優れている。<i>SBP</i>についてのMRMRによれば、T1(Figure 10cにおけるスコア0.032)およびT2(スコア0.0030)はADN(スコア0.028)よりも優れている<span class="note">(訳注: 数値は原文のまま)</span>。<i>DBP</i>についてのRReliefFによれば、SFおよびCIFはTDNよりも優れている。また、<i>DBP</i>についてのCFSおよびMRMRによれば、他の多くの特徴量がTPおよびTDPよりも優れている。</p>
+<p>さらに、MODWT強調後に計算され、かつ新規であるという条件を同時に満たす特徴量が、頻繁に選択されている。例えば、SFとCIFは、<i>SBP</i>(Figure 10a)と<i>DBP</i>(Figure 11a)の両方についてのRReliefFによれば、最良の特徴量の一つである。SFは、<i>DBP</i>についてMRMRによっても選択されている。複数の手法によって選択されている他の特徴量は、T1とT2である。</p>
+<p>加えて、Figure 11b,cに示すとおり、<i>DBP</i>についてCFSおよびMRMRによってスコアが評価される場合、提案された多くの特徴量が既知の特徴量を上回ることに留意すべきである。</p>
+<p>先に考察した結果を考慮すると、195に等しかった当初の特徴量数は、補足資料のTable S1に示す最良の有意な特徴量を選択することによって削減できる。提案されたいくつかの特徴量は、SF、CIF、T1、T2、SPL、TDN、TP、Area from DP to end など、異なる選択手法に応じて少なくとも2回出現している。PPG信号の特徴量として提案され、脈波のRMSとその平均絶対値との比として定義される形状係数(shape factor)SFは、強調信号 <i>x<sub>MODWT</sub></i> に適用された場合に3回選択されていることに留意すべきである。さらに、<i>x<sub>MODWT</sub></i> におけるDPはより顕著であるため、<i>x<sub>MODWT</sub></i> 上のSFは <i>x<sub>FILT</sub></i> 上のSFより大きい。この特徴量は脈波の形状に関係しており、脈波の形状は血管老化に強く依存する。したがって、それは、一般に加齢とともに増加する動脈スティフネスの評価にも関連する可能性がある。</p>
+<p>これらの考察は、PPG信号のMODWT強調、ならびに特定された新規特徴量が、ML技術によるBP推定を改善する可能性を持つ、BPにとって有意な情報の抽出をもたらすことを示している。</p>
+
+<h2>7. 結論<span class="en">Conclusions</span></h2>
+<p>本論文では、BP測定にとって有意なPPG信号の特徴量、ならびにPPG信号を強調するためのMODWTの使用が論じられた。</p>
+<p>ABP信号はBPのより直接的で正確な測定を可能にするものの、それは侵襲的な方法で得られる。これは、在宅でさえ容易かつ快適に実施されるPPG取得とは対照的である。したがって、ABP脈波とのより大きな類似性を示すという事実に動機づけられて、MODWTによるPPG脈波強調の使用が提案された。</p>
+<p>本論文で提示された第一の結果は、強調信号の使用により、DPやDNなどのPPG脈波の特徴点のより信頼性のある抽出が可能になるということである。実際、PPG脈波上でDPまたはDNを同定することは、患者の年齢や状態によってそれらがあまり強調されていなかったり欠けていたりするため、時に困難である。しかしながら、提案するMODWT強調のおかげで、第4節で実施した誤差解析によって示されたとおり、信号の谷とピークを考慮することで特徴点をより直接的に得ることができ、[21]で提示された専用に定義されたアルゴリズムと同等の性能を得る。例えば、DPは脈波の95%で明瞭に現れており(未処理の脈波ではわずか1%であったのに対し)、その特徴点は[21]に対して0.04秒の平均誤差を持っていた。</p>
+<p>実際、特徴抽出と選択の後の第二の重要な結果として、<i>x<sub>MODWT</sub></i> から得られ第6節で考察された、提案されたいくつかの新しい特徴量(および既存の特徴量)が、3つの特徴量評価手法、すなわちCFS、RReliefFおよびMRMRによって与えられたスコアに従って、有意であることが見出された。これらの手法は、関心のある変数――この場合は収縮期および拡張期のBP値――の推定にとって関連性があり、かつ冗長でない最適な特徴量の選択を可能にすることが想起されるべきである。したがって、本論文で報告された結果は、PPG信号解析に基づくBP推定手法を開発するための基盤として使用できる。</p>
+
+<h3>補足資料<span class="en">Supplementary Materials</span></h3>
+<p>以下の支持情報は https://www.mdpi.com/article/10.3390/s23042321/s1 でダウンロードできる: より関連性の高い信号特徴量を列挙するAppendix S1。</p>
+
+<h3>著者の貢献<span class="en">Author Contributions</span></h3>
+<p>概念化、F.A.、L.D.P.、A.M.L.L.、M.S.およびA.D.N.。ソフトウェア、L.D.P.。執筆――原稿、F.A.、L.D.P.、A.M.L.L.、M.S.およびA.D.N.。監督、F.A.およびA.D.N.。全著者は原稿の公開版を読み、同意した。</p>
+
+<h3>資金<span class="en">Funding</span></h3>
+<p>本研究は外部資金を受けていない。</p>
+
+<h3>インフォームド・コンセントに関する声明<span class="en">Informed Consent Statement</span></h3>
+<p>本プロジェクトは臨床ケアに影響を与えず、すべての保護対象保健情報が非特定化されていたため、患者の同意は免除された。</p>
+
+<h3>データ利用可能性に関する声明<span class="en">Data Availability Statement</span></h3>
+<p>本研究では公開データセットが解析された。このデータは[24]に見出すことができる。</p>
+
+<h3>利益相反<span class="en">Conflicts of Interest</span></h3>
+<p>著者らは、利益相反がないことを宣言する。</p>
+
+<h3>参考文献<span class="en">References</span></h3>
+<p class="note">参考文献リスト(文献1~46)は原文(英語)のままであり、翻訳対象(本文・図・表)に含まれないため本訳では省略した。本文中の[番号]は原論文の参考文献番号に対応する。</p>
+
+<p class="note"><b>免責事項/出版社注記(Disclaimer/Publisher's Note):</b> すべての出版物に含まれる声明、意見、およびデータは、専ら個々の著者および寄稿者のものであり、MDPIおよび/または編集者のものではない。MDPIおよび/または編集者は、内容中で言及されるいかなるアイデア、方法、指示、または製品に起因する、人または財産へのいかなる傷害についても、責任を負わない。</p>

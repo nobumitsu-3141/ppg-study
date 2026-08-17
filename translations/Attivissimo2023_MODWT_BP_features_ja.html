@@ -1,0 +1,249 @@
+<meta charset="utf-8">
+<title>Attivissimo2023 和訳 - PPGウェーブレット強調と特徴量選択</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+body { font-family: "IPAPGothic","IPAGothic",sans-serif; font-size: 10.5pt; line-height: 1.75; color: #1a1a1a; margin: 0; }
+h1 { font-size: 16pt; line-height: 1.5; border-bottom: 3px solid #1a4b7a; padding-bottom: 6px; margin: 0 0 4px 0; }
+h1 .en { display:block; font-size: 10pt; color:#555; font-weight: normal; margin-top: 4px; }
+h2 { font-size: 13pt; color: #1a4b7a; border-left: 6px solid #1a4b7a; padding-left: 8px; margin: 22px 0 8px 0; page-break-after: avoid; }
+h2 .en, h3 .en { font-size: 9pt; color: #888; font-weight: normal; margin-left: 8px; }
+h3 { font-size: 11.5pt; color: #123; margin: 16px 0 6px 0; page-break-after: avoid; }
+p { margin: 0 0 9px 0; text-align: justify; }
+.meta { background: #f2f6fa; border: 1px solid #c8d8e8; padding: 10px 14px; font-size: 9pt; line-height: 1.6; margin: 10px 0 18px 0; }
+.meta b { color:#1a4b7a; }
+.authors { font-size: 10.5pt; margin: 6px 0 2px 0; }
+.affil { font-size: 9pt; color: #444; margin: 0 0 10px 0; }
+.abstract { background: #fafafa; border: 1px solid #ddd; padding: 12px 16px; margin: 12px 0; }
+.abstract h2 { margin-top: 0; }
+.figure { border: 1.5px solid #888; background: #fcfcf7; padding: 10px 14px; margin: 14px 0; page-break-inside: avoid; font-size: 9.5pt; }
+.figure .figtitle { font-weight: bold; color: #7a3b1a; }
+.figure .labels { color: #555; font-size: 8.5pt; margin-top: 6px; border-top: 1px dashed #bbb; padding-top: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 9pt; page-break-inside: avoid; }
+caption { text-align: left; font-weight: bold; color: #7a3b1a; font-size: 9.5pt; margin-bottom: 4px; caption-side: top; }
+th, td { border: 1px solid #999; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background: #e8eef4; }
+.note { color: #666; font-size: 8.5pt; }
+.pb { page-break-before: always; }
+sub, sup { line-height: 0; }
+</style>
+<style>.eq{text-align:center;margin:10px 0;}.eq .eqno{float:right;color:#555;}ol.num{margin:6px 0 10px 22px;padding:0;}ol.num li{margin-bottom:4px;}</style>
+<div class="meta">
+<b>【本PDFについて】</b> 本文書は下記原著論文の日本語逐語訳です(本文・図・表)。原論文はMDPIのオープンアクセス論文であり、Creative Commons Attribution(CC BY)ライセンス(https://creativecommons.org/licenses/by/4.0/)の条件の下で配布されています(出典を明記した上での翻訳・複製・再配布が許諾されます)。<br>
+<b>原著:</b> Attivissimo F, De Palma L, Di Nisio A, Scarpetta M, Lanzolla AML. Photoplethysmography Signal Wavelet Enhancement and Novel Features Selection for Non-Invasive Cuff-Less Blood Pressure Monitoring. <i>Sensors</i> 2023, 23, 2321. https://doi.org/10.3390/s23042321<br>
+<b>ライセンス:</b> CC BY 4.0 / <b>翻訳:</b> Claude Code による機械翻訳(逐語訳)。翻訳は原文の改変(翻案)に該当します。正確な内容は必ず原文を参照してください。参考文献リストは原文のまま(翻訳対象外)のため省略し、本文中の[番号]は原文の参考文献番号を指します。
+</div>
+
+<p class="note"><i>sensors</i> (MDPI) — Article(研究論文)</p>
+
+<h1>非侵襲カフレス血圧モニタリングのための光電容積脈波信号のウェーブレット強調と新規特徴量選択<span class="en">Photoplethysmography Signal Wavelet Enhancement and Novel Features Selection for Non-Invasive Cuff-Less Blood Pressure Monitoring</span></h1>
+<p class="authors">Filippo Attivissimo、Luisa De Palma、Attilio Di Nisio *、Marco Scarpetta、Anna Maria Lucia Lanzolla</p>
+<p class="affil">Department of Electrical and Information Engineering, Polytechnic University of Bari, 70125 Bari, Italy(バーリ工科大学電気情報工学科、イタリア、バーリ)<br>
+* 連絡先著者: attilio.dinisio@poliba.it</p>
+<p class="note">学術編集者(Academic Editors): John Allen および Ki H. Chon / 受付: 2022年11月18日、改訂: 2023年1月11日、受理: 2023年2月9日、公開: 2023年2月19日<br>
+著作権: © 2023 著者ら。ライセンシー MDPI(スイス、バーゼル)。本論文は、Creative Commons Attribution(CC BY)ライセンス(https://creativecommons.org/licenses/by/4.0/)の条件の下で配布されるオープンアクセス論文である。</p>
+
+<div class="abstract">
+<h2>要旨<span class="en">Abstract</span></h2>
+<p>本論文では、光電容積脈波(PPG)を用いた血圧(BP)推定に関連する新しい特徴量を提示する。提案する特徴量と文献で既知のものを含む合計195個の特徴量が、1080名の異なる患者からの50,000脈波で構成されるセットに対して計算された。次いで、BP推定のための最も有意な特徴量を同定するために、3つの特徴選択法、すなわち相関ベース特徴選択(Correlation-based Feature Selection: CFS)、RReliefF、および最小冗長性最大関連性(Minimum Redundancy Maximum Relevance: MRMR)が適用された。これらの特徴量の一部は、最大重複離散ウェーブレット変換(Maximal Overlap Discrete Wavelet Transform: MODWT)の使用に基づく新規のPPG信号強調法を通じて抽出されている。実際、強調された信号は、PPG信号の特徴点(例: 収縮期点、拡張期点、および重複切痕点)の、単純な手段による信頼性のある同定をもたらし、専用に定義されたアルゴリズムからの結果と同等の結果を得る。収縮期点については、専用に定義された既知のアルゴリズムを用いて得られた位置とMODWT強調を用いて得られた位置との差として計算された誤差の平均と標準偏差は、それぞれ0.0097秒と0.0202秒である。拡張期点については、それぞれ0.0441秒と0.0486秒であり、重複切痕点については0.0458秒と0.0896秒である。したがって、本研究は、文献で既知の特徴量に加えて、PPG信号から抽出された個々の脈波ごとのMODWT強調信号からの、いくつかの新しい特徴量の選択をもたらす。これらの特徴量は、収縮期血圧(<i>SBP</i>)および拡張期血圧(<i>DBP</i>)を非侵襲的な方法で推定するのに有用な機械学習(ML)モデルの訓練に用いることができ、これは遠隔医療のヘルスケアモニタリングに適している。</p>
+<p><b>キーワード:</b> 血圧(BP)、高血圧、特徴選択、最大重複離散ウェーブレット変換(MODWT)、光電容積脈波(PPG)、遠隔医療</p>
+</div>
+
+<h2>1. 緒言<span class="en">Introduction</span></h2>
+<p>今日、心血管疾患およびその他の疾患の早期同定と予防を保証することを目的として、在宅での遠隔医療ソリューションによる、および病院前・院内ケアのための、バイタルサインの適切なモニタリングの重要性と必要性が高まっている。近年、遠隔医療は、バイタルサインのモニタリングを可能にする、使用が簡単で、非侵襲的で、無線である、革新的なウェアラブルセンサ、小型化されたデバイス、さらにはスマートフォンの使用のおかげで、ますます普及してきている[1–6]。</p>
+<p>バイタルサインの中でも、血圧(BP)のモニタリングは、多くの臨床状態の治療においてきわめて重要な側面である。それは、慢性疾患ならびに死亡率および罹患率の増加と関連する高血圧状態の評価に関連する。現在、測定はカフベースの機器を用いて行われているが、これらは煩雑で、常に正確とは限らず、カフのサイズが正しくない場合や適切な較正が行われない場合には誤差を生じやすい。したがって、基本的な前提条件は、介護者と患者の両方がその使用について訓練を受ける必要があることである。さらに、ゴールドスタンダードは動脈血圧(ABP)の侵襲的血圧モニタリングであり、これは末梢動脈のカニュレーションを通じて実施され、重症患者および周術期患者の管理において利用されている。</p>
+<p>バイタルサインのリアルタイムモニタリングのために活用でき、ますます採用されつつある測定技術は、プレチスモグラフィ(PG)である。プレチスモグラフィには様々な種類があり、静電容量特性または誘導特性、圧電特性[7]に基づくもの、あるいは光電容積脈波(PPG)などの光学特性を利用するものがある。PPGは、光源(LED)と皮膚表面に配置された光検出器との間で透過または反射される光を測定し、これは血液循環における容積変化の影響を受ける[8]。透過測定では、より深い浸透を可能にする赤色光(680 nm)または近赤外光(810 nm)を使用することが可能である。反射測定では、光検出器は、組織、骨、および血管からの後方散乱光または反射光を検出する[9]。反射光の最大拍動成分は510 nmから590 nmの波長範囲で生じるため、緑色光(565 nm)および黄色光(590 nm)を使用することができる[10,11]。</p>
+<p>PPG信号は、拍動部分と定常部分によって特徴づけられる。拍動部分は、血液量変化に伴う血圧の変動と関連しており、脈拍と同期している。一方、定常部分は、呼吸や交感神経系などのいくつかの側面と関連している。</p>
+<p>PPGは通常、酸素飽和度(SpO<sub>2</sub>)の測定、心拍数(HR)および呼吸数の推定、ならびにアテローム性動脈硬化症および動脈スティフネスの評価に使用される。さらに、適切な較正を伴う、BPの推定へのPPGの拡張も、活発な研究領域である。実際、これらの目的のために、ウェアラブルで、非侵襲的で、無線で、小型化され、安価で、使いやすいセンサによって単一部位で取得された信号を使用できることは、個人の健康を管理し高血圧状態を検出するための大きな可能性を確かに有している。実際、今日では、PPG信号の使用への関心は、BPの推定にとってますます重要になってきている。</p>
+<p>長年にわたり、そして今日でも、多くの研究が、BPの推定のために同時に取得された心電図(ECG)信号とPPG信号の使用[12]に焦点を当ててきたが、PPG信号のみの使用にも焦点が当てられている。実際、PPG信号とBPとの間には、脈波伝播速度(PWV)として知られる血流速度の尺度に関係する関係が存在する[13]。したがって、血液パルスが心臓から末梢点に到達するまでの時間、すなわち脈波伝播時間(PTT)を測定することが可能である[14]。より短いPTTはより高いBPと関連し、より長いPTTはより低いBPと関連する。しかしながら、このアプローチは多部位取得と2つの信号間の同期の必要性を必要とするため、PPG信号単独の使用は、追求され改善されるべき大きな可能性を持つアプローチであることは確かである。実際、それは取得を単純化できるが、PPG信号からBPを得るためにはより複雑な処理を必要とする。さらに、BPの推定のためのPPGは、ノイズ除去、マルチ光検出器の開発、イベント検出、皮膚の色および臨床的要因に基づく個人較正の実施の必要性、短時間間隔での較正ドリフトなどの、問題点や限界から自由ではない[10]。</p>
+<p>したがって、PPGによるBP測定を改善する必要があり、この理由から、関心は、BPと相関し機械学習(ML)に活用できるPPG信号の特徴量の研究に焦点が当てられている[15–22]。特徴量は、非侵襲的な<i>SBP</i>および<i>DBP</i>測定の両方に使用でき、典型的には、時間領域(微分の計算を含む)、周波数領域、または統計的に定義できる。加えて、サポートベクターマシン、回帰木、ニューラルネットワーク、線形回帰など、様々なML手法が研究者によって検討されてきた。</p>
+<p>本論文では、研究は、BP推定を改善する可能性を持つ、PPG信号からの新しくより有意な特徴量の抽出に焦点を当ててきた。特に、最大重複離散ウェーブレット変換(MODWT)を使用することにより、PPG信号を強調し、この目的にとって重要な特徴量を抽出することが可能であることが見出された。実際、MODWTがPPG信号の特徴点の同定を改善し、それをABP信号により類似したものにすることが示されている。したがって、本研究は、文献で使用されていない、強調されたPPG信号と基本のPPG信号の両方から抽出される、BP推定に有用ないくつかの新しい特徴量を導入する。本研究のもう一つの基本的な貢献は、BP推定に最も関連する特徴量を見つけることを目的とした、新規および既知の両方の特徴量の注意深い解析である。この目的のために、MIMIC-III Waveform Databaseに含まれる多数のPPG信号から抽出された特徴量を解析するために、3つの異なる特徴選択アルゴリズムが採用されている。この解析は、BP推定のための最も情報量の多い特徴量の同定をもたらした。これは、PPG信号からのBP測定のためのML技術の使用を含む他のあらゆる研究で使用できる、本質的かつ一般的な結果である。実際、今後の研究では、われわれの焦点はMLモデルに置かれ、ここで特定された有意な特徴量を用いた最良のアルゴリズムを見つけることになる。</p>
+<p>本論文は以下のように構成される: 第2節では、ソースデータベースと信号前処理が記述される。第3節では、MODWTを用いて得られた新しい提案特徴量を含む、特徴抽出が提示される。第4節では、PPG信号からの特徴点推定の誤差が解析される。特徴量の解析は第5節で報告され、そこでは、いくつかの基準に従って最も有意な特徴量が選択される。そして最後に、第6節では、結果の考察があり、結論が続く。</p>
+
+<h2>2. データセットの前処理とラベリング<span class="en">Dataset Pre-Processing and Labeling</span></h2>
+<p>データ解析のワークフローをFigure 1に示し、本節および以降の節で詳述する。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 1(図1)</span> データ解析のワークフロー。
+<div class="labels">図中ラベル訳: Database=データベース / Alignment=アラインメント(時間整列) / Chunking=チャンク化 / Pre-Processing=前処理 / Segmentation and Labeling=セグメンテーションとラベリング / Features Extraction=特徴抽出 / Features Selection=特徴選択</div>
+</div>
+
+<p>本研究では、集中治療室の患者のモニタによって取得された生理学的信号の臨床データセットが使用される。しかしながら、取得はしばしば中断されたり、機器構成が変更されたりする(例えば、モニタリング機器の故障、設定ミス、患者状態に関する優先事項などのため)ので、これらのデータセットが異なる長さの記録を含み、信号が欠損していたり異常であったりすることは一般的である。したがって、処理の進行に伴い、信頼できないデータを段階的に破棄するために、多くの自動チェックが行われている。データ処理はMATLAB R2022aを用いて実施されている。</p>
+
+<h3>2.1. データセット<span class="en">Dataset</span></h3>
+<p>本研究は、オープンアクセスのMIMIC-III Waveform Database[23–25]で利用可能なPPGおよびABP信号を用いて実施された。このデータベースが選択されたのは、それが非常に大規模で自由に利用可能なデータベースであり、生体医用信号の解析に関する他の多くの研究で使用されたMIMIC II Waveform Databaseの拡張だからである。MIMIC-III Waveform Databaseは、16歳以上の成人(入院の87%、56%は男性成人)および新生児(入院の13%)の集中治療室(ICU)のベッドサイドモニタから取得された生理学的信号を含み、ほぼ常に1つ以上のECG信号を含み、しばしばABP、PPG、および呼吸信号を含む。成人の年齢四分位数は、Q<sub>1</sub> = 52.8歳、Q<sub>2</sub> = 65.8歳、Q<sub>3</sub> = 77.8歳である。主要な患者疾患は、自己冠動脈の冠動脈アテローム性動脈硬化症(7.1%)、詳細不明の敗血症(4.2%)、および心内膜下梗塞(ケアの初回エピソード)(3.6%)である。データは、2つの重症治療情報システムの異なる医療機器で収集されている: Philips CareVue Clinical Information System(Intellivue MP-70モニタ付き)およびiMDsoft MetaVision ICUである。データベース内のすべての保護対象保健情報は非特定化されており、人口統計学的情報は提供されていない。さらに、このデータベースで利用可能なPPG信号は指先デバイスを用いて収集されており、すべての信号は125 Hzのサンプリングレートで取得されている。</p>
+<p>データベースの巨大なサイズを考慮し、当初はフォルダ#30の一部とフォルダ#32の全体のみがデータベースからダウンロードされ、これは6740名の患者に対応する。しかしながら、本論文で提示する研究のためには、PPGとABPの両方の信号が利用可能な患者のみ、すなわち1080名の患者が考慮されている。データの取り扱いには、WFDB MATLABツールボックス[25,26]と専用に作成された関数が使用されている。</p>
+
+<h3>2.2. アラインメント<span class="en">Alignment</span></h3>
+<p>ABPとPPGが異なる機器によって取得される場合、それらは時間整列なしで提供される。したがって、予防的な形で、[16,27,28]で報告されているとおり、相互相関を用いてすべての記録についてそのような整列が実施されている。相互相関関数</p>
+<div class="eq"><i>g</i>(Δ<i>t</i>) = Σ ABP(<i>t</i>) × PPG(<i>t</i> + Δ<i>t</i>) <span class="eqno">(1)</span></div>
+<p>が2つの信号間で計算され、次いで、最大値の位置が時間のリードまたはラグとして考慮されている。整列の一例をFigure 2に示す。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 2(図2)</span> 正規化されたPPG信号とABP信号のアラインメント。
+<div class="labels">図中ラベル訳: Normalized PPG signal and corresponding ABP signal=正規化PPG信号と対応するABP信号 / PPG signal=PPG信号 / ABP signal=ABP信号 / Normalized signal=正規化信号 / mmHg / Time (s)=時間(秒)</div>
+</div>
+
+<h3>2.3. チャンク化<span class="en">Chunking</span></h3>
+<p>各記録について、信号のチャンク化によって30秒の連続ブロックが得られている。この持続時間は任意であるが、HRなどの生理学的情報を得るのに十分と考えられる。</p>
+
+<h3>2.4. 前処理<span class="en">Pre-Processing</span></h3>
+<p>次いで、PPG信号は以下の処理を受けている: (1) ノイズ除去。[28–30]で報告され[16]で使用された技術に従うもので、0.5 Hzから8 Hzの通過帯域を持つ2次Butterworthフィルタの適用から成る。(2) Zスコア標準化。[16]で実施されたとおり。(3) ベースライン補正。[31–33]で報告され[18]で使用された技術によるもので、4次のフィッティング多項式の除去から成る。得られた信号は、以後 <i>x<sub>FILT</sub></i> として参照される。</p>
+<p>ABP信号も、各チャンクを圧脈波へ分割するために処理されている。その中で、収縮期血圧(<i>SBP</i>)と拡張期血圧(<i>DBP</i>)が後に測定されることになる。その分割のために、8 Hzのカットオフ周波数を持つ10次ローパスYule-Walker再帰フィルタリングがABP信号に適用され、ABP脈波を同定するために、[34]で報告されているとおり<i>傾き和関数(slope sum function)</i>が計算されている。傾き和計算のための解析ウィンドウ長は、脈波の立ち上がりの典型的な持続時間に等しく選ばれ、本研究では([34]と同様に)0.128秒に設定されている。これは、<i>f<sub>s</sub></i> = 125 Hzで取得された16サンプルに対応する。</p>
+<p>その後、ABP脈波は<i>相補的信号異常指数(complementary signal abnormality index)</i>[34,35]に従って評価され、それらが0.4の閾値を超える場合、ABPチャンク全体と対応するPPGチャンクは、[27]で実証されたとおり、以後の処理から破棄された。</p>
+<p>PPGチャンクは、類似性テストに不合格の場合にも破棄された。文献では、いくつかの類似性テストが提案されている[16,17]が、本論文では、複数の線形回帰の決定係数に基づく異なるテストが使用されている。その目的のために、PPG脈波は、ABP脈波の対応する境界を用いて個別化され、次いで、以下の回帰が計算されている: PPG脈波の対応するABP脈波への回帰、PPG脈波の直前の脈波への回帰、およびABP脈波の直前の脈波への回帰である。3つの場合のそれぞれについて、別々に、チャンクの脈波間での決定係数の平均が計算され、決定係数の平均が0.8未満であった場合、[27]で実証されたとおり、そのチャンクは破棄されている。</p>
+<p>決定係数 <i>rsq</i> は以下のように計算されている:</p>
+<div class="eq"><i>y<sub>resid</sub></i> = <b><i>x</i></b> − <i>y<sub>fit</sub></i>,&nbsp;&nbsp;<i>SS<sub>resid</sub></i> = Σ<sub><i>i</i>=1</sub><sup><i>N</i></sup> <i>y<sub>resid</sub></i><sup>2</sup>,&nbsp;&nbsp;<i>SS<sub>total</sub></i> = (<i>N</i> − 1) var(<b><i>x</i></b>),&nbsp;&nbsp;<i>rsq</i> = 1 − <i>SS<sub>resid</sub></i>/<i>SS<sub>total</sub></i> <span class="eqno">(2)</span></div>
+<p>ここで、<b><i>x</i></b> = [<i>x</i><sub>1</sub>, ..., <i>x<sub>i</sub></i>, ..., <i>x<sub>N</sub></i>] は長さ <i>N</i> のサンプリングされたPPG脈波信号であり、<i>i</i> = 1, ..., <i>N</i>、<i>y<sub>fit</sub></i> = [<i>y</i><sub>1</sub>, ..., <i>y<sub>i</sub></i>, ..., <i>y<sub>N</sub></i>] は付随するフィッティングである。</p>
+
+<h3>2.5. 脈波セグメンテーションとラベリング<span class="en">Pulse Segmentation and Labeling</span></h3>
+<p>特徴抽出の目的のためには、PPG脈波は、前小節で個別化されたABP脈波とは独立にセグメント化されるべきである。この目的のために、本研究では、<i>傾き和関数</i>の計算がABPとの類推でPPGへも拡張され、チャンクの分割を得ている。最初に得られたセグメントは、部分的な脈波を含む可能性があるため破棄されている。各PPG脈波について、歪度(skewness)に基づく追加の信号品質指数が計算されている[19]。本論文では、歪度がゼロ未満のとき、PPG脈波は破棄されている。</p>
+<p>その後、PPG脈波は、特徴選択の段階に必要な<i>SBP</i>および<i>DBP</i>値でラベル付けされた。その目的のために、ABP脈波は、PPG脈波の境界に従って再セグメント化されている。次いで、処理された各ABP脈波について、<i>SBP</i>はピーク値として、<i>DBP</i>は次の最小値として測定されている。</p>
+<p>最後のチェックとして、ABP脈波と対応するPPG脈波は、非生理学的な値を持つ場合、すなわち <i>SBP</i> &gt; 300 mmHg または <i>DBP</i> &lt; 20 mmHg のとき、破棄された。</p>
+
+<h2>3. 特徴抽出<span class="en">Features Extraction</span></h2>
+<p>特徴量の抽出は、PPG脈波またはPPGチャンクに対して、以下の信号を処理して実施されている:</p>
+<ol class="num">
+<li><i>x<sub>FILT</sub></i>: ベースライン補正後に得られたもの。</li>
+<li><i>x<sub>NORM</sub></i>: 各脈波について別々に、<i>x<sub>FILT</sub></i> を範囲[0;1]で正規化した後に得られたもの。</li>
+<li><i>x<sub>MODWT</sub></i>: 本節で後述するMODWT強調の後に <i>x<sub>FILT</sub></i> から得られたもの。</li>
+</ol>
+<p>抽出された特徴量の総数は195である。最も関連性の高いものは、補足資料のAppendix S1に列挙・定義されており、文献[18,20,22]で既知の特徴量と、PPG信号でのBP測定のために本論文で提案する特徴量とを区別している。</p>
+<p>いくつかの提案特徴量は、MATLAB組み込み関数 <i>extract</i> を用いて個々の脈波から抽出されている。この関数は、時間領域および周波数</p>
+<p>領域の特徴量を、<i>x<sub>FILT</sub></i> および <i>x<sub>MODWT</sub></i> の各脈波に対して、また少数の場合には <i>x<sub>NORM</sub></i> に対しても与える。明らかに、これらの特徴量の定義はよく知られている。しかしながら、BPに対するその有意性を評価するための <i>x<sub>MODWT</sub></i> PPG信号への適用は新規である。</p>
+<p>多くの特徴量が、[18,20–22]に従って <i>x<sub>FILT</sub></i> 上のPPG脈波から抽出されており、特徴点の振幅、面積、幅、時間、一次および二次微分、特徴量の非線形関数、ならびに統計量に関係している。</p>
+<p>さらに、Figure 3に示すとおり、<i>x<sub>FILT</sub></i> の各PPG脈波上で特徴点が同定されており、それらは、<i>最大傾斜点(max slope point)</i>(MSP)、<i>収縮期ピーク(systolic peak)</i>(SP)、<i>重複切痕(dicrotic notch)</i>(DN)、<i>変曲点(inflection point)</i>(IP)、および<i>拡張期ピーク(diastolic peak)</i>(DP)である。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 3(図3)</span> 2名の異なる患者についての、特徴点を伴う <i>x<sub>NORM</sub></i> のPPG脈波の異なる形態: (青色脈波)成人患者、(赤色脈波)新生児患者。サンプリング周波数は125 Hz。
+<div class="labels">図中ラベル訳: PPG Pulse=PPG脈波 / Max slope=最大傾斜 / Systolic peak=収縮期ピーク / Inflection point=変曲点 / Diastolic peak=拡張期ピーク / Dicrotic notch=重複切痕 / Normalized pulse=正規化脈波 / Sample index=サンプルインデックス</div>
+</div>
+
+<p>これらの特徴点の同定は、PPG振幅のみに基づいて信頼性をもって得ることはできない。信号形態は患者ごとに変化し、特に、Figure 3に示すとおり、患者の年齢および状態に関係するからである。実際、DPは信号中で明らかでない場合がある。したがって、点の検出は、PPG脈波の一次および二次微分も考慮する[21]のアルゴリズムに基づいて実施されている。</p>
+<p>本論文では、[21]に代わる、特徴点の決定のためのアプローチを提案する。それは、ABP信号によりよく類似する強調されたPPG信号を得るための、適切なウェーブレットフィルタリングの適用に基づく。この目的のために、MODWTが各脈波に適用され、レベル log<sub>2</sub> <i>N</i> まで計算されている。ここで、<i>N</i> は脈波のサンプル数である。</p>
+<p>ウェーブレットは、医用画像および生体信号の強調とノイズ除去への応用が見出されてきた[36–38]。特に、MODWTは、ECG、脳波(EEG)、脳磁図(MEG)などの他の生理学的信号に対して成功裏に使用されてきたが[39,40]、われわれの研究において、PPG信号に対しても適切であることが証明された。このウェーブレットは、離散ウェーブレット変換(DWT)に類似した非間引き(undecimated)ウェーブレット変換である。しかしながら、その計算では係数のダウンサンプリングが行われず、したがって高い冗長性を持つ。さらに、MODWTは線形フィルタリング演算であり、スケールに依存する信号の挙動を評価するために使用でき、時間シフト不変な手法であって、分解された各レベルのウェーブレット係数およびスケーリング係数の、初期信号との整列を提供する。加えて、それは局在化された信号変動の解析を可能にする。したがって、分解のレベル数を考慮した、スケーリング関数とウェーブレット関数の線形結合が存在する。本研究で使用されたMODWTの実装は、Fourier領域で巡回畳み込みを実行する。</p>
+<p>脈波の再構成は、逆最大重複離散ウェーブレット変換(IMODWT)を用いて行われている。多くのMODWT変種の中で、<i>sym4</i> 合成ウェーブレットが選択された。特徴点の強調においてより良い結果を提供したからである。このウェーブレットのファミリーは、ほぼ対称、直交、かつ双直交であり、そのスケーリング関数とウェーブレット関数をFigure 4に示す。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 4(図4)</span> <b>(a)</b> スケーリング関数、<b>(b)</b> ウェーブレット関数。
+<div class="labels">図中ラベル訳: W0=スケーリング関数W0 / W1=ウェーブレット関数W1</div>
+</div>
+
+<p>IMODWTによる信号合成には、第4および第5レベルの係数のみが使用されている。[41]で報告されているとおり、これらの選択された係数は、ECG信号におけるQRS群のエネルギーを最大化する。本研究では、同じアプローチにより、そのエネルギーを最大化する帯域幅をカバーする、PPG脈波の周波数局在化バージョンを得ることが可能となった。</p>
+<p>実際、本論文における鍵となる点は、PPG脈波へのMODWTの使用であり、これにより、Figure 3に見られるとおり、PPG脈波の最も関連性の高い点のうちの2つであるDPとDNの強調が可能となった。本研究で実装されたアルゴリズムでは、SPは強調されたPPG脈波の最初のピークとして同定され、DNに対応する局所極小がそれに続き、次いでDPとして同定される局所極大が続く。</p>
+<p>Figure 5で明白なとおり、DPとDNは強調された信号においてより顕著であり、Figure 6に示すABP脈波の形態とのより大きな類似性が明らかである。他方、MODWT使用前のPPG脈波では、そのような点はより不明瞭であり、一次および二次微分からの情報も使用しない限り、信頼性をもって同定することはできない。</p>
+<p>ABP脈波との改善された類似性を示すこれらの新しい脈波から、次いで、追加の特徴量が抽出されている。これには、PPG脈波の特徴点、時間関連特徴量、面積関連特徴量、エネルギー関連特徴量、振幅関連特徴量、およびMATLABの組み込み関数 <i>extract</i> を用いた時間および周波数領域のその他の特徴量が含まれる。強調された脈波から抽出されたいくつかの特徴量は、補足資料のAppendix S1に報告されている。</p>
+<p>その他の特徴量は、単一の脈波ではなく、1つの脈波とその次の脈波から構成されるペアを含む時間区間で信号を考慮して計算されている。ただし、その場合、各ペアについて計算された値はチャンクのすべてのペアの間で平均され、結果として得られる特徴量値は、次いでチャンクの各脈波に割り当てられる(例: Mean of tb1、Mean of tb2、Mean of TP/p2pi、Mean of TDN/p2pi など)。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 5(図5)</span> MODWT使用前(青)および使用後(赤)のPPG脈波。
+<div class="labels">図中ラベル訳: Plot of normalized PPG pulse and normalized reconstructed PPG pulse=正規化PPG脈波と正規化再構成PPG脈波のプロット / Max slope=最大傾斜 / Systolic peak=収縮期ピーク / Inflection point=変曲点 / Dicrotic notch=重複切痕 / Diastolic peak=拡張期ピーク / Normalized values=正規化値 / Sample index=サンプルインデックス</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 6(図6)</span> SBPおよびDBP値を伴う、PPG脈波に対応するABP脈波。
+<div class="labels">図中ラベル訳: Pulse ABP=ABP脈波 / Systolic value (SBP)=収縮期値(SBP) / Dicrotic notch=重複切痕 / Diastolic value (DPB)=拡張期値(DPB)<span class="note">(訳注: 原文の綴りのまま、DBPの誤植)</span> / mmHg / Sample index=サンプルインデックス</div>
+</div>
+
+<p>最後に、より小さな区間や単一の脈波ではなく、PPGチャンク全体に対して計算された特徴量がある。その値は、ここでも、チャンクの各脈波に割り当てられる(例: Area from 2 to 5、Peak1、Freq1、Freq2 など)。いくつかの周波数関連特徴量は、[18]に記述された16個のFFT特徴量を抽出するために、<i>x<sub>FILT</sub></i> の各PPGチャンクに適用された高速Fourier変換(FFT)によって得られている。平均や標準偏差などの他の統計関連特徴量は、ノイズ除去後かつZスコア標準化前のPPGチャンクに対して計算されている。</p>
+<p>それぞれがその特徴量によって記述される、得られた20×10<sup>6</sup>脈波のセットから、次節以降で実施される解析のためにランダムサンプルが抽出されている。</p>
+
+<h2>4. SP、DPおよびDN特徴点推定の誤差解析<span class="en">Error Analysis of SP, DP and DN Characteristic Points Estimation</span></h2>
+<p>PPG脈波の特徴点のタイミングは特に関連性が高いため、それらに基づく特徴量は、圧脈波伝播時間、大動脈のスティフネス、BP、および年齢と相関する[42]。</p>
+<p>実際、SP時刻(<i>TSP</i>)は左室からの圧波の到達によるものであり、一方、DP時刻(<i>TDP</i>)は、下肢に到達して指へ向かって反射される圧波によるものである。したがって、両者の間の時間間隔は、伝播時間に、また動脈スティフネス <i>SI</i> にも関係する。</p>
+<div class="eq"><i>SI</i> = <i>h</i>/(<i>TDP</i> − <i>TSP</i>) <span class="eqno">(3)</span></div>
+<p>ここで、<i>h</i> は患者の身長である。</p>
+<p>その理由から、微分に基づく[21]のアルゴリズムの適用によって得られたSP(およびDPとDNも)の時刻から、MODWTを活用する本論文で報告するアルゴリズムで得られたものを差し引いた差を研究することが必要と考えられた。そのタイミングは、両方の場合において、分解能8 msで計算されている。これは(データセット内の信号の125 Hzサンプリング周波数を踏まえた)サンプリングステップに等しい。</p>
+<p>したがって、2×10<sup>6</sup>脈波のランダムサンプルを取ることによって、これらの誤差に関する統計解析が実施されている。</p>
+<p>第一の結果は、DPが <i>x<sub>FILT</sub></i> 脈波の1%未満でしか視認できないのに対し、<i>x<sub>MODWT</sub></i> 脈波の95%で視認できることである。したがって、<i>x<sub>MODWT</sub></i> 脈波の大部分では、DPは(SPの後の)第二の局所ピークを探索することによって直接見つけることができる。他方、対応する <i>x<sub>FILT</sub></i> においてDPがピークとして視認できない場合、文献で一般に仮定されるDP位置は二次微分がゼロとなる位置であり、本論文でもこれに従っている。</p>
+<p><i>x<sub>FILT</sub></i> から <i>x<sub>MODWT</sub></i> を差し引いた位置の差を、Figure 7–9に示す。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 7(図7)</span> <b>(a)</b> 収縮期位置の誤差のヒストグラム、<b>(b)</b> 平均、平均+標準偏差、および平均−標準偏差を伴う誤差の箱ひげ図。
+<div class="labels">図中ラベル訳: Histogram of errors for systolic locations=収縮期位置の誤差のヒストグラム / Boxplot of errors for systolic locations=収縮期位置の誤差の箱ひげ図 / Probability density=確率密度 / Error (s)=誤差(秒) / Errors (s)=誤差(秒) / Mean=平均 / STD=標準偏差 / −STD=−標準偏差 / Data=データ</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 8(図8)</span> <b>(a)</b> 拡張期位置の誤差のヒストグラム、<b>(b)</b> 平均、平均+標準偏差、および平均−標準偏差を伴う誤差の箱ひげ図。
+<div class="labels">図中ラベル訳: Histogram of errors for diastolic locations=拡張期位置の誤差のヒストグラム / Boxplot of errors for diastolic locations=拡張期位置の誤差の箱ひげ図(他はFigure 7と同様)</div>
+</div>
+
+<div class="figure">
+<span class="figtitle">Figure 9(図9)</span> <b>(a)</b> 重複切痕位置の誤差のヒストグラム、<b>(b)</b> 平均、平均+標準偏差、および平均−標準偏差を伴う誤差の箱ひげ図。
+<div class="labels">図中ラベル訳: Histogram of errors for dicrotic notch locations=重複切痕位置の誤差のヒストグラム / Boxplot of errors for dicrotic notch locations=重複切痕位置の誤差の箱ひげ図(他はFigure 7と同様)</div>
+</div>
+
+<p>Table 1に、上述のとおり計算された誤差の平均と標準偏差を、3つの特徴点について報告する。</p>
+
+<table>
+<caption>Table 1(表1) 特徴点についての誤差の平均と標準偏差</caption>
+<tr><th></th><th>平均 (s)</th><th>標準偏差 (s)</th></tr>
+<tr><td>収縮期点(SP)</td><td>0.0097</td><td>0.0202</td></tr>
+<tr><td>拡張期点(DP)</td><td>0.0441</td><td>0.0486</td></tr>
+<tr><td>重複切痕点(DN)</td><td>0.0458</td><td>0.0896</td></tr>
+</table>
+
+<p>したがって、Figure 7–9のプロットから観察できること、およびTable 1の値から、3つの場合すべてにおいて計算された時間誤差はきわめて小さく、そのため、MODWTに基づいて実装されたアルゴリズムは、PPG脈波の3つの特徴点SP、DP、DNを同定するための、文献のものと互換な有効な代替法である。</p>
+<p>次節では、MODWT強調後に得られたこれら3つの特徴点を用いて抽出された特徴量、ならびに新たに得られた残りの特徴量が、BP測定にとって有意であるかどうかを解析する。</p>
+
+<h2>5. 特徴選択<span class="en">Features Selection</span></h2>
+<p>特徴抽出に続いて、<i>DBP</i>および<i>SBP</i>ラベルに関連する最も有意な特徴量の選択が行われた。その解析のために、50,000脈波のサブセットがランダムに抽出されている。</p>
+<p>これらの目的のために、[18]に従って3つの異なる手法が使用されている。使用されたアルゴリズムは以下である: 相関ベース特徴選択(CFS)。これは相関を計算し、ラベルと高く相関すると同時に他の各特徴量とは無視できる程度にしか相関しない特徴量を選択する。RReliefF[43,44]。これは、同じラベルを持つ近傍に異なる値を与える予測子にペナルティを課し、異なるラベルを持つ近傍に異なる値を与える予測子に報酬を与える。そしてMRMR(最小冗長性最大関連性)[45,46]。これは、相互に可能な限り非類似でありながらラベルを効果的に表現できる、特徴量の最適セットを見つける。この最後のアルゴリズムは、特徴量セット内の冗長性を最小化し、特徴量セットのラベルへの関連性を最大化する。</p>
+<p>3つの手法を用いて、<i>SBP</i>測定のための最良の特徴量が選択されている。(195個のうち)最初の20個の特徴量をFigure 10に示し、補足資料のTable S1に列挙する。</p>
+<div class="figure">
+<span class="figtitle">Figure 10(図10)</span> <b>(a)</b> <i>SBP</i>測定のためのRReliefFアルゴリズムでソートされた特徴量重要度スコア。<b>(b)</b> <i>SBP</i>測定のためのCFSアルゴリズムでソートされた特徴量重要度スコア。<b>(c)</b> <i>SBP</i>測定のためのMRMRアルゴリズムでソートされた特徴量重要度スコア。特徴量ラベルは以下のように注記される: (*) <i>x<sub>FILT</sub></i> 上で計算(すなわちMODWT強調前)、(°) <i>x<sub>MODWT</sub></i> 上で計算(すなわちMODWT強調後)、(-) 正規化信号 <i>x<sub>NORM</sub></i> 上で計算、(+) 新規特徴量、および (#) 既知特徴量。
+<div class="labels">凡例訳: X<sub>FILT</sub> and known feature=X<sub>FILT</sub>かつ既知特徴量 / X<sub>MODWT</sub> and new feature=X<sub>MODWT</sub>かつ新規特徴量 / X<sub>MODWT</sub> and known feature=X<sub>MODWT</sub>かつ既知特徴量 / X<sub>NORM</sub> and known feature=X<sub>NORM</sub>かつ既知特徴量 / X<sub>FILT</sub> and new feature=X<sub>FILT</sub>かつ新規特徴量 / Importance scores=重要度スコア<br>
+<b>(a) RReliefF(SBP)のスコア:</b> Mean of tb1 *# 0.0263 / Mean of tb2 *# 0.01 / Mean of (tb1−tb2)/p2pi *# 0.0074 / Area from 2 to 5 *# 0.0062 / Mean of TP/p2pi *# 0.006 / Mean of TDN/p2pi *# 0.006 / Mean of tb1/p2pi *# 0.0058 / Freq1 *# 0.0056 / SF °+ 0.0055 / Area from 0 to 2 *# 0.0054 / Peak1 *# 0.0053 / TDN °# 0.0046 / CIF °+ 0.0044 / Freq1/Freq3 *# 0.0044 / Mean of tb2/p2pi *# 0.0043 / T2 °+ 0.0042 / T1 °+ 0.0041 / STD -# 0.0041 / Mean of ta1/p2pi *# 0.004 / Freq1/Freq2 *# 0.004<br>
+<b>(b) CFS(SBP)のスコア:</b> Mean of tb2/p2pi *# 0.22124 / Mean of tb2 *# 0.20996 / Area from ft to MSP *# 0.16622 / 75-per *# 0.14954 / 1/(TDN−TSP) *# 0.1493 / IQR *# 0.14697 / 1/(TIP-TSP) *# 0.14696 / Area from 2 to 5 *# 0.14541 / ADP -# 0.14317 / a1 *# 0.14069 / ADP/(PI-TDN) *# 0.13866 / AMS -# 0.1382 / 1/TP *# 0.13127 / T1 °+ 0.12899 / Area from DP to end *# 0.12746 / Mean of TDN/p2pi *# 0.12336 / ADN/(PI-TDN) *# 0.12227 / Area from IP to DP *# 0.12149 / STD -# 0.1212 / TDN °# 0.12041<br>
+<b>(c) MRMR(SBP)のスコア:</b> Mean of tb1 *# 0.1348 / ADN/(PI-TDN) *# 0.1308 / SPL *+ 0.0584 / AMS -# 0.0067 / Mean of tb2 *# 0.0067 / ADP °# 0.0055 / 75-per *# 0.0047 / Mean of b1/a1 *# 0.0044 / Mean of PPG before normalization *# 0.0034 / TDP/p2pi *# 0.0034 / diaw66 *# 0.0033 / T1 °+ 0.0032 / Mean of tb2/p2pi *# 0.003 / T2 °+ 0.003 / Fmax *# 0.0028 / ADN °# 0.0028 / Mean of tb1/p2pi *# 0.0027 / Peak1 *# 0.0025 / Area from DP to end *# 0.0025 / Mean of ta2 *# 0.0024</div>
+</div>
+
+<p>結果は、3つの手法が、最良の特徴量の中に、MODWT強調信号から抽出された新しい特徴量のいくつかを選択していることを示しており、これは、次節で考察するとおり、それらの有意性を確認するものである。</p>
+<p><i>DBP</i>測定に関連する最も有意な特徴量を同定するためにも、同じ手続きが実施されている(Figure 11に示す)。</p>
+
+<div class="figure">
+<span class="figtitle">Figure 11(図11)</span> <b>(a)</b> <i>DBP</i>測定のためのRReliefFアルゴリズムでソートされた特徴量重要度スコア。<b>(b)</b> <i>DBP</i>測定のためのCFSアルゴリズムでソートされた特徴量重要度スコア。<b>(c)</b> <i>DBP</i>測定のためのMRMRアルゴリズムでソートされた特徴量重要度スコア。特徴量ラベルはFigure 10と同様に注記される。
+<div class="labels"><b>(a) RReliefF(DBP)のスコア:</b> Mean of tb1 *# 0.0271 / Mean of tb2 *# 0.0095 / Area from 2 to 5 *# 0.0079 / Mean of (tb1−tb2)/p2pi *# 0.0076 / Freq1 *# 0.0073 / Area from 0 to 2 *# 0.0068 / Freq1/Freq3 *# 0.0067 / Mean of TDN/p2pi *# 0.0066 / Freq1/Freq2 *# 0.0064 / Mean of TP/p2pi *# 0.0063 / Mean of tb1/p2pi *# 0.0062 / Peak1 *# 0.006 / SF °+ 0.0055 / STD of PPG before normalization *# 0.0047 / Mean of ta1/p2pi *# 0.0046 / Mean of tb2/p2pi *# 0.0045 / ADN/ASP *# 0.0045 / A0-2/A2-5 *# 0.0044 / CIF °+ 0.0044 / Mean of a2 *# 0.0043 / TDN °# 0.0043 / ADN -# 0.0043 / Sk *# 0.0042 / T2 °+ 0.0042 / Freq2 *# 0.0041<br>
+<b>(b) CFS(DBP)のスコア:</b> HB °+ 0.29929 / MedF °+ 0.29769 / MeaF °+ 0.29264 / OB °+ 0.27692 / OB *+ 0.27623 / MeaF *+ 0.27366 / MedF *+ 0.27282 / HB *+ 0.27164 / PI *# 0.24878 / TDP °# 0.23609 / TP °# 0.22742 / T2 °+ 0.22596 / TDP *# 0.21776 / TIP *# 0.21262 / Logarithm IP *# 0.2072 / diaw75 *# 0.19984 / TP *# 0.1987 / TDN *# 0.19848 / diaw66 *# 0.19748 / Mean of a2 *# 0.19584 / a1 *# 0.18753 / Logarithm of DN *# 0.18683 / diaw50 *# 0.18324 / 1/TP *# 0.17516 / diaw33 *# 0.16808<br>
+<b>(c) MRMR(DBP)のスコア:</b> Mean of tb1 *# 0.1111 / SINAD °+ 0.1083 / SPL *+ 0.1036 / ADN/(PI-TDN) *# 0.0344 / ta1 *# 0.03 / HB °+ 0.03 / Mean of tb2 *# 0.0296 / Area from ft to MSP *# 0.0261 / SPL °+ 0.0248 / SINAD *+ 0.0228 / T2 °+ 0.0213 / SF -+ 0.0208 / a1 *# 0.0197 / SF °+ 0.0194 / Mean of PPG before normalization *# 0.019 / Mean of ta2/p2pi *# 0.0189 / sysw33 *# 0.0176 / Mean of b1/a1 *# 0.0169 / PSA *+ 0.0157 / RP °# 0.0156 / 1/(TDN−TSP) *# 0.0156 / Mean of a2 *# 0.0154 / Mean of (tb1−tb2)/p2pi *# 0.0151 / TP °# 0.0146 / Mean of ta1/p2pi *# 0.0137(凡例に X<sub>NORM</sub> and new feature=X<sub>NORM</sub>かつ新規特徴量 を追加)</div>
+</div>
+
+<p>したがって、拡張期値が取られる場合についても同様に、3つの手法は、MODWT強調PPG信号とフィルタリングされた信号(<i>x<sub>FILT</sub></i>)の両方について、新たに定義されたいくつかの特徴量を選択している。</p>
+
+<h2>6. 考察<span class="en">Discussion</span></h2>
+<p>本節では、3つの手法を用いて選択された特徴量が、収縮期と拡張期の両方の場合において、MODWT強調後に計算された既知の特徴量と新規のものを含むことを強調するために、特徴選択の段階で得られた結果をまとめる。したがって、以下の観察を行うことができる。</p>
+<p>実際、いくつかの特徴量がPPG信号から抽出され、3つの選択手法を用いて検討されている。特に、多くの既知の特徴量がMODWT強調の前後の両方で計算されており、MODWTの使用のみで改善がもたらされることを示している。これは以下の特徴量について生じている: TDN。これは<i>SBP</i>についてCFSにより、また<i>SBP</i>(スコア0.0046)と<i>DBP</i>(スコア0.0043)の両方についてRReliefFにより選択されている<span class="note">(訳注: 原文 "an DBP" のまま、"and" の誤植)</span>。<i>SBP</i>についてMRMRにより選択されたADPおよびADN。<i>DBP</i>についてCFSにより選択されたTDP。そして<i>DBP</i>についてCFSとMRMRの両方により選択されたTPである。</p>
+<p>他方、MODWT強調信号から抽出されていない場合でも、いくつかの新しい特徴量が選択されている: SPLは<i>SBP</i>についてMRMRにより選択されている。OB、MeaF、MedFおよびHBは<i>DBP</i>についてCFSにより選択されている。そして、SPL、SINAD、SFおよびPSAは<i>DBP</i>についてMRMRにより選択されている。</p>
+<p>さらに、すべての選択基準は、提案されたいくつかの新規特徴量が、MODWT強調の活用において既知の特徴量よりも有用であることを示している。例えば、<i>SBP</i>についてのRReliefFによれば、SFはTDNよりも優れている。<i>SBP</i>についてのCFSによれば、T1(Figure 10bにおけるスコア0.12899)はTDN(スコア0.12041)よりも優れている。<i>SBP</i>についてのMRMRによれば、T1(Figure 10cにおけるスコア0.032)およびT2(スコア0.0030)はADN(スコア0.028)よりも優れている<span class="note">(訳注: 数値は原文のまま)</span>。<i>DBP</i>についてのRReliefFによれば、SFおよびCIFはTDNよりも優れている。また、<i>DBP</i>についてのCFSおよびMRMRによれば、他の多くの特徴量がTPおよびTDPよりも優れている。</p>
+<p>さらに、MODWT強調後に計算され、かつ新規であるという条件を同時に満たす特徴量が、頻繁に選択されている。例えば、SFとCIFは、<i>SBP</i>(Figure 10a)と<i>DBP</i>(Figure 11a)の両方についてのRReliefFによれば、最良の特徴量の一つである。SFは、<i>DBP</i>についてMRMRによっても選択されている。複数の手法によって選択されている他の特徴量は、T1とT2である。</p>
+<p>加えて、Figure 11b,cに示すとおり、<i>DBP</i>についてCFSおよびMRMRによってスコアが評価される場合、提案された多くの特徴量が既知の特徴量を上回ることに留意すべきである。</p>
+<p>先に考察した結果を考慮すると、195に等しかった当初の特徴量数は、補足資料のTable S1に示す最良の有意な特徴量を選択することによって削減できる。提案されたいくつかの特徴量は、SF、CIF、T1、T2、SPL、TDN、TP、Area from DP to end など、異なる選択手法に応じて少なくとも2回出現している。PPG信号の特徴量として提案され、脈波のRMSとその平均絶対値との比として定義される形状係数(shape factor)SFは、強調信号 <i>x<sub>MODWT</sub></i> に適用された場合に3回選択されていることに留意すべきである。さらに、<i>x<sub>MODWT</sub></i> におけるDPはより顕著であるため、<i>x<sub>MODWT</sub></i> 上のSFは <i>x<sub>FILT</sub></i> 上のSFより大きい。この特徴量は脈波の形状に関係しており、脈波の形状は血管老化に強く依存する。したがって、それは、一般に加齢とともに増加する動脈スティフネスの評価にも関連する可能性がある。</p>
+<p>これらの考察は、PPG信号のMODWT強調、ならびに特定された新規特徴量が、ML技術によるBP推定を改善する可能性を持つ、BPにとって有意な情報の抽出をもたらすことを示している。</p>
+
+<h2>7. 結論<span class="en">Conclusions</span></h2>
+<p>本論文では、BP測定にとって有意なPPG信号の特徴量、ならびにPPG信号を強調するためのMODWTの使用が論じられた。</p>
+<p>ABP信号はBPのより直接的で正確な測定を可能にするものの、それは侵襲的な方法で得られる。これは、在宅でさえ容易かつ快適に実施されるPPG取得とは対照的である。したがって、ABP脈波とのより大きな類似性を示すという事実に動機づけられて、MODWTによるPPG脈波強調の使用が提案された。</p>
+<p>本論文で提示された第一の結果は、強調信号の使用により、DPやDNなどのPPG脈波の特徴点のより信頼性のある抽出が可能になるということである。実際、PPG脈波上でDPまたはDNを同定することは、患者の年齢や状態によってそれらがあまり強調されていなかったり欠けていたりするため、時に困難である。しかしながら、提案するMODWT強調のおかげで、第4節で実施した誤差解析によって示されたとおり、信号の谷とピークを考慮することで特徴点をより直接的に得ることができ、[21]で提示された専用に定義されたアルゴリズムと同等の性能を得る。例えば、DPは脈波の95%で明瞭に現れており(未処理の脈波ではわずか1%であったのに対し)、その特徴点は[21]に対して0.04秒の平均誤差を持っていた。</p>
+<p>実際、特徴抽出と選択の後の第二の重要な結果として、<i>x<sub>MODWT</sub></i> から得られ第6節で考察された、提案されたいくつかの新しい特徴量(および既存の特徴量)が、3つの特徴量評価手法、すなわちCFS、RReliefFおよびMRMRによって与えられたスコアに従って、有意であることが見出された。これらの手法は、関心のある変数――この場合は収縮期および拡張期のBP値――の推定にとって関連性があり、かつ冗長でない最適な特徴量の選択を可能にすることが想起されるべきである。したがって、本論文で報告された結果は、PPG信号解析に基づくBP推定手法を開発するための基盤として使用できる。</p>
+
+<h3>補足資料<span class="en">Supplementary Materials</span></h3>
+<p>以下の支持情報は https://www.mdpi.com/article/10.3390/s23042321/s1 でダウンロードできる: より関連性の高い信号特徴量を列挙するAppendix S1。</p>
+
+<h3>著者の貢献<span class="en">Author Contributions</span></h3>
+<p>概念化、F.A.、L.D.P.、A.M.L.L.、M.S.およびA.D.N.。ソフトウェア、L.D.P.。執筆――原稿、F.A.、L.D.P.、A.M.L.L.、M.S.およびA.D.N.。監督、F.A.およびA.D.N.。全著者は原稿の公開版を読み、同意した。</p>
+
+<h3>資金<span class="en">Funding</span></h3>
+<p>本研究は外部資金を受けていない。</p>
+
+<h3>インフォームド・コンセントに関する声明<span class="en">Informed Consent Statement</span></h3>
+<p>本プロジェクトは臨床ケアに影響を与えず、すべての保護対象保健情報が非特定化されていたため、患者の同意は免除された。</p>
+
+<h3>データ利用可能性に関する声明<span class="en">Data Availability Statement</span></h3>
+<p>本研究では公開データセットが解析された。このデータは[24]に見出すことができる。</p>
+
+<h3>利益相反<span class="en">Conflicts of Interest</span></h3>
+<p>著者らは、利益相反がないことを宣言する。</p>
+
+<h3>参考文献<span class="en">References</span></h3>
+<p class="note">参考文献リスト(文献1~46)は原文(英語)のままであり、翻訳対象(本文・図・表)に含まれないため本訳では省略した。本文中の[番号]は原論文の参考文献番号に対応する。</p>
+
+<p class="note"><b>免責事項/出版社注記(Disclaimer/Publisher's Note):</b> すべての出版物に含まれる声明、意見、およびデータは、専ら個々の著者および寄稿者のものであり、MDPIおよび/または編集者のものではない。MDPIおよび/または編集者は、内容中で言及されるいかなるアイデア、方法、指示、または製品に起因する、人または財産へのいかなる傷害についても、責任を負わない。</p>
