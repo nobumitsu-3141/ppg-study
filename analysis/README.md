@@ -28,6 +28,25 @@ python3 -m tests.test_pda_synthetic
 **運用上の帰結**: DN-less拍はPDAの前に連続数拍のアンサンブル平均を行う（P4の前処理に組み込み済み）。
 これはスライド5.5「解が一意に決まらない／振幅側が弱い」の定量的実証でもある。
 
+## 解析機構の検証（Phase 3〜5: モデル・統計・交差検証）
+
+```bash
+python3 -m tests.test_pipeline_synthetic
+```
+
+真値既知の合成コホート（80例×30ウィンドウ）で、対照モデル（PWTT型）→
+K(SI,RI)補正→症例単位5-fold CV→ブートストラップCI の一連を検証する。
+クラウドセッション（2026-08-25）での結果:
+
+- effectコホート（PWTTに血管状態が混入＝補正の余地が実在）: 3シード全てで
+  ΔPE（提案−対照）の95%CI上限 < 0（有意な改善を正しく検出）
+- nullコホート（混入なし）: 3シードとも有意差なし（**偽陽性ゼロ** — 改善が無いのに
+  「改善あり」と言ってしまわないことの確認）
+- Bland-Altman・4象限concordanceが破綻なく計算できること
+
+つまり実データで有意差が出ても出なくても、それが機構のバグではなく
+データの答えだと言える状態になっている。
+
 ## VitalDB（事前①）の実行順
 
 ※ 事前に vitaldb.net でアカウント登録・利用規約に同意（P0-1）、
@@ -37,7 +56,14 @@ python3 -m tests.test_pda_synthetic
 python3 scripts/00_download_lists.py   # 症例・トラック一覧の取得
 python3 scripts/01_track_inventory.py  # P1-1: 装置別CO×波形の保有集計（552例の再現）
 python3 scripts/02_fetch_case.py 1     # P0-3: 1症例で波形取得→PDA→PWTTの動作確認
+python3 scripts/03_run_analysis.py     # 本解析: まず20例でパイロット（--limit で拡大）
 ```
+
+`03_run_analysis.py` は 波形→拍→SQI→4拍アンサンブル→PDA→SI・RI と PWTT・HR・参照CO を
+60秒ウィンドウごとに抽出して `data/features/` にキャッシュし、合成テストと同じ機構
+（症例単位5-fold CV＋ブートストラップCI）で ΔPE・Bland-Altman・concordance を出す。
+SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を見て確定し、SAPに固定してから
+本解析（全例）を回すこと。
 
 引用要件: Lee HC, et al. *Sci Data* 2022;9:279（PMID 35676300, DOI 10.1038/s41597-022-01411-5）。
 
@@ -49,8 +75,13 @@ python3 scripts/02_fetch_case.py 1     # P0-3: 1症例で波形取得→PDA→PW
 | `src/indices.py` | 成分波からの ΔT・RI・SI、ECG＋脈波からの PWTT |
 | `src/beats.py` | 拍切り出し・SQI v0・アンサンブル平均 |
 | `src/synth.py` | 真値既知の合成PPG（切痕あり／DN-less） |
+| `src/models.py` | 対照モデル（PWTT型）と提案モデル（K(SI,RI)補正）、症例単位k-fold CV（リーク禁止） |
+| `src/stats.py` | percentage error（Critchley）・Bland-Altman・4象限concordance・症例単位ブートストラップCI |
+| `src/synth_cohort.py` | 真値既知の合成コホート（effect/null）— モデル・統計の機構検証用 |
 | `tests/test_pda_synthetic.py` | C-4 の検証（上記結果を再現） |
+| `tests/test_pipeline_synthetic.py` | Phase 3〜5 の機構検証（有意差の検出＋偽陽性ガード） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
+| `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。P0-2通過後にMacで実行 |
 
 ## 注意
 
