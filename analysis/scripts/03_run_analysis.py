@@ -13,7 +13,7 @@
 流れ（1症例あたり）:
   1. SNUADC/PLETH + SNUADC/ECG_II（500Hz）と 参照CO（1s）を取得
   2. 60秒ウィンドウごとに:
-       脈波→拍切り出し→SQI→4拍アンサンブル→PDA→ΔT・RI・SI（中央値）
+       脈波→拍切り出し→SQI→適応拍数アンサンブル→PDA→ΔT・RI・SI（中央値）
        ECG＋脈波→PWTT（中央値）, R-R→HR, 参照CO（中央値）
   3. data/features/case_{id}.csv にキャッシュ（再実行時はフェッチ省略）
 全症例の特徴量が揃ったら:
@@ -35,7 +35,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.beats import segment_beats, sqi, ensemble_average  # noqa: E402
+from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
+                       estimate_noise, required_ensemble_size)
 from src.pda import fit_beat  # noqa: E402
 from src.indices import si_ri_from_fit, pwtt_series, detect_r_peaks  # noqa: E402
 from src.models import crossval  # noqa: E402
@@ -69,14 +70,23 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, co: np.ndarray,
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
         return None
 
-    # --- SI・RI: SQI通過拍を4拍ずつアンサンブル→PDA（ok解のみ採用） ---
+    # --- SI・RI: SQI通過拍をアンサンブル→PDA（ok解のみ採用） ---
+    # 拍数はノイズから決める。収束検算は「自信を持って誤った解」を弾けないため
+    # （tests/test_index_variants.py: 別解の16/17が検算通過）、実効ノイズを
+    # 前処理側で目標以下に抑えることが唯一の防壁になる。
     beats = segment_beats(seg_p, FS)
     good = [(a, b) for a, b in beats if sqi(seg_p[a:b], FS)["ok"]]
-    if len(good) < 8:                       # 最低2アンサンブル分
+    if len(good) < 8:
+        return None
+    sigma = float(np.nanmedian([estimate_noise(seg_p[a:b]) for a, b in good]))
+    n_ens, reachable = required_ensemble_size(sigma)
+    if not reachable:                       # 上限拍数でも目標ノイズに届かない
+        return None
+    if len(good) < 2 * n_ens:               # 最低2アンサンブル分
         return None
     dts, ris = [], []
-    for k in range(0, len(good) - 3, 4):
-        y = ensemble_average([seg_p[a:b] for a, b in good[k:k + 4]])
+    for k in range(0, len(good) - n_ens + 1, n_ens):
+        y = ensemble_average([seg_p[a:b] for a, b in good[k:k + n_ens]])
         t = np.arange(len(y)) / FS
         try:
             fit = fit_beat(t, y)
@@ -112,7 +122,8 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, co: np.ndarray,
     if m_co.sum() < 5:
         return None
     return {"t0": t0, "pwtt": float(np.median(pw)), "si": float(si), "ri": ri,
-            "hr": hr, "co_ref": float(np.median(co[m_co]))}
+            "hr": hr, "co_ref": float(np.median(co[m_co])),
+            "sigma_rel": sigma, "n_ens": n_ens, "n_fits": len(dts)}
 
 
 def extract_case(caseid: int, device: str, height_m: float):

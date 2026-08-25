@@ -25,8 +25,25 @@ python3 -m tests.test_pda_synthetic
   → **4拍アンサンブル平均で ΔT ≤2.8 ms / RI ≤2.7% に回復**
 - 1成分だけの波形に2カーネルを当てると収束検算がフラグを立てる（過剰カーネル検出）
 
-**運用上の帰結**: DN-less拍はPDAの前に連続数拍のアンサンブル平均を行う（P4の前処理に組み込み済み）。
+**運用上の帰結**: DN-less拍はPDAの前に数拍のアンサンブル平均を行う。
+拍数は固定ではなく**ウィンドウのノイズから決める**（下の「アンサンブル拍数の適応決定」）。
 これはスライド5.5「解が一意に決まらない／振幅側が弱い」の定量的実証でもある。
+
+## アンサンブル拍数の適応決定
+
+```bash
+python3 -m tests.test_ensemble_adaptive
+```
+
+収束検算は「自信を持って誤った解」を弾けない（別解の16/17が通過）ため、
+実効ノイズを前処理側で抑えることが唯一の防壁になる。
+
+- 相対ノイズを2階差分の頑健SDから推定（8条件で推定誤差 **≤1.6%**）
+- 必要拍数 n = ⌈(σ_rel / 0.003)²⌉、下限4・上限16拍
+- 上限でも目標に届かないウィンドウは**棄却**する
+
+実測（DN-less）: ノイズ2%で固定4拍 11/20 → 適応15拍 **20/20**、
+ノイズ3%で固定4拍 **0/20** → 適応16拍 19/20（ただし目標未達として棄却対象）。
 
 ## 指標定義の候補比較（SAP凍結の根拠）
 
@@ -82,7 +99,7 @@ python3 scripts/02_fetch_case.py 1     # P0-3: 1症例で波形取得→PDA→PW
 python3 scripts/03_run_analysis.py     # 本解析: まず20例でパイロット（--limit で拡大）
 ```
 
-`03_run_analysis.py` は 波形→拍→SQI→4拍アンサンブル→PDA→SI・RI と PWTT・HR・参照CO を
+`03_run_analysis.py` は 波形→拍→SQI→適応拍数アンサンブル→PDA→ΔT・RI・SI と PWTT・HR・参照CO を
 60秒ウィンドウごとに抽出して `data/features/` にキャッシュし、合成テストと同じ機構
 （症例単位5-fold CV＋ブートストラップCI）で ΔPE・Bland-Altman・concordance を出す。
 SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を見て確定し、SAPに固定してから
@@ -96,7 +113,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 |---|---|
 | `src/pda.py` | skewed-Gaussian 2カーネルのPDA。ランドマーク初期値（5.3-a）＋dmuグリッド多点スタート（5.3-c）＋収束検算（境界張り付き・振幅ゼロ・競合解の曖昧さ・残差の谷幅） |
 | `src/indices.py` | 成分波からの ΔT・RI・SI、ECG＋脈波からの PWTT |
-| `src/beats.py` | 拍切り出し・SQI v0・アンサンブル平均 |
+| `src/beats.py` | 拍切り出し・SQI v0・アンサンブル平均・ノイズ推定と拍数の適応決定 |
 | `src/synth.py` | 真値既知の合成PPG（切痕あり／DN-less） |
 | `src/models.py` | 対照モデル（PWTT型）と提案モデル（K(SI,RI)補正）、症例単位k-fold CV（リーク禁止） |
 | `src/stats.py` | percentage error（Critchley）・Bland-Altman・4象限concordance・症例単位ブートストラップCI |
@@ -104,6 +121,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `tests/test_pda_synthetic.py` | C-4 の検証（上記結果を再現） |
 | `tests/test_pipeline_synthetic.py` | Phase 3〜5 の機構検証（有意差の検出＋偽陽性ガード） |
 | `tests/test_index_variants.py` | SI・RI の定義候補の同定性比較（SAP凍結の根拠） |
+| `tests/test_ensemble_adaptive.py` | アンサンブル拍数の適応決定の検証（ノイズ推定・棄却規準） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
 | `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。P0-2通過後にMacで実行 |
 
