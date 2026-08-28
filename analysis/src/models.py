@@ -14,8 +14,16 @@ import numpy as np
 
 
 def _rel(x: np.ndarray) -> np.ndarray:
-    """初回値からの相対変化。"""
-    return (x - x[0]) / max(abs(float(x[0])), 1e-9)
+    """初回値からの相対変化。
+
+    分母は初回値だが、初回値がその系列の典型値に比べ極端に小さいと
+    比が発散する（実データで初回RI≈0 の症例が overflow 警告を出した）。
+    分母に「系列の中央絶対値の5%」の床を敷いて発散を防ぐ。
+    """
+    x = np.asarray(x, float)
+    scale = float(np.nanmedian(np.abs(x)))
+    denom = max(abs(float(x[0])), 0.05 * scale, 1e-9)
+    return (x - x[0]) / denom
 
 
 def _deltas(case: dict) -> dict:
@@ -95,19 +103,21 @@ def premise_test(cases: list[dict], with_map: bool = True) -> dict:
         Xm.append(np.column_stack([d["dsi"], d["dri"], d["dmap"]]))
         y.append(d["dpwtt_rel"])
     y = np.concatenate(y)
+    Xall, Xmall = np.vstack(X), np.vstack(Xm)
+    good = np.isfinite(y) & np.isfinite(Xall).all(axis=1) & np.isfinite(Xmall).all(axis=1)
+    y, Xall, Xmall = y[good], Xall[good], Xmall[good]
     sst = float(np.sum((y - y.mean()) ** 2))
 
-    def _r2(mat):
-        M = np.vstack(mat)
+    def _r2(M):
         coef, *_ = np.linalg.lstsq(M, y, rcond=None)
         sse = float(np.sum((y - M @ coef) ** 2))
         return 1.0 - sse / max(sst, 1e-12), coef
 
-    r2_v, coef_v = _r2(X)
+    r2_v, coef_v = _r2(Xall)
     out = {"n_windows": int(y.size), "r2_vasc": r2_v,
            "beta_dsi": float(coef_v[0]), "beta_dri": float(coef_v[1])}
     if with_map:
-        r2_vm, coef_vm = _r2(Xm)
+        r2_vm, coef_vm = _r2(Xmall)
         out.update({"r2_vasc_map": r2_vm, "beta_dsi_adj": float(coef_vm[0]),
                     "beta_dri_adj": float(coef_vm[1]), "beta_dmap": float(coef_vm[2])})
     return out
@@ -153,10 +163,12 @@ def premise_by_case(cases: list[dict]) -> dict:
     for c in cases:
         d = _deltas(c)
         y = d["dpwtt_rel"]
+        mfin = np.isfinite(y) & np.isfinite(d["dsi"]) & np.isfinite(d["dri"])
+        y = y[mfin]
         n = len(y)
         if n < 8:
             continue
-        X = np.column_stack([np.ones(n), d["dsi"], d["dri"]])
+        X = np.column_stack([np.ones(n), d["dsi"][mfin], d["dri"][mfin]])
         coef, *_ = np.linalg.lstsq(X, y, rcond=None)
         resid = y - X @ coef
         sst = float(np.sum((y - y.mean()) ** 2))

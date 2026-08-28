@@ -54,22 +54,36 @@ def detect_r_peaks(ecg: np.ndarray, fs: float, hr_max: float = 200.0) -> np.ndar
 
 
 def pleth_onset_after(pleth: np.ndarray, fs: float, i_start: int, win_s: float = 0.6) -> int | None:
-    """R波後 win_s 秒以内の脈波立ち上がり点（一次微分最大）を返す。"""
-    i_end = min(i_start + int(win_s * fs), len(pleth) - 1)
-    if i_end - i_start < int(0.05 * fs):
+    """R波後 win_s 秒以内の脈波立ち上がり点（foot）を返す。
+
+    旧実装は一次微分最大（立ち上がりの中腹）で、実データでは拍ごとの
+    ばらつきが大きく（caseid=1 で IQR 96–152ms、隣接ウィンドウ自己相関 +0.34）、
+    前提検証を希釈する主因候補だった。拍の切り出しと同じ
+    「平滑化2階微分の最大点」（立ち上がりの開始）に統一する。
+    """
+    from .beats import _foot_before_peak
+    i_end = min(i_start + int(win_s * fs), len(pleth))
+    if i_end - i_start < int(0.1 * fs):
         return None
     seg = np.asarray(pleth[i_start:i_end], float)
-    d = np.diff(seg)
-    if d.size == 0 or not np.isfinite(d).any():
+    if not np.isfinite(seg).any():
         return None
-    return i_start + int(np.nanargmax(d))
+    pk = i_start + int(np.nanargmax(seg))
+    if pk <= i_start:
+        return None
+    return _foot_before_peak(pleth, pk, fs, j_min=i_start)
 
 
 def pwtt_series(ecg: np.ndarray, pleth: np.ndarray, fs: float) -> np.ndarray:
-    """拍ごとの PWTT [s]（R波 → 脈波立ち上がり）。esCCO 再現の対照に使う。"""
+    """拍ごとの PWTT [s]（R波 → 脈波 foot）。esCCO 再現の対照に使う。
+
+    生理的にありえない値（<20ms, >500ms）は拍単位で除外する。
+    """
     out = []
     for i_r in detect_r_peaks(ecg, fs):
         i_on = pleth_onset_after(pleth, fs, i_r)
         if i_on is not None:
-            out.append((i_on - i_r) / fs)
+            v = (i_on - i_r) / fs
+            if 0.02 < v < 0.5:
+                out.append(v)
     return np.asarray(out)

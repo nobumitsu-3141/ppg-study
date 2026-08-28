@@ -72,7 +72,8 @@ def pick_device(row, forced: str | None) -> str | None:
 
 
 def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.ndarray,
-                    co_t: np.ndarray, t0: float, height_m: float) -> dict | str:
+                    co_t: np.ndarray, t0: float, height_m: float,
+                    fit_tally=None) -> dict | str:
     """1ウィンドウ分の {pwtt, si, ri, hr, map, co_ref} を返す。
     品質不足なら棄却理由の文字列を返す（Phase 2 で棄却率を集計するため）。"""
     i0, i1 = int(t0 * FS), int((t0 + WIN_S) * FS)
@@ -103,12 +104,26 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     for k in range(0, len(good) - n_ens + 1, n_ens):
         y = ensemble_average([seg_p[a:b] for a, b in good[k:k + n_ens]])
         t = np.arange(len(y)) / FS
+        if fit_tally is not None:
+            fit_tally["try"] += 1
         try:
             fit = fit_beat(t, y)
         except Exception:
+            if fit_tally is not None:
+                fit_tally["exception"] += 1
             continue
         if not fit.get("ok", False):
+            if fit_tally is not None:
+                ck = fit["checks"]
+                if ck["boundary_stick"]:
+                    fit_tally["境界張り付き"] += 1
+                if ck["amp_zero"]:
+                    fit_tally["振幅ゼロ(成分消失)"] += 1
+                if not ck["reproducible"]:
+                    fit_tally["競合解あり(曖昧)"] += 1
             continue
+        if fit_tally is not None:
+            fit_tally["ok"] += 1
         m = si_ri_from_fit(fit, height_m=height_m)
         if m["dt_s"] > 0:
             dts.append(m["dt_s"])
@@ -142,9 +157,11 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     m_co = (co_t >= t0) & (co_t < t0 + WIN_S) & np.isfinite(co) & (co > 0.5) & (co < 20)
     if m_co.sum() < 5:
         return "参照CO欠落(<5点)"
+    q = lambda x: float(np.percentile(x, 75) - np.percentile(x, 25))  # noqa: E731
     return {"t0": t0, "pwtt": float(np.median(pw)), "si": float(si), "ri": ri,
             "hr": hr, "map": mbp, "co_ref": float(np.median(co[m_co])),
-            "sigma_rel": sigma, "n_ens": n_ens, "n_fits": len(dts)}
+            "sigma_rel": sigma, "n_ens": n_ens, "n_fits": len(dts),
+            "pwtt_iqr": q(pw), "dt_iqr": q(dts), "ri_iqr": q(ris)}
 
 
 def extract_case(caseid: int, device: str, height_m: float):
@@ -156,7 +173,11 @@ def extract_case(caseid: int, device: str, height_m: float):
     out = FEAT / f"case_{caseid}.csv"
     meta_p = FEAT / f"case_{caseid}_meta.json"
     if out.exists() and meta_p.exists():
-        return pd.read_csv(out)
+        try:
+            if json.loads(meta_p.read_text(encoding="utf-8")).get("v") == 2:
+                return pd.read_csv(out)
+        except Exception:
+            pass  # 壊れた/旧版メタ → 再抽出
     import vitaldb  # pip install vitaldb
     wav = vitaldb.load_case(caseid, ["SNUADC/PLETH", "SNUADC/ECG_II", "SNUADC/ART"], 1 / FS)
     pleth = wav[:, 0].astype(np.float32)
@@ -165,9 +186,10 @@ def extract_case(caseid: int, device: str, height_m: float):
     co = vitaldb.load_case(caseid, [f"{device}/CO"], 1).ravel().astype(np.float32)
     co_t = np.arange(co.size, dtype=np.float32)          # 1s間隔
     dur = len(pleth) / FS
-    rows, rej = [], Counter()
+    rows, rej, tally = [], Counter(), Counter()
     for t0 in np.arange(0, dur - WIN_S, WIN_S):
-        f = window_features(pleth, ecg, art, co, co_t, float(t0), height_m)
+        f = window_features(pleth, ecg, art, co, co_t, float(t0), height_m,
+                            fit_tally=tally)
         if isinstance(f, dict):
             rows.append(f)
         else:
@@ -175,9 +197,9 @@ def extract_case(caseid: int, device: str, height_m: float):
     df = pd.DataFrame(rows)
     FEAT.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
-    meta = {"caseid": caseid, "device": device, "duration_min": round(dur / 60, 1),
+    meta = {"v": 2, "caseid": caseid, "device": device, "duration_min": round(dur / 60, 1),
             "n_total": int(len(rows) + sum(rej.values())), "n_valid": len(rows),
-            "rejects": dict(rej)}
+            "rejects": dict(rej), "fit_checks": dict(tally)}
     meta_p.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     return df
 
@@ -335,11 +357,22 @@ def main() -> None:
         n_tot += m["n_total"]
         n_val += m["n_valid"]
         agg.update(m.get("rejects", {}))
+    fits = Counter()
+    for f in sorted(FEAT.glob("case_*_meta.json")):
+        fits.update(json.loads(f.read_text(encoding="utf-8")).get("fit_checks", {}))
     if n_meta:
         print(f"\n== ウィンドウ棄却の内訳（メタのある {n_meta} 症例・計 {n_tot:,} ウィンドウ） ==")
         print(f"  採用: {n_val:,} ({n_val / max(n_tot, 1):.0%})")
         for reason, n in agg.most_common():
             print(f"  {reason:<24}: {n:5,d} ({n / max(n_tot, 1):.0%})")
+        if fits.get("try"):
+            nt = fits["try"]
+            print(f"\n== PDA当てはめ検算の内訳（全 {nt:,} 区間） ==")
+            print(f"  ok: {fits.get('ok', 0):,} ({fits.get('ok', 0) / nt:.0%})")
+            for k in ("競合解あり(曖昧)", "境界張り付き", "振幅ゼロ(成分消失)", "exception"):
+                if fits.get(k):
+                    print(f"  {k:<20}: {fits[k]:6,d} ({fits[k] / nt:.0%})")
+            print("  ※ 複数の検算に同時に引っかかる区間があるため合計は100%を超えうる")
 
     if len(cases) < 10:
         print(f"\n解析可能な症例が {len(cases)} 例しかありません（最低10例）。--limit を増やすか基準を見直してください。")
