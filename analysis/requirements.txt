@@ -1,5 +1,8 @@
-numpy>=1.24
-scipy>=1.10
-pandas>=2.0
-matplotlib>=3.7
+# 下限は実コードが使うAPIに合わせてある。
+# numpy>=2.0: np.trapezoid（tests/test_index_variants.py）。Python 3.9 でも 2.0.2 が入る
+# scipy>=1.13 / pandas>=2.2 / matplotlib>=3.8.4: numpy 2.0 対応ビルド
+numpy>=2.0
+scipy>=1.13
+pandas>=2.2
+matplotlib>=3.8.4
 vitaldb>=1.4
