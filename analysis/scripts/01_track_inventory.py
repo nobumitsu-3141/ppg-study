@@ -28,9 +28,23 @@ WAVE_PATTERNS = {
 CO_PATTERN = r"^(Vigileo|EV1000|Vigilance|CardioQ)/(CO|CI|SV|SVI)$"
 
 
+def check_csv(path: Path) -> None:
+    """壊れた入力を分かりやすく弾く（gzipのまま保存されている等）。"""
+    if not path.exists():
+        raise SystemExit(f"{path} がありません。先に python scripts/00_download_lists.py を実行してください。")
+    with open(path, "rb") as f:
+        head = f.read(2)
+    if head == b"\x1f\x8b":
+        raise SystemExit(
+            f"{path} が gzip のまま保存されています（展開されていない）。\n"
+            "python scripts/00_download_lists.py を再実行してください（展開に対応済み）。")
+
+
 def main() -> None:
-    trks = pd.read_csv(DATA / "trks.csv")
-    cases = pd.read_csv(DATA / "cases.csv")
+    for name in ("trks.csv", "cases.csv"):
+        check_csv(DATA / name)
+    trks = pd.read_csv(DATA / "trks.csv", low_memory=False)
+    cases = pd.read_csv(DATA / "cases.csv", low_memory=False)
     print(f"cases: {cases.shape[0]}  tracks: {trks.shape[0]}")
 
     # --- まず名前の候補を目視確認（命名が変わっていたらパターンを直す） ---
