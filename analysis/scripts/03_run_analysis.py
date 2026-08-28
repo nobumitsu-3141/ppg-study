@@ -71,14 +71,15 @@ def pick_device(row, forced: str | None) -> str | None:
 
 
 def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.ndarray,
-                    co_t: np.ndarray, t0: float, height_m: float) -> dict | None:
-    """1ウィンドウ分の {pwtt, si, ri, hr, map, co_ref} を返す。品質不足なら None。"""
+                    co_t: np.ndarray, t0: float, height_m: float) -> dict | str:
+    """1ウィンドウ分の {pwtt, si, ri, hr, map, co_ref} を返す。
+    品質不足なら棄却理由の文字列を返す（Phase 2 で棄却率を集計するため）。"""
     i0, i1 = int(t0 * FS), int((t0 + WIN_S) * FS)
     seg_p = np.nan_to_num(np.asarray(pleth[i0:i1], float))
     seg_e = np.nan_to_num(np.asarray(ecg[i0:i1], float))
     seg_a = np.asarray(art[i0:i1], float)
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
-        return None
+        return "脈波欠落"
 
     # --- SI・RI: SQI通過拍をアンサンブル→PDA（ok解のみ採用） ---
     # 拍数はノイズから決める。収束検算は「自信を持って誤った解」を弾けないため
@@ -90,13 +91,13 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     beats = segment_beats(seg_p, FS, ecg=seg_e)
     good = [(a, b) for a, b in beats if sqi(seg_p[a:b], FS)["ok"]]
     if len(good) < 8:
-        return None
+        return "SQI通過拍不足(<8)"
     sigma = float(np.nanmedian([estimate_noise(seg_p[a:b]) for a, b in good]))
     n_ens, reachable = required_ensemble_size(sigma)
     if not reachable:                       # 上限拍数でも目標ノイズに届かない
-        return None
+        return "ノイズ超過(16拍でも目標未達)"
     if len(good) < 2 * n_ens:               # 最低2アンサンブル分
-        return None
+        return "拍数不足(2アンサンブル未満)"
     dts, ris = [], []
     for k in range(0, len(good) - n_ens + 1, n_ens):
         y = ensemble_average([seg_p[a:b] for a, b in good[k:k + n_ens]])
@@ -112,7 +113,7 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
             dts.append(m["dt_s"])
             ris.append(m["ri"])
     if len(dts) < 2:
-        return None
+        return "PDA不収束(<2区間)"
     dt_med = float(np.median(dts))
     si = height_m / dt_med
     ri = float(np.median(ris))
@@ -120,36 +121,40 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     # --- PWTT・HR ---
     pw = pwtt_series(seg_e, seg_p, FS)
     if pw.size < 10:
-        return None
+        return "PWTT不足(<10)"
     r = detect_r_peaks(seg_e, FS)
     if r.size < 20:
-        return None
+        return "R波不足(<20)"
     rr = np.diff(r) / FS
     rr = rr[(rr > 0.3) & (rr < 1.5)]
     if rr.size < 10:
-        return None
+        return "RR不足(<10)"
     hr = 60.0 / float(np.median(rr))
 
     # --- 平均血圧（SAP §7.3 用。動脈圧波形のウィンドウ平均） ---
     a = seg_a[np.isfinite(seg_a) & (seg_a > 20) & (seg_a < 300)]
     if a.size < int(0.5 * WIN_S * FS):
-        return None
+        return "動脈圧欠落(<50%)"
     mbp = float(np.mean(a))
 
     # --- 参照CO（ウィンドウ内中央値） ---
     m_co = (co_t >= t0) & (co_t < t0 + WIN_S) & np.isfinite(co) & (co > 0.5) & (co < 20)
     if m_co.sum() < 5:
-        return None
+        return "参照CO欠落(<5点)"
     return {"t0": t0, "pwtt": float(np.median(pw)), "si": float(si), "ri": ri,
             "hr": hr, "map": mbp, "co_ref": float(np.median(co[m_co])),
             "sigma_rel": sigma, "n_ens": n_ens, "n_fits": len(dts)}
 
 
 def extract_case(caseid: int, device: str, height_m: float):
-    """1症例の特徴量CSVを作る（キャッシュ済みならスキップ）。"""
+    """1症例の特徴量CSVを作る。棄却理由の内訳もメタJSONに保存する。
+    キャッシュはCSVとメタが両方あるときのみ有効。"""
+    import json
+    from collections import Counter
     import pandas as pd
     out = FEAT / f"case_{caseid}.csv"
-    if out.exists():
+    meta_p = FEAT / f"case_{caseid}_meta.json"
+    if out.exists() and meta_p.exists():
         return pd.read_csv(out)
     import vitaldb  # pip install vitaldb
     wav = vitaldb.load_case(caseid, ["SNUADC/PLETH", "SNUADC/ECG_II", "SNUADC/ART"], 1 / FS)
@@ -159,14 +164,20 @@ def extract_case(caseid: int, device: str, height_m: float):
     co = vitaldb.load_case(caseid, [f"{device}/CO"], 1).ravel().astype(np.float32)
     co_t = np.arange(co.size, dtype=np.float32)          # 1s間隔
     dur = len(pleth) / FS
-    rows = []
+    rows, rej = [], Counter()
     for t0 in np.arange(0, dur - WIN_S, WIN_S):
         f = window_features(pleth, ecg, art, co, co_t, float(t0), height_m)
-        if f is not None:
+        if isinstance(f, dict):
             rows.append(f)
+        else:
+            rej[f] += 1
     df = pd.DataFrame(rows)
     FEAT.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
+    meta = {"caseid": caseid, "device": device, "duration_min": round(dur / 60, 1),
+            "n_total": int(len(rows) + sum(rej.values())), "n_valid": len(rows),
+            "rejects": dict(rej)}
+    meta_p.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     return df
 
 
@@ -297,6 +308,22 @@ def main() -> None:
             "windows": {k: df[k].to_numpy(float) for k in ["pwtt", "si", "ri", "hr", "map", "co_ref"]},
             "device": dev,
         })
+
+    # --- 棄却理由の集計（Phase 2: SAP凍結の材料。メタがある症例のみ） ---
+    import json
+    from collections import Counter
+    agg, n_tot, n_val, n_meta = Counter(), 0, 0, 0
+    for f in sorted(FEAT.glob("case_*_meta.json")):
+        m = json.loads(f.read_text(encoding="utf-8"))
+        n_meta += 1
+        n_tot += m["n_total"]
+        n_val += m["n_valid"]
+        agg.update(m.get("rejects", {}))
+    if n_meta:
+        print(f"\n== ウィンドウ棄却の内訳（メタのある {n_meta} 症例・計 {n_tot:,} ウィンドウ） ==")
+        print(f"  採用: {n_val:,} ({n_val / max(n_tot, 1):.0%})")
+        for reason, n in agg.most_common():
+            print(f"  {reason:<24}: {n:5,d} ({n / max(n_tot, 1):.0%})")
 
     if len(cases) < 10:
         print(f"\n解析可能な症例が {len(cases)} 例しかありません（最低10例）。--limit を増やすか基準を見直してください。")
