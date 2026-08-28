@@ -2,7 +2,7 @@
 """Phase 2〜5: VitalDB実データでの本解析ランナー（v0）。
 
 GATE P0-2（倫理委員会の該当性照会）は 2026-08-28 に通過済み（審査不要との回答）。
-Macで実行する — クラウドセッションからは vitaldb.net に接続できない。
+Mac・クラウドセッションのどちらでも実行できる（ネットワーク許可済み環境）。
 
 実行例:
   python3 scripts/03_run_analysis.py                 # 先頭20例でパイロット
@@ -39,7 +39,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
                        estimate_noise, required_ensemble_size)
 from src.pda import fit_beat  # noqa: E402
-from src.indices import si_ri_from_fit, pwtt_series, detect_r_peaks  # noqa: E402
+from src.indices import (si_ri_from_fit, pwtt_series, detect_r_peaks,  # noqa: E402
+                         estimate_pleth_lag)
 from src.models import (crossval, premise_test, premise_by_case,  # noqa: E402
                         incremental_value)
 from src.stats import bootstrap_diff_ci, bland_altman, concordance_4q  # noqa: E402
@@ -73,7 +74,7 @@ def pick_device(row, forced: str | None) -> str | None:
 
 def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.ndarray,
                     co_t: np.ndarray, t0: float, height_m: float,
-                    fit_tally=None) -> dict | str:
+                    fit_tally=None, lag: float | None = None) -> dict | str:
     """1ウィンドウ分の {pwtt, si, ri, hr, map, co_ref} を返す。
     品質不足なら棄却理由の文字列を返す（Phase 2 で棄却率を集計するため）。"""
     i0, i1 = int(t0 * FS), int((t0 + WIN_S) * FS)
@@ -135,7 +136,8 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     ri = float(np.median(ris))
 
     # --- PWTT・HR ---
-    pw = pwtt_series(seg_e, seg_p, FS)
+    # lag は症例全体から推定した脈波チャネル遅延（折り返し展開用）。
+    pw = pwtt_series(seg_e, seg_p, FS, lag=lag)
     if pw.size < 10:
         return "PWTT不足(<10)"
     r = detect_r_peaks(seg_e, FS)
@@ -174,7 +176,7 @@ def extract_case(caseid: int, device: str, height_m: float):
     meta_p = FEAT / f"case_{caseid}_meta.json"
     if out.exists() and meta_p.exists():
         try:
-            if json.loads(meta_p.read_text(encoding="utf-8")).get("v") == 2:
+            if json.loads(meta_p.read_text(encoding="utf-8")).get("v") == 3:
                 return pd.read_csv(out)
         except Exception:
             pass  # 壊れた/旧版メタ → 再抽出
@@ -186,10 +188,12 @@ def extract_case(caseid: int, device: str, height_m: float):
     co = vitaldb.load_case(caseid, [f"{device}/CO"], 1).ravel().astype(np.float32)
     co_t = np.arange(co.size, dtype=np.float32)          # 1s間隔
     dur = len(pleth) / FS
+    # 脈波チャネルの装置遅延を症例全体から推定（PWTTの折り返し展開に必要）
+    lag = estimate_pleth_lag(ecg, pleth, FS)
     rows, rej, tally = [], Counter(), Counter()
     for t0 in np.arange(0, dur - WIN_S, WIN_S):
         f = window_features(pleth, ecg, art, co, co_t, float(t0), height_m,
-                            fit_tally=tally)
+                            fit_tally=tally, lag=lag)
         if isinstance(f, dict):
             rows.append(f)
         else:
@@ -197,7 +201,8 @@ def extract_case(caseid: int, device: str, height_m: float):
     df = pd.DataFrame(rows)
     FEAT.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
-    meta = {"v": 2, "caseid": caseid, "device": device, "duration_min": round(dur / 60, 1),
+    meta = {"v": 3, "caseid": caseid, "device": device, "duration_min": round(dur / 60, 1),
+            "pleth_lag_ms": round(lag * 1000) if np.isfinite(lag) else None,
             "n_total": int(len(rows) + sum(rej.values())), "n_valid": len(rows),
             "rejects": dict(rej), "fit_checks": dict(tally)}
     meta_p.write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")

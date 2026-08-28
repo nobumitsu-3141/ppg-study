@@ -7,9 +7,17 @@ from scipy.signal import find_peaks
 
 
 def _smooth(x: np.ndarray, fs: float, win_s: float = 0.02) -> np.ndarray:
+    """端を端値で延長してから移動平均する。
+
+    ゼロ埋め（np.convolve mode='same'）だと、実データのようにDCオフセットが
+    大きい信号では窓の端に人工的な段差ができ、2階微分の最大が常に探索窓の
+    先頭に張り付く（実症例17で PWTT が R波直上に落ちて 1分間に1〜9拍しか
+    通らなかった根本原因）。合成データはベースラインが0近傍のため発覚しない。
+    """
     n = max(int(win_s * fs), 3)
     k = np.ones(n) / n
-    return np.convolve(x, k, mode="same")
+    xp = np.pad(np.asarray(x, float), (n, n), mode="edge")
+    return np.convolve(xp, k, mode="same")[n:-n]
 
 
 def _foot_before_peak(x: np.ndarray, p: int, fs: float, j_min: int = 0,
@@ -31,20 +39,31 @@ def _foot_before_peak(x: np.ndarray, p: int, fs: float, j_min: int = 0,
 
 
 def _feet_from_ecg(pleth: np.ndarray, ecg: np.ndarray, fs: float) -> np.ndarray:
-    """R波を時間基準にして脈波の立ち上がり点（foot）を1心拍に1つだけ取る。
+    """脈波の立ち上がり点（foot）を1心拍に1つ取る。心電図はRR間隔の情報源として使う。
 
-    切痕も脈波の極小値なので、極小値だけを頼りにすると1心拍で2点拾ってしまう。
-    R波は1心拍に1つしかないため、これを基準にすれば取り違えが起きない。
+    当初は「R波から0.6秒以内」を探索していたが、実データ（VitalDB case 17）で
+    脈波チャネルがECGに対し約650ms遅延している症例が見つかった（モニタ内部の
+    処理遅延。装置・症例ごとに異なり、事前に知り得ない）。固定窓では本当の
+    foot が窓外に出て、前拍ピーク直後を拍頭と誤認し、減衰から始まる区間を
+    PDAに渡してしまう（境界張り付き79%の根本原因）。
+    そこで脈波自身の収縮期ピーク（卓立度で切痕・反射波と区別）を先に取り、
+    その手前の foot を2階微分で求める。RRはピーク間隔の下限にのみ使う。
     """
     from .indices import detect_r_peaks
     r = detect_r_peaks(ecg, fs)
-    feet = []
-    for i in r:
-        j1 = min(i + int(0.6 * fs), len(pleth))
-        if j1 - i < int(0.1 * fs):
-            continue
-        pk = i + int(np.argmax(pleth[i:j1]))          # 収縮期ピーク（最も頑健な目印）
-        feet.append(_foot_before_peak(pleth, pk, fs, j_min=i))
+    if len(r) < 3:
+        return _feet_from_pleth(pleth, fs, (30, 180))
+    rr_med = float(np.median(np.diff(r))) / fs
+    dmin = int(max(0.55 * rr_med, 0.25) * fs)
+    x = np.asarray(pleth, float)
+    rng_ = float(np.percentile(x, 99) - np.percentile(x, 1))
+    if rng_ <= 0:
+        return np.array([], dtype=int)
+    pk, _ = find_peaks(x, distance=dmin, prominence=0.25 * rng_)
+    feet, prev = [], 0
+    for p_ in pk:
+        feet.append(_foot_before_peak(x, p_, fs, j_min=prev))
+        prev = p_
     return np.unique(feet)
 
 

@@ -74,16 +74,93 @@ def pleth_onset_after(pleth: np.ndarray, fs: float, i_start: int, win_s: float =
     return _foot_before_peak(pleth, pk, fs, j_min=i_start)
 
 
-def pwtt_series(ecg: np.ndarray, pleth: np.ndarray, fs: float) -> np.ndarray:
-    """拍ごとの PWTT [s]（R波 → 脈波 foot）。esCCO 再現の対照に使う。
+def _rf_pairs(ecg: np.ndarray, pleth: np.ndarray, fs: float):
+    """各R波と「その後最初の脈波foot」の対 (v_raw, RR_n) を返す。"""
+    from .beats import _feet_from_ecg
+    r = detect_r_peaks(ecg, fs)
+    feet = _feet_from_ecg(pleth, ecg, fs)
+    if len(r) < 3 or len(feet) < 3:
+        return [], float("nan")
+    rr_med = float(np.median(np.diff(r))) / fs
+    pairs, fi = [], 0
+    for n, i_r in enumerate(r[:-1]):
+        rr_n = (r[n + 1] - i_r) / fs
+        while fi < len(feet) and feet[fi] <= i_r + int(0.02 * fs):
+            fi += 1
+        if fi >= len(feet):
+            break
+        v = (feet[fi] - i_r) / fs
+        if 0.02 < v < 1.5 * rr_med:
+            pairs.append((v, rr_n))
+    return pairs, rr_med
 
-    生理的にありえない値（<20ms, >500ms）は拍単位で除外する。
+
+def estimate_pleth_lag(ecg: np.ndarray, pleth: np.ndarray, fs: float) -> float:
+    """症例レベルの脈波遅延 L（装置遅延＋典型PWTT）を推定する [s]。
+
+    VitalDBの脈波チャネルはモニタ内部処理でECGに対し数百msの固定遅延を持ち
+    （case 1/17 で約670ms）、遅延がRRを超えると R→次foot の生値は RR を法として
+    折り返す。候補 v + k·RR_n (k=0,1,2) のうち、L が症例内でほぼ一定である
+    ことを使ってクラスタを同定する。**記録全体で推定すること** — RRの変動が
+    大きいほど誤った枝のクラスタは滲み、正しい枝だけが締まる。
+    60秒窓の中だけではRRがほぼ一定のため枝を区別できない（実測で確認済み）。
     """
+    # 60秒窓ごとに対を取り、症例全体でプールする。
+    # 記録全体を一括で処理すると、R波検出の閾値（分位点ベース）が非定常な
+    # 振幅変化に追従できず倍数計上や欠落が起きる（実測: RR中央値が半分になった）。
+    # 窓単位なら閾値が局所適応し、かつプールにはRRの多様性が残るので
+    # 折り返し枝の判別ができる。
+    ecg = np.nan_to_num(np.asarray(ecg, float))
+    pleth = np.nan_to_num(np.asarray(pleth, float))
+    win = int(60 * fs)
+    step = max(int(180 * fs), win)
+    pairs = []
+    for i0 in range(0, max(len(ecg) - win, 1), step):
+        pw, _ = _rf_pairs(ecg[i0:i0 + win], pleth[i0:i0 + win], fs)
+        pairs.extend(pw)
+    if len(pairs) < 30:
+        return float("nan")
+    varr = np.array([v for v, _ in pairs])
+    rarr = np.array([rr for _, rr in pairs])
+    branches = np.stack([varr + k * rarr for k in (0, 1, 2)])   # (3, n)
+    cands = branches[branches < 3.0]
+    hist, edges = np.histogram(cands, bins=np.arange(0.0, 3.02, 0.02))
+    # 選択基準は「被覆率」: その遅延で±80ms以内に枝を持つR-foot対の割合。
+    # 真の遅延はほぼ全拍を覆う。締まりだけで選ぶと、R直近の偽footが作る
+    # 少数の鋭いクラスタを拾ってしまう（実測で確認）。
+    top = np.argsort(hist)[::-1][:10]
+    best_L, best_cov = float("nan"), 0.0
+    for b in top:
+        c0 = float(edges[b] + 0.01)
+        cov = float(np.mean(np.min(np.abs(branches - c0), axis=0) < 0.08))
+        if cov > best_cov:
+            near = cands[np.abs(cands - c0) < 0.10]
+            best_cov, best_L = cov, float(np.median(near)) if near.size else c0
+    return best_L
+
+
+def pwtt_series(ecg: np.ndarray, pleth: np.ndarray, fs: float,
+                lag: float | None = None) -> np.ndarray:
+    """拍ごとの PWTT [s]（R波 → 対応する脈波 foot・折り返し展開つき）。
+
+    lag には estimate_pleth_lag() で**症例全体から**推定した値を渡すこと。
+    None の場合は渡された区間だけで推定する（短い区間では枝の同定が
+    不安定になるため、本解析では必ず症例レベルの lag を渡す）。
+
+    返り値には装置遅延が加算されている（絶対値は症例間比較に使えない）。
+    本研究のモデルは症例内のΔのみ使うため、固定遅延は差分で消える。
+    """
+    ecg = np.nan_to_num(np.asarray(ecg, float))
+    pleth = np.nan_to_num(np.asarray(pleth, float))
+    pairs, _ = _rf_pairs(ecg, pleth, fs)
+    if len(pairs) < 3:
+        return np.asarray([])
+    L = lag if (lag is not None and np.isfinite(lag)) else estimate_pleth_lag(ecg, pleth, fs)
+    if not np.isfinite(L):
+        return np.asarray([])
     out = []
-    for i_r in detect_r_peaks(ecg, fs):
-        i_on = pleth_onset_after(pleth, fs, i_r)
-        if i_on is not None:
-            v = (i_on - i_r) / fs
-            if 0.02 < v < 0.5:
-                out.append(v)
+    for v, rr_n in pairs:
+        best = min((v + k * rr_n for k in (0, 1, 2)), key=lambda x: abs(x - L))
+        if abs(best - L) < 0.15:
+            out.append(best)
     return np.asarray(out)

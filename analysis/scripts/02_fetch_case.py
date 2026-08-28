@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
                        estimate_noise, required_ensemble_size)
 from src.pda import fit_beat  # noqa: E402
-from src.indices import si_ri_from_fit, pwtt_series  # noqa: E402
+from src.indices import si_ri_from_fit, pwtt_series, estimate_pleth_lag  # noqa: E402
 
 FS = 500.0
 TRACKS = ["SNUADC/PLETH", "SNUADC/ECG_II"]
@@ -95,7 +95,10 @@ def main() -> None:
     else:
         print("    ★ 収束した区間なし。この症例は解析対象から外す候補")
 
-    pw = pwtt_series(seg_e, seg_p, FS)
+    lag = estimate_pleth_lag(ecg, pleth, FS)
+    print(f"脈波チャネル遅延（症例全体から推定）: {lag*1000:.0f} ms"
+          "  ※PWTTはこの遅延を含む。症例内Δでは相殺される")
+    pw = pwtt_series(seg_e, seg_p, FS, lag=lag)
     if pw.size:
         print(f"PWTT: n={pw.size}, median={np.median(pw)*1000:.0f} ms "
               f"(IQR {np.percentile(pw,25)*1000:.0f}–{np.percentile(pw,75)*1000:.0f})")
