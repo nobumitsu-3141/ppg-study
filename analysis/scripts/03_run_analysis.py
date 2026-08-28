@@ -83,7 +83,10 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.
     # 拍数はノイズから決める。収束検算は「自信を持って誤った解」を弾けないため
     # （tests/test_index_variants.py: 別解の16/17が検算通過）、実効ノイズを
     # 前処理側で目標以下に抑えることが唯一の防壁になる。
-    beats = segment_beats(seg_p, FS)
+    # 心電図を基準に切る。極小値だけだと重複切痕を foot と誤検出して
+    # 1心拍が2つに割れ、RI>1 などの非生理的な値が出る
+    # （tests/test_beat_segmentation.py・実データ caseid=1 で確認）。
+    beats = segment_beats(seg_p, FS, ecg=seg_e)
     good = [(a, b) for a, b in beats if sqi(seg_p[a:b], FS)["ok"]]
     if len(good) < 8:
         return None
