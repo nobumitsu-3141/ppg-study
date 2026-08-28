@@ -94,7 +94,7 @@ def main() -> None:
               f"{(i_end-pre)/FS*1000:+.0f} ms）")
         if seg.size > int(0.2 * FS):
             try:
-                f = fit_beat(np.arange(len(seg)) / FS, seg)
+                f = fit_beat(np.arange(len(seg)) / FS, seg, compute_valley=True)
                 m = si_ri_from_fit(f)
                 c = f["components"]
                 print(f"\n[3b. テンプレート1拍へのPDA当てはめ]（この症例が分解可能かの判定）")

@@ -50,12 +50,16 @@ def fit_beat(
     dmu_bounds=(0.08, 0.60),
     alpha_bounds=(0.0, 8.0),
     seed: int = 0,
+    compute_valley: bool = False,
 ) -> dict:
     """1拍を 2 kernel で当てはめ、収束検算つきで結果を返す。
 
     t: 拍先頭を 0 とした時刻 [s], y: PPG (拍内で足切り・detrend 済みを想定)
     alpha_bounds: 既定は正の skew のみ（前進波・反射波とも急峻な立ち上がり）。
                   これを緩めると DN-less 波形で振幅比の同定性が悪化する。
+    compute_valley: 残差の谷幅を計算するか。ok 判定には使わない診断用の値で、
+                  当てはめ回数がおよそ3倍になるため既定は False。
+                  1症例あたり数千回当てはめる本解析では効いてくる。
     """
     t = np.asarray(t, float)
     y = np.asarray(y, float)
@@ -144,24 +148,27 @@ def fit_beat(
     ambiguous = any(abs(_ri_of(r) - ri_best) > 0.08 for r in competing)
     reproducible = not ambiguous
 
-    # 残差の谷: dmu を固定してほかを再当てはめ、RSS(dmu) の谷幅
-    grid = np.linspace(max(lo[5], p[5] - 0.15), min(hi[5], p[5] + 0.15), 13)
-    prof = []
-    for dfix in grid:
-        def resid_fix(q):
-            q8 = np.array([q[0], q[1], q[2], q[3], q[4], dfix, q[5], q[6]])
-            return model2(t, q8) - ys
-        q0 = np.delete(p, 5)
-        qlo, qhi = np.delete(lo, 5), np.delete(hi, 5)
-        try:
-            rr = least_squares(resid_fix, np.clip(q0, qlo + 1e-6, qhi - 1e-6),
-                               bounds=(qlo, qhi), method="trf", max_nfev=1500)
-            prof.append(2 * rr.cost)
-        except Exception:
-            prof.append(np.inf)
-    prof = np.array(prof)
-    thr = prof.min() * 1.05 + 1e-12
-    valley_width = float(grid[prof <= thr][-1] - grid[prof <= thr][0]) if np.any(prof <= thr) else float("nan")
+    # 残差の谷: dmu を固定してほかを再当てはめ、RSS(dmu) の谷幅（診断用・既定では計算しない）
+    valley_width = float("nan")
+    if compute_valley:
+        grid = np.linspace(max(lo[5], p[5] - 0.15), min(hi[5], p[5] + 0.15), 13)
+        prof = []
+        for dfix in grid:
+            def resid_fix(q):
+                q8 = np.array([q[0], q[1], q[2], q[3], q[4], dfix, q[5], q[6]])
+                return model2(t, q8) - ys
+            q0 = np.delete(p, 5)
+            qlo, qhi = np.delete(lo, 5), np.delete(hi, 5)
+            try:
+                rr = least_squares(resid_fix, np.clip(q0, qlo + 1e-6, qhi - 1e-6),
+                                   bounds=(qlo, qhi), method="trf", max_nfev=1500)
+                prof.append(2 * rr.cost)
+            except Exception:
+                prof.append(np.inf)
+        prof = np.array(prof)
+        thr = prof.min() * 1.05 + 1e-12
+        valley_width = (float(grid[prof <= thr][-1] - grid[prof <= thr][0])
+                        if np.any(prof <= thr) else float("nan"))
 
     return {
         "params": p,

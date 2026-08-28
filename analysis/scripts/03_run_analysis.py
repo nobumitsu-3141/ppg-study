@@ -9,6 +9,7 @@ Macで実行する — クラウドセッションからは vitaldb.net に接�
   python3 scripts/03_run_analysis.py --limit 100     # 例数を増やす
   python3 scripts/03_run_analysis.py --device Vigileo  # 参照CO装置を固定
   python3 scripts/03_run_analysis.py --stats-only    # 抽出済み特徴量から統計だけ再計算
+  python3 scripts/03_run_analysis.py --limit 20 --jobs 6  # 6並列で20例（推奨）
 
 流れ（1症例あたり）:
   1. SNUADC/PLETH + SNUADC/ECG_II + SNUADC/ART（500Hz）と 参照CO（1s）を取得
@@ -169,6 +170,18 @@ def extract_case(caseid: int, device: str, height_m: float):
     return df
 
 
+def _extract_one(arg):
+    """並列ワーカ。返り値: (caseid, DataFrame or None, エラー文字列 or None)"""
+    caseid, device, height_m = arg
+    try:
+        df = extract_case(caseid, device, height_m)
+    except Exception as e:
+        return caseid, None, f"取得/抽出失敗: {e}"
+    if len(df) < MIN_WINDOWS:
+        return caseid, None, f"有効ウィンドウ {len(df)} < {MIN_WINDOWS}"
+    return caseid, df, None
+
+
 # ---------------------------------------------------------------- 統計
 def report(cases: list[dict]) -> None:
     """合成テストと同一の機構・同一の出力形式で結果を出す。"""
@@ -220,6 +233,8 @@ def main() -> None:
                     help="参照CO装置を固定（既定: Vigileo→EV1000→…の優先順）")
     ap.add_argument("--stats-only", action="store_true",
                     help="フェッチせず data/features/ のキャッシュだけで統計を出す")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="並列に処理する症例数（既定1。CPUコア数-1 程度が目安）")
     args = ap.parse_args()
 
     tc_path = DATA / "target_cases.csv"
@@ -232,7 +247,7 @@ def main() -> None:
     tc = pd.read_csv(tc_path)
     demo = pd.read_csv(DATA / "cases.csv")[["caseid", "height"]].set_index("caseid")
 
-    cases = []
+    cases, todo = [], []
     n_try = 0
     for _, row in tc.iterrows():
         if n_try >= args.limit:
@@ -245,27 +260,43 @@ def main() -> None:
         if not np.isfinite(h_cm) or h_cm < 100:
             continue
         n_try += 1
-        if args.stats_only:
+        todo.append((caseid, dev, h_cm / 100.0))
+
+    # --- 特徴量抽出（症例単位で並列化できる。取得はI/O律速、PDAはCPU律速） ---
+    results = {}
+    if args.stats_only:
+        for caseid, dev, h in todo:
             f = FEAT / f"case_{caseid}.csv"
-            if not f.exists():
-                continue
-            df = pd.read_csv(f)
-        else:
-            print(f"[{n_try}/{args.limit}] caseid={caseid} device={dev} ...", flush=True)
-            try:
-                df = extract_case(caseid, dev, h_cm / 100.0)
-            except Exception as e:
-                print(f"  skip（取得/抽出失敗: {e}）")
-                continue
-        if len(df) < MIN_WINDOWS:
-            print(f"  skip（有効ウィンドウ {len(df)} < {MIN_WINDOWS}）")
+            if f.exists():
+                results[caseid] = pd.read_csv(f)
+    elif args.jobs > 1:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        print(f"{len(todo)} 症例を {args.jobs} 並列で処理します …", flush=True)
+        with ProcessPoolExecutor(max_workers=args.jobs) as ex:
+            futs = {ex.submit(_extract_one, a): a[0] for a in todo}
+            for n, fu in enumerate(as_completed(futs), 1):
+                cid, df, err = fu.result()
+                print(f"[{n}/{len(todo)}] caseid={cid}: "
+                      + (f"skip（{err}）" if err else f"有効ウィンドウ {len(df)}"), flush=True)
+                if df is not None:
+                    results[cid] = df
+    else:
+        for n, a in enumerate(todo, 1):
+            cid, df, err = _extract_one(a)
+            print(f"[{n}/{len(todo)}] caseid={cid}: "
+                  + (f"skip（{err}）" if err else f"有効ウィンドウ {len(df)}"), flush=True)
+            if df is not None:
+                results[cid] = df
+
+    for caseid, dev, h in todo:
+        df = results.get(caseid)
+        if df is None or len(df) < MIN_WINDOWS:
             continue
         cases.append({
-            "caseid": caseid, "height": h_cm / 100.0,
+            "caseid": caseid, "height": h,
             "windows": {k: df[k].to_numpy(float) for k in ["pwtt", "si", "ri", "hr", "map", "co_ref"]},
             "device": dev,
         })
-        print(f"  ok（有効ウィンドウ {len(df)}）")
 
     if len(cases) < 10:
         print(f"\n解析可能な症例が {len(cases)} 例しかありません（最低10例）。--limit を増やすか基準を見直してください。")

@@ -205,11 +205,31 @@ R波検出と拍の切り出しの修正後:
 倫理委員会の該当性照会（P0-2, 2026-08-28「審査不要」との回答）。
 
 ```bash
-python3 scripts/00_download_lists.py   # 症例・トラック一覧の取得
-python3 scripts/01_track_inventory.py  # P1-1: 装置別CO×波形の保有集計（552例の再現）
-python3 scripts/02_fetch_case.py 1     # P0-3: 1症例で波形取得→PDA→PWTTの動作確認
-python3 scripts/03_run_analysis.py     # 本解析: まず20例でパイロット（--limit で拡大）
+python3 scripts/00_download_lists.py       # 症例・トラック一覧の取得
+python3 scripts/01_track_inventory.py      # P1-1: 装置別CO×波形の保有集計
+python3 scripts/05_diagnose_waveform.py 1  # 波形の素性診断（極性・形・分解可能性）
+python3 scripts/02_fetch_case.py 1         # P0-3: 1症例で波形取得→PDA→PWTTの動作確認
+python3 scripts/03_run_analysis.py --limit 5 --jobs 6   # パイロット
 ```
+
+### 処理時間
+
+PDA の当てはめが律速で、1回あたり約80ms（重なりの強い波形）。
+1症例＝約190ウィンドウ×約22区間 ≒ 4,200回の当てはめ ≒ **6分**。
+
+| 規模 | 直列 | 6並列（`--jobs 6`） |
+|---|---|---|
+| 5例（パイロット） | 30分 | **5分** |
+| 20例 | 2時間 | **20分** |
+| 874例（本解析） | 3.4日 | **14時間** |
+
+`--jobs` はCPUコア数−1 程度を指定する。特徴量は `data/features/case_*.csv` に
+キャッシュされるので、中断しても再実行で続きから進む。
+
+**高速化の経緯**: 当初は1回あたり216msかかっていた。残差の谷幅の計算が
+コストの80%を占めており、しかも ok 判定には使えないことが分かった（上記）ため
+既定で計算しないようにした（`compute_valley=False`）。精度は完全に同一
+（ΔT誤差 −0.2〜−0.5ms、RI誤差 +1% のまま）。診断用の 05 では計算する。
 
 `03_run_analysis.py` は 波形→拍→SQI→適応拍数アンサンブル→PDA→ΔT・RI・SI と PWTT・HR・参照CO を
 60秒ウィンドウごとに抽出して `data/features/` にキャッシュし、合成テストと同じ機構
