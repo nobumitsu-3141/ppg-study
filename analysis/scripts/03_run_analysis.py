@@ -11,10 +11,10 @@ Macで実行する — クラウドセッションからは vitaldb.net に接�
   python3 scripts/03_run_analysis.py --stats-only    # 抽出済み特徴量から統計だけ再計算
 
 流れ（1症例あたり）:
-  1. SNUADC/PLETH + SNUADC/ECG_II（500Hz）と 参照CO（1s）を取得
+  1. SNUADC/PLETH + SNUADC/ECG_II + SNUADC/ART（500Hz）と 参照CO（1s）を取得
   2. 60秒ウィンドウごとに:
        脈波→拍切り出し→SQI→適応拍数アンサンブル→PDA→ΔT・RI・SI（中央値）
-       ECG＋脈波→PWTT（中央値）, R-R→HR, 参照CO（中央値）
+       ECG＋脈波→PWTT（中央値）, R-R→HR, 動脈圧→MAP（平均）, 参照CO（中央値）
   3. data/features/case_{id}.csv にキャッシュ（再実行時はフェッチ省略）
 全症例の特徴量が揃ったら:
   4. models.crossval（症例単位5-fold, 較正=各症例の初回ウィンドウ）
@@ -39,7 +39,7 @@ from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
                        estimate_noise, required_ensemble_size)
 from src.pda import fit_beat  # noqa: E402
 from src.indices import si_ri_from_fit, pwtt_series, detect_r_peaks  # noqa: E402
-from src.models import crossval  # noqa: E402
+from src.models import crossval, premise_test, incremental_value  # noqa: E402
 from src.stats import bootstrap_diff_ci, bland_altman, concordance_4q  # noqa: E402
 
 DATA = Path(__file__).resolve().parent.parent / "data"
@@ -69,12 +69,13 @@ def pick_device(row, forced: str | None) -> str | None:
     return None
 
 
-def window_features(pleth: np.ndarray, ecg: np.ndarray, co: np.ndarray,
+def window_features(pleth: np.ndarray, ecg: np.ndarray, art: np.ndarray, co: np.ndarray,
                     co_t: np.ndarray, t0: float, height_m: float) -> dict | None:
-    """1ウィンドウ分の {pwtt, si, ri, hr, co_ref} を返す。品質不足なら None。"""
+    """1ウィンドウ分の {pwtt, si, ri, hr, map, co_ref} を返す。品質不足なら None。"""
     i0, i1 = int(t0 * FS), int((t0 + WIN_S) * FS)
     seg_p = np.nan_to_num(np.asarray(pleth[i0:i1], float))
     seg_e = np.nan_to_num(np.asarray(ecg[i0:i1], float))
+    seg_a = np.asarray(art[i0:i1], float)
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
         return None
 
@@ -125,12 +126,18 @@ def window_features(pleth: np.ndarray, ecg: np.ndarray, co: np.ndarray,
         return None
     hr = 60.0 / float(np.median(rr))
 
+    # --- 平均血圧（SAP §7.3 用。動脈圧波形のウィンドウ平均） ---
+    a = seg_a[np.isfinite(seg_a) & (seg_a > 20) & (seg_a < 300)]
+    if a.size < int(0.5 * WIN_S * FS):
+        return None
+    mbp = float(np.mean(a))
+
     # --- 参照CO（ウィンドウ内中央値） ---
     m_co = (co_t >= t0) & (co_t < t0 + WIN_S) & np.isfinite(co) & (co > 0.5) & (co < 20)
     if m_co.sum() < 5:
         return None
     return {"t0": t0, "pwtt": float(np.median(pw)), "si": float(si), "ri": ri,
-            "hr": hr, "co_ref": float(np.median(co[m_co])),
+            "hr": hr, "map": mbp, "co_ref": float(np.median(co[m_co])),
             "sigma_rel": sigma, "n_ens": n_ens, "n_fits": len(dts)}
 
 
@@ -141,15 +148,16 @@ def extract_case(caseid: int, device: str, height_m: float):
     if out.exists():
         return pd.read_csv(out)
     import vitaldb  # pip install vitaldb
-    wav = vitaldb.load_case(caseid, ["SNUADC/PLETH", "SNUADC/ECG_II"], 1 / FS)
+    wav = vitaldb.load_case(caseid, ["SNUADC/PLETH", "SNUADC/ECG_II", "SNUADC/ART"], 1 / FS)
     pleth = wav[:, 0].astype(np.float32)
     ecg = wav[:, 1].astype(np.float32)
+    art = wav[:, 2].astype(np.float32)
     co = vitaldb.load_case(caseid, [f"{device}/CO"], 1).ravel().astype(np.float32)
     co_t = np.arange(co.size, dtype=np.float32)          # 1s間隔
     dur = len(pleth) / FS
     rows = []
     for t0 in np.arange(0, dur - WIN_S, WIN_S):
-        f = window_features(pleth, ecg, co, co_t, float(t0), height_m)
+        f = window_features(pleth, ecg, art, co, co_t, float(t0), height_m)
         if f is not None:
             rows.append(f)
     df = pd.DataFrame(rows)
@@ -177,6 +185,29 @@ def report(cases: list[dict]) -> None:
     print(f"Bland-Altman(提案): bias {ba['bias']:+.2f} L/min "
           f"(LoA {ba['loa_low']:+.2f}..{ba['loa_high']:+.2f})")
     print(f"4象限concordance(提案, 除外帯0.5 L/min): {concordance_4q(d_est, d_ref):.2f}")
+
+    # --- SAP §7: 参照COの独立性への対処 ---
+    pt = premise_test(cases)
+    print("\n== SAP §7.1 前提検証（参照COを使わない） ==")
+    print(f"ΔPWTT の変動のうち血管指標で説明される割合: r2 = {pt['r2_vasc']:.3f}"
+          f"  (n={pt['n_windows']:,} ウィンドウ)")
+    print(f"  係数 ΔΔT%: {pt['beta_dsi']:+.3f}  ΔRI%: {pt['beta_dri']:+.3f}")
+    print("  ★ 主要評価が有意でも、ここが 0 近傍なら「参照側の性質への追随」を疑う（§7.6）")
+
+    iv = incremental_value(cases)
+    print("\n== SAP §7.3 血圧との関係（記述のみ・判別力は無い） ==")
+    print(f"  PE 対照 {iv['対照']:.1f}% / +血圧 {iv['+血圧']:.1f}% / "
+          f"+血管指標 {iv['+血管指標']:.1f}% / +両方 {iv['+両方']:.1f}%")
+
+    devs = sorted({c.get("device", "?") for c in cases})
+    print("\n== SAP §7.2 参照CO装置の内訳 ==")
+    for d in devs:
+        n = sum(c.get("device") == d for c in cases)
+        kind = "熱希釈" if d == "Vigilance" else ("食道ドプラ" if d == "CardioQ" else "動脈圧由来")
+        print(f"  {d:<10} {n:4d} 例  ({kind})")
+    n_ind = sum(c.get("device") in ("Vigilance", "CardioQ") for c in cases)
+    print(f"  → 動脈圧から独立な参照: {n_ind} 例"
+          + ("（少数のため記述にとどめる）" if n_ind < 50 else ""))
 
 
 def main() -> None:
@@ -228,7 +259,7 @@ def main() -> None:
             continue
         cases.append({
             "caseid": caseid, "height": h_cm / 100.0,
-            "windows": {k: df[k].to_numpy(float) for k in ["pwtt", "si", "ri", "hr", "co_ref"]},
+            "windows": {k: df[k].to_numpy(float) for k in ["pwtt", "si", "ri", "hr", "map", "co_ref"]},
             "device": dev,
         })
         print(f"  ok（有効ウィンドウ {len(df)}）")

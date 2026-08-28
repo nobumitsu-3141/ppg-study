@@ -10,7 +10,9 @@
       c≠0 が「PWTTに血管側が混入する」= esCCO誤差の源（effectコホート）
       c=0 なら補正の余地なし（nullコホート: 偽陽性の検出用）
   - SI・RI は vasc を反映（+測定ノイズ）
-  - CO_ref = SV×HR に参照法の測定誤差（約7%）を乗せる
+  - MAP は血管状態とSVの両方を反映する
+  - CO_ref = SV×HR に参照法の測定誤差（約7%）を乗せる。map_artifact > 0 で
+      「参照CO自体が血圧変動と並行して動く」FloTrac系の性質を模擬できる（SAP §7.3の検証用）
 """
 from __future__ import annotations
 
@@ -18,7 +20,7 @@ import numpy as np
 
 
 def make_cohort(n_cases: int = 60, n_windows: int = 30, effect: bool = True,
-                seed: int = 0) -> list[dict]:
+                seed: int = 0, map_artifact: float = 0.0) -> list[dict]:
     """症例のリストを返す。各症例: dict(caseid, height, windows=dict of arrays, truth)."""
     rng = np.random.default_rng(seed)
     c_vasc = 0.025 if effect else 0.0   # PWTTへの血管状態の混入係数 [s]（SV由来の変化と同程度）
@@ -43,11 +45,22 @@ def make_cohort(n_cases: int = 60, n_windows: int = 30, effect: bool = True,
                 + 0.003 * rng.standard_normal(n_windows))
         si = si0 + 1.1 * vasc + 0.25 * rng.standard_normal(n_windows)
         ri = np.clip(ri0 + 0.09 * vasc + 0.025 * rng.standard_normal(n_windows), 0.05, 1.5)
-        co_ref = sv * hr / 1000.0 * (1 + 0.07 * rng.standard_normal(n_windows))  # [L/min]
+        # 平均血圧: 血管状態と心拍出量の両方を反映する（MAP ≒ CO × SVR）
+        map0 = rng.uniform(65.0, 95.0)
+        mp = map0 * (1 + 0.10 * vasc + 0.05 * (sv / sv0 - 1)
+                     + 0.02 * rng.standard_normal(n_windows))
+
+        co_true = sv * hr / 1000.0                                   # [L/min]
+        # map_artifact > 0 は FloTrac 系の性質の模擬:
+        # 参照CO自体が血圧変動と並行して動く（真のCOではなく血圧を追う成分）。
+        co_ref = co_true * (1 + map_artifact * (mp / mp[0] - 1.0))
+        co_ref = co_ref * (1 + 0.07 * rng.standard_normal(n_windows))
 
         cases.append({
             "caseid": i, "height": height,
-            "windows": {"pwtt": pwtt, "si": si, "ri": ri, "hr": hr, "co_ref": co_ref},
-            "truth": {"sv": sv, "vasc": vasc, "effect": effect},
+            "windows": {"pwtt": pwtt, "si": si, "ri": ri, "hr": hr,
+                        "map": mp, "co_ref": co_ref},
+            "truth": {"sv": sv, "vasc": vasc, "co_true": co_true,
+                      "effect": effect, "map_artifact": map_artifact},
         })
     return cases

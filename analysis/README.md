@@ -88,6 +88,29 @@ SI・RIの定義には複数の候補がある（ピーク間ΔT／立ち上が�
 症例内の相対変化（ΔSI%）では身長が完全に約分される — ΔT をそのまま使っても結論は変わらない
 （合成コホートで ΔPE の差は 0.1〜0.3ポイント、有意性の判定は不変）。
 
+## 参照COの独立性の検証（SAP §7）
+
+```bash
+python3 -m tests.test_reference_independence
+```
+
+対象874例の98%は FloTrac 系（Vigileo/EV1000）が参照COで、これは動脈圧波形から
+算出され血圧変動と並行して動く。提案手法も血管状態で動くため、
+一致度の改善が「真の精度向上」か「参照側の性質への追随」かを見分ける必要がある。
+
+真の効果／偽の改善／効果なしの3シナリオで各判定法を突き合わせた結果:
+
+| 判定法 | 真の効果 | 偽の改善 | 判別力 |
+|---|---|---|---|
+| 主要評価（ΔPE の有意性） | 3/3 有意 | **3/3 有意** | **無し** |
+| §7.1 前提検証 r²_vasc | 0.658 | **0.001** | **有り** |
+| §7.3 血圧を超える増分 | −0.16pt | −0.18pt | 無し |
+
+**主要評価だけでは区別できない。** 区別できるのは §7.1 の前提検証（ΔPWTT が
+血管指標で説明されるか＝参照COを一切使わない）のみ。ΔMAP を共変量に入れる案は
+血管指標との共線性のため判別力が無く、記述にとどめる。この結果は SAP §7.6 の
+解釈規準に反映済み。
+
 ## 解析機構の検証（Phase 3〜5: モデル・統計・交差検証）
 
 ```bash
@@ -135,13 +158,14 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `src/indices.py` | 成分波からの ΔT・RI・SI、ECG＋脈波からの PWTT |
 | `src/beats.py` | 拍切り出し・SQI v0・アンサンブル平均・ノイズ推定と拍数の適応決定 |
 | `src/synth.py` | 真値既知の合成PPG（切痕あり／DN-less） |
-| `src/models.py` | 対照モデル（PWTT型）と提案モデル（K(SI,RI)補正）、症例単位k-fold CV（リーク禁止） |
+| `src/models.py` | 対照モデル（PWTT型）と提案モデル（K(SI,RI)補正）、症例単位k-fold CV（リーク禁止）、前提検証・増分価値 |
 | `src/stats.py` | percentage error（Critchley）・Bland-Altman・4象限concordance・症例単位ブートストラップCI |
 | `src/synth_cohort.py` | 真値既知の合成コホート（effect/null）— モデル・統計の機構検証用 |
 | `tests/test_pda_synthetic.py` | C-4 の検証（上記結果を再現） |
 | `tests/test_pipeline_synthetic.py` | Phase 3〜5 の機構検証（有意差の検出＋偽陽性ガード） |
 | `tests/test_index_variants.py` | SI・RI の定義候補の同定性比較（SAP凍結の根拠） |
 | `tests/test_ensemble_adaptive.py` | アンサンブル拍数の適応決定の検証（ノイズ推定・棄却規準） |
+| `tests/test_reference_independence.py` | 参照COの血圧依存による偽の改善を見抜けるかの検証（SAP §7） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
 | `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。Macで実行 |
 
