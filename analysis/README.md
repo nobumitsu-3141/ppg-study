@@ -3,14 +3,29 @@
 スライド「PPG波形解析 8.7」6.6〜6.7 の解析パイプライン。
 チェックリスト（準備C・事前①）の実装部分がここに入っている。
 
-## セットアップ（Mac・初回のみ）
+## セットアップ（Mac）
+
+**初回**（リポジトリがまだ無い場合）― ターミナルにそのまま貼る:
 
 ```bash
-cd analysis
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+git clone https://github.com/nobumitsu-3141/ppg-study.git ~/ppg-study
+bash ~/ppg-study/setup_mac.sh
 ```
+
+**2回目以降**（最新の取得＋環境の更新）:
+
+```bash
+bash ~/ppg-study/setup_mac.sh
+```
+
+**作業ウィンドウを開き直したとき**（仮想環境の有効化だけ）:
+
+```bash
+cd ~/ppg-study/analysis && source .venv/bin/activate
+```
+
+以降のコマンドはすべて `analysis/` で、仮想環境を有効にした状態で実行する
+（`pip: command not found` は仮想環境が有効になっていないサイン）。
 
 ## まず動作確認（C-4: 合成波形でのPDA検証）
 
