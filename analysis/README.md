@@ -8,9 +8,14 @@
 **初回**（リポジトリがまだ無い場合）― ターミナルにそのまま貼る:
 
 ```bash
-git clone https://github.com/nobumitsu-3141/ppg-study.git ~/ppg-study
+git clone -b claude/slide-references-formatting-ynthk7 \
+  https://github.com/nobumitsu-3141/ppg-study.git ~/ppg-study
 bash ~/ppg-study/setup_mac.sh
 ```
+
+※ `-b` を省くと既定ブランチ（main）が取得され、**`analysis/` も `setup_mac.sh` も入っていない**
+（解析コードはすべて作業ブランチにある）。すでに `-b` 無しでクローンしてしまった場合は
+`cd ~/ppg-study && git checkout claude/slide-references-formatting-ynthk7` で切り替える。
 
 **2回目以降**（最新の取得＋環境の更新）:
 
