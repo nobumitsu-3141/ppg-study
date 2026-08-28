@@ -78,6 +78,34 @@ def main() -> None:
         d1 = np.gradient(tpl)
         i_up = int(np.argmax(d1[:i_pk + 1])) if i_pk > 0 else 0
         print(f"   → 最大立ち上がりの位置: R波から {(i_up-pre)/FS*1000:+.0f} ms")
+        rr_med = float(np.median(rr)) if len(rr) else float("nan")
+        print(f"   ※ RR={rr_med*1000:.0f} ms なので、R波から {rr_med*1000:.0f} ms 以降の山は"
+              f"【次の心拍】であって反射波ではない")
+
+        # --- テンプレート1拍にPDAを当てて、この症例が分解可能かを判定する ---
+        from src.pda import fit_beat
+        from src.indices import si_ri_from_fit
+        i_end = min(pre + int(rr_med * FS), len(tpl)) if np.isfinite(rr_med) else len(tpl)
+        seg = tpl[i_up - int(0.02 * FS) if i_up > int(0.02 * FS) else 0:i_end]
+        if seg.size > int(0.2 * FS):
+            try:
+                f = fit_beat(np.arange(len(seg)) / FS, seg)
+                m = si_ri_from_fit(f)
+                c = f["components"]
+                print(f"\n[3b. テンプレート1拍へのPDA当てはめ]（この症例が分解可能かの判定）")
+                print(f"   成分1 ピーク {c[0]['t_peak']*1000:5.0f} ms 高さ {c[0]['height']:.3f}  /  "
+                      f"成分2 ピーク {c[1]['t_peak']*1000:5.0f} ms 高さ {c[1]['height']:.3f}")
+                print(f"   ΔT={m['dt_s']*1000:.0f} ms  RI={m['ri']:.2f}  nrmse={f['nrmse']:.4f}  "
+                      f"収束検算 ok={f['ok']}")
+                vw = f["checks"]["valley_width_s"] * 1000
+                print(f"   谷の幅 {vw:.0f} ms（ΔT {m['dt_s']*1000:.0f} ms に対し十分狭ければ"
+                      f"位置が定まっている）")
+                if f["ok"] and 0.1 <= m["ri"] <= 1.0:
+                    print("   → この症例は解析可能。個々のウィンドウで異常が出るなら前処理側の問題")
+                else:
+                    print("   → 平均波形ですら分解できない。この症例は解析対象から外す候補")
+            except Exception as e:
+                print(f"\n[3b] テンプレートの当てはめ失敗: {e}")
 
     # --- 拍とノイズ ---
     b = segment_beats(pleth, FS, ecg=ecg)

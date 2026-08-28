@@ -21,13 +21,36 @@ def si_ri_from_fit(fit: dict, height_m: float | None = None) -> dict:
     return out
 
 
-def detect_r_peaks(ecg: np.ndarray, fs: float) -> np.ndarray:
-    """簡易R波検出（清浄な信号向け v0）。返り値: サンプル添字。"""
+def detect_r_peaks(ecg: np.ndarray, fs: float, hr_max: float = 200.0) -> np.ndarray:
+    """R波検出（Pan-Tompkins 型）。返り値: サンプル添字。
+
+    旧実装は「全体の最大振幅 × 0.6」を閾値にしていたため、記録中に
+    アーチファクトが1つでもあると閾値が跳ね上がり、大多数のR波を取り逃した
+    （実データ caseid=1 で真の約576拍に対し245個＝42%しか検出できず、
+    脈波側の拍数と食い違って解析全体が破綻した）。
+
+    微分→二乗→移動平均でQRSの急峻さを強調し（T波と基線動揺は抑えられる）、
+    分位点ベースの頑健な閾値を使う。単発のアーチファクトでは閾値が動かない。
+    """
     x = np.asarray(ecg, float)
-    x = x - np.nanmedian(x)
-    thr = 0.6 * np.nanmax(np.abs(x))
-    idx, _ = find_peaks(np.abs(x), height=thr, distance=int(0.3 * fs))
-    return idx
+    x = np.nan_to_num(x - np.nanmedian(x))
+    if x.size < int(0.5 * fs):
+        return np.array([], dtype=int)
+    d = np.diff(x, prepend=x[0])
+    w = max(int(0.10 * fs), 3)
+    energy = np.convolve(d * d, np.ones(w) / w, mode="same")
+    thr = 0.30 * float(np.percentile(energy, 98))
+    if thr <= 0:
+        return np.array([], dtype=int)
+    idx, _ = find_peaks(energy, height=thr, distance=int(60.0 / hr_max * fs))
+    # エネルギーのピークから、元波形の局所的な振幅最大（=R波頂点）へ寄せる
+    half = max(int(0.05 * fs), 2)
+    out = []
+    for i in idx:
+        a, b = max(0, i - half), min(len(x), i + half)
+        if b > a:
+            out.append(a + int(np.argmax(np.abs(x[a:b]))))
+    return np.unique(out)
 
 
 def pleth_onset_after(pleth: np.ndarray, fs: float, i_start: int, win_s: float = 0.6) -> int | None:

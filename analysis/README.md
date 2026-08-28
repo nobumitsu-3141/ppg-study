@@ -49,6 +49,26 @@ python3 -m tests.test_pda_synthetic
 拍数は固定ではなく**ウィンドウのノイズから決める**（下の「アンサンブル拍数の適応決定」）。
 これはスライド5.5「解が一意に決まらない／振幅側が弱い」の定量的実証でもある。
 
+## R波検出の頑健性
+
+```bash
+python3 -m tests.test_r_peak_detection
+```
+
+旧実装は「記録全体の最大振幅 × 0.6」を閾値にしていたため、体動などの
+大振幅アーチファクトが1つあると閾値が跳ね上がり検出が壊滅した。
+実データ（caseid=1）では真の約576拍（HR 115）に対し **245個＝42%** しか
+検出できず、脈波側の拍数と食い違って PDA の結果が破綻していた。
+
+微分→二乗→移動平均でQRSを強調し、分位点ベースの閾値を使う方式に変更:
+
+| 条件 | 旧 | 新 |
+|---|---|---|
+| HR 55/75/115・アーチファクト無 | 100% | 100% |
+| HR 55/75/115・**アーチファクト有** | **0%**（1個のみ） | **100%** |
+
+検出位置のずれは95%点で2.0ms、T波の誤検出なし。
+
 ## 拍の切り出しとアンサンブル整列
 
 ```bash
@@ -181,18 +201,20 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | ファイル | 内容 |
 |---|---|
 | `src/pda.py` | skewed-Gaussian 2カーネルのPDA。ランドマーク初期値（5.3-a）＋dmuグリッド多点スタート（5.3-c）＋収束検算（境界張り付き・振幅ゼロ・競合解の曖昧さ・残差の谷幅） |
-| `src/indices.py` | 成分波からの ΔT・RI・SI、ECG＋脈波からの PWTT |
+| `src/indices.py` | 成分波からの ΔT・RI・SI、R波検出（Pan-Tompkins型）、ECG＋脈波からの PWTT |
 | `src/beats.py` | 拍切り出し（心電図基準・2階微分foot）・SQI v0・拍頭揃えアンサンブル・ノイズ推定と拍数の適応決定 |
 | `src/synth.py` | 真値既知の合成PPG（切痕あり／DN-less） |
 | `src/models.py` | 対照モデル（PWTT型）と提案モデル（K(SI,RI)補正）、症例単位k-fold CV（リーク禁止）、前提検証・増分価値 |
 | `src/stats.py` | percentage error（Critchley）・Bland-Altman・4象限concordance・症例単位ブートストラップCI |
 | `src/synth_cohort.py` | 真値既知の合成コホート（effect/null）— モデル・統計の機構検証用 |
 | `tests/test_pda_synthetic.py` | C-4 の検証（上記結果を再現） |
+| `tests/test_r_peak_detection.py` | R波検出の頑健性（アーチファクト耐性・T波誤検出）の検証 |
 | `tests/test_beat_segmentation.py` | 拍の切り出し（重複切痕の二重検出）と整列の検証 |
 | `tests/test_pipeline_synthetic.py` | Phase 3〜5 の機構検証（有意差の検出＋偽陽性ガード） |
 | `tests/test_index_variants.py` | SI・RI の定義候補の同定性比較（SAP凍結の根拠） |
 | `tests/test_ensemble_adaptive.py` | アンサンブル拍数の適応決定の検証（ノイズ推定・棄却規準） |
 | `tests/test_reference_independence.py` | 参照COの血圧依存による偽の改善を見抜けるかの検証（SAP §7） |
+| `scripts/05_diagnose_waveform.py` | 実波形の素性診断（値の分布・R波揃え平均テンプレート・テンプレートへのPDA当てはめ） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
 | `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。Macで実行 |
 
