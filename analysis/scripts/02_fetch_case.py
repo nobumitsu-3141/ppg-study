@@ -64,20 +64,36 @@ def main() -> None:
     print(f"  相対ノイズ {sig:.4f} → アンサンブル {n_ens} 拍"
           f"{'' if reachable else '（★目標未達。本解析ではこのウィンドウを棄却）'}")
 
-    # ノイズに応じた拍数で平均 → PDA
-    for k in range(0, min(len(good), 4 * n_ens) - n_ens + 1, n_ens):
-        chunk = [seg_p[a:b] for a, b in good[k:k + n_ens]]
-        if len(chunk) < n_ens:
-            break
-        y = ensemble_average(chunk)
+    # ノイズに応じた拍数で平均 → PDA。
+    # 本解析(03)は60秒ウィンドウ内の全区間の中央値を使うので、ここでも全区間を集計する。
+    dts, ris, n_try, n_ok = [], [], 0, 0
+    for k in range(0, len(good) - n_ens + 1, n_ens):
+        n_try += 1
+        y = ensemble_average([seg_p[a:b] for a, b in good[k:k + n_ens]])
         t = np.arange(len(y)) / FS
         try:
             fit = fit_beat(t, y)
-            m = si_ri_from_fit(fit, height_m=None)
-            print(f"  beats {k}-{k+n_ens-1}: dT={m['dt_s']*1000:.0f} ms  RI={m['ri']:.2f}  "
-                  f"ok={fit['ok']} nrmse={fit['nrmse']:.3f}")
-        except Exception as e:
-            print(f"  beats {k}-{k+n_ens-1}: fit failed ({e})")
+        except Exception:
+            continue
+        if not fit.get("ok", False):
+            continue
+        n_ok += 1
+        m = si_ri_from_fit(fit, height_m=None)
+        dts.append(m["dt_s"] * 1000)
+        ris.append(m["ri"])
+    print(f"  PDA: {n_try} 区間中 {n_ok} 区間が収束検算を通過 ({n_ok/max(n_try,1):.0%})")
+    if dts:
+        d, r = np.array(dts), np.array(ris)
+        print(f"    ΔT 中央値 {np.median(d):.0f} ms "
+              f"(IQR {np.percentile(d,25):.0f}–{np.percentile(d,75):.0f})")
+        print(f"    RI 中央値 {np.median(r):.2f} "
+              f"(IQR {np.percentile(r,25):.2f}–{np.percentile(r,75):.2f})"
+              f"  → 本解析はこの中央値をウィンドウの値として使う")
+        print(f"    先頭4区間: " + ", ".join(f"ΔT{a:.0f}/RI{b:.2f}" for a, b in zip(d[:4], r[:4])))
+        if np.median(r) < 0.1 or np.median(r) > 1.0:
+            print("    ★ RI が生理的範囲(0.1–1.0)の外。この症例は要検討")
+    else:
+        print("    ★ 収束した区間なし。この症例は解析対象から外す候補")
 
     pw = pwtt_series(seg_e, seg_p, FS)
     if pw.size:

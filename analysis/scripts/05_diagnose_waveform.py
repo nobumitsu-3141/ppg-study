@@ -85,8 +85,13 @@ def main() -> None:
         # --- テンプレート1拍にPDAを当てて、この症例が分解可能かを判定する ---
         from src.pda import fit_beat
         from src.indices import si_ri_from_fit
+        # 拍頭（収縮期ピーク手前の谷）から次拍の直前までを1拍として切り出す。
+        # 立ち上がり点から切ると先頭が非ゼロになり、定数項の無いモデルが破綻する。
         i_end = min(pre + int(rr_med * FS), len(tpl)) if np.isfinite(rr_med) else len(tpl)
-        seg = tpl[i_up - int(0.02 * FS) if i_up > int(0.02 * FS) else 0:i_end]
+        i_foot = int(np.argmin(tpl[:i_pk + 1])) if i_pk > 0 else 0
+        seg = tpl[i_foot:i_end]
+        print(f"   （1拍の切り出し: R波から {(i_foot-pre)/FS*1000:+.0f} ms 〜 "
+              f"{(i_end-pre)/FS*1000:+.0f} ms）")
         if seg.size > int(0.2 * FS):
             try:
                 f = fit_beat(np.arange(len(seg)) / FS, seg)

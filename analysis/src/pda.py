@@ -172,6 +172,11 @@ def fit_beat(
         ],
         "rss": rss,
         "nrmse": nrmse,
+        # valley_width_s は診断用に返すが ok 判定には使わない。
+        # 別解に落ちた拍と正しい解の拍で 谷幅/ΔT がともに中央値 0.21 と重なり、
+        # どこに閾値を置いても弁別できないことを合成データで確認した
+        # （閾値0.40〜0.60 で正しい解 23/23 を保持する一方、誤った解も 16/17 が通過）。
+        # 誤った解への防壁は前処理側の実効ノイズ管理（src/beats.required_ensemble_size）。
         "checks": {
             "boundary_stick": boundary_stick,
             "amp_zero": amp_zero,
