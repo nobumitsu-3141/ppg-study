@@ -89,8 +89,8 @@ K(SI,RI)補正→症例単位5-fold CV→ブートストラップCI の一連を
 
 ## VitalDB（事前①）の実行順
 
-※ 事前に vitaldb.net でアカウント登録・利用規約に同意（P0-1）、
-   倫理委員会への該当性照会の回答を確認（P0-2）してから。
+前提条件はいずれも充足済み: vitaldb.net の登録・規約同意（P0-1, 2026-08-25）、
+倫理委員会の該当性照会（P0-2, 2026-08-28「審査不要」との回答）。
 
 ```bash
 python3 scripts/00_download_lists.py   # 症例・トラック一覧の取得
@@ -123,7 +123,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `tests/test_index_variants.py` | SI・RI の定義候補の同定性比較（SAP凍結の根拠） |
 | `tests/test_ensemble_adaptive.py` | アンサンブル拍数の適応決定の検証（ノイズ推定・棄却規準） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
-| `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。P0-2通過後にMacで実行 |
+| `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。Macで実行 |
 
 ## 注意
 

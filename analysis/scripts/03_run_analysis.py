@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Phase 2〜5: VitalDB実データでの本解析ランナー（v0）。
 
-★ 実行は P0-2（倫理委員会の該当性照会への回答確認）を通過してから。Macで実行する。
-   クラウドセッションからは vitaldb.net に接続できない。
+GATE P0-2（倫理委員会の該当性照会）は 2026-08-28 に通過済み（審査不要との回答）。
+Macで実行する — クラウドセッションからは vitaldb.net に接続できない。
 
 実行例:
   python3 scripts/03_run_analysis.py                 # 先頭20例でパイロット
@@ -184,7 +184,7 @@ def main() -> None:
     if not tc_path.exists():
         print("data/target_cases.csv がありません。\n"
               "先に scripts/00_download_lists.py と scripts/01_track_inventory.py を実行してください。\n"
-              "（P0-2: 倫理委員会の回答確認後・Mac上で）")
+              "（Mac上で実行すること。クラウドからは vitaldb.net に接続できない）")
         raise SystemExit(1)
     import pandas as pd
     tc = pd.read_csv(tc_path)
