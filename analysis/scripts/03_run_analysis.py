@@ -46,17 +46,25 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 FEAT = DATA / "features"
 FS = 500.0
 WIN_S = 60.0                      # 特徴量ウィンドウ長 [s]
-DEVICE_PRIORITY = ["Vigileo", "EV1000", "Vigilance", "CardioQ"]
+# 参照COの優先順: 熱希釈（Vigilance II = 肺動脈カテ）を最優先にする。
+# FloTrac系（Vigileo/EV1000）のCOは動脈圧波形から導出されるため、
+# 本研究が解析するのと近い信号領域に由来する。両方を持つ症例では
+# 独立性の高い熱希釈を参照に採る。
+DEVICE_PRIORITY = ["Vigilance", "Vigileo", "EV1000", "CardioQ"]
 MIN_WINDOWS = 12                  # 症例採用に必要な有効ウィンドウ数（較正1+評価11以上）
 
 
 # ---------------------------------------------------------------- 特徴量抽出
 def pick_device(row, forced: str | None) -> str | None:
-    """target_cases.csv の保有フラグから参照CO装置を1つ選ぶ。"""
+    """target_cases.csv の保有フラグから参照CO装置を1つ選ぶ。
+
+    列名は 01_track_inventory.py が書く `{装置}_CO`（COトラックを実際に持つ症例）。
+    CI/SV/SVI しか無い症例は解析に使えないので対象外。
+    """
     if forced:
-        return forced if row.get(f"co_{forced}", False) else None
+        return forced if row.get(f"{forced}_CO", False) else None
     for dev in DEVICE_PRIORITY:
-        if row.get(f"co_{dev}", False):
+        if row.get(f"{dev}_CO", False):
             return dev
     return None
 
