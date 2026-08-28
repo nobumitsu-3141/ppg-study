@@ -136,6 +136,55 @@ def crossval(cases: list[dict], n_folds: int = 5, seed: int = 0,
     return out
 
 
+def premise_by_case(cases: list[dict]) -> dict:
+    """§7.1 の診断版: 前提検証が「偽」なのか「ノイズで薄まっている」のかを切り分ける。
+
+    プール回帰の r² が 0 近傍になる経路は3つある:
+      A 前提が本当に成り立たない（血管指標は ΔPWTT を説明しない）
+      B 測定ノイズによる希釈（ΔT・RI・PWTT の推定誤差が大きく、回帰が減衰する）
+      C 症例ごとに係数の向きが違い、プールで打ち消し合う
+
+    区別の手掛かり:
+      - 隣接ウィンドウの自己相関: 血行動態は分単位で持続するので、
+        真の信号なら高いはず。0 近傍なら測定ノイズが支配的（→B）
+      - 症例内回帰（切片つき）の r² 分布と係数の符号の揃い方（→C の検出）
+    """
+    rows = []
+    for c in cases:
+        d = _deltas(c)
+        y = d["dpwtt_rel"]
+        n = len(y)
+        if n < 8:
+            continue
+        X = np.column_stack([np.ones(n), d["dsi"], d["dri"]])
+        coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+        resid = y - X @ coef
+        sst = float(np.sum((y - y.mean()) ** 2))
+        r2 = 1.0 - float(np.sum(resid ** 2)) / max(sst, 1e-12)
+
+        def _ac1(x):
+            x = np.asarray(x, float)
+            if len(x) < 3 or np.std(x) < 1e-12:
+                return float("nan")
+            return float(np.corrcoef(x[:-1], x[1:])[0, 1])
+
+        w = c["windows"]
+        rows.append({"caseid": c.get("caseid"), "n": n, "r2": r2,
+                     "b_dsi": float(coef[1]), "b_dri": float(coef[2]),
+                     "ac_pwtt": _ac1(w["pwtt"]), "ac_si": _ac1(w["si"]),
+                     "ac_ri": _ac1(w["ri"])})
+    r2s = np.array([r["r2"] for r in rows])
+    b1 = np.array([r["b_dsi"] for r in rows])
+    return {
+        "per_case": rows,
+        "r2_median": float(np.median(r2s)) if len(r2s) else float("nan"),
+        "sign_consistency": float(max((b1 > 0).mean(), (b1 < 0).mean())) if len(b1) else float("nan"),
+        "ac_pwtt_median": float(np.nanmedian([r["ac_pwtt"] for r in rows])),
+        "ac_si_median": float(np.nanmedian([r["ac_si"] for r in rows])),
+        "ac_ri_median": float(np.nanmedian([r["ac_ri"] for r in rows])),
+    }
+
+
 def incremental_value(cases: list[dict], n_folds: int = 5, seed: int = 0) -> dict:
     """SAP §7.3: 血圧を超える増分価値があるか。
 

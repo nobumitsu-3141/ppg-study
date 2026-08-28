@@ -40,7 +40,8 @@ from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
                        estimate_noise, required_ensemble_size)
 from src.pda import fit_beat  # noqa: E402
 from src.indices import si_ri_from_fit, pwtt_series, detect_r_peaks  # noqa: E402
-from src.models import crossval, premise_test, incremental_value  # noqa: E402
+from src.models import (crossval, premise_test, premise_by_case,  # noqa: E402
+                        incremental_value)
 from src.stats import bootstrap_diff_ci, bland_altman, concordance_4q  # noqa: E402
 
 DATA = Path(__file__).resolve().parent.parent / "data"
@@ -220,6 +221,21 @@ def report(cases: list[dict]) -> None:
           f"  (n={pt['n_windows']:,} ウィンドウ)")
     print(f"  係数 ΔΔT%: {pt['beta_dsi']:+.3f}  ΔRI%: {pt['beta_dri']:+.3f}")
     print("  ★ 主要評価が有意でも、ここが 0 近傍なら「参照側の性質への追随」を疑う（§7.6）")
+
+    pd_ = premise_by_case(cases)
+    print("\n== §7.1 診断（r²≈0 の原因切り分け: 前提が偽か・ノイズ希釈か・符号打ち消しか） ==")
+    print(f"  隣接ウィンドウの自己相関（信号なら高い・ノイズなら0近傍）:")
+    print(f"    PWTT {pd_['ac_pwtt_median']:+.2f} / ΔT系(SI) {pd_['ac_si_median']:+.2f} / "
+          f"RI {pd_['ac_ri_median']:+.2f}")
+    print(f"  症例内回帰（切片つき）: r² 中央値 {pd_['r2_median']:.3f} / "
+          f"ΔΔT%係数の符号の揃い {pd_['sign_consistency']:.0%}")
+    print(f"  読み方: 自己相関が高いのに r² が低い → 前提が実際に弱い")
+    print(f"          自己相関が 0 近傍 → 測定ノイズ希釈（先に測定品質を直す）")
+    print(f"          プール r² 低 × 症例内 r² 高 × 符号バラバラ → 症例間で関係が異方向")
+    for r in pd_["per_case"]:
+        print(f"    case {r['caseid']:>5}: n={r['n']:3d} r²={r['r2']:.2f} "
+              f"β_ΔT={r['b_dsi']:+.2f} β_RI={r['b_dri']:+.2f} "
+              f"ac[pwtt {r['ac_pwtt']:+.2f} / si {r['ac_si']:+.2f} / ri {r['ac_ri']:+.2f}]")
 
     iv = incremental_value(cases)
     print("\n== SAP §7.3 血圧との関係（記述のみ・判別力は無い） ==")
