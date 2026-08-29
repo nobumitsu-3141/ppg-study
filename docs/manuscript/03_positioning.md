@@ -83,14 +83,14 @@ Sugo & Ochiai 2025 (PMID 41047412)（日本光電）は、応答時間の異な�
 
 ## 3. 骨子・原稿への反映（作業項目）
 
-- [ ] Introduction に Ishihara & Tsutsui 2014 を追加（「メーカー側が提唱した仮説」）
-- [ ] Introduction/Discussion に Ding & Zhang 2016、**Yang 2021** を追加し違いを明示
-- [ ] Discussion の装置遅延の段落を「発見」から「VitalDBでの最初の定量」に書き換え、
+- [x] Introduction に Ishihara & Tsutsui 2014 を追加（「メーカー側が提唱した仮説」）
+- [x] Introduction/Discussion に Ding & Zhang 2016、**Yang 2021** を追加し違いを明示
+- [x] Discussion の装置遅延の段落を「発見」から「VitalDBでの最初の定量」に書き換え、
       Ruffolo 2025 と PulseDB 2022 を引用
-- [ ] **陽性対照（年齢とΔT/SIの関係）を追加解析として実施**。
+- [x] **陽性対照（年齢とΔT/SIの関係）を追加解析として実施**。
       SAPは凍結済みのため、**探索的追加解析として改訂履歴に日付つきで記載**する
       （事前指定の主解析には手を触れない。これは正直な運用であり、隠すと問題になる）
-- [ ] Methods に PLETHチャネルの前処理・AGCの有無に関する記述を追加
+- [x] Methods に PLETHチャネルの前処理・AGCの有無に関する記述を追加
 - [ ] 当てはめの同定可能性（信頼区間・除外率）を Results 表3 に追加
 - [ ] Limitations に「表示用処理波形であること」を明記
 
