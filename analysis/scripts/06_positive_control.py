@@ -94,8 +94,33 @@ def load_cases(min_windows: int) -> pd.DataFrame:
             "map": float(np.nanmedian(df["map"])),
             "n_windows": len(df),
             "device": meta.get("device", "?"),
+            # --- 症例内でのRI・ΔTの可測性（症例間のAGC正規化では壊れない量） ---
+            "ri_cv": _cv(df["ri"]),
+            "dt_cv": _cv(df["si"]),        # SI と ΔT の変動係数は同一
+            "r_ri_map": _corr(df["ri"], df["map"]),
+            "r_dt_map": _corr(df["si"], df["map"]),
         })
     return pd.DataFrame(rows)
+
+
+def _cv(s) -> float:
+    """症例内の変動係数。0近傍なら「その症例では動いていない」。"""
+    v = pd.to_numeric(s, errors="coerce").to_numpy(dtype=float)
+    v = v[np.isfinite(v)]
+    if v.size < 5:
+        return np.nan
+    m = np.median(v)
+    return float(np.std(v) / abs(m)) if m != 0 else np.nan
+
+
+def _corr(a, b) -> float:
+    """症例内のSpearman相関（可測性の確認用。仮説の検証ではない）。"""
+    x = pd.to_numeric(a, errors="coerce")
+    y = pd.to_numeric(b, errors="coerce")
+    m = x.notna() & y.notna()
+    if m.sum() < 10:
+        return np.nan
+    return float(x[m].rank().corr(y[m].rank()))
 
 
 def spearman(x: np.ndarray, y: np.ndarray):
@@ -155,6 +180,21 @@ def report(df: pd.DataFrame) -> None:
             print(f"  {label}あり ΔT 中央値 {g1.median():.0f} ms (n={len(g1)}) / "
                   f"なし {g0.median():.0f} ms (n={len(g0)})   期待: ありの方が短い")
 
+    print("\n--- 症例内でのRIの可測性（症例間のAGC正規化とは独立の確認） ---")
+    print("  自動利得制御は症例ごとに振幅を正規化するため、症例間の比較を壊しても")
+    print("  症例内の相対変化は保ちうる。主解析が使うのは症例内のΔRI%である。")
+    for label, cv_col, r_col in [("RI", "ri_cv", "r_ri_map"), ("ΔT", "dt_cv", "r_dt_map")]:
+        cv = df[cv_col].dropna()
+        rr = df[r_col].dropna()
+        if len(cv) >= 10:
+            print(f"  {label:3s}: 症例内変動係数 中央値 {cv.median():.3f} "
+                  f"(IQR {cv.quantile(.25):.3f}–{cv.quantile(.75):.3f})   "
+                  f"平均血圧との症例内相関 中央値 {rr.median():+.3f} "
+                  f"(|r|>0.3 の症例 {100 * (rr.abs() > 0.3).mean():.0f}%)")
+    print("  読み方: 変動係数が0近傍なら症例内でも動いていない（可測性なし）。")
+    print("          十分に動き、血圧と一定の相関を示すなら症例内では可測である")
+    print("          （相関の存在は仮説の支持ではない。共線性のため §7.3 参照）")
+
     print("\n--- 陰性対照（無関係であるべき） ---")
     r, ci, p, n = spearman(df["caseid"].to_numpy().astype(float),
                            df["dt_ms"].to_numpy())
@@ -180,11 +220,17 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--min-windows", type=int, default=12,
                     help="症例採用に必要な有効ウィンドウ数（主解析と同じ既定12）")
+    ap.add_argument("--min-age", type=float, default=None,
+                    help="この年齢未満の症例を除く（例: 18 で成人限定。小児の影響を確認）")
     ap.add_argument("--csv", type=str, default=None,
                     help="症例代表値をCSVに書き出す")
     args = ap.parse_args()
 
     df = load_cases(args.min_windows)
+    if args.min_age is not None:
+        n0 = len(df)
+        df = df[df["age"] >= args.min_age]
+        print(f"年齢 {args.min_age:.0f} 歳以上に限定: {n0} → {len(df)} 例")
     if args.csv:
         df.to_csv(args.csv, index=False)
         print(f"書き出し: {args.csv}")
