@@ -332,7 +332,10 @@ def main() -> None:
         for caseid, dev, h in todo:
             f = FEAT / f"case_{caseid}.csv"
             if f.exists():
-                results[caseid] = pd.read_csv(f)
+                try:
+                    results[caseid] = pd.read_csv(f)
+                except Exception:
+                    pass  # 有効ウィンドウ0の症例は空CSVになる。採用基準(<12)未満なので集計対象外
     elif args.jobs > 1:
         from concurrent.futures import ProcessPoolExecutor, as_completed
         print(f"{len(todo)} 症例を {args.jobs} 並列で処理します …", flush=True)

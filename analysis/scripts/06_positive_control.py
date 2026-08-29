@@ -123,6 +123,27 @@ def _corr(a, b) -> float:
     return float(x[m].rank().corr(y[m].rank()))
 
 
+def _partial_negcontrol(df: pd.DataFrame):
+    """caseid と ΔT の順位相関から、年齢・HR・MAP・装置の寄与を除いた残差相関。"""
+    d = df.dropna(subset=["age", "hr", "map", "dt_ms"]).copy()
+    if len(d) < 30:
+        return None
+    X = np.column_stack([
+        d["age"].rank(), d["hr"].rank(), d["map"].rank(),
+        *[(d["device"] == dev).astype(float) for dev in d["device"].unique()[:-1]],
+        np.ones(len(d)),
+    ])
+    def resid(v):
+        y = pd.Series(v).rank().to_numpy(dtype=float)
+        coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+        return y - X @ coef
+    rx = resid(d["caseid"].to_numpy(dtype=float))
+    ry = resid(d["dt_ms"].to_numpy(dtype=float))
+    if np.std(rx) < 1e-12 or np.std(ry) < 1e-12:
+        return None
+    return float(np.corrcoef(rx, ry)[0, 1])
+
+
 def spearman(x: np.ndarray, y: np.ndarray):
     """Spearman の順位相関と、Fisher 変換による95%CI・両側p値。
 
@@ -201,6 +222,13 @@ def report(df: pd.DataFrame) -> None:
     if np.isfinite(r):
         print(f"  症例ID vs ΔT: rho {r:+.3f} [95%CI {ci[0]:+.3f}, {ci[1]:+.3f}] "
               f"p={p:.4f}   期待: 0近傍")
+    # 僅かな相関が出た場合の切り分け: 年齢等ではcaseidとの相関が無いことは確認済み
+    # （対象874例で caseid vs age rho=-0.025）。症例構成（心拍数・血圧・参照装置）の
+    # 経時ドリフトを介した見かけの相関かどうかを、順位回帰の残差で調整して確かめる。
+    adj = _partial_negcontrol(df)
+    if adj is not None:
+        print(f"  調整後（年齢・HR・MAP・装置で調整）: rho {adj:+.3f}   "
+              f"期待: 0近傍に縮小すれば症例構成ドリフトで説明可能")
 
     print("\n--- 読み方（事前に決めておく） ---")
     print("  加齢とΔTに期待どおりの負の相関があり、陰性対照が0近傍")
