@@ -63,7 +63,10 @@ def load_cases(min_windows: int) -> pd.DataFrame:
         csv_p = FEAT / f"case_{cid}.csv"
         if not csv_p.exists():
             continue
-        df = pd.read_csv(csv_p)
+        try:
+            df = pd.read_csv(csv_p)
+        except Exception:
+            continue  # 本解析の実行中に書き込み途中のファイルを掴んだ場合は飛ばす
         if len(df) < min_windows or "si" not in df.columns:
             continue
         if cid not in demo.index:
