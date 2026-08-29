@@ -3,8 +3,9 @@
 **Status**: Complete draft with the confirmatory-run results filled in (862 cases,
 161,737 windows). Remaining `[[ ]]` placeholders: demographics table, rejection tallies,
 full-cohort positive-control rerun, prespecified sensitivity analyses, Zenodo DOI.
-Reference list at the end; entries marked ★ still need their bibliographic details
-confirmed against PubMed before submission.
+Reference list at the end; all previously flagged entries verified against
+PubMed/publisher records on 2026-08-30 (two corrections applied: Sugo & Ochiai journal;
+Basso author list and DOI).
 
 **Framing**: reference-free premise test as the primary analysis (see `00_outline_ja.md` §0).
 
@@ -581,9 +582,10 @@ its vascular component, are the more promising direction.
 
 ## References
 
-> **確認事項**: 以下は文献調査で得た書誌情報。**投稿前に全件PubMedで原典を開き、
-> 巻・号・頁と著者名を照合すること**（★印は書誌の一部が未照合）。
-> 引用形式は投稿先の規定に合わせて整形する。
+> **照合状況（2026-08-30）**: ★印だった10件を PubMed・出版社ページ・DOIリゾルバで
+> 照合済み。訂正2件: Sugo & Ochiai 2025 の誌名は BMC Biomed Eng、Basso 2024 の
+> 著者は Basso G, Haakma R, Vullings R（DOI は ad9662 が正）。
+> 引用形式は投稿先の規定に合わせて最終整形する。
 
 ### esCCO / PWTT法
 
@@ -620,8 +622,10 @@ its vascular component, are the more promising direction.
     pulse wave transit time and thoracic impedance exhibit limited agreement with
     thermodilution method during orthotopic liver transplantation. Anesth Analg.
     2018;126(1):85-92. PMID 28598912.
-11. ★ Sugo Y, Ochiai R. [CO monitor response-time comparison requiring 20–30 min moving
-    averages]. 2025. PMID 41047412. **← 副次解析のウィンドウ長への批判に先回りするため必読**
+11. Sugo Y, Ochiai R. Moving-average processing enables accurate quantification of time
+    delay and compares the trending ability of cardiac output monitors with different
+    response times. BMC Biomed Eng. 2025;7(1):14. PMID 41047412.
+    doi:10.1186/s42490-025-00101-8 **← 副次解析のウィンドウ長への批判に先回り**
 
 ### 前駆出期（PEP）とPWTTの分解 ― 考察の骨格
 
@@ -649,8 +653,10 @@ its vascular component, are the more promising direction.
 18. Millasseau SC, Ritter JM, Takazawa K, Chowienczyk PJ. Contour analysis of the
     photoplethysmographic pulse measured at the finger. J Hypertens. 2006;24(8):1449-56.
     PMID 16877944.
-19. Rubins U, et al. [First Gaussian-fit reflection index]. 2008. PMID 18855034. ★
-20. Goswami D, et al. [First decomposition-derived SI and RI]. 2010. PMID 20734136. ★
+19. Rubins U. Finger and ear photoplethysmogram waveform analysis by fitting with
+    Gaussians. Med Biol Eng Comput. 2008;46(12):1271-1276. PMID 18855034.
+20. Goswami D, Chaudhuri K, Mukherjee J. A new two-pulse synthesis model for digital
+    volume pulse signal analysis. Cardiovasc Eng. 2010;10(3):109-117. PMID 20734136.
 21. Epstein S, Vergnaud AC, Elliott P, Chowienczyk P, Alastruey J. Numerical assessment of
     the stiffness index. Annu Int Conf IEEE Eng Med Biol Soc. 2014;2014:1969-72.
     PMID 25570367.
@@ -659,10 +665,12 @@ its vascular component, are the more promising direction.
     2015;36(9):1801-25. PMID 26235798. **← 振幅比がすべての血管参照に対して失敗**
 23. Tigges T, et al. Model selection for the pulse decomposition analysis of fingertip
     photoplethysmograms. Annu Int Conf IEEE Eng Med Biol Soc. 2017. PMID 29060777.
-24. Fleischhauer V, et al. [Two-kernel Gamma+Gaussian most robust to noise and motion].
-    2020. PMID 33021236. ★ **← 2カーネル選択の根拠（Methods）**
-25. Basso G, Sorelli M, Bocchi L, et al. A skewed-Gaussian model for pulse decomposition
-    analysis of photoplethysmography signals. Physiol Meas. 2024;45(11). PMID 39577084.
+24. Fleischhauer V, Ruprecht N, Sorelli M, Bocchi L, Zaunseder S. Pulse decomposition
+    analysis in photoplethysmography imaging. Physiol Meas. 2020;41(9):095009.
+    PMID 33021236. **← 2カーネル選択の根拠（Methods）。投稿先第一候補と同じ誌**
+25. Basso G, Haakma R, Vullings R. A skewed-Gaussian model for pulse decomposition
+    analysis of photoplethysmography signals. Physiol Meas. 2024;45(11):115006.
+    PMID 39577084. doi:10.1088/1361-6579/ad9662
     **← 本研究の当てはめモデルの原典。投稿先第一候補と同じ誌**
 
 ### PTT・PPGを用いた補正の先行研究（新規性の申告に必須）
@@ -670,9 +678,10 @@ its vascular component, are the more promising direction.
 26. Ding XR, Zhang YT, Liu J, Dai WX, Tsang HK. Continuous cuffless blood pressure estimation
     using pulse transit time and photoplethysmogram intensity ratio. IEEE Trans Biomed Eng.
     2016;63(5):964-72. PMID 26415147.
-27. ★ Yang S, et al. [PPG morphology combined with pulse arrival time for blood pressure,
-    VitalDB, 1,376 patients]. IEEE J Biomed Health Inform. 2021. PMID 32750963.
-    **← 引用漏れは隠蔽と受け取られる。最重要**
+27. Yang S, Sohn J, Lee S, Lee J, Kim HC. Estimation and validation of arterial blood
+    pressure using photoplethysmogram morphology features in conjunction with pulse
+    arrival time in large open databases. IEEE J Biomed Health Inform.
+    2021;25(4):1018-1030. PMID 32750963. **← 引用漏れは隠蔽と受け取られる。最重要**
 28. Lee J, Yang S, Lee S, Kim HC. Analysis of pulse arrival time as an indicator of blood
     pressure in a large surgical biosignal database. J Clin Med. 2019;8(11):1773.
     PMID 31653002.
@@ -701,11 +710,18 @@ its vascular component, are the more promising direction.
 34. Joosten A, Desebbe O, Suehiro K, et al. Accuracy and precision of non-invasive cardiac
     output monitoring devices in perioperative medicine: a systematic review and
     meta-analysis. Br J Anaesth. 2017;118(3):298-310. PMID 28203792.
-35. ★ Altman DG, Bland JM. Absence of evidence is not evidence of absence. BMJ. 1995.
-    PMID 7647644. **← 精密な陰性であると主張する根拠**
-36. ★ von Elm E, Altman DG, Egger M, et al. The Strengthening the Reporting of Observational
-    Studies in Epidemiology (STROBE) statement. 2007. PMID 18064739.
-37. ★ Montenij LJ, et al. [Method-comparison checklist for cardiac output validation].
-    2016. PMID 27199309. **← 麻酔科の査読者が当てるチェックリスト**
-38. ★ Md Lazin bin Md Lazim MR, et al. [Heart rate confounding in PTT-based estimation].
-    2020. PMID 32290168.
+35. Altman DG, Bland JM. Absence of evidence is not evidence of absence. BMJ.
+    1995;311(7003):485. PMID 7647644. **← 精密な陰性であると主張する根拠**
+36. von Elm E, Altman DG, Egger M, Pocock SJ, Gøtzsche PC, Vandenbroucke JP; STROBE
+    Initiative. The Strengthening the Reporting of Observational Studies in Epidemiology
+    (STROBE) statement: guidelines for reporting observational studies. Lancet.
+    2007;370(9596):1453-1457. PMID 18064739.（このPMIDはLancet版。他誌の同時掲載と識別子を混ぜない）
+37. Montenij LJ, Buhre WF, Jansen JR, Kruitwagen CL, de Waal EE. Methodology of method
+    comparison studies evaluating the validity of cardiac output monitors: a stepwise
+    approach and checklist. Br J Anaesth. 2016;116(6):750-758. PMID 27199309.
+    **← 麻酔科の査読者が当てるチェックリスト**
+38. Md Lazin Md Lazim MR, Aminuddin A, Chellappan K, Ugusman A, Hamid AA,
+    Wan Ahmad WAN, Mohamad MSF. Is heart rate a confounding factor for
+    photoplethysmography markers? A systematic review. Int J Environ Res Public Health.
+    2020;17(7):2591. PMID 32290168.
+    **← 実はPPG血管指標へのHR交絡の系統的レビュー。感度解析Bの引用として最適**
