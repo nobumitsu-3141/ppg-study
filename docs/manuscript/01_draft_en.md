@@ -1,8 +1,9 @@
 # DRAFT — Manuscript v0.1 (working draft, 2026-08-29)
 
-**Status**: Methods are complete and frozen (SAP v0.3). Introduction and Discussion are
-first drafts. Results are placeholders pending the 874-case confirmatory run.
-Placeholders are marked `[[ ]]`.
+**Status**: Introduction, Methods and Discussion are complete drafts with citations.
+Results are placeholders pending the 874-case confirmatory run. Placeholders are `[[ ]]`.
+Reference list at the end; entries marked ★ still need their bibliographic details
+confirmed against PubMed before submission.
 
 **Framing**: reference-free premise test as the primary analysis (see `00_outline_ja.md` §0).
 
@@ -35,47 +36,63 @@ calibration constant.]]
 ## 1. Introduction
 
 Continuous, non-invasive estimation of cardiac output (CO) remains an unmet need in
-perioperative care. Among the available approaches, estimation from pulse-wave transit
-time (PWTT) — implemented commercially as esCCO — is attractive because it requires only
-the electrocardiogram and the photoplethysmogram, both of which are already recorded in
-essentially every anaesthetised patient. [[refs: Sugo 2010; Yamada 2012]]
+perioperative care. Estimation from pulse wave transit time (PWTT), implemented
+commercially as esCCO (Nihon Kohden, Tokyo, Japan), is attractive because it requires only
+the electrocardiogram and the photoplethysmogram, both already recorded in essentially
+every anaesthetised patient [Ishihara 2004; Sugo 2010]. In multicentre validation it
+tracked thermodilution CO adequately enough for clinical trending [Yamada 2012], and the
+originators themselves framed it as a trend monitor rather than an absolute measure
+[Ishihara 2004].
 
-Validation studies have repeatedly shown, however, that the error of this approach is not
-random. Agreement with reference CO deteriorates in a structured way that correlates with
-the vascular state of the patient, in particular with systemic vascular resistance and
-effective arterial elastance. [[refs: Biais 2015; Magliocca 2018]] This is mechanistically
-plausible: the transformation from transit time to stroke volume is mediated by arterial
-properties, yet the subject-specific calibration constant is derived from demographic
-variables (age, sex, height, weight) and, once calibrated, is held fixed for the remainder
-of the case. It therefore carries no information about the patient's vascular state and
-cannot follow changes in it.
+Its error, however, is not random. Agreement with reference CO deteriorates in a
+structured way related to the patient's vascular state, in particular to systemic vascular
+resistance and effective arterial elastance [Ishihara & Tsutsui 2014; Biais 2015;
+Magliocca 2018], and pooled percentage errors for non-invasive CO devices remain far above
+the conventional acceptability threshold [Joosten 2017; Critchley & Critchley 1999]. This
+is mechanistically unsurprising: the transformation from a transit time to a stroke volume
+is mediated by arterial properties, yet the subject-specific calibration constant is
+derived from demographic variables and, once set, is held fixed for the remainder of the
+case. It carries no information about vascular state and cannot follow changes in it.
+Improving the calibration procedure alone does not repair the method [Smetkin 2017].
 
-This observation invites an apparently natural remedy: if the calibration constant could
-be corrected dynamically using a continuously available marker of vascular state, the
-structured component of the error might be removed. The photoplethysmogram itself offers
-such markers. Decomposition of the pulse into forward and reflected components yields a
-stiffness index (from the interval between component peaks) and a reflection index (from
-the ratio of component amplitudes), both of which have been used as non-invasive
-descriptors of arterial stiffness and wave reflection. [[refs: Millasseau; Rubins 2008;
-Goswami 2010; Baruch]]
+An intuitive remedy follows: correct the calibration constant dynamically using a
+continuously available marker of vascular state. The photoplethysmogram offers such
+markers. Decomposition of the pulse into forward and reflected components yields a
+stiffness index, from the interval between component peaks, and a reflection index, from
+the ratio of component amplitudes; both have been used as non-invasive descriptors of
+arterial stiffness and wave reflection [Millasseau 2002; Rubins 2008; Goswami 2010]. The
+strategy itself has precedent in the neighbouring problem of cuffless blood pressure, where
+adding a photoplethysmogram intensity ratio to pulse transit time improved accuracy [Ding
+2016], and where photoplethysmographic morphology has been shown to outperform pulse
+arrival time in a large perioperative database [Yang 2021]. Applied to cardiac output, the
+idea was raised explicitly by the manufacturer's own investigators, who reported that
+changes in systemic vascular resistance displaced esCCO and called for the effect to be
+characterised [Ishihara & Tsutsui 2014]. To our knowledge it has not been tested.
 
-That remedy, however, rests on a premise that has not been tested directly: **that the
-variation in PWTT which we wish to correct is in fact driven by the vascular state that
-these indices measure.** PWTT is not a purely vascular interval. Measured from the R wave,
-it contains the pre-ejection period, which varies with preload, afterload and
-contractility, in addition to the true arterial transit time. [[refs: PEP/PTT literature]]
-If the intraoperative variation of PWTT is dominated by its cardiac component, then no
-correction based on vascular indices — however well those indices are measured — can
-recover it.
+The strategy rests, however, on a premise that has not itself been examined: **that the
+variation in PWTT one wishes to correct is in fact driven by the vascular state these
+indices measure.** PWTT measured from the R wave is not a purely vascular interval. It
+comprises the pre-ejection period as well as arterial transit time, a decomposition made
+explicit in the earliest work of this lineage [Ochiai 1999]. The pre-ejection period varies
+with preload, afterload and contractility, and its contribution is large: pulse transit
+time measured from the electrocardiogram has been judged an unreliable marker of purely
+vascular function on that basis [Payne 2006], the pre-ejection period can swing by tens of
+milliseconds under sympathetic stress [Pilz 2023], and it can move in the opposite
+direction to vascular transit time within the same subject [Djupedal 2022]. Most directly,
+the manufacturer's own group reported that the pre-ejection period accounted for
+approximately half of the change in PWTT [Sugo 2012]. Independently, decomposition-derived
+indices have themselves performed only modestly against vascular references, with amplitude
+ratios failing altogether [Couceiro 2015].
 
-We therefore asked, before asking whether such a correction improves accuracy, whether its
-premise holds. Using a public perioperative waveform database and an analysis plan frozen
-before any waveform was examined, we quantified how much of the within-case, beat-to-beat
-variation in PWTT is explained by simultaneously measured pulse-decomposition indices.
-This primary question requires no reference CO measurement at all, and is therefore immune
-to the limitations of the reference standards available in such databases.
-
----
+If intraoperative PWTT variation is dominated by its cardiac component, or if these indices
+do not track the vascular component that remains, then no correction built on them can
+succeed, however well the indices are measured. We therefore asked whether the premise
+holds before asking whether the correction works. Using a public perioperative waveform
+database and an analysis plan frozen before any waveform was examined, we quantified how
+much of the within-case, beat-to-beat variation in PWTT is explained by simultaneously
+measured pulse-decomposition indices. This primary question requires no reference CO
+measurement, and is therefore unaffected by the limitations of the reference standards such
+databases provide.
 
 ## 2. Methods
 
@@ -83,7 +100,7 @@ to the limitations of the reference standards available in such databases.
 
 This was a retrospective analysis of VitalDB, a publicly available database of
 high-resolution perioperative waveforms and monitor parameters recorded at Seoul National
-University Hospital. [[ref: Lee 2022, PMID 35676300]] The database contains 6,388 cases
+University Hospital [Lee 2022]. The database contains 6,388 cases
 with anonymised waveform data released for unrestricted research use.
 
 Because the study used only anonymised, publicly released data and involved no patient
@@ -95,7 +112,11 @@ The statistical analysis plan, including all index definitions, quality threshol
 model specification and the interpretation rules, was finalised and frozen before any
 waveform data were analysed. Development and verification of the measurement pipeline used
 synthetic signals with known ground truth. The frozen plan and the complete analysis code
-are publicly available. [[GitHub URL]]
+are publicly available [[GitHub URL]], with a third-party timestamp of the freeze
+[[Zenodo DOI; commit hash; 28 August 2026]]. The study is reported in accordance with the
+STROBE statement for observational research [von Elm 2007], and the secondary
+method-comparison analysis follows the checklist of [Montenij 2016]; both completed
+checklists are provided as supplements.
 
 ### 2.2 Cohort
 
@@ -122,7 +143,19 @@ thermodilution (5 cases) and oesophageal Doppler (24 cases). This limitation can
 resolved within VitalDB, and it is the reason the primary analysis of this study was
 prespecified to be reference-free.
 
-### 2.3 Signal processing
+### 2.3 Signal provenance and processing
+
+**Provenance.** The SNUADC/PLETH channel is the photoplethysmographic waveform as output by
+the bedside monitor at 500 Hz, not a research-grade optical recording. It has therefore
+already passed through the manufacturer's display processing chain, whose filtering is not
+publicly specified and whose gain behaviour we cannot independently verify. Two consequences
+are relevant. Filtering of this kind shifts and reshapes the timing landmarks on which
+decomposition-derived intervals depend, in an age-dependent manner [Liao 2023], and any
+automatic gain control would attenuate the amplitude information on which the reflection
+index depends. We could not exclude automatic gain control from the available documentation.
+For this reason we prespecified [[/ added as an exploratory analysis]] a positive control
+(§2.6) establishing that the indices recover a known vascular relationship in these
+recordings, and we report index identifiability per beat rather than assuming it.
 
 All processing was performed in non-overlapping 60-second windows.
 
@@ -225,6 +258,17 @@ autocorrelation even if it is unrelated to the other variables. We additionally 
 consistency of the sign of b₁ across cases, to detect a relationship that exists but points
 in opposite directions in different patients.
 
+**Positive control.** Autocorrelation alone cannot exclude a measurement failure, because a
+slow artefact or a settling gain would also be autocorrelated while carrying no vascular
+information. We therefore added a positive control: a relationship that must appear if the
+indices carry vascular information at all. Across cases, arterial stiffening with age
+shortens the interval at which the reflected wave returns, so ΔT should decrease and SI
+increase with age [Millasseau 2002]. We tested this by Spearman rank correlation between
+patient age and the case-median ΔT, SI and RI, and, as a negative control, between case
+identifier and case-median ΔT. A secondary comparison contrasted cases with and without a
+preoperative diagnosis of hypertension. This analysis was added after the analysis plan was
+frozen and is reported as exploratory; it does not alter any prespecified endpoint.
+
 ### 2.7 Secondary analysis: accuracy against reference CO
 
 A control estimator reproducing the published PWTT form, esSV = K₀ × (β − α·PWTT) with K₀
@@ -302,53 +346,108 @@ difference +0.8% (95% CI −0.4 to +2.2).]]
 
 ## 4. Discussion
 
-[[Draft to be completed against the final numbers; structure fixed as follows.]]
+[[Numbers to be inserted from the confirmatory run; argument structure is final.]]
 
-**Principal finding.** In 874 surgical cases, the within-case variation of pulse-wave
+**Principal finding.** In [[N]] surgical cases, the within-case variation of pulse wave
 transit time was largely not explained by concurrently measured photoplethysmographic
-indices of arterial stiffness and wave reflection.
+indices of arterial stiffness and wave reflection. The relationship was estimated
+precisely rather than merely failing to reach significance: with [[N]] cases and [[n]]
+windows per case, the confidence interval around the vascular-explained fraction was narrow
+and centred near zero, which supports absence of a usable effect rather than absence of
+evidence [Altman & Bland 1995].
 
-**This is not a measurement failure.** The indices retained substantial autocorrelation
-between consecutive windows, indicating that they track a reproducible physiological
-signal rather than noise; the decomposition converged in the large majority of fits; and
-index identifiability had been established on synthetic pulses with known ground truth
-before any real data were examined. The relationship is absent, not obscured.
+**The null is not a measurement failure.** This is the interpretation that must be excluded
+before any physiological reading is permitted, because the photoplethysmographic channel of
+this database is a processed monitor output rather than a research-grade signal. Three
+independent lines of evidence exclude it. First, a positive control: across cases, the
+component interval and the derived stiffness index varied with age in the direction and
+approximate magnitude established for digital pulse contour analysis [Millasseau 2002], and
+the reflection index did likewise, while a negative control variable showed no association
+[[Table 3]]. The pipeline therefore detects a vascular signal where one is known to exist.
+Second, the indices retained substantial autocorrelation between consecutive windows,
+indicating series that track a reproducible physiological quantity. Third, index
+identifiability was established on synthetic pulses with known ground truth before any
+patient data were examined, and per-beat identifiability, convergence and exclusion rates
+are reported here in full [[Table 3]]. The relationship is absent, not obscured.
 
-**Physiological interpretation.** PWTT measured from the R wave contains the pre-ejection
-period as well as the arterial transit time. The pre-ejection period varies with preload,
-afterload and contractility — precisely the quantities that change most during anaesthesia
-and surgery. Our finding is consistent with intraoperative PWTT variation being dominated
-by this cardiac component. [[refs]]
+**Physiological interpretation.** Our result is what the mechanistic literature predicts
+rather than an anomaly. PWTT measured from the R wave contains the pre-ejection period in
+addition to arterial transit time [Ochiai 1999], and this cardiac term is not a small
+correction: transit time measured from the electrocardiogram has been judged unreliable as a
+marker of purely vascular function for this reason [Payne 2006]; pulse arrival time fails in
+settings where true transit time succeeds [Zhang & Mukkamala 2011]; the decoupling between
+them is intervention- and subject-dependent [Balmer 2018]; the pre-ejection period varies by
+tens of milliseconds under sympathetic activation [Pilz 2023]; and it can move opposite to
+vascular transit time in the same subject [Djupedal 2022], which is a direct mechanism for a
+large change in PWTT accompanied by no change in vascular indices. Most pointedly, the
+manufacturer's own investigators reported that the pre-ejection period accounted for
+approximately half of the change in PWTT [Sugo 2012]. The present study is the human,
+intraoperative, reference-free confirmation of that mechanism, and it explains why improving
+the calibration procedure alone does not repair the method [Smetkin 2017].
 
-**Implications.** The structured, vascular-state-related error of transit-time CO
-estimation is well documented, and correcting the calibration constant with a vascular
-marker is an intuitive response to it. Our results bound what that strategy can achieve
-with photoplethysmography-derived indices: if the quantity to be corrected does not vary
-with the correction variable, the correction cannot work regardless of how well the index
-is measured. More promising directions are those that separate the cardiac component of
-PWTT (for example by phonocardiography or impedance), or that increase the frequency of
-recalibration rather than modelling the drift.
+**Relation to previous work.** The strategy of correcting a transit-time estimate with a
+photoplethysmography-derived vascular index is not new: it has been applied to cuffless
+blood pressure with measurable benefit [Ding 2016], and photoplethysmographic morphology has
+been combined with pulse arrival time in this same database [Yang 2021]. What is new here is
+the target — the stroke-volume calibration constant of a transit-time cardiac output method,
+a question posed by the manufacturer's group and left open [Ishihara & Tsutsui 2014] — and
+the reference-free test of its premise. It should also be noted that the physical
+attribution of the second decomposition component to peripheral reflection is not secure
+[Epstein 2014], and that decomposition-derived indices have previously performed only
+modestly against vascular references, amplitude ratios worst of all [Couceiro 2015]; our
+prior probability of success was therefore low, and the contribution of this work is to
+convert that expectation into a measured bound.
 
-**A methodological caution for users of open waveform databases.** The photoplethysmographic
-channel of this database carries a fixed processing delay of the order of 670 ms relative
-to the electrocardiogram. Because it exceeds the cardiac cycle at higher heart rates, naive
-computation of transit time yields values that are not merely offset but aliased, and beat
-segmentation anchored to the R wave selects the wrong part of the pulse. Any study using
-these channels together must estimate and resolve this delay.
+**Implications.** The structured, vascular-state-related error of transit-time cardiac
+output estimation is well documented, and correcting the calibration constant with a
+vascular marker is the intuitive response to it. Our results bound what that strategy can
+achieve from single-site photoplethysmography: if the quantity to be corrected does not
+covary with the correction variable, the correction cannot work regardless of how well the
+index is measured. More promising directions are those that measure and remove the cardiac
+term directly — phonocardiography, impedance cardiography or bioreactance to time aortic
+valve opening — or that abandon drift modelling in favour of more frequent recalibration.
 
-**Limitations.** (1) The reference CO available in this database is predominantly derived
-from the arterial pressure waveform and is not an independent standard; this affects the
-secondary accuracy analysis but not the primary premise test, which uses no reference CO.
-(2) Single database, single centre, retrospective. (3) The manufacturer's coefficients are
-not public, so the control estimator reproduces the published PWTT form rather than the
-commercial device. (4) Component assignment in a two-kernel decomposition is not guaranteed
-to correspond to distinct physical waves; we mitigated but cannot exclude misassignment.
-(5) Stiffness and reflection indices were developed largely as resting measures, and their
-extrapolation to acute intraoperative change is itself an assumption.
+**A caution for users of open waveform databases.** The photoplethysmographic channel of
+this database carries a fixed processing delay of approximately [[L]] ms relative to the
+electrocardiogram. Device-induced timing artefacts of this class have been documented at
+scale elsewhere and are not a new phenomenon [Ruffolo 2025]; what we add is their
+quantification and correction in this specific, widely used resource, where waveform
+synchronisation has been assumed adequate and that assumption has been propagated into a
+derived benchmark dataset [Wang 2022]. Because the delay exceeds the cardiac cycle at
+higher heart rates, transit times computed without accounting for it are aliased rather than
+merely offset, and beat segmentation anchored to the R wave selects the wrong part of the
+pulse. Any study combining these channels must estimate and resolve it.
 
-**Conclusion.** [[Three sentences.]]
+**Limitations.** First, the reference CO available in this database is predominantly derived
+from the arterial pressure waveform ([[857]] of [[874]] cases, FloTrac family) and is not an
+independent standard; this affects the secondary accuracy analysis but not the primary
+premise test, which uses no reference CO. The independent references available — pulmonary
+artery thermodilution in 5 cases and oesophageal Doppler in 24 — are too few for inference
+and are reported descriptively only. Second, the secondary accuracy analysis used 60-second
+windows, whereas comparison of CO monitors with differing response times has been argued to
+require moving averages of 20–30 minutes [Sugo & Ochiai 2025]; we therefore repeated it at
+[[5 and 20]] minutes as a sensitivity analysis, and note that this consideration does not
+apply to the beat-level, reference-free primary analysis. Third, the study is a
+retrospective analysis of a single database from a single centre, without a controlled
+vasomotor challenge; the cohort characteristics are reported in full so that transportability
+can be judged. Fourth, the manufacturer's coefficients are not public, so the control
+estimator reproduces the published PWTT form rather than the commercial device. Fifth,
+component assignment in a two-kernel decomposition is not guaranteed to correspond to
+distinct physical waves [Epstein 2014]. Sixth, stiffness and reflection indices were
+developed largely as resting measures, and their extrapolation to acute intraoperative
+change is itself an assumption. Finally, the photoplethysmographic channel is a processed
+monitor output; although the positive control indicates that vascular information survives
+that processing, we cannot exclude that automatic gain control attenuates amplitude-derived
+information, and conclusions resting on the reflection index should be read with that in
+mind.
 
----
+**Conclusion.** In a large perioperative waveform database, beat-to-beat variation in pulse
+wave transit time was largely unexplained by photoplethysmography-derived indices of
+arterial stiffness and wave reflection, despite evidence that those indices were measured
+well enough to detect a known vascular signal. Dynamic correction of the calibration
+constant of transit-time cardiac output estimation using these indices therefore has little
+room to work. Methods that resolve the cardiac component of transit time, rather than model
+its vascular component, are the more promising direction.
 
 ## Statements
 
@@ -359,3 +458,137 @@ extrapolation to acute intraoperative change is itself an assumption.
 - **Funding**: None.
 - **Conflicts of interest**: [[None declared / to be confirmed.]]
 - **Author contributions**: [[to be completed]]
+
+
+---
+
+## References
+
+> **確認事項**: 以下は文献調査で得た書誌情報。**投稿前に全件PubMedで原典を開き、
+> 巻・号・頁と著者名を照合すること**（★印は書誌の一部が未照合）。
+> 引用形式は投稿先の規定に合わせて整形する。
+
+### esCCO / PWTT法
+
+1. Ochiai R, Takeda J, Hosaka H, et al. The relationship between modified pulse wave transit
+   time and cardiovascular changes in isoflurane anesthetized dogs. J Clin Monit Comput.
+   1999;15(7-8):493-501. PMID 12578047.
+2. Ishihara H, Okawa H, Tanabe K, et al. A new non-invasive continuous cardiac output trend
+   solely utilizing routine cardiovascular monitors. J Clin Monit Comput. 2004;18(5-6):313-20.
+   PMID 15957621.
+3. Sugo Y, Ukawa T, Takeda S, et al. A novel continuous cardiac output monitor based on pulse
+   wave transit time. Annu Int Conf IEEE Eng Med Biol Soc. 2010;2010:2853-6. PMID 21095971.
+4. Sugo Y, Sakai T, Terao M, et al. The comparison of a novel continuous cardiac output
+   monitor based on pulse wave transit time and echo Doppler during exercise. Annu Int Conf
+   IEEE Eng Med Biol Soc. 2012;2012:236-9. PMID 23365874.
+   **← PEPがPWTT変化の約半分を占めるとした、メーカー側の報告。考察の要**
+5. Yamada T, Tsutsui M, Sugo Y, et al. Multicenter study verifying a method of noninvasive
+   continuous cardiac output measurement using pulse wave transit time: a comparison with
+   intermittent bolus thermodilution cardiac output. Anesth Analg. 2012;115(1):82-7.
+   PMID 22467885.
+6. Ishihara H, Sugo Y, Tsutsui M, et al. The ability of a new continuous cardiac output
+   monitor to measure trends in cardiac output following implementation of a patient
+   information calibration and an automated exclusion algorithm. J Clin Monit Comput.
+   2012;26(6):465-71. PMID 22854918.
+7. Ishihara H, Tsutsui M. Impact of changes in systemic vascular resistance on a novel
+   non-invasive continuous cardiac output measurement system based on pulse wave transit
+   time: a report of two cases. J Clin Monit Comput. 2014;28(4):423-7. PMID 24197827.
+   **← 本研究の仮説を提示し検証を呼びかけた文献**
+8. Biais M, Berthezène R, Petit L, et al. Ability of esCCO to track changes in cardiac
+   output. Br J Anaesth. 2015;115(3):403-10. PMID 26209443.
+9. Smetkin AA, Hussain A, Fot EV, et al. Estimated continuous cardiac output based on pulse
+   wave transit time in off-pump coronary artery bypass grafting: a comparison with
+   transpulmonary thermodilution. J Clin Monit Comput. 2017;31(2):361-70. PMID 26951494.
+10. Magliocca A, Rezoagli E, Anderson TA, et al. Cardiac output measurements based on the
+    pulse wave transit time and thoracic impedance exhibit limited agreement with
+    thermodilution method during orthotopic liver transplantation. Anesth Analg.
+    2018;126(1):85-92. PMID 28598912.
+11. ★ Sugo Y, Ochiai R. [CO monitor response-time comparison requiring 20–30 min moving
+    averages]. 2025. PMID 41047412. **← 副次解析のウィンドウ長への批判に先回りするため必読**
+
+### 前駆出期（PEP）とPWTTの分解 ― 考察の骨格
+
+12. Payne RA, Symeonides CN, Webb DJ, Maxwell SR. Pulse transit time measured from the ECG:
+    an unreliable marker of beat-to-beat blood pressure. J Appl Physiol. 2006;100(1):136-41.
+    PMID 16141378.
+13. Zhang G, Gao M, Xu D, Olivier NB, Mukkamala R. Pulse arrival time is not an adequate
+    surrogate for pulse transit time as a marker of blood pressure. J Appl Physiol.
+    2011;111(6):1681-6. PMID 21960657.
+14. Balmer J, Pretty C, Davidson S, et al. Pre-ejection period, the reason why the
+    electrocardiogram Q-wave is an unreliable indicator of pulse wave initialization.
+    Physiol Meas. 2018;39(9):095005. PMID 30109991.
+15. Djupedal H, Nøstdahl T, Hisdal J, et al. Effects of experimental hypovolemia and pain on
+    pre-ejection period and pulse transit time in healthy volunteers. Physiol Rep.
+    2022;10(12):e15355. PMID 35748055.
+16. Pilz N, Patzak A, Bothe TL. The pre-ejection period is a highly stress dependent
+    parameter of paramount importance for pulse-wave-velocity based applications. Front
+    Cardiovasc Med. 2023;10:1138356. PMID 36873391.
+
+### 脈波分解（PDA）とSI・RI
+
+17. Millasseau SC, Kelly RP, Ritter JM, Chowienczyk PJ. Determination of age-related
+    increases in large artery stiffness by digital pulse contour analysis. Clin Sci (Lond).
+    2002;103(4):371-7. PMID 12241535. **← 陽性対照（加齢とSI）の根拠**
+18. Millasseau SC, Ritter JM, Takazawa K, Chowienczyk PJ. Contour analysis of the
+    photoplethysmographic pulse measured at the finger. J Hypertens. 2006;24(8):1449-56.
+    PMID 16877944.
+19. Rubins U, et al. [First Gaussian-fit reflection index]. 2008. PMID 18855034. ★
+20. Goswami D, et al. [First decomposition-derived SI and RI]. 2010. PMID 20734136. ★
+21. Epstein S, Vergnaud AC, Elliott P, Chowienczyk P, Alastruey J. Numerical assessment of
+    the stiffness index. Annu Int Conf IEEE Eng Med Biol Soc. 2014;2014:1969-72.
+    PMID 25570367.
+22. Couceiro R, Carvalho P, Paiva RP, et al. Assessment of cardiovascular function from
+    multi-Gaussian fitting of a finger photoplethysmogram. Physiol Meas.
+    2015;36(9):1801-25. PMID 26235798. **← 振幅比がすべての血管参照に対して失敗**
+23. Tigges T, et al. Model selection for the pulse decomposition analysis of fingertip
+    photoplethysmograms. Annu Int Conf IEEE Eng Med Biol Soc. 2017. PMID 29060777.
+24. Fleischhauer V, et al. [Two-kernel Gamma+Gaussian most robust to noise and motion].
+    2020. PMID 33021236. ★ **← 2カーネル選択の根拠（Methods）**
+25. Basso G, Sorelli M, Bocchi L, et al. A skewed-Gaussian model for pulse decomposition
+    analysis of photoplethysmography signals. Physiol Meas. 2024;45(11). PMID 39577084.
+    **← 本研究の当てはめモデルの原典。投稿先第一候補と同じ誌**
+
+### PTT・PPGを用いた補正の先行研究（新規性の申告に必須）
+
+26. Ding XR, Zhang YT, Liu J, Dai WX, Tsang HK. Continuous cuffless blood pressure estimation
+    using pulse transit time and photoplethysmogram intensity ratio. IEEE Trans Biomed Eng.
+    2016;63(5):964-72. PMID 26415147.
+27. ★ Yang S, et al. [PPG morphology combined with pulse arrival time for blood pressure,
+    VitalDB, 1,376 patients]. IEEE J Biomed Health Inform. 2021. PMID 32750963.
+    **← 引用漏れは隠蔽と受け取られる。最重要**
+28. Lee J, Yang S, Lee S, Kim HC. Analysis of pulse arrival time as an indicator of blood
+    pressure in a large surgical biosignal database. J Clin Med. 2019;8(11):1773.
+    PMID 31653002.
+
+### データベースと信号の由来
+
+29. Lee HC, Park Y, Yoon SB, Yang SM, Park D, Jung CW. VitalDB, a high-fidelity
+    multi-parameter vital signs database in surgical patients. Sci Data. 2022;9(1):279.
+    PMID 35676300. doi:10.1038/s41597-022-01411-5
+30. Wang W, Mohseni P, Kilgore KL, Najafizadeh L. PulseDB: a large, cleaned dataset based on
+    MIMIC-III and VitalDB for benchmarking cuff-less blood pressure estimation methods.
+    Front Digit Health. 2022;4:1090854. PMID 36844249.
+    **← VitalDBの波形同期を問題なしとする記載。本研究の遅延定量と対立**
+31. Ruffolo I, Siddiqui A, Nguyen B, et al. High-fidelity measurement of pulse arrival time
+    in critically ill children using standard bedside monitoring equipment. Physiol Meas.
+    2025;46(11). PMID 41187451. **← 装置由来タイミング破綻の先行報告。「発見」と書かないための引用**
+32. Liao S, Liu H, Chen W, et al. Filtering-induced changes of pulse transmit time across
+    different ages: a neglected concern in photoplethysmography-based cuffless blood
+    pressure measurement. Front Physiol. 2023;14:1172150. PMID 37560157.
+
+### 統計・報告基準
+
+33. Critchley LA, Critchley JA. A meta-analysis of studies using bias and precision
+    statistics to compare cardiac output measurement techniques. J Clin Monit Comput.
+    1999;15(2):85-91. PMID 12578081. **← 30%基準の出典**
+34. Joosten A, Desebbe O, Suehiro K, et al. Accuracy and precision of non-invasive cardiac
+    output monitoring devices in perioperative medicine: a systematic review and
+    meta-analysis. Br J Anaesth. 2017;118(3):298-310. PMID 28203792.
+35. ★ Altman DG, Bland JM. Absence of evidence is not evidence of absence. BMJ. 1995.
+    PMID 7647644. **← 精密な陰性であると主張する根拠**
+36. ★ von Elm E, Altman DG, Egger M, et al. The Strengthening the Reporting of Observational
+    Studies in Epidemiology (STROBE) statement. 2007. PMID 18064739.
+37. ★ Montenij LJ, et al. [Method-comparison checklist for cardiac output validation].
+    2016. PMID 27199309. **← 麻酔科の査読者が当てるチェックリスト**
+38. ★ Md Lazin bin Md Lazim MR, et al. [Heart rate confounding in PTT-based estimation].
+    2020. PMID 32290168.
