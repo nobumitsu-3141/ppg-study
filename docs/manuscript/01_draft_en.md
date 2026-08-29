@@ -384,9 +384,22 @@ uninformative.** The same positive control that ΔT passed, RI failed: across [[
 the reflection index showed no association whatever with age ([[ρ = −0.001, p = 0.99]]).
 Within cases it behaved as noise rather than as physiology, varying with a coefficient of
 variation of [[0.68]] — threefold that of ΔT — despite being a bounded ratio, while
-correlating less strongly with mean arterial pressure than ΔT did. The most likely
-explanation is that automatic gain control in the monitor's display processing chain
-attenuates precisely the amplitude information from which RI is derived. We therefore report
+correlating less strongly with mean arterial pressure than ΔT did.
+
+To identify what class of signal processing could produce this specific pattern, we applied
+candidate operations to synthetic pulses of known composition. Uniform gain normalisation,
+whether per beat or per record, left both indices exactly intact, as it must: the reflection
+index is a ratio of two component heights within one beat and is invariant to any scaling of
+that beat. Gentle high-pass filtering (0.3–0.5 Hz) also preserved both, and stronger
+high-pass filtering degraded the fit itself so that beats were rejected rather than
+mismeasured. Only a gain that varies *within* the beat, on a timescale comparable to the
+separation of the forward and reflected components, reproduced the observed pattern:
+with a 0.25 s time constant the reflection index was displaced by [[+61%]] while ΔT moved
+by only [[−9 ms]]. A time constant of 1 s — slower than one beat — had no effect at all.
+The pattern we observe is therefore consistent with a fast, within-beat gain adjustment in
+the monitor's processing chain, and not with the simple amplitude normalisation usually
+invoked. We emphasise that this narrows the candidate mechanism; it is not evidence that
+this particular database applies such processing. We therefore report
 the reflection index but draw no conclusion from it: its null is a statement about what can
 be recovered from this signal source, not about physiology. This independently reproduces
 the finding of Couceiro and colleagues, whose amplitude-derived indices failed against every
