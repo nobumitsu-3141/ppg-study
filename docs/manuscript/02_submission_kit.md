@@ -158,3 +158,25 @@ manuscript.
    指摘を反映してから次へ出す。同じ指摘で二度落ちないようにする
 3. **大幅修正（major revision）** → 原則すべての指摘に一つずつ回答する。
    同意できない指摘にも根拠を示して丁寧に反論してよい（黙殺だけは避ける）
+
+---
+
+## 5. Zenodo で事前登録に第三者DOIを付ける手順（無料・約10分）
+
+GitHubのコミット履歴だけでは「事後に書き換えていない」ことの第三者証明として弱い。
+Zenodo（CERN運営・無料）でリポジトリのスナップショットにDOIを発行する。
+
+1. https://zenodo.org を開き **「Sign in with GitHub」** でログイン
+2. 右上メニュー → **GitHub** ページで `nobumitsu-3141/ppg-study` のスイッチを **ON**
+3. GitHubのリポジトリページ → **Releases → Draft a new release**
+   - Tag: `sap-v0.3`（作成済み。SAP凍結コミット 407f226 を指す）
+   - Title: `SAP v0.3 (frozen measurement pipeline)`
+   - 説明: Statistical analysis plan frozen on 2026-08-28 (commit 407f226),
+     before the confirmatory analysis. Archived for timestamping.
+   - **Publish release**
+4. 数分後にZenodoが自動アーカイブし **DOI (10.5281/zenodo.XXXXXXX)** を発行
+5. 原稿 §2.1 の `[[Zenodo DOI; commit hash; 28 August 2026]]` に記入
+
+注意: DOI発行日は今日になるが、タグの指すコミット日付とGitHub履歴が凍結日を
+裏づける。原稿には「frozen on 28 August 2026 (commit 407f226; archived at doi:...)」
+と正確に書く。
