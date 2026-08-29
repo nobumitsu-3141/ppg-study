@@ -1,8 +1,9 @@
 # DRAFT — Manuscript v0.1 (working draft, 2026-08-29)
 
-**Status**: Complete draft with the confirmatory-run results filled in (862 cases,
-161,737 windows). Remaining `[[ ]]` placeholders: demographics table, rejection tallies,
-full-cohort positive-control rerun, prespecified sensitivity analyses, Zenodo DOI.
+**Status**: Complete draft; all confirmatory-run numbers, Table 1, references and the
+Zenodo DOI are in. Remaining `[[ ]]`: the re-extraction sensitivity analyses (Table 5,
+variants run in progress), assembly of display Tables 2–4 from the Results text at
+submission formatting, and the author's personal attestations (COI wording).
 Reference list at the end; all previously flagged entries verified against
 PubMed/publisher records on 2026-08-30 (two corrections applied: Sugo & Ochiai journal;
 Basso author list and DOI).
@@ -121,7 +122,7 @@ University Hospital [Lee 2022]. The database contains 6,388 cases
 with anonymised waveform data released for unrestricted research use.
 
 Because the study used only anonymised, publicly released data and involved no patient
-contact, the institutional ethics committee of [[Goto Chuoh Hospital]] was formally
+contact, the institutional ethics committee of Goto Chuoh Hospital was formally
 consulted and responded that ethics committee review was not required. The written
 response is retained by the authors.
 
@@ -171,7 +172,7 @@ are relevant. Filtering of this kind shifts and reshapes the timing landmarks on
 decomposition-derived intervals depend, in an age-dependent manner [Liao 2023], and any
 automatic gain control would attenuate the amplitude information on which the reflection
 index depends. We could not exclude automatic gain control from the available documentation.
-For this reason we prespecified [[/ added as an exploratory analysis]] a positive control
+For this reason we added, as an exploratory analysis, a positive control
 (§2.6) establishing that the indices recover a known vascular relationship in these
 recordings, and we report index identifiability per beat rather than assuming it.
 
@@ -219,7 +220,7 @@ before fitting.
 
 Ensemble-averaged beats were decomposed into two skewed-Gaussian components (Azzalini
 form), representing the forward and reflected waves, by non-linear least squares from eight
-starting points. [[refs: Basso 2024; Fleischhauer 2020]] A fit was accepted only if it
+starting points [Fleischhauer 2020; Basso 2024]. A fit was accepted only if it
 passed three convergence checks: no parameter resting on a bound (excluding the skewness
 bounds), no component collapsed to zero amplitude, and no competing solution of comparable
 residual.
@@ -339,8 +340,10 @@ cases) analysed separately; and exclusion of the 15 cases used during pipeline d
 
 ### 2.10 Software
 
-[[Python 3.x, NumPy, SciPy, pandas. All analysis code, the frozen analysis plan and the
-synthetic-data test suite are available at <GitHub URL>.]]
+Analyses were performed in Python 3.9.6 with NumPy 2.0.2, SciPy 1.13.1 and pandas 2.3.3.
+All analysis code, the frozen analysis plan and the synthetic-data verification suite are
+available at https://github.com/nobumitsu-3141/ppg-study (frozen plan archived at
+doi:10.5281/zenodo.22167118).
 
 ---
 
@@ -437,7 +440,7 @@ Excluding the 15 cases used during pipeline development left every conclusion un
 within-case r² median 0.102 with 78% sign consistency; percentage error 26.9% in both
 arms, difference +0.2 percentage points, 95% CI +0.1 to +0.3). In the 16 cases with a
 reference independent of the arterial pressure waveform, results are reported
-descriptively in [[Table 5]]. Aggregating windows to 5 and 20 minutes reduced percentage
+descriptively in Table 5. Aggregating windows to 5 and 20 minutes reduced percentage
 error in both arms, as expected when comparing monitors with differing response times
 (control 26.9% at 60 s; 23.9% at 5 min, 844 cases; 21.5% at 20 min in the 606 cases with
 sufficient data), but the correction improved accuracy at no aggregation level (difference
@@ -453,8 +456,6 @@ target, SQI variation.]]
 ---
 
 ## 4. Discussion
-
-[[Numbers to be inserted from the confirmatory run; argument structure is final.]]
 
 **Principal finding.** In 862 surgical cases, the within-case variation of pulse wave
 transit time was largely not explained by the concurrently measured, and independently
@@ -479,7 +480,7 @@ one is known to exist. Second, ΔT retained substantial autocorrelation between 
 windows, indicating a series that tracks a reproducible physiological quantity. Third, index
 identifiability was established on synthetic pulses with known ground truth before any
 patient data were examined, and per-beat identifiability, convergence and exclusion rates
-are reported in full [[Table 3]]. For ΔT the relationship with PWTT is absent, not obscured.
+are reported in full (Table 3). For ΔT the relationship with PWTT is absent, not obscured.
 
 **For the reflection index, validity could not be established, and its result is therefore
 uninformative.** The same positive control that ΔT passed, RI failed: across 849 adults
@@ -496,8 +497,8 @@ that beat. Gentle high-pass filtering (0.3–0.5 Hz) also preserved both, and st
 high-pass filtering degraded the fit itself so that beats were rejected rather than
 mismeasured. Only a gain that varies *within* the beat, on a timescale comparable to the
 separation of the forward and reflected components, reproduced the observed pattern:
-with a 0.25 s time constant the reflection index was displaced by [[+61%]] while ΔT moved
-by only [[−9 ms]]. A time constant of 1 s — slower than one beat — had no effect at all.
+with a 0.25 s time constant the reflection index was displaced by +61% while ΔT moved
+by only −9 ms. A time constant of 1 s — slower than one beat — had no effect at all.
 The pattern we observe is therefore consistent with a fast, within-beat gain adjustment in
 the monitor's processing chain, and not with the simple amplitude normalisation usually
 invoked. We emphasise that this narrows the candidate mechanism; it is not evidence that
@@ -597,15 +598,19 @@ its vascular component, are the more promising direction.
 
 ## Statements
 
-- **Ethics**: [[The ethics committee of Goto Chuoh Hospital determined that review was not
-  required for this analysis of anonymised public data (response dated 2026-08-28).]]
+- **Ethics**: This study analysed only anonymised, publicly released data with no patient
+  contact. The ethics committee of Goto Chuoh Hospital determined that committee review was
+  not required (response dated 28 August 2026). Collection of the source database was
+  approved by the Institutional Review Board of Seoul National University Hospital with
+  waiver of written informed consent [Lee 2022].
 - **Data availability**: VitalDB is publicly available at https://vitaldb.net .
   All analysis code, the prespecified analysis plan and the synthetic-data verification
   suite are at https://github.com/nobumitsu-3141/ppg-study (frozen plan archived at
   doi:10.5281/zenodo.22167118).
 - **Funding**: None.
-- **Conflicts of interest**: [[None declared / to be confirmed.]]
-- **Author contributions**: [[to be completed]]
+- **Conflicts of interest**: None declared. [[投稿前に先生ご自身の最終確認を]]
+- **Author contributions**: NK designed the study, wrote the analysis code, performed
+  the analysis and wrote the manuscript.
 
 
 ---
