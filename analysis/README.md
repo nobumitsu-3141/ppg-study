@@ -233,10 +233,14 @@ PDA の当てはめが律速で、1回あたり約80ms（重なりの強い波�
 
 ```bash
 cd ~/ppg-study/analysis && source .venv/bin/activate
-nohup caffeinate -i python scripts/03_run_analysis.py --limit 874 --jobs 6 \
+nohup caffeinate -i python scripts/03_run_analysis.py --limit 874 --jobs 8 \
   > full_run.log 2>&1 &
 ```
 
+- `--jobs` は **CPUコア数と同じでよい**（`sysctl -n hw.ncpu` で確認）。実測プロファイル
+  （2026-08-28、実症例2例）では1症例あたりダウンロード約5秒（全体の1%）・PDAフィット98%と
+  完全にCPU律速で、メモリは1ワーカー約0.4〜0.5GBのため、8コア16GB機なら `--jobs 8` が最適。
+  コア数を超える値にしても速くならない
 - `caffeinate` はmacOS標準（追加インストール不要）。ただし **MacBookで蓋を閉じると
   眠って止まる**ので、ノート機なら電源につないで蓋を開けたままにする（デスクトップ機は不要）
 - 進捗を見る: `tail -f ~/ppg-study/analysis/full_run.log`（Ctrl+Cは表示を止めるだけで解析は続く）
