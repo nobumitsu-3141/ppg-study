@@ -1,7 +1,8 @@
 # DRAFT — Manuscript v0.1 (working draft, 2026-08-29)
 
-**Status**: Introduction, Methods and Discussion are complete drafts with citations.
-Results are placeholders pending the 874-case confirmatory run. Placeholders are `[[ ]]`.
+**Status**: Complete draft with the confirmatory-run results filled in (862 cases,
+161,737 windows). Remaining `[[ ]]` placeholders: demographics table, rejection tallies,
+full-cohort positive-control rerun, prespecified sensitivity analyses, Zenodo DOI.
 Reference list at the end; entries marked ★ still need their bibliographic details
 confirmed against PubMed before submission.
 
@@ -12,24 +13,39 @@ confirmed against PubMed before submission.
 ## Title
 
 Photoplethysmographic arterial stiffness does not explain intraoperative pulse-wave
-transit time variation: a prespecified, reference-free analysis of 874 surgical cases
+transit time variation: a prespecified, reference-free analysis of 862 surgical cases
 
 ## Abstract (structured, ~250 words — write last)
 
-**Background.** [[Transit-time based CO estimation; error correlates with vascular state;
-calibration constant contains no vascular information; the untested premise.]]
+**Background.** Cardiac output estimation from pulse wave transit time (PWTT) carries an
+error that correlates with vascular state, yet its calibration constant is fixed after
+calibration. Correcting it with photoplethysmography-derived vascular indices has been
+proposed but rests on an untested premise: that intraoperative PWTT variation reflects the
+vascular state those indices measure.
 
-**Methods.** [[874 cases from VitalDB with PPG, ECG, arterial pressure and continuous CO.
-Prespecified analysis plan frozen before analysis. Primary analysis reference-free:
-within-case regression of change in PWTT on changes in pulse-decomposition-derived
-transit time (ΔT) and reflection index (RI).]]
+**Methods.** From the VitalDB open perioperative database, 874 cases had photoplethysmogram,
+ECG, arterial pressure and a continuous cardiac output track; 862 were analysable under a
+statistical analysis plan frozen before any waveform was examined. The primary analysis
+used no reference cardiac output: within-case change in PWTT was regressed on concurrent
+relative changes in the pulse-decomposition component interval (ΔT, as stiffness index) and
+reflection index. An exploratory positive control tested whether the indices reproduce the
+known association of arterial stiffness with age.
 
-**Results.** [[r² =; coefficients =; measurement quality evidence; secondary accuracy
-analysis.]]
+**Results.** Across 161,737 sixty-second windows, vascular indices explained none of the
+within-case PWTT variation (pooled r² = 0.000; coefficient per ΔSI% −0.027, per ΔRI%
+−0.003). The coefficient's sign was consistent with the vascular hypothesis in 78% of
+cases, indicating a directionally correct but quantitatively negligible vascular component.
+Signals were reproducible (lag-1 autocorrelation: PWTT +0.75, ΔT +0.50), and ΔT reproduced
+the expected age association, whereas the reflection index did not and was judged
+uninterpretable in this signal source. Correcting the calibration constant did not improve
+accuracy (percentage error 27.2% versus 26.9%; difference +0.2 percentage points, 95% CI
++0.1 to +0.4).
 
-**Conclusions.** [[Beat-to-beat PWTT variation is largely not explained by PPG-derived
-vascular indices, bounding the achievable benefit of vascular correction of the
-calibration constant.]]
+**Conclusions.** The premise underlying vascular correction of PWTT-based cardiac output
+fails quantitatively: the vascular component of intraoperative PWTT variation, though
+directionally detectable, is two orders of magnitude too small to support calibration
+correction from single-site photoplethysmography. This is consistent with dominance of the
+pre-ejection period.
 
 ---
 
@@ -332,23 +348,53 @@ synthetic-data test suite are available at <GitHub URL>.]]
 > given so that the narrative can be assembled immediately when the run completes.
 
 ### 3.1 Cohort and data yield
-[[Figure 1 flow diagram. Cases analysed of 874; windows analysed; rejection breakdown;
-patient and procedure characteristics in Table 1.]]
+
+Of the 874 eligible cases, 862 (98.6%) yielded at least 12 valid windows and entered the
+analysis, contributing 161,737 sixty-second windows (Figure 1). The reference CO device in
+the analysed cases was EV1000 in 545, Vigileo in 301, CardioQ in 11 and Vigilance II in 5;
+846 of 862 (98.1%) references were therefore arterial-waveform-derived, and the 16 cases
+with an independent reference are reported descriptively only. [[Table 1: demographics and
+procedure characteristics. Rejection breakdown by reason from the case metadata.]]
 
 ### 3.2 Measurement quality
-[[Table 3. Pilot: pulse decomposition accepted in 77% of fits; lag-1 autocorrelation
-PWTT +0.79, ΔT-based index +0.65, RI +0.47.]]
+
+Consecutive-window lag-1 autocorrelation was +0.75 for PWTT, +0.50 for the ΔT-based index
+and +0.43 for RI, indicating series that track reproducible physiology rather than noise
+(Table 3). In the exploratory positive control ([[interim, 566 adults; full-cohort rerun
+pending]]), ΔT shortened with age (ρ = −0.180, 95% CI −0.258 to −0.099) and was shorter in
+patients with preoperative hypertension, while the negative-control association was null;
+RI showed no association with age (ρ = −0.001) and was accordingly judged uninterpretable
+in this signal source (§2.6). [[Fit-convergence tallies and per-gate rejection rates.]]
 
 ### 3.3 Primary analysis — premise test
-[[Table 2, Figure 2. Pilot: pooled r² ≈ 0; within-case r² median 0.103; sign of the ΔT
-coefficient negative in 10 of 15 cases with all |coefficients| ≤ 0.05.]]
+
+Across 161,737 windows in 862 cases, the vascular indices explained none of the within-case
+variation in PWTT: pooled r² = 0.000, with coefficients of −0.027 per ΔSI% and −0.003 per
+ΔRI% (Table 2, Figure 2). The within-case coefficient on ΔSI% carried the sign predicted by
+the vascular hypothesis in 78% of cases — far beyond chance in 862 cases — but its
+magnitude was negligible: a 10% change in the stiffness index predicted a 0.27% change in
+PWTT, against within-case PWTT excursions of several percent. The median within-case r² was
+0.101. The vascular component of intraoperative PWTT variation is therefore directionally
+detectable but roughly two orders of magnitude too small to be useful for correction.
 
 ### 3.4 Secondary analysis — accuracy
-[[Table 4, Figure 4. Pilot: percentage error 27.8% control versus 27.6% proposed;
-difference +0.8% (95% CI −0.4 to +2.2).]]
+
+The vascular correction did not improve agreement with the reference: median percentage
+error was 26.9% for the control PWTT-type estimator and 27.2% for the corrected estimator,
+a difference of +0.2 percentage points (95% CI +0.1 to +0.4) — that is, the correction
+produced a small but statistically significant worsening, consistent with adding noise
+rather than information. Bland–Altman bias of the corrected estimator was −0.07 L/min
+(limits of agreement −3.28 to +3.14 L/min) and four-quadrant concordance (0.5 L/min
+exclusion zone) was 0.56 (Table 4, Figure 4). Descriptively, percentage error was flat
+across adjustment sets (control 26.9%; with blood pressure 27.0%; with vascular indices
+27.2%; with both 27.1%), as prespecified these comparisons carry no interpretive weight
+(§2.8). The prespecified futility criterion was met.
 
 ### 3.5 Sensitivity analyses
-[[Table 5.]]
+
+[[Table 5: pilot-15 exclusion; alternative index definitions (onset-to-onset ΔT, a₂/a₁,
+area ratio); three-kernel decomposition; ensemble noise target 0.002/0.004; SQI variation;
+accuracy at 5- and 20-minute windows; non-FloTrac subset (16 cases, descriptive).]]
 
 ---
 
@@ -356,13 +402,15 @@ difference +0.8% (95% CI −0.4 to +2.2).]]
 
 [[Numbers to be inserted from the confirmatory run; argument structure is final.]]
 
-**Principal finding.** In [[N]] surgical cases, the within-case variation of pulse wave
+**Principal finding.** In 862 surgical cases, the within-case variation of pulse wave
 transit time was largely not explained by the concurrently measured, and independently
 validated, photoplethysmographic index of arterial stiffness (ΔT). The relationship was estimated
-precisely rather than merely failing to reach significance: with [[N]] cases and [[n]]
-windows per case, the confidence interval around the vascular-explained fraction was narrow
-and centred near zero, which supports absence of a usable effect rather than absence of
-evidence [Altman & Bland 1995].
+precisely rather than merely failing to reach significance: with 862 cases contributing
+161,737 windows, the vascular-explained fraction of PWTT variation was 0.000, and the
+coefficient on the stiffness index, though directionally consistent with the vascular
+hypothesis in 78% of cases, corresponds to a 0.27% change in PWTT per 10% change in the
+index. This is a precise estimate of a negligible effect, not an absence of evidence
+[Altman & Bland 1995].
 
 **For the timing index, the null is not a measurement failure.** This interpretation must be
 excluded before any physiological reading is permitted, because the photoplethysmographic
@@ -456,10 +504,10 @@ merely offset, and beat segmentation anchored to the R wave selects the wrong pa
 pulse. Any study combining these channels must estimate and resolve it.
 
 **Limitations.** First, the reference CO available in this database is predominantly derived
-from the arterial pressure waveform ([[857]] of [[874]] cases, FloTrac family) and is not an
+from the arterial pressure waveform (846 of 862 analysed cases, FloTrac family) and is not an
 independent standard; this affects the secondary accuracy analysis but not the primary
 premise test, which uses no reference CO. The independent references available — pulmonary
-artery thermodilution in 5 cases and oesophageal Doppler in 24 — are too few for inference
+artery thermodilution in 5 cases and oesophageal Doppler in 11 — are too few for inference
 and are reported descriptively only. Second, the secondary accuracy analysis used 60-second
 windows, whereas comparison of CO monitors with differing response times has been argued to
 require moving averages of 20–30 minutes [Sugo & Ochiai 2025]; we therefore repeated it at
