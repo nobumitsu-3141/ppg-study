@@ -289,6 +289,10 @@ def main() -> None:
                     help="フェッチせず data/features/ のキャッシュだけで統計を出す")
     ap.add_argument("--jobs", type=int, default=1,
                     help="並列に処理する症例数（既定1。CPUコア数-1 程度が目安）")
+    ap.add_argument("--exclude", type=str, default=None,
+                    help="除外する caseid（カンマ区切り）。SAP §3.1 で事前指定した"
+                         "パイロット15例除外の感度解析用: "
+                         "--stats-only --exclude 17,19,22,25,26,29,34,38,52,60,68,70,83,94,97")
     args = ap.parse_args()
 
     tc_path = DATA / "target_cases.csv"
@@ -315,6 +319,12 @@ def main() -> None:
             continue
         n_try += 1
         todo.append((caseid, dev, h_cm / 100.0))
+
+    if args.exclude:
+        excl = {int(x) for x in args.exclude.split(",") if x.strip()}
+        n0 = len(todo)
+        todo = [a for a in todo if a[0] not in excl]
+        print(f"--exclude: {n0 - len(todo)} 例を除外（感度解析）", flush=True)
 
     # --- 特徴量抽出（症例単位で並列化できる。取得はI/O律速、PDAはCPU律速） ---
     results = {}
