@@ -168,14 +168,20 @@ Zenodo（CERN運営・無料）でリポジトリのスナップショットにD
 
 1. https://zenodo.org を開き **「Sign in with GitHub」** でログイン
 2. 右上メニュー → **GitHub** ページで `nobumitsu-3141/ppg-study` のスイッチを **ON**
-3. GitHubのリポジトリページ → **Releases → Draft a new release**
-   - Tag: `sap-v0.3`（作成済み。SAP凍結コミット 407f226 を指す）
+3. **先にMacのターミナルでタグを作る**（クラウドからはタグをプッシュできないため）:
+   ```
+   cd ~/ppg-study
+   git tag -a sap-v0.3 407f226 -m "SAP v0.3 freeze (2026-08-28)"
+   git push origin sap-v0.3
+   ```
+4. GitHubのリポジトリページ → **Releases → Draft a new release**
+   - Tag: `sap-v0.3`（↑で作成したもの。SAP凍結コミット 407f226 を指す）
    - Title: `SAP v0.3 (frozen measurement pipeline)`
    - 説明: Statistical analysis plan frozen on 2026-08-28 (commit 407f226),
      before the confirmatory analysis. Archived for timestamping.
    - **Publish release**
-4. 数分後にZenodoが自動アーカイブし **DOI (10.5281/zenodo.XXXXXXX)** を発行
-5. 原稿 §2.1 の `[[Zenodo DOI; commit hash; 28 August 2026]]` に記入
+5. 数分後にZenodoが自動アーカイブし **DOI (10.5281/zenodo.XXXXXXX)** を発行
+6. 原稿 §2.1 の `[[Zenodo DOI; commit hash; 28 August 2026]]` に記入
 
 注意: DOI発行日は今日になるが、タグの指すコミット日付とGitHub履歴が凍結日を
 裏づける。原稿には「frozen on 28 August 2026 (commit 407f226; archived at doi:...)」
