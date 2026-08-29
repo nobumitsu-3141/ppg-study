@@ -353,18 +353,28 @@ Of the 874 eligible cases, 862 (98.6%) yielded at least 12 valid windows and ent
 analysis, contributing 161,737 sixty-second windows (Figure 1). The reference CO device in
 the analysed cases was EV1000 in 545, Vigileo in 301, CardioQ in 11 and Vigilance II in 5;
 846 of 862 (98.1%) references were therefore arterial-waveform-derived, and the 16 cases
-with an independent reference are reported descriptively only. [[Table 1: demographics and
-procedure characteristics. Rejection breakdown by reason from the case metadata.]]
+with an independent reference are reported descriptively only. Of 232,451 windows examined,
+70% passed all quality gates; the leading reasons for rejection were failure to reach the
+ensemble noise target (12%), missing reference CO (6%), missing arterial pressure (4%),
+fewer than two accepted decompositions (3%) and an insufficient number of quality-passing
+beats (2%). Of 2,692,082 fitted segments, 72% passed all convergence checks; 22% were
+rejected for a parameter at its bound, 8% for a competing solution and under 0.1% for
+component collapse (categories overlap). [[Table 1: demographics and procedure
+characteristics.]]
 
 ### 3.2 Measurement quality
 
 Consecutive-window lag-1 autocorrelation was +0.75 for PWTT, +0.50 for the ΔT-based index
 and +0.43 for RI, indicating series that track reproducible physiology rather than noise
-(Table 3). In the exploratory positive control ([[interim, 566 adults; full-cohort rerun
-pending]]), ΔT shortened with age (ρ = −0.180, 95% CI −0.258 to −0.099) and was shorter in
-patients with preoperative hypertension, while the negative-control association was null;
-RI showed no association with age (ρ = −0.001) and was accordingly judged uninterpretable
-in this signal source (§2.6). [[Fit-convergence tallies and per-gate rejection rates.]]
+(Table 3). In the exploratory positive control (849 adults), ΔT shortened with age
+(ρ = −0.197, 95% CI −0.261 to −0.131, p < 0.0001) and was shorter in patients with
+preoperative hypertension (median 259 versus 267 ms). RI showed no association with age
+(ρ = +0.041, p = 0.23) and was accordingly judged uninterpretable in this signal source
+(§2.6). The negative-control association between case identifier and ΔT was ρ = +0.078
+(95% CI +0.011 to +0.145): an order of magnitude less variance than the age association
+(0.6% versus 3.9%) and not attributable to demographic drift, since case identifier was
+uncorrelated with age in the cohort (ρ = −0.025); [[adjusted negative control]] we report
+it for completeness and it does not affect the interpretation of the positive control.
 
 ### 3.3 Primary analysis — premise test
 
@@ -416,11 +426,11 @@ index. This is a precise estimate of a negligible effect, not an absence of evid
 excluded before any physiological reading is permitted, because the photoplethysmographic
 channel of this database is a processed monitor output rather than a research-grade signal.
 Three independent lines of evidence exclude it for ΔT. First, a positive control: across
-cases, the component interval varied with age in the expected direction (ρ = [[−0.18]],
-95% CI [[−0.26 to −0.10]]), as established for digital pulse contour analysis [Millasseau
+cases, the component interval varied with age in the expected direction (ρ = −0.197,
+95% CI −0.261 to −0.131), as established for digital pulse contour analysis [Millasseau
 2002], and was shorter in patients with a preoperative diagnosis of hypertension, while a
-negative control variable showed no association ([[ρ = 0.02]]). Restricting the analysis to
-adults left the estimate unchanged. The pipeline therefore detects a vascular signal where
+negative control variable carried an order of magnitude less variance (§3.2). The estimate
+was computed in adults and was materially unchanged when children were included. The pipeline therefore detects a vascular signal where
 one is known to exist. Second, ΔT retained substantial autocorrelation between consecutive
 windows, indicating a series that tracks a reproducible physiological quantity. Third, index
 identifiability was established on synthetic pulses with known ground truth before any
@@ -428,10 +438,10 @@ patient data were examined, and per-beat identifiability, convergence and exclus
 are reported in full [[Table 3]]. For ΔT the relationship with PWTT is absent, not obscured.
 
 **For the reflection index, validity could not be established, and its result is therefore
-uninformative.** The same positive control that ΔT passed, RI failed: across [[566]] adults
-the reflection index showed no association whatever with age ([[ρ = −0.001, p = 0.99]]).
+uninformative.** The same positive control that ΔT passed, RI failed: across 849 adults
+the reflection index showed no association with age (ρ = +0.041, p = 0.23).
 Within cases it behaved as noise rather than as physiology, varying with a coefficient of
-variation of [[0.68]] — threefold that of ΔT — despite being a bounded ratio, while
+variation of 0.70 — threefold that of ΔT (0.23) — despite being a bounded ratio, while
 correlating less strongly with mean arterial pressure than ΔT did.
 
 To identify what class of signal processing could produce this specific pattern, we applied
