@@ -371,10 +371,12 @@ and +0.43 for RI, indicating series that track reproducible physiology rather th
 preoperative hypertension (median 259 versus 267 ms). RI showed no association with age
 (ρ = +0.041, p = 0.23) and was accordingly judged uninterpretable in this signal source
 (§2.6). The negative-control association between case identifier and ΔT was ρ = +0.078
-(95% CI +0.011 to +0.145): an order of magnitude less variance than the age association
-(0.6% versus 3.9%) and not attributable to demographic drift, since case identifier was
-uncorrelated with age in the cohort (ρ = −0.025); [[adjusted negative control]] we report
-it for completeness and it does not affect the interpretation of the positive control.
+(95% CI +0.011 to +0.145), essentially unchanged after adjustment for age, heart rate,
+mean arterial pressure and reference device (ρ = +0.072). It is therefore not attributable
+to demographic or measured case-mix drift (case identifier was uncorrelated with age,
+ρ = −0.025); its origin is unidentified, but it carries an order of magnitude less
+variance than the age association (0.6% versus 3.9%) and does not affect the
+interpretation of the positive control. We report it for completeness.
 
 ### 3.3 Primary analysis — premise test
 
@@ -402,9 +404,14 @@ across adjustment sets (control 26.9%; with blood pressure 27.0%; with vascular 
 
 ### 3.5 Sensitivity analyses
 
-[[Table 5: pilot-15 exclusion; alternative index definitions (onset-to-onset ΔT, a₂/a₁,
-area ratio); three-kernel decomposition; ensemble noise target 0.002/0.004; SQI variation;
-accuracy at 5- and 20-minute windows; non-FloTrac subset (16 cases, descriptive).]]
+Excluding the 15 cases used during pipeline development left every conclusion unchanged
+(847 cases, 158,445 windows: premise r² = 0.005 with coefficients −0.028 and −0.003;
+within-case r² median 0.102 with 78% sign consistency; percentage error 26.9% in both
+arms, difference +0.2 percentage points, 95% CI +0.1 to +0.3). In the 16 cases with a
+reference independent of the arterial pressure waveform, results are reported
+descriptively in [[Table 5]]. [[Remaining prespecified sensitivity analyses: alternative
+index definitions, three-kernel decomposition, ensemble noise target 0.002/0.004, SQI
+variation, accuracy at 5- and 20-minute windows.]]
 
 ---
 
