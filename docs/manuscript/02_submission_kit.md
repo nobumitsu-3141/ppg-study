@@ -127,7 +127,9 @@ by that board. [[出典: VitalDB の原著論文の記載に合わせて確認�
 ```
 The data analysed in this study are publicly available from VitalDB
 (https://vitaldb.net). The complete analysis code, the prespecified statistical analysis
-plan and the synthetic-data verification suite are available at [[GitHub URL]].
+plan and the synthetic-data verification suite are available at
+https://github.com/nobumitsu-3141/ppg-study; the frozen analysis plan is archived at
+Zenodo (doi:10.5281/zenodo.22167118).
 ```
 
 > **注意**: リポジトリは現在公開設定。投稿時にURLを示す前提なら公開のままでよいが、

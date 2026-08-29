@@ -129,8 +129,9 @@ The statistical analysis plan, including all index definitions, quality threshol
 model specification and the interpretation rules, was finalised and frozen before any
 waveform data were analysed. Development and verification of the measurement pipeline used
 synthetic signals with known ground truth. The frozen plan and the complete analysis code
-are publicly available [[GitHub URL]], with a third-party timestamp of the freeze
-[[Zenodo DOI; commit hash; 28 August 2026]]. The study is reported in accordance with the
+are publicly available at https://github.com/nobumitsu-3141/ppg-study, with a third-party
+timestamp of the freeze (Zenodo, doi:10.5281/zenodo.22167118, archiving tag sap-v0.3 at
+commit 407f226; frozen 28 August 2026). The study is reported in accordance with the
 STROBE statement for observational research [von Elm 2007], and the secondary
 method-comparison analysis follows the checklist of [Montenij 2016]; both completed
 checklists are provided as supplements.
@@ -599,7 +600,9 @@ its vascular component, are the more promising direction.
 - **Ethics**: [[The ethics committee of Goto Chuoh Hospital determined that review was not
   required for this analysis of anonymised public data (response dated 2026-08-28).]]
 - **Data availability**: VitalDB is publicly available at https://vitaldb.net .
-  All analysis code and the prespecified analysis plan are at [[GitHub URL]].
+  All analysis code, the prespecified analysis plan and the synthetic-data verification
+  suite are at https://github.com/nobumitsu-3141/ppg-study (frozen plan archived at
+  doi:10.5281/zenodo.22167118).
 - **Funding**: None.
 - **Conflicts of interest**: [[None declared / to be confirmed.]]
 - **Author contributions**: [[to be completed]]
