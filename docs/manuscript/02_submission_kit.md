@@ -24,7 +24,7 @@ calibration constant of this method is derived from demographic variables and th
 fixed, correcting it with a continuously available vascular marker is an intuitive and
 frequently suggested remedy.
 
-We report that the premise underlying that remedy does not hold. In 874 surgical cases
+We report that the premise underlying that remedy does not hold. In 862 surgical cases
 from a public perioperative waveform database, the within-case variation of pulse-wave
 transit time was largely unexplained by simultaneously measured photoplethysmographic
 indices of arterial stiffness and wave reflection.
@@ -42,7 +42,7 @@ Three features of the study may be of particular interest to your readers:
    physiological signal; identifiability of every index definition was established on
    synthetic pulses with known ground truth before any patient data were examined.
 
-3. We document a processing delay of approximately 670 ms in the photoplethysmographic
+3. We document a processing delay of approximately 660 ms (median; IQR 644–676) in the photoplethysmographic
    channel of this widely used database. Because it exceeds the cardiac cycle at higher
    heart rates, transit times computed without accounting for it are aliased rather than
    merely offset. We believe this is of immediate practical value to other groups using

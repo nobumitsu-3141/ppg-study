@@ -360,8 +360,34 @@ ensemble noise target (12%), missing reference CO (6%), missing arterial pressur
 fewer than two accepted decompositions (3%) and an insufficient number of quality-passing
 beats (2%). Of 2,692,082 fitted segments, 72% passed all convergence checks; 22% were
 rejected for a parameter at its bound, 8% for a competing solution and under 0.1% for
-component collapse (categories overlap). [[Table 1: demographics and procedure
-characteristics.]]
+component collapse (categories overlap). Patient, procedure and recording
+characteristics are shown in Table 1: the cohort was middle-aged to elderly (median 61
+years), predominantly ASA 1–2 general-surgical and thoracic patients under general
+anaesthesia, with long recordings (median 257 minutes) yielding a median of 177 valid
+windows per case.
+
+**Table 1. Characteristics of the analysed cases (n = 862).**
+
+| Characteristic | Value |
+|---|---|
+| Age, years | 61 (51–70) |
+| Male sex | 517 (60%) |
+| Height, cm | 163 (157–170) |
+| Weight, kg | 61 (54–69) |
+| Body mass index, kg/m² | 23.0 (20.7–25.2) |
+| ASA physical status 1 / 2 / 3 / ≥4 | 158 (18%) / 531 (62%) / 148 (17%) / 8 (1%) — not recorded 17 (2%) |
+| Preoperative hypertension | 328 (38%) |
+| Preoperative diabetes | 119 (14%) |
+| Emergency surgery | 76 (9%) |
+| Department: general surgery / thoracic / urology / gynaecology | 615 (71%) / 215 (25%) / 28 (3%) / 4 (<1%) |
+| Commonest procedure types | hepatic 149 (17%); transplantation 125 (15%); biliary–pancreatic 122 (14%); major resection 109 (13%) |
+| Anaesthesia | general, 862 (100%) |
+| Recording length, min | 257 (182–338) |
+| Valid 60-s windows per case | 177 (104–255) |
+| Photoplethysmographic channel delay, ms | 660 (644–676) |
+| Reference CO device: EV1000 / Vigileo / CardioQ / Vigilance II | 545 (63%) / 301 (35%) / 11 (1%) / 5 (1%) |
+
+Values are median (IQR) or n (%).
 
 ### 3.2 Measurement quality
 
@@ -524,8 +550,9 @@ term directly — phonocardiography, impedance cardiography or bioreactance to t
 valve opening — or that abandon drift modelling in favour of more frequent recalibration.
 
 **A caution for users of open waveform databases.** The photoplethysmographic channel of
-this database carries a fixed processing delay of approximately [[L]] ms relative to the
-electrocardiogram. Device-induced timing artefacts of this class have been documented at
+this database carries a fixed processing delay relative to the electrocardiogram — in this
+cohort a case-level median of 660 ms with a tight interquartile range (644–676 ms),
+consistent with a device processing constant rather than physiology. Device-induced timing artefacts of this class have been documented at
 scale elsewhere and are not a new phenomenon [Ruffolo 2025]; what we add is their
 quantification and correction in this specific, widely used resource, where waveform
 synchronisation has been assumed adequate and that assumption has been propagated into a
