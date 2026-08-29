@@ -100,10 +100,69 @@ def verdict(r: dict) -> str:
     return "両方破壊"
 
 
+def decimate(t: np.ndarray, y: np.ndarray, fs_new: float) -> tuple:
+    """アンチエイリアス後に等間隔で間引く（実機の数値出力を模す）。"""
+    from scipy.signal import butter, filtfilt
+    if fs_new >= FS:
+        return t, y
+    b, a = butter(4, 0.4 * fs_new / (FS / 2), btype="low")
+    ylp = filtfilt(b, a, y)
+    step = int(round(FS / fs_new))
+    return t[::step], ylp[::step]
+
+
+def sampling_sweep(n: int) -> None:
+    """実機から取り出せる間隔で ΔT・RI が復元できるかを調べる。
+
+    実機（日本光電）からは生波形ではなくフィルタ後の数値列しか出せない。
+    間隔が 0.004 秒なら 250 Hz、0.04 秒なら 25 Hz であり、後者では
+    1拍あたり約20点しかない。2カーネル(8パラメータ)を同定できるかを確かめる。
+    """
+    print("\n=== サンプリング間隔の影響（実機からの数値出力を想定） ===")
+    print(f"{'fs [Hz]':>8}{'間隔':>10}{'1拍の点数':>10}{'ΔT誤差':>12}"
+          f"{'ΔT のばらつき':>14}{'RI誤差':>10}{'収束':>9}")
+    print("-" * 76)
+    for fs_new in (500, 250, 125, 100, 50, 25):
+        e_dt, e_ri, ok, npts = [], [], 0, []
+        for i in range(n):
+            T = 0.72 + 0.012 * i
+            t_, y_, truth = make_beat(preset="clear_notch", fs=FS, T=T,
+                                      noise=0.004, drift=0.004, seed=2000 + i)
+            td, yd = decimate(np.asarray(t_, float), np.asarray(y_, float), fs_new)
+            npts.append(len(td))
+            try:
+                fit = fit_beat(td, yd, seed=i)
+            except Exception:
+                continue
+            if not fit.get("ok"):
+                continue
+            ok += 1
+            m = si_ri_from_fit(fit)
+            e_dt.append(1000.0 * (m["dt_s"] - truth["dt"]))
+            e_ri.append(100.0 * (m["ri"] - truth["ri"]) / truth["ri"])
+        if not e_dt:
+            print(f"{fs_new:>8}{1/fs_new:>9.3f}s{int(np.mean(npts)):>10}"
+                  f"{'収束せず':>12}{'':>14}{'':>10}{ok:>4}/{n}")
+            continue
+        dt = np.array(e_dt)
+        iqr = float(np.percentile(dt, 75) - np.percentile(dt, 25))
+        print(f"{fs_new:>8}{1/fs_new:>9.3f}s{int(np.mean(npts)):>10}"
+              f"{np.median(dt):>+9.1f}ms{iqr:>11.1f}ms"
+              f"{np.median(e_ri):>+8.1f}%{ok:>4}/{n}")
+    print("\n  読み方: ΔT誤差が一定の偏り（ばらつきが小さい）なら、本研究は症例内の")
+    print("  変化量しか使わないので較正点との差で相殺される。装置遅延と同じ扱いになる。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--n", type=int, default=32, help="条件あたりの拍数")
+    ap.add_argument("--sampling", action="store_true",
+                    help="サンプリング間隔の影響のみを調べる")
     args = ap.parse_args()
+
+    if args.sampling:
+        sampling_sweep(args.n)
+        return
 
     conds = [
         ("生波形（対照）", lambda y: y),
@@ -136,6 +195,8 @@ def main() -> None:
     print("  誤ったRIではなく棄却として現れるため、今回の所見の説明にはならない。")
     print("\n  注意: これは所見と整合する機序を絞り込む機構実験であり、")
     print("        VitalDB が実際にこの処理を行っている証拠ではない。")
+
+    sampling_sweep(args.n)
 
 
 if __name__ == "__main__":
