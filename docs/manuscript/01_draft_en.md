@@ -409,9 +409,18 @@ Excluding the 15 cases used during pipeline development left every conclusion un
 within-case r² median 0.102 with 78% sign consistency; percentage error 26.9% in both
 arms, difference +0.2 percentage points, 95% CI +0.1 to +0.3). In the 16 cases with a
 reference independent of the arterial pressure waveform, results are reported
-descriptively in [[Table 5]]. [[Remaining prespecified sensitivity analyses: alternative
-index definitions, three-kernel decomposition, ensemble noise target 0.002/0.004, SQI
-variation, accuracy at 5- and 20-minute windows.]]
+descriptively in [[Table 5]]. Aggregating windows to 5 and 20 minutes reduced percentage
+error in both arms, as expected when comparing monitors with differing response times
+(control 26.9% at 60 s; 23.9% at 5 min, 844 cases; 21.5% at 20 min in the 606 cases with
+sufficient data), but the correction improved accuracy at no aggregation level (difference
+−0.1 points, 95% CI −0.2 to +0.1 at 5 min; −0.2, 95% CI −0.5 to +0.0 at 20 min) —
+the accuracy null is therefore not an artefact of the 60-second window. Adding heart rate
+to the premise regression raised the explained fraction from 0.000 to 0.077 while leaving
+the vascular coefficients essentially unchanged (ΔSI% −0.020, ΔRI% −0.003, ΔHR% −0.057):
+within-case PWTT variation tracks heart rate, not the vascular indices, and the vascular
+null is not produced by heart-rate confounding. [[Sensitivity analyses requiring
+re-extraction: alternative index definitions, three-kernel decomposition, ensemble noise
+target, SQI variation.]]
 
 ---
 
@@ -485,7 +494,11 @@ large change in PWTT accompanied by no change in vascular indices. Most pointedl
 manufacturer's own investigators reported that the pre-ejection period accounted for
 approximately half of the change in PWTT [Sugo 2012]. The present study is the human,
 intraoperative, reference-free confirmation of that mechanism, and it explains why improving
-the calibration procedure alone does not repair the method [Smetkin 2017].
+the calibration procedure alone does not repair the method [Smetkin 2017]. Consistent with
+it, when heart rate — a marker of chronotropic and autonomic state — was added to the
+primary regression as an exploratory analysis, it alone explained 7.7% of within-case PWTT
+variation where the vascular indices explained none, and their coefficients were unchanged
+by its inclusion.
 
 **Relation to previous work.** The strategy of correcting a transit-time estimate with a
 photoplethysmography-derived vascular index is not new: it has been applied to cuffless
@@ -528,7 +541,8 @@ artery thermodilution in 5 cases and oesophageal Doppler in 11 — are too few f
 and are reported descriptively only. Second, the secondary accuracy analysis used 60-second
 windows, whereas comparison of CO monitors with differing response times has been argued to
 require moving averages of 20–30 minutes [Sugo & Ochiai 2025]; we therefore repeated it at
-[[5 and 20]] minutes as a sensitivity analysis, and note that this consideration does not
+5 and 20 minutes as a sensitivity analysis; percentage error fell with averaging in both
+arms, but the correction improved accuracy at no aggregation level (§3.5), and note that this consideration does not
 apply to the beat-level, reference-free primary analysis. Third, the study is a
 retrospective analysis of a single database from a single centre, without a controlled
 vasomotor challenge; the cohort characteristics are reported in full so that transportability
