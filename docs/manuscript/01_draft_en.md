@@ -11,8 +11,8 @@ confirmed against PubMed before submission.
 
 ## Title
 
-Photoplethysmographic vascular indices explain little of intraoperative pulse-wave
-transit time variation: a prespecified reference-free analysis of 874 surgical cases
+Photoplethysmographic arterial stiffness does not explain intraoperative pulse-wave
+transit time variation: a prespecified, reference-free analysis of 874 surgical cases
 
 ## Abstract (structured, ~250 words — write last)
 
@@ -269,6 +269,14 @@ identifier and case-median ΔT. A secondary comparison contrasted cases with and
 preoperative diagnosis of hypertension. This analysis was added after the analysis plan was
 frozen and is reported as exploratory; it does not alter any prespecified endpoint.
 
+Because the positive control is computed across cases and uses no reference cardiac output
+and no within-case change, it is independent of the primary endpoint. We therefore fixed in
+advance that an index failing it would still be reported in the prespecified primary
+regression, but that no conclusion would be drawn from its coefficient, on the grounds that
+a null cannot be interpreted for a quantity that has not been shown to be measurable. As
+reported below, ΔT passed this control and RI did not; this determination was made from the
+control alone, before the premise-test result was examined.
+
 ### 2.7 Secondary analysis: accuracy against reference CO
 
 A control estimator reproducing the published PWTT form, esSV = K₀ × (β − α·PWTT) with K₀
@@ -349,26 +357,42 @@ difference +0.8% (95% CI −0.4 to +2.2).]]
 [[Numbers to be inserted from the confirmatory run; argument structure is final.]]
 
 **Principal finding.** In [[N]] surgical cases, the within-case variation of pulse wave
-transit time was largely not explained by concurrently measured photoplethysmographic
-indices of arterial stiffness and wave reflection. The relationship was estimated
+transit time was largely not explained by the concurrently measured, and independently
+validated, photoplethysmographic index of arterial stiffness (ΔT). The relationship was estimated
 precisely rather than merely failing to reach significance: with [[N]] cases and [[n]]
 windows per case, the confidence interval around the vascular-explained fraction was narrow
 and centred near zero, which supports absence of a usable effect rather than absence of
 evidence [Altman & Bland 1995].
 
-**The null is not a measurement failure.** This is the interpretation that must be excluded
-before any physiological reading is permitted, because the photoplethysmographic channel of
-this database is a processed monitor output rather than a research-grade signal. Three
-independent lines of evidence exclude it. First, a positive control: across cases, the
-component interval and the derived stiffness index varied with age in the direction and
-approximate magnitude established for digital pulse contour analysis [Millasseau 2002], and
-the reflection index did likewise, while a negative control variable showed no association
-[[Table 3]]. The pipeline therefore detects a vascular signal where one is known to exist.
-Second, the indices retained substantial autocorrelation between consecutive windows,
-indicating series that track a reproducible physiological quantity. Third, index
+**For the timing index, the null is not a measurement failure.** This interpretation must be
+excluded before any physiological reading is permitted, because the photoplethysmographic
+channel of this database is a processed monitor output rather than a research-grade signal.
+Three independent lines of evidence exclude it for ΔT. First, a positive control: across
+cases, the component interval varied with age in the expected direction (ρ = [[−0.18]],
+95% CI [[−0.26 to −0.10]]), as established for digital pulse contour analysis [Millasseau
+2002], and was shorter in patients with a preoperative diagnosis of hypertension, while a
+negative control variable showed no association ([[ρ = 0.02]]). Restricting the analysis to
+adults left the estimate unchanged. The pipeline therefore detects a vascular signal where
+one is known to exist. Second, ΔT retained substantial autocorrelation between consecutive
+windows, indicating a series that tracks a reproducible physiological quantity. Third, index
 identifiability was established on synthetic pulses with known ground truth before any
 patient data were examined, and per-beat identifiability, convergence and exclusion rates
-are reported here in full [[Table 3]]. The relationship is absent, not obscured.
+are reported in full [[Table 3]]. For ΔT the relationship with PWTT is absent, not obscured.
+
+**For the reflection index, validity could not be established, and its result is therefore
+uninformative.** The same positive control that ΔT passed, RI failed: across [[566]] adults
+the reflection index showed no association whatever with age ([[ρ = −0.001, p = 0.99]]).
+Within cases it behaved as noise rather than as physiology, varying with a coefficient of
+variation of [[0.68]] — threefold that of ΔT — despite being a bounded ratio, while
+correlating less strongly with mean arterial pressure than ΔT did. The most likely
+explanation is that automatic gain control in the monitor's display processing chain
+attenuates precisely the amplitude information from which RI is derived. We therefore report
+the reflection index but draw no conclusion from it: its null is a statement about what can
+be recovered from this signal source, not about physiology. This independently reproduces
+the finding of Couceiro and colleagues, whose amplitude-derived indices failed against every
+vascular reference they tested [Couceiro 2015]. **This decision rests on the positive
+control alone, which is independent of the primary endpoint, and was made without reference
+to the premise-test result; the prespecified primary analysis was not altered.**
 
 **Physiological interpretation.** Our result is what the mechanistic literature predicts
 rather than an anomaly. PWTT measured from the R wave contains the pre-ejection period in
@@ -436,15 +460,16 @@ component assignment in a two-kernel decomposition is not guaranteed to correspo
 distinct physical waves [Epstein 2014]. Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
 change is itself an assumption. Finally, the photoplethysmographic channel is a processed
-monitor output; although the positive control indicates that vascular information survives
-that processing, we cannot exclude that automatic gain control attenuates amplitude-derived
-information, and conclusions resting on the reflection index should be read with that in
-mind.
+monitor output. Timing information demonstrably survives that processing, as the positive
+control shows, but amplitude information appears not to: the reflection index failed the
+same control, so this study can say nothing about whether wave reflection tracks PWTT.
+Testing that would require a photoplethysmographic source with documented gain behaviour.
 
 **Conclusion.** In a large perioperative waveform database, beat-to-beat variation in pulse
-wave transit time was largely unexplained by photoplethysmography-derived indices of
-arterial stiffness and wave reflection, despite evidence that those indices were measured
-well enough to detect a known vascular signal. Dynamic correction of the calibration
+wave transit time was largely unexplained by a photoplethysmography-derived index of
+arterial stiffness, despite evidence that this index was measured well enough to detect a
+known vascular signal; the corresponding amplitude-derived index could not be validated in
+this signal source and remains untested. Dynamic correction of the calibration
 constant of transit-time cardiac output estimation using these indices therefore has little
 room to work. Methods that resolve the cardiac component of transit time, rather than model
 its vascular component, are the more promising direction.
