@@ -97,9 +97,18 @@ def build_matrix(cases: list[dict]) -> tuple:
     return {k: v[m] for k, v in X.items()}, y[m], int(m.sum())
 
 
-def r2_of(X: dict, y: np.ndarray, keys: list[str]) -> tuple:
-    """指定した説明変数（＋切片）での決定係数と係数を返す。"""
-    M = np.column_stack([X[k] for k in keys] + [np.ones(y.size)])
+def r2_of(X: dict, y: np.ndarray, keys: list[str], intercept: bool = True) -> tuple:
+    """指定した説明変数での決定係数と係数を返す。
+
+    intercept=False は事前指定の主解析（src.models.premise_test）と同じ
+    「原点を通る」当てはめ。相対変化は較正点で0なので原点を通る設計だが、
+    分母は平均まわりの全変動なので r² は負にもなりうる指標である。
+    intercept=True は統計学的に標準的な決定係数。両方を報告する。
+    """
+    parts = [X[k] for k in keys]
+    if intercept:
+        parts.append(np.ones(y.size))
+    M = np.column_stack(parts)
     coef, *_ = np.linalg.lstsq(M, y, rcond=None)
     sse = float(np.sum((y - M @ coef) ** 2))
     sst = float(np.sum((y - y.mean()) ** 2))
@@ -146,10 +155,22 @@ def main() -> None:
     r2_dtraw, c_dtraw = r2_of(X, y, ["dt"])
     print(f"  ΔT%（身長なし）のみ : r² {r2_dtraw:.4f}   β {c_dtraw['dt']:+.4f}")
     print(f"  ΔSI%（身長込み）のみ: r² {r2_dt:.4f}   β {c_dt['si_raw']:+.4f}")
-    print(f"  → r²の差 {abs(r2_dtraw - r2_dt):.6f}")
-    print("  数式: SI = 身長/ΔT、身長は症例内で定数なので ΔSI% = ΔT₀/ΔT − 1。")
-    print("        身長は完全に約分され、症例内では同一の情報しか持たない。")
-    print("        （r²が一致することがその実測による確認）")
+    print(f"  → r²の差 {abs(r2_dtraw - r2_dt):.4f}")
+    print("  数式: SI = 身長/ΔT。身長は症例内で定数なので")
+    print("        ΔSI% ＝ ΔT₀/ΔT − 1 となり、身長は完全に約分される。")
+    print("        → 『身長を含めたより正確なSI』にしても症例内の情報は増えない。")
+    print("  注意: ただし ΔSI% と ΔT% は逆数の関係（1+ΔSI% = 1/(1+ΔT%)）であり、")
+    print("        線形回帰の結果は完全一致はしない。係数の符号が逆で")
+    print("        r² がほぼ同じなら、同じ情報を別の尺度で見ているだけである。")
+
+    print("\n=== 参考: 事前指定の主解析（切片なし）との対応 ===")
+    r2_ni, c_ni = r2_of(X, y, ["si_raw", "ri"], intercept=False)
+    print(f"  切片なし（＝SAP §7.1 の主解析と同じ形）: r² {r2_ni:.4f}   "
+          f"β_ΔSI% {c_ni['si_raw']:+.4f}  β_ΔRI% {c_ni['ri']:+.4f}")
+    print(f"  切片あり（統計学的に標準）            : r² {r2_both:.4f}")
+    print("  読み方: 相対変化は較正点で0なので原点を通る設計だが、その r² は")
+    print("          平均まわりの全変動を分母にするため負にもなりうる。")
+    print("          どちらで測っても数％以下であり結論は変わらない。")
 
     print("\n=== 問3: 説明力の上限はどこにあるか ===")
     r2_map, _ = r2_of(X, y, ["map"])
@@ -167,10 +188,15 @@ def main() -> None:
     print(f"\n  PWTTの隣接ウィンドウ自己相関（中央値） {ac:+.3f}")
     print(f"  → 系列が1次自己回帰に従うと仮定した場合の再現可能成分の目安 "
           f"{max(ac, 0) ** 2 * 100:.0f}〜{max(ac, 0) * 100:.0f}%")
-    print("  読み方: よく測れている血行動態変数（血圧・心拍数）を総動員しても")
-    print("          説明できる割合がこの程度なら、指標の精度を上げても")
-    print("          伸びしろは限られる。逆に大きな未説明分が残るなら、")
-    print("          より良い血管指標に余地がありうる。")
+    lo, hi = max(ac, 0) ** 2 * 100, max(ac, 0) * 100
+    print(f"  再現可能成分の目安 {lo:.0f}〜{hi:.0f}% に対し、")
+    print(f"  測定できた変数すべてで説明できたのは {r2_all * 100:.1f}%。")
+    print(f"  → 再現性があるのに未説明の成分が {lo - r2_all * 100:.0f}〜"
+          f"{hi - r2_all * 100:.0f}ポイント残っている。")
+    print("  読み方: 血圧は血管指標の約3倍を説明しており、PWTTに血管性の")
+    print("          成分が実在することを示す。未説明の再現成分も大きい。")
+    print("          つまり『補正という発想に余地が無い』のではなく、")
+    print("          『この脈波分解指標では捉えられなかった』が正確である。")
 
 
 if __name__ == "__main__":

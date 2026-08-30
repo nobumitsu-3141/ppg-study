@@ -33,9 +33,11 @@ relative changes in the pulse-decomposition component interval (ΔT, as stiffnes
 reflection index. An exploratory positive control tested whether the indices reproduce the
 known association of arterial stiffness with age.
 
-**Results.** Across 161,737 sixty-second windows, vascular indices explained none of the
-within-case PWTT variation (pooled r² = 0.000; coefficient per ΔSI% −0.027, per ΔRI%
-−0.003). The coefficient's sign was consistent with the vascular hypothesis in 78% of
+**Results.** Across 161,737 sixty-second windows, vascular indices explained essentially
+none of the within-case PWTT variation (prespecified through-origin pooled r² = 0.000; with
+an intercept, 0.044; coefficient per ΔSI% −0.027, per ΔRI% −0.003). By comparison, mean
+arterial pressure alone explained 0.139 — three times more — so a vascular contribution to
+PWTT exists but is not captured by these indices. The coefficient's sign was consistent with the vascular hypothesis in 78% of
 cases, indicating a directionally correct but quantitatively negligible vascular component.
 Signals were reproducible (lag-1 autocorrelation: PWTT +0.75, ΔT +0.50), and ΔT reproduced
 the expected age association, whereas the reflection index did not and was judged
@@ -411,9 +413,15 @@ interpretation of the positive control. We report it for completeness.
 
 ### 3.3 Primary analysis — premise test
 
-Across 161,737 windows in 862 cases, the vascular indices explained none of the within-case
-variation in PWTT: pooled r² = 0.000, with coefficients of −0.027 per ΔSI% and −0.003 per
-ΔRI% (Table 2, Figure 2). The within-case coefficient on ΔSI% carried the sign predicted by
+Across 161,737 windows in 862 cases, the vascular indices explained essentially none of the
+within-case variation in PWTT: the prespecified pooled estimate, fitted through the origin
+because all relative changes are zero at calibration, was r² = 0.000, with coefficients of
+−0.027 per ΔSI% and −0.003 per ΔRI% (Table 2, Figure 2). Refitting with an intercept — the
+conventional coefficient of determination, reported here as an exploratory sensitivity
+analysis — gave r² = 0.044. The reflection index contributed almost nothing to either:
+omitting it left r² at 0.041 and shifted the stiffness coefficient only from −0.024 to
+−0.022, so the conclusion does not depend on including an index whose validity we could not
+establish (§3.2). The within-case coefficient on ΔSI% carried the sign predicted by
 the vascular hypothesis in 78% of cases — far beyond chance in 862 cases — but its
 magnitude was negligible: a 10% change in the stiffness index predicted a 0.27% change in
 PWTT, against within-case PWTT excursions of several percent. The median within-case r² was
@@ -542,12 +550,28 @@ modestly against vascular references, amplitude ratios worst of all [Couceiro 20
 prior probability of success was therefore low, and the contribution of this work is to
 convert that expectation into a measured bound.
 
+**How much vascular signal is there to capture?** Our result bounds what *these indices*
+achieve, not what any vascular marker could. Two exploratory observations delimit the
+remaining space. First, mean arterial pressure — a well-measured haemodynamic variable that
+is itself pressure-dependent-stiffness related through the Bramwell–Hill relation — alone
+explained 0.139 of within-case PWTT variation, roughly three times the vascular indices, and
+heart rate a further 0.081. A vascular contribution to intraoperative PWTT therefore exists
+and is measurable; it is simply not what the pulse-decomposition indices captured. Second,
+all measured variables together (indices, pressure, heart rate) explained 0.196, whereas the
+lag-1 autocorrelation of PWTT (+0.75) implies a reproducible, non-noise component of roughly
+0.56–0.75. A substantial reproducible fraction of PWTT variation therefore remains
+unexplained by anything we measured — plausibly the pre-ejection period, which we could not
+measure. The honest statement is not that vascular correction has no room, but that the room
+lies outside what single-site photoplethysmographic decomposition indices reach.
+
 **Implications.** The structured, vascular-state-related error of transit-time cardiac
 output estimation is well documented, and correcting the calibration constant with a
 vascular marker is the intuitive response to it. Our results bound what that strategy can
 achieve from single-site photoplethysmography: if the quantity to be corrected does not
 covary with the correction variable, the correction cannot work regardless of how well the
-index is measured. More promising directions are those that measure and remove the cardiac
+index is measured. Notably, even mean arterial pressure — which explains three times more of
+the PWTT variation — did not improve accuracy when added to the estimator (§3.4), so a
+larger explained fraction alone does not guarantee a usable correction. More promising directions are those that measure and remove the cardiac
 term directly — phonocardiography, impedance cardiography or bioreactance to time aortic
 valve opening — or that abandon drift modelling in favour of more frequent recalibration.
 
@@ -593,8 +617,11 @@ arterial stiffness, despite evidence that this index was measured well enough to
 known vascular signal; the corresponding amplitude-derived index could not be validated in
 this signal source and remains untested. Dynamic correction of the calibration
 constant of transit-time cardiac output estimation using these indices therefore has little
-room to work. Methods that resolve the cardiac component of transit time, rather than model
-its vascular component, are the more promising direction.
+room to work. This is a statement about the indices, not about the concept: arterial
+pressure explained three times more of the same variation, so a vascular component exists
+but lies outside what these indices reach. Methods that resolve the cardiac component of
+transit time, or that capture pressure-dependent stiffness directly, are the more promising
+direction.
 
 ## Statements
 
