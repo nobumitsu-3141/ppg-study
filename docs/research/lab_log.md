@@ -851,3 +851,51 @@ C-1 の効果量は既定では表示しない（`--peek` が要る）。先に�
 波形3点が揃うのが5例しかない理由が **60例で PLETH が欠けている**ことだと確定した
 （ECG欠 0・ART欠 0）。心臓外科症例で SpO2 波形が記録器に回っていないためと思われる。
 原稿の限界記述に使える。
+
+---
+
+## 2026-08-30（続き7）研究0の解析スクリプトを作成（PWDB・構成概念妥当性）
+
+「SI が脈波伝播速度と、RI が末梢血管抵抗と関連することを先に示すべきではないか」
+という指摘を受け、Charlton の Pulse Wave Database（PWDB）で真値に対して検証する
+`scripts/20_pwdb_validity.py` を作成し、模擬データで自己検証を通した。
+
+### PWDB の仕様（`peterhcharlton/pwdb` の `export_pwdb.m` から確定）
+
+| ファイル | 内容 |
+|---|---|
+| `pwdb_haemod_params.csv` | 真値33列。`PWV_a`・`PWV_cf`・`svr`・`CO`・`SV`・`HR`・`AIx`・`AP`・`Tr` など |
+| `pwdb_model_configs.csv` | 入力18列。`pvr`（末梢血管抵抗 Pa·s/m³）・`pvc`（末梢コンプライアンス）など |
+| `PWs/csv/PWs_Digital_PPG.csv` | 指尖PPG。1行=1被験者、1列目=Subject Number、以降 pt1..ptN の1拍 |
+| `pwdb_pw_indices.csv` | 部位別の従来指標（`<site>_RI`・`<site>_SI`・`<site>_AI`・`<site>_PTT` 等） |
+
+部位は AorticRoot / ThorAorta / AbdAorta / IliacBif / Carotid / SupTemporal /
+SupMidCerebral / Brachial / Radial / **Digital** / CommonIliac / Femoral / AntTibial。
+信号は P・U・A・PPG。**標本化周波数はCSVに入らない**ため、拍長 = 60/HR から復元する。
+
+見出しは略号＋単位（例 `PWV_a [m/s]`・`SVR [10^6 Pa s / m3]`）で書かれるため、
+**列は位置で対応づける**（`export_pwdb.m` のパラメータ並びは固定）。
+
+### スクリプトが問うこと
+
+1. PDA由来の ΔT は真値の大動脈脈波伝播速度と関連するか（SI は 1/ΔT の単調変換）
+2. PDA由来の RI は真値の末梢血管抵抗と関連するか
+3. **成分対の取り方で結果が変わるか** — 2カーネル 1↔2 ／ 3カーネル 1↔2 ／ 3カーネル 1↔3。
+   Couceiro の R1_2（0.26）と R1_d（0.42）の正反対の成績を、真値で決着させる
+4. 総動脈コンプライアンス・心拍出量との関連
+
+`fit_beat3_all` を新設し、**すべての成分対**の ΔT・振幅比を返すようにした
+（`11_variants_extract.py` の `fit_beat3` は第1↔第2しか返さない。走行中のため触っていない）。
+
+### 自己検証（模擬PWDB・30名）
+
+- 列の位置対応 PASS
+- 2カーネルの収束率 100%
+- **仕込んだ関係を復元: ρ(ΔT, PWV) = −1.000、ρ(RI, SVR) = +1.000**
+- 3カーネルの当てはめ成功率 97%
+
+### 実行できない理由と対処
+
+**Zenodo は本セッションの egress ポリシーで遮断されている**（403）。
+`raw.githubusercontent.com` は到達可のため仕様の確認はできたが、データは落とせない。
+**Mac でダウンロードして実行する。** 4,374名で `--jobs 2` なら1時間強の見込み。
