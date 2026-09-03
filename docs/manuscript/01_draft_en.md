@@ -339,6 +339,11 @@ sound but this form of correction is inadequate.
 Alternative index definitions (§2.4); three-kernel decomposition; ensemble noise target
 varied to 0.002 and 0.004; signal quality threshold varied; the non-FloTrac subset (16
 cases) analysed separately; and exclusion of the 15 cases used during pipeline development.
+The variants requiring re-extraction were computed by a separate program that re-ran the
+frozen decomposition from the raw waveforms on the same windows as the primary analysis,
+taking PWTT, heart rate, pressure and reference CO from the primary run; a re-run under
+identical definitions was included as a check that this harness reproduces the primary
+indices.
 
 ### 2.10 Software
 
@@ -463,8 +468,9 @@ Nine variants requiring re-extraction were computed on the same windows (Table 6
 alternative amplitude definitions and the onset-to-onset timing definition prespecified in
 §2.4, a three-kernel decomposition, the ensemble noise target moved to 0.002 and to 0.004,
 and the signal-quality threshold moved to 5% and to 20%. Re-running the frozen
-decomposition from the raw waveforms under identical definitions reproduced the primary
-result exactly. Across the nine variants the vascular-explained fraction of ΔPWTT ranged
+decomposition from the raw waveforms under identical definitions reproduced ΔT and RI
+exactly in all 161,737 windows, so the remaining rows differ from the primary analysis
+only by the definition that was changed. Across the nine variants the vascular-explained fraction of ΔPWTT ranged
 from −0.051 to 0.005 and the coefficient on ΔSI% from −0.004 to −0.032, and the correction
 worsened percentage error in every one (difference +0.1 to +0.4 points, all 95% CIs
 excluding zero). Neither a third kernel nor either alternative amplitude definition raised
