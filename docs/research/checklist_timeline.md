@@ -71,14 +71,13 @@ Mac でのダウンロードから始まる。
 
 投稿作業と並行できる。計算は1時間程度。倫理手続き不要・無償。
 
-- [ ] Mac で PWDB の必要3ファイルだけを取得（Zenodo doi:10.5281/zenodo.3275625）
-      — 配布物は 44.3 GB の zip だが、要るのは `pwdb_haemod_params.csv`・`pwdb_model_configs.csv`・
-        `PWs_Digital_PPG.csv` の3本（数十 MB）。`22_pwdb_fetch.py` が HTTP Range で zip の中から
-        この3本だけ取り出す。`--list` で中身を確認してから `--out ~/pwdb`
-- [ ] `python scripts/20_pwdb_validity.py --selftest` で配管を確認（数秒）
-- [ ] `python scripts/20_pwdb_validity.py --pwdb <dir> --limit 50` で形式と収束率を確認（数分）
-- [ ] 判定基準を lab_log に先に書く（予測の向きで |rho| ≥ 0.3 を成立とする。年齢層別でも向きが揃うこと）
-- [ ] report に年齢層別（6層）の順位相関を足す（PWV は年齢で上がり ΔT は下がるので、プールの相関は年齢で膨らむ）
+- [x] Mac で PWDB を取得（2026-09-03）— 44.3 GB は記録全体の合計で、要るのは個別ファイル6本・265 MB。
+      `~/pwdb/` に haemod_params・model_configs・model_variations・onset_times・pw_indices・PWs_csv.zip
+- [x] 見出しを実配布版と突き合わせた（09-03）— model_configs に base・base_age 列があり、位置対応では
+      **pvr の位置に density（定数1060）が入る**ことを実行前に発見。列は見出し名で引くよう改修
+- [x] 判定基準を先に固定（09-03・lab_log）— 年齢層内の順位相関が全層で予測の向き、かつ中央値 |rho| ≥ 0.3
+- [x] report に年齢層別の順位相関・因子別の主効果・真の伝播時間を足した（09-03）
+- [ ] `python scripts/20_pwdb_validity.py --pwdb ~/pwdb --limit 50` で形式と収束率を確認（数分）
 - [ ] 全員を走らせる `--jobs 2`（約1時間）→ `data/pwdb/pwdb_indices.csv`
 - [ ] 2×2 の行を確定し、roadmap §8 と lab_log に記録する
 

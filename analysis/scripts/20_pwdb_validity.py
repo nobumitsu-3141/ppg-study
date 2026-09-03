@@ -21,6 +21,18 @@
   Q4  総動脈コンプライアンス（PVC）・心拍出量との関連
       Zc = ρ·PWV/A、PWV ∝ 1/√C という理論的な鎖が指標に現れるか
 
+設計と判定（実行前に固定。lab_log 2026-09-03）
+--------------------------------------------
+PWDB は年齢6段階 × 6因子（大動脈径・心拍数・駆出時間・平均血圧・脈波伝播速度・1回拍出量）
+の3水準完全要因配置（729 × 6 = 4,374 名）。末梢血管抵抗 pvr は入力ではなく、平均血圧と
+心拍出量から決まる派生量である。したがって
+  主判定  年齢層内の順位相関が全層で予測の向き、かつ中央値 |ρ| ≥ 0.3 なら成立
+          Q1: ρ(ΔT, PWV_a) < 0    Q2: ρ(RI, pvr) > 0
+  機構    因子ごとの主効果（+1 と −1 の差）で、ΔT を動かすのが脈波伝播速度、
+          RI を動かすのが平均血圧（＝抵抗）であることを確かめる
+  真値    pwdb_onset_times.csv の立ち上がり時刻の差 ＝ 真の伝播時間。橈骨→指尖の真値の幅を
+          VitalDB の T2−T1 の症例内変動（SD ≈ 18 ms）と比べる
+
 なぜ決定的か
 ------------
 本研究は VitalDB で「血管指標は ΔPWTT を説明しない」「RI は妥当性を確立できない」
@@ -48,6 +60,7 @@ Am J Physiol Heart Circ Physiol 2019. doi:10.5281/zenodo.3275625
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -61,29 +74,40 @@ from src.indices import si_ri_from_fit                               # noqa: E40
 DATA = Path(__file__).resolve().parent.parent / "data"
 OUT = DATA / "pwdb"
 
-# export_pwdb.m 由来。列は位置で対応づける（見出しは略号＋単位で書かれるため）
-HAEMOD_PARAMS = ["subj_no", "age", "HR", "SV", "CO", "LVET", "dPdt", "PFT", "RFV",
-                 "SBP_a", "DBP_a", "MBP_a", "PP_a", "SBP_b", "DBP_b", "MBP_b", "PP_b",
-                 "PP_amp", "AP", "AIx", "Tr", "PWV_a", "PWV_cf", "PWV_br", "PWV_fa",
-                 "dia_asc_a", "dia_desc_thor_a", "dia_abd_a", "dia_car", "len_prox_a",
-                 "MBP_drop_finger", "MBP_drop_ankle", "svr"]
-CONFIG_PARAMS = ["subj_no", "age", "hr", "sv", "t_pf", "reg_vol", "dbp", "mbp", "mu",
-                 "alpha", "p_drop", "pvc", "p_out", "rho", "lvet", "pvr",
-                 "gamma_b0", "gamma_b1"]
-
-
 # ---------------------------------------------------------------- 読み込み
-def _read_positional(path: Path, names: list[str]):
-    """位置で列名を割り当てる。PWDBの見出しは略号＋単位のため名前照合ができない。"""
+# 列は見出しの名前で引く（単位の [..] を落として小文字化）。位置対応は配布版の版差で
+# 黙ってずれるので使わない。実配布版（Zenodo 2019-07-07）の model_configs には
+# base・base_age の2列が age の前にあり、位置対応だと pvr の位置に density（定数 1060）が
+# 入っていた。実行前の見出し確認で捕まえた。
+def _norm(col) -> str:
+    c = re.sub(r"\[.*?\]", "", str(col))
+    c = c.strip().lower()
+    return re.sub(r"[^a-z0-9]+", "_", c).strip("_")
+
+
+RENAME = {"hr": "HR", "sv": "SV", "co": "CO", "pwv_a": "PWV_a", "pwv_cf": "PWV_cf"}
+
+
+def _read_named(path: Path, need: tuple, prefix: str = ""):
+    """見出し名で列を引く。need の列が無ければ見出しを添えて止まる。"""
     import pandas as pd
     df = pd.read_csv(path, skipinitialspace=True)
-    if df.shape[1] < len(names):
-        # 版差で列が減ることがある。頭から対応づけ、足りない分は欠測にする
-        df.columns = names[:df.shape[1]]
-        for n in names[df.shape[1]:]:
-            df[n] = np.nan
-    else:
-        df.columns = names + [f"extra_{i}" for i in range(df.shape[1] - len(names))]
+    cols = {}
+    for c in df.columns:
+        n = _norm(c)
+        if n == "subject_number":
+            n = "subj_no"
+        elif prefix:
+            n = prefix + n
+        else:
+            n = RENAME.get(n, n)
+        cols[c] = n
+    df = df.rename(columns=cols)
+    missing = [k for k in need if k not in df.columns]
+    if missing:
+        raise KeyError(f"{path.name}: 必要な列がありません {missing}。"
+                       f"見出し（正規化後）: {list(df.columns)[:14]} …")
+    df["subj_no"] = df["subj_no"].astype(int)
     return df
 
 
@@ -152,16 +176,42 @@ def locate_pwdb_files(root: Path) -> dict:
     return found
 
 
+# 任意の追加ファイル（あれば使う）
+EXTRA = {
+    "variations": ("*model*variation*.csv", "var_",
+                   ("subj_no", "var_age", "var_dia", "var_hr", "var_lvet", "var_mbp", "var_pwv", "var_sv")),
+    "onsets": ("*onset*time*.csv", "on_", ("subj_no", "on_aorticroot_p", "on_digital_ppg")),
+}
+
+
+def load_extras(root: Path) -> dict:
+    """pwdb_model_variations.csv（どの因子を振ったか）と pwdb_onset_times.csv（真の立ち上がり時刻）。"""
+    out = {}
+    root = Path(root).expanduser()
+    for key, (pat, prefix, need) in EXTRA.items():
+        q = _find_one(root, pat)
+        if q is None:
+            print(f"  （{key}: 見つからないので省略）", flush=True)
+            continue
+        try:
+            out[key] = _read_named(q, need, prefix=prefix)
+            print(f"  読み込み元: {q}", flush=True)
+        except KeyError as e:
+            print(f"  （{key}: {e} → 省略）", flush=True)
+    return out
+
+
 def load_pwdb(root: Path):
-    """PWDB の配布物から真値と指尖PPGを読む。root は配布物を置いた任意の親フォルダでよい。"""
+    """PWDB の配布物から真値・入力・指尖PPG・追加表を読む。root は配布物を置いた親フォルダでよい。"""
     import pandas as pd
     f = locate_pwdb_files(root)
     print(f"  読み込み元: {f['haemod']}\n            {f['config']}\n            {f['ppg']}",
           flush=True)
-    hae = _read_positional(f["haemod"], HAEMOD_PARAMS)
-    cfg = _read_positional(f["config"], CONFIG_PARAMS)
+    hae = _read_named(f["haemod"], ("subj_no", "age", "HR", "SV", "CO", "PWV_a", "PWV_cf", "svr"))
+    cfg = _read_named(f["config"], ("subj_no", "pvr", "pvc"))
     ppg = pd.read_csv(f["ppg"], skipinitialspace=True)
-    return hae, cfg, ppg
+    extras = load_extras(root)
+    return hae, cfg, ppg, extras
 
 
 def beat_of(ppg_row: np.ndarray, hr_bpm: float):
@@ -266,10 +316,10 @@ def indices_for_subject(args_tuple):
 
 
 # ---------------------------------------------------------------- 統計
-def _spearman(x, y):
+def _spearman(x, y, min_n: int = 20):
     from scipy.stats import rankdata
     g = np.isfinite(x) & np.isfinite(y)
-    if g.sum() < 20:
+    if g.sum() < min_n:
         return float("nan"), int(g.sum())
     a, b = np.asarray(x)[g], np.asarray(y)[g]
     if np.ptp(a) == 0 or np.ptp(b) == 0:
@@ -277,14 +327,100 @@ def _spearman(x, y):
     return float(np.corrcoef(rankdata(a), rankdata(b))[0, 1]), int(g.sum())
 
 
-def report(df, hae, cfg):
+FACTORS = ["dia", "hr", "lvet", "mbp", "pwv", "sv"]
+FACTOR_LABEL = {"dia": "大動脈径", "hr": "心拍数", "lvet": "駆出時間", "mbp": "平均血圧",
+                "pwv": "脈波伝播速度", "sv": "1回拍出量"}
+# 事前規準（lab_log 2026-09-03）: 年齢層内の順位相関が全層で予測の向き、かつ中央値 |ρ| ≥ 0.3
+CRIT_RHO = 0.30
+PAIRS = [("dt2_ms", "PWV_a", -1, "Q1  ΔT 2k × 大動脈PWV"),
+         ("dt2_ms", "PWV_cf", -1, "    ΔT 2k × 頸大腿PWV"),
+         ("ri2", "pvr", +1, "Q2  RI 2k × 末梢血管抵抗"),
+         ("ri2", "svr", +1, "    RI 2k × 全身血管抵抗"),
+         ("ri2", "pvc", 0, "    RI 2k × 末梢コンプライアンス"),
+         ("dt3_12", "PWV_a", -1, "    ΔT 3k 1↔2 × 大動脈PWV"),
+         ("dt3_13", "PWV_a", -1, "    ΔT 3k 1↔3 × 大動脈PWV"),
+         ("ri3_12", "pvr", +1, "    RI 3k 1↔2 × 末梢血管抵抗"),
+         ("ri3_13", "pvr", +1, "    RI 3k 1↔3 × 末梢血管抵抗")]
+
+
+def _by_age(d, x, y):
+    out = []
+    for age, g in d.groupby("age"):
+        r, n = _spearman(g[x].to_numpy(float), g[y].to_numpy(float), min_n=8)
+        out.append((age, r, n))
+    return out
+
+
+def _judge(rows, sign):
+    rs = np.array([r for _a, r, _n in rows if np.isfinite(r)])
+    if rs.size == 0:
+        return None
+    n_ok = int((np.sign(rs) == sign).sum()) if sign else int(rs.size)
+    med = float(np.median(np.abs(rs)))
+    return {"n_ages": int(rs.size), "n_ok": n_ok, "med_abs": med,
+            "pass": bool(sign) and n_ok == rs.size and med >= CRIT_RHO}
+
+
+def _factor_effects(d, idx):
+    """年齢層内の主効果（+1 と −1 の平均差を層平均で割った %）と順位相関。年齢層の中央値。"""
+    eff, rho = [], []
+    for _age, g in d.groupby("age"):
+        v = g[idx].to_numpy(float)
+        m = float(np.nanmean(v)) if np.isfinite(v).sum() >= 8 else np.nan
+        if not np.isfinite(m) or m == 0:
+            continue
+        e_row, r_row = [], []
+        for f in FACTORS:
+            lv = g[f"var_{f}"].to_numpy(float)
+            hi_, lo_ = v[lv > 0.5], v[lv < -0.5]
+            e_row.append(100.0 * (np.nanmean(hi_) - np.nanmean(lo_)) / m
+                         if hi_.size and lo_.size else np.nan)
+            r_row.append(_spearman(v, lv, min_n=8)[0])
+        eff.append(e_row)
+        rho.append(r_row)
+    if not eff:
+        return np.full(len(FACTORS), np.nan), np.full(len(FACTORS), np.nan)
+    return np.nanmedian(np.array(eff), axis=0), np.nanmedian(np.array(rho), axis=0)
+
+
+def _oat_table(d, idx):
+    """1因子だけ振った被験者（他は基準値）での値。年齢層の中央値を −1 / 0 / +1 で返す。"""
+    lv = d[[f"var_{f}" for f in FACTORS]].to_numpy(float)
+    nz = (np.abs(lv) > 0.5).sum(axis=1)
+    base = d[nz == 0].groupby("age")[idx].median()
+    out = {}
+    for j, f in enumerate(FACTORS):
+        sel = d[(nz == 1) & (np.abs(lv[:, j]) > 0.5)]
+        lo_ = sel[sel[f"var_{f}"] < -0.5].groupby("age")[idx].median()
+        hi_ = sel[sel[f"var_{f}"] > 0.5].groupby("age")[idx].median()
+        out[f] = tuple(float(np.nanmedian(x)) if len(x) else np.nan for x in (lo_, base, hi_))
+    return out
+
+
+def _onsets_ms(on):
+    cols = [c for c in on.columns if c.startswith("on_")]
+    med = float(np.nanmedian(on[cols].to_numpy(float)))
+    if np.isfinite(med) and med < 10:      # 秒なら ms に
+        on = on.copy()
+        on[cols] = on[cols] * 1000.0
+        print("  立ち上がり時刻は秒と判断して ms に換算した", flush=True)
+    return on
+
+
+def report(df, hae, cfg, extras: dict | None = None) -> dict:
     import pandas as pd
+    extras = extras or {}
     d = df.merge(hae, on="subj_no", how="left")
-    if cfg is not None:
-        d = d.merge(cfg[["subj_no", "pvr", "pvc"]], on="subj_no", how="left")
-    for c in ("pvr", "pvc"):
-        if c not in d:
-            d[c] = np.nan
+    d = d.merge(cfg[["subj_no", "pvr", "pvc"]], on="subj_no", how="left")
+    if "variations" in extras:
+        d = d.merge(extras["variations"], on="subj_no", how="left")
+    if "onsets" in extras:
+        on = _onsets_ms(extras["onsets"])
+        d = d.merge(on, on="subj_no", how="left")
+        d["ptt_root_fin_ms"] = d["on_digital_ppg"] - d["on_aorticroot_p"]
+        if "on_radial_ppg" in d:
+            d["ptt_rad_fin_ms"] = d["on_digital_ppg"] - d["on_radial_ppg"]
+    summary = {"n": int(len(d))}
 
     print(f"\n{'='*74}\n研究0: 真値既知の仮想集団による構成概念妥当性\n{'='*74}")
     n2 = int(d.get("ok2", pd.Series(dtype=int)).sum())
@@ -293,75 +429,169 @@ def report(df, hae, cfg):
           f" / 3カーネル当てはめ成功 {n3} ({n3/max(len(d),1):.0%})")
     if "comp3_absent" in d:
         print(f"  うち第3成分が退化（2カーネル解に一致）: {int(d['comp3_absent'].sum())}")
+    if "fs" in d:
+        fs_med = float(np.nanmedian(d["fs"]))
+        summary["fs"] = fs_med
+        print(f"  拍長 60/HR から復元した標本化周波数 中央値 {fs_med:.0f} Hz（配布版は 500 Hz のはず）")
+    ages = sorted(d["age"].dropna().unique().tolist())
+    print(f"  年齢層: {ages}")
 
-    # 収束検算を通った拍のみを使う（主解析と同じ規約）
     ok2 = d[d.get("ok2", 0) == 1]
     ok3 = d[d.get("ok3", 0) == 1]
 
-    targets = [("PWV_a", "大動脈脈波伝播速度", ok2, ok3),
-               ("PWV_cf", "頸大腿脈波伝播速度", ok2, ok3),
-               ("svr", "全身血管抵抗", ok2, ok3),
-               ("pvr", "末梢血管抵抗（入力）", ok2, ok3),
-               ("pvc", "末梢血管コンプライアンス（入力）", ok2, ok3),
-               ("CO", "心拍出量", ok2, ok3),
-               ("SV", "1回拍出量", ok2, ok3),
-               ("age", "年齢", ok2, ok3)]
+    # --- 1. 全員をプールした順位相関（年齢の効果を含むので参考） ---
+    targets = [("PWV_a", "大動脈PWV"), ("PWV_cf", "頸大腿PWV"), ("svr", "全身抵抗"),
+               ("pvr", "末梢抵抗"), ("pvc", "末梢ｺﾝﾌﾟﾗｲｱﾝｽ"), ("CO", "心拍出量"),
+               ("SV", "1回拍出量"), ("age", "年齢")]
     idx = [("dt2_ms", "ΔT  2カーネル 1↔2", "2"),
            ("ri2", "RI  2カーネル 1↔2", "2"),
            ("dt3_12", "ΔT  3カーネル 1↔2", "3"),
            ("ri3_12", "RI  3カーネル 1↔2  (Couceiro R1_2 相当)", "3"),
            ("dt3_13", "ΔT  3カーネル 1↔3", "3"),
            ("ri3_13", "RI  3カーネル 1↔3  (Couceiro R1_d 相当)", "3")]
-
-    print(f"\n{'-'*74}\n順位相関（Spearman ρ）\n{'-'*74}")
-    hdr = f"{'指標':<40}" + "".join(f"{t[:9]:>11}" for t, _, _, _ in targets)
-    print(hdr)
+    print(f"\n{'-'*74}\n1. 全員プールの順位相関（Spearman ρ。年齢差を含むので参考値）\n{'-'*74}")
+    print(f"{'指標':<40}" + "".join(f"{t[:9]:>11}" for _c, t in targets))
     for col, lab, which in idx:
         src = ok2 if which == "2" else ok3
         if col not in src:
             continue
         line = f"{lab:<40}"
-        for tgt, _, _, _ in targets:
-            r, n = _spearman(src[col].to_numpy(float), src[tgt].to_numpy(float))
+        for tgt, _ in targets:
+            r, _n = _spearman(src[col].to_numpy(float), src[tgt].to_numpy(float))
             line += f"{r:>+11.3f}" if np.isfinite(r) else f"{'—':>11}"
         print(line)
 
-    print(f"\n事前予測: 動脈が硬い（PWV大）ほど反射波の帰還が早く ΔT は短縮する → ρ(ΔT, PWV) < 0")
-    print(f"          末梢が収縮（抵抗大）するほど反射が強まる → ρ(RI, PVR) > 0")
-    print(f"注意: SI = 身長/ΔT は 1/ΔT の単調変換であり、順位相関では符号が反転するだけである")
+    # --- 2. 年齢層内の順位相関（主判定） ---
+    print(f"\n{'-'*74}\n2. 年齢層内の順位相関（主判定。各層の ρ と中央値、予測の向きに揃った層の数）\n{'-'*74}")
+    print(f"{'対':<34}" + "".join(f"{int(a):>7}" for a in ages) + f"{'中央値':>9}{'向き':>8}  判定")
+    for x, y, sign, lab in PAIRS:
+        src = ok2 if x in ("dt2_ms", "ri2") else ok3
+        if x not in src or y not in src:
+            continue
+        rows = _by_age(src, x, y)
+        j = _judge(rows, sign)
+        line = f"{lab:<34}"
+        by = {a: r for a, r, _n in rows}
+        for a in ages:
+            r = by.get(a, np.nan)
+            line += f"{r:>+7.2f}" if np.isfinite(r) else f"{'—':>7}"
+        if j:
+            exp = {-1: "負", 1: "正", 0: "—"}[sign]
+            verdict = ("成立" if j["pass"] else "不成立") if sign else "記述"
+            line += f"{j['med_abs']:>9.3f}{j['n_ok']:>4}/{j['n_ages']:<3} {exp}  {verdict}"
+            if lab.startswith("Q1"):
+                summary["q1"] = j
+            if lab.startswith("Q2"):
+                summary["q2"] = j
+        print(line)
+    print(f"  規準: 全層で予測の向き かつ 中央値 |ρ| ≥ {CRIT_RHO}。事前予測は ΔT×PWV が負、RI×抵抗が正。")
+    print("  注意: PWDB の pvr は入力の MBP・HR・SV から決まる派生量（MBP ≈ pvr × CO）。")
+    print("        RI×pvr の関連は MBP・HR・SV の効果と混ざるので、3 の要因別の主効果で切り分ける。")
+
+    # --- 3. 要因別の主効果（変動表がある場合） ---
+    if "var_pwv" in d:
+        print(f"\n{'-'*74}\n3. 振った因子ごとの主効果（年齢層内。+1 と −1 の平均差 ÷ 層平均 [%]、および順位相関）\n{'-'*74}")
+        print(f"{'因子':<14}{'ΔT 主効果%':>12}{'ρ(ΔT)':>9}{'RI 主効果%':>12}{'ρ(RI)':>9}")
+        e_dt, r_dt = _factor_effects(ok2, "dt2_ms")
+        e_ri, r_ri = _factor_effects(ok2, "ri2")
+        for k, f in enumerate(FACTORS):
+            print(f"{FACTOR_LABEL[f]:<14}{e_dt[k]:>+12.1f}{r_dt[k]:>+9.2f}{e_ri[k]:>+12.1f}{r_ri[k]:>+9.2f}")
+        summary["factor_dt"] = dict(zip(FACTORS, map(float, e_dt)))
+        summary["factor_ri"] = dict(zip(FACTORS, map(float, e_ri)))
+        print("  読み方: ΔT が主に「脈波伝播速度」で動き、RI が主に「平均血圧（＝末梢抵抗）」で動けば概念どおり。")
+        print("          Epstein 2014 では導管スティフネス +200% で SI +60%、末梢抵抗 +200% で SI <2%。")
+
+        print(f"\n{'-'*74}\n4. 1因子だけ振った被験者（他はすべて基準値）での値。年齢層の中央値\n{'-'*74}")
+        print(f"{'因子':<14}{'ΔT −1':>9}{'ΔT 0':>9}{'ΔT +1':>9}{'RI −1':>9}{'RI 0':>9}{'RI +1':>9}")
+        o_dt, o_ri = _oat_table(ok2, "dt2_ms"), _oat_table(ok2, "ri2")
+        for f in FACTORS:
+            a, b, c = o_dt[f]
+            x, y, z = o_ri[f]
+            print(f"{FACTOR_LABEL[f]:<14}{a:>9.1f}{b:>9.1f}{c:>9.1f}{x:>9.3f}{y:>9.3f}{z:>9.3f}")
+
+    # --- 5. 真の伝播時間（立ち上がり時刻の表がある場合） ---
+    if "ptt_root_fin_ms" in d:
+        print(f"\n{'-'*74}\n5. 真の伝播時間（モデルの立ち上がり時刻の差。装置遅延も PEP も含まない）\n{'-'*74}")
+        q = lambda v: np.nanpercentile(v, [5, 50, 95])  # noqa: E731
+        a5, a50, a95 = q(d["ptt_root_fin_ms"].to_numpy(float))
+        print(f"  大動脈起始部→指尖  中央値 {a50:.1f} ms（5–95% {a5:.1f}–{a95:.1f}）")
+        if "ptt_rad_fin_ms" in d:
+            b5, b50, b95 = q(d["ptt_rad_fin_ms"].to_numpy(float))
+            print(f"  橈骨→指尖（VitalDB の T2−T1 の生理部分に相当） 中央値 {b50:.1f} ms（5–95% {b5:.1f}–{b95:.1f}）")
+            summary["ptt_rad_fin"] = (float(b5), float(b50), float(b95))
+        r_pwv = _judge(_by_age(d, "PWV_a", "ptt_root_fin_ms"), -1)
+        r_dt = _judge(_by_age(ok2, "dt2_ms", "ptt_root_fin_ms"), +1)
+        if r_pwv:
+            print(f"  年齢層内 ρ(大動脈PWV, 起始部→指尖の伝播時間) 中央値|ρ| {r_pwv['med_abs']:.2f}"
+                  f"（負の層 {r_pwv['n_ok']}/{r_pwv['n_ages']}。強く負なら真値どうしが整合）")
+        if r_dt:
+            print(f"  年齢層内 ρ(ΔT, 起始部→指尖の伝播時間) 中央値|ρ| {r_dt['med_abs']:.2f}"
+                  f"（正の層 {r_dt['n_ok']}/{r_dt['n_ages']}。ΔT が伝播時間を追うなら正）")
+        summary["ptt_root_fin_rho_pwv"] = r_pwv
+        summary["ptt_root_fin_rho_dt"] = r_dt
+
+    # --- 判定のまとめ ---
+    print(f"\n{'-'*74}\n判定（事前規準）\n{'-'*74}")
+    for key, lab in (("q1", "Q1 ΔT は大動脈PWV と関連する"), ("q2", "Q2 RI は末梢血管抵抗と関連する")):
+        j = summary.get(key)
+        if j:
+            print(f"  {lab}: {'成立' if j['pass'] else '不成立'}"
+                  f"（向きの揃った層 {j['n_ok']}/{j['n_ages']}、中央値 |ρ| {j['med_abs']:.3f}）")
+    print("  VitalDB では不成立だったので、in silico 成立なら信号鎖の問題、不成立なら概念の限界（roadmap §3）。")
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / "pwdb_indices.csv"
     d.to_csv(p, index=False)
-    print(f"\n被験者別の結果: {p}")
+    print(f"\n被験者別の結果（真値・因子・立ち上がり時刻を結合済み）: {p}")
+    return summary
 
 
 # ---------------------------------------------------------------- 自己検証
-def _make_mock(root: Path, n: int = 60, seed: int = 0):
-    """PWDB と同じCSV形式の模擬データを作る。真値と指標の関係を仕込む。"""
-    import pandas as pd
+HAEMOD_HEADER = ("Subject Number, age [years], HR [bpm], SV [ml], CO [l/min], LVET [ms], dp/dt [mmHg/s], "
+                 "PFT [ms], RFV [ml], SBP_a [mmHg], DBP_a [mmHg], MAP_a [mmHg], PP_a [mmHg], SBP_b [mmHg], "
+                 "DBP_b [mmHg], MBP_b [mmHg], PP_b [mmHg], PP_amp [ratio], AP [mmHg], AIx [%], Tr [ms], "
+                 "PWV_a [m/s], PWV_cf [m/s], PWV_br [m/s], PWV_fa [m/s], dia_asca [mm], dia_dta [mm], "
+                 "dia_abda [mm], dia_car [mm], Len [mm], drop fin [mmHg], drop ankle [mmHg], SVR [10^6 Pa s / m3]")
+CONFIG_HEADER = ("Subject Number, base, base_age, age [years], hr [bpm], sv [ml], pft [ms], rfv [ml], dbp [mmHg], "
+                 "mbp [mmHg], viscosity [Pa s], alpha [-], p_drop [mmHg], pvc [scaling factor], p_out [mmHg], "
+                 "density [kg /m^3], lvet [ms], pvr [Pa s/m^3], b0 [g/s], b1 [g cm/s], k1 [g/s^2/cm], k2 [/cm], "
+                 "k3 [g/s^2/cm]")
+VARIATION_HEADER = "SUBJECT NUMBER, AGE, DIA, HR, LVET, MBP, PWV, SV"
+ONSET_HEADER = ("Subject Number, AorticRoot_P, AorticRoot_U, AorticRoot_A, AorticRoot_PPG, Radial_P, Radial_U, "
+                "Radial_A, Radial_PPG, Digital_P, Digital_U, Digital_A, Digital_PPG")
+
+
+def _make_mock(root: Path, n: int = 48, seed: int = 0):
+    """実配布版と同じ見出しの模擬データを作る。真値と指標の関係を仕込む。"""
     rng = np.random.default_rng(seed)
     root.mkdir(parents=True, exist_ok=True)
     (root / "PWs" / "csv").mkdir(parents=True, exist_ok=True)
-
-    fs, rows, hae, cfg = 500.0, [], [], []
+    ages = [25, 35, 45, 55, 65, 75]
+    fs, rows, hae, cfg, var, ons, truth = 500.0, [], [], [], [], [], {}
     for i in range(1, n + 1):
+        age = ages[(i - 1) % 6]
+        lv = rng.integers(-1, 2, size=6)                   # DIA, HR, LVET, MBP, PWV, SV
         hr = float(rng.uniform(55, 85))
-        pwv = float(rng.uniform(4.0, 12.0))                 # 真値
-        pvr = float(rng.uniform(0.8, 2.2))                  # 真値
+        pwv = 5.0 + 0.09 * (age - 25) + 1.2 * lv[4] + float(rng.uniform(-0.3, 0.3))   # 真値
+        pvr = float(rng.uniform(0.8, 2.2)) * 1e8                                          # 真値
         dur = 60.0 / hr
         m = int(dur * fs)
         tt = np.arange(m) / fs
         dt_true = 0.42 - 0.022 * pwv                        # PWVが大きいほど短縮
-        ri_true = 0.20 + 0.28 * (pvr - 0.8) / 1.4           # 抵抗が大きいほど上昇
+        ri_true = 0.20 + 0.28 * (pvr / 1e8 - 0.8) / 1.4     # 抵抗が大きいほど上昇
         y = (1.00 * np.exp(-0.5 * ((tt - 0.11) / 0.045) ** 2)
              + ri_true * np.exp(-0.5 * ((tt - (0.11 + dt_true)) / 0.075) ** 2))
         rows.append([i] + list(y))
-        hae.append([i, 55.0, hr, 70.0, hr * 70 / 1000.0, 300.0, 900.0, 0.1, 0.0,
+        hae.append([i, age, hr, 70.0, hr * 70 / 1000.0, 300.0, 900.0, 0.1, 0.0,
                     120, 80, 93, 40, 118, 79, 92, 39, 1.05, 5.0, 20.0, 140.0,
-                    pwv, pwv * 0.95, 8.0, 9.0, 3.0, 2.5, 1.8, 0.7, 0.2, 5.0, 5.0, pvr])
-        cfg.append([i, 55.0, hr, 70.0, 0.3, 0.0, 80, 93, 0.0025, 1.3, 0.0,
-                    1.2e-8, 0.0, 1060, 300, pvr, 0.0, 0.0])
+                    pwv, pwv * 0.95, 8.0, 9.0, 3.0, 2.5, 1.8, 0.7, 0.2, 5.0, 5.0, pvr * 1.6 / 1e6])
+        cfg.append([i, int(lv.sum() == 0), 1, age, hr, 70.0, 79, 0.73, 75, 89, 0.0025, 1.3333, 0,
+                    1.0, 33.2, 1060, 282, pvr, 600, 150, 3e6, -13.5, 5.4e5])
+        var.append([i, age] + lv.tolist())
+        t_fin = 0.05 + 1.2 / pwv                            # 秒（換算の検査用）
+        ons.append([i, 0.0, 0.0, 0.0, 0.01, t_fin - 0.06, t_fin - 0.06, t_fin - 0.06, t_fin - 0.02,
+                    t_fin - 0.01, t_fin - 0.01, t_fin - 0.01, t_fin])
+        truth[i] = {"pwv": pwv, "pvr": pvr, "fs": fs}
 
     w = max(len(r) for r in rows)
     mat = np.full((len(rows), w), np.nan)
@@ -374,50 +604,64 @@ def _make_mock(root: Path, n: int = 60, seed: int = 0):
     with open(p, "a") as f:
         np.savetxt(f, mat, delimiter=",", fmt="%.10g")
 
-    pd.DataFrame(hae).to_csv(root / "pwdb_haemod_params.csv", index=False,
-                             header=["Subject Number"] + [f"{c} [u]" for c in HAEMOD_PARAMS[1:]])
-    pd.DataFrame(cfg).to_csv(root / "pwdb_model_configs.csv", index=False,
-                             header=["Subject Number"] + [f"{c} [u]" for c in CONFIG_PARAMS[1:]])
-    return root
+    def _write(name, header, table):
+        with open(root / name, "w") as f:
+            f.write(header + "\n")
+            for r in table:
+                f.write(",".join(f"{v:.15g}" if isinstance(v, float) else str(v) for v in r) + "\n")
+
+    _write("pwdb_haemod_params.csv", HAEMOD_HEADER, hae)
+    _write("pwdb_model_configs.csv", CONFIG_HEADER, cfg)
+    _write("pwdb_model_variations.csv", VARIATION_HEADER, var)
+    _write("pwdb_onset_times.csv", ONSET_HEADER, ons)
+    return root, truth
 
 
 def selftest() -> int:
     import tempfile, pandas as pd
-    print("== 20_pwdb_validity 自己検証（模擬PWDB・ネットワーク不要） ==\n")
+    print("== 20_pwdb_validity 自己検証（模擬PWDB・実配布版の見出し・ネットワーク不要） ==\n")
     ok = True
+
+    def rep(name, cond, detail=""):
+        nonlocal ok
+        ok &= bool(cond)
+        print(f"  [{'PASS' if cond else 'FAIL'}] {name}{('  ' + detail) if detail else ''}", flush=True)
+
     with tempfile.TemporaryDirectory() as td:
-        root = _make_mock(Path(td) / "exported_data", n=30)
-        hae, cfg, ppg = load_pwdb(root)
-        print(f"  読み込み: 血行動態 {hae.shape} / 設定 {cfg.shape} / PPG {ppg.shape}")
-        load_ok = len(hae) == 30 and len(ppg) == 30 and "PWV_a" in hae and "pvr" in cfg
-        ok &= load_ok
-        print(f"  列の位置対応（PWV_a・pvr が引ける）  {'PASS' if load_ok else 'FAIL'}")
+        root, truth = _make_mock(Path(td) / "exported_data", n=48)
+        hae, cfg, ppg, extras = load_pwdb(root)
+        rep("見出し名で読めた（haemod 33列・configs 23列）",
+            len(hae) == 48 and "PWV_a" in hae and "svr" in hae and "pvr" in cfg and "pvc" in cfg)
+        c = cfg.set_index("subj_no")
+        rep("configs の pvr が仕込んだ真値と一致（density 1060 ではない）",
+            all(abs(c.loc[i, "pvr"] - truth[i]["pvr"]) <= 1e-6 * truth[i]["pvr"] for i in truth))
+        h = hae.set_index("subj_no")
+        rep("haemod の PWV_a が仕込んだ真値と一致",
+            all(abs(h.loc[i, "PWV_a"] - truth[i]["pwv"]) < 1e-6 for i in truth))
+        rep("追加表（variations・onsets）が読めた", "variations" in extras and "onsets" in extras)
 
         rows = []
         for i in range(len(ppg)):
             rows.append(indices_for_subject((int(ppg.iloc[i, 0]), ppg.iloc[i].to_numpy(float),
-                                             float(hae.iloc[i]["HR"]))))
-            if (i + 1) % 10 == 0:
+                                             float(h.loc[int(ppg.iloc[i, 0]), "HR"]))))
+            if (i + 1) % 12 == 0:
                 print(f"    当てはめ {i+1}/{len(ppg)}", flush=True)
         df = pd.DataFrame(rows)
-        conv = df["ok2"].mean()
-        c_ok = conv > 0.8
-        ok &= c_ok
-        print(f"  2カーネルの収束率 {conv:.0%}  {'PASS' if c_ok else 'FAIL'}")
+        rep("2カーネルの収束率 > 80%", df["ok2"].mean() > 0.8, f"{df['ok2'].mean():.0%}")
+        rep("拍長から復元した fs ≈ 500 Hz", abs(float(np.nanmedian(df["fs"])) - 500) < 10,
+            f"{float(np.nanmedian(df['fs'])):.0f} Hz")
+        rep("3カーネルの当てはめ成功率 > 50%", df["ok3"].mean() > 0.5, f"{df['ok3'].mean():.0%}")
 
-        d = df.merge(hae, on="subj_no")
-        r_pwv, _ = _spearman(d["dt2_ms"].to_numpy(float), d["PWV_a"].to_numpy(float))
-        r_svr, _ = _spearman(d["ri2"].to_numpy(float), d["svr"].to_numpy(float))
-        p1 = np.isfinite(r_pwv) and r_pwv < -0.9
-        p2 = np.isfinite(r_svr) and r_svr > 0.9
-        ok &= p1 and p2
-        print(f"  仕込んだ関係を復元: ρ(ΔT, PWV)={r_pwv:+.3f}（要 <−0.9）  {'PASS' if p1 else 'FAIL'}")
-        print(f"                      ρ(RI, SVR)={r_svr:+.3f}（要 >+0.9）  {'PASS' if p2 else 'FAIL'}")
-
-        f3 = df["ok3"].mean()
-        f3_ok = f3 > 0.5
-        ok &= f3_ok
-        print(f"  3カーネルの当てはめ成功率 {f3:.0%}  {'PASS' if f3_ok else 'FAIL'}")
+        summ = report(df, hae, cfg, extras)
+        q1, q2 = summ.get("q1"), summ.get("q2")
+        rep("Q1 仕込んだ ΔT×PWV の関係を年齢層内で復元（成立判定）",
+            bool(q1 and q1["pass"]), f"{q1}" if q1 else "None")
+        rep("Q2 仕込んだ RI×pvr の関係を年齢層内で復元（成立判定）",
+            bool(q2 and q2["pass"]), f"{q2}" if q2 else "None")
+        rp = summ.get("ptt_root_fin_rho_pwv")
+        rep("立ち上がり時刻を秒→ms に換算し、真の伝播時間が PWV と負に相関",
+            bool(rp and rp["pass"]), f"{rp}" if rp else "None")
+        rep("要因別の主効果が計算できた", "factor_dt" in summ)
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 
@@ -426,7 +670,7 @@ def selftest() -> int:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--pwdb", type=str, help="PWDB の exported_data ディレクトリ")
+    ap.add_argument("--pwdb", type=str, help="PWDB の配布物を置いたフォルダ（zip のままでも可）")
     ap.add_argument("--limit", type=int, default=0, help="先頭N名だけ処理（0=全員）")
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--selftest", action="store_true")
@@ -439,7 +683,7 @@ def main() -> None:
 
     import pandas as pd
     root = Path(args.pwdb).expanduser()
-    hae, cfg, ppg = load_pwdb(root)
+    hae, cfg, ppg, extras = load_pwdb(root)
     if args.limit:
         ppg = ppg.iloc[:args.limit]
     hr_by = dict(zip(hae["subj_no"].astype(int), hae["HR"].astype(float)))
@@ -457,7 +701,7 @@ def main() -> None:
             rows.append(indices_for_subject(w))
             if n % 200 == 0:
                 print(f"  [{n}/{len(work)}]", flush=True)
-    report(pd.DataFrame(rows), hae, cfg)
+    report(pd.DataFrame(rows), hae, cfg, extras)
 
 
 if __name__ == "__main__":
