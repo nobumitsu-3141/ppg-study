@@ -1,9 +1,9 @@
 # DRAFT — Manuscript v0.1 (working draft, 2026-08-29)
 
-**Status**: Complete draft; all confirmatory-run numbers, Table 1, references and the
-Zenodo DOI are in. Remaining `[[ ]]`: the re-extraction sensitivity analyses (Table 5,
-variants run in progress), assembly of display Tables 2–4 from the Results text at
-submission formatting, and the author's personal attestations (COI wording).
+**Status**: Complete draft; all confirmatory-run numbers, Tables 1 and 6, references and
+the Zenodo DOI are in. The only `[[ ]]` left is the author's conflict-of-interest
+attestation. Outstanding before submission: assembly of display Tables 2–5 from the
+Results text at submission formatting.
 Reference list at the end; all previously flagged entries verified against
 PubMed/publisher records on 2026-08-30 (two corrections applied: Sugo & Ochiai journal;
 Basso author list and DOI).
@@ -337,7 +337,7 @@ sound but this form of correction is inadequate.
 ### 2.9 Sensitivity analyses
 
 Alternative index definitions (§2.4); three-kernel decomposition; ensemble noise target
-varied to 0.002 and 0.004; signal quality threshold varied; the non-FloTrac subset (29
+varied to 0.002 and 0.004; signal quality threshold varied; the non-FloTrac subset (16
 cases) analysed separately; and exclusion of the 15 cases used during pipeline development.
 
 ### 2.10 Software
@@ -457,9 +457,48 @@ the accuracy null is therefore not an artefact of the 60-second window. Adding h
 to the premise regression raised the explained fraction from 0.000 to 0.077 while leaving
 the vascular coefficients essentially unchanged (ΔSI% −0.020, ΔRI% −0.003, ΔHR% −0.057):
 within-case PWTT variation tracks heart rate, not the vascular indices, and the vascular
-null is not produced by heart-rate confounding. [[Sensitivity analyses requiring
-re-extraction: alternative index definitions, three-kernel decomposition, ensemble noise
-target, SQI variation.]]
+null is not produced by heart-rate confounding.
+
+Nine variants requiring re-extraction were computed on the same windows (Table 6): the two
+alternative amplitude definitions and the onset-to-onset timing definition prespecified in
+§2.4, a three-kernel decomposition, the ensemble noise target moved to 0.002 and to 0.004,
+and the signal-quality threshold moved to 5% and to 20%. Re-running the frozen
+decomposition from the raw waveforms under identical definitions reproduced the primary
+result exactly. Across the nine variants the vascular-explained fraction of ΔPWTT ranged
+from −0.051 to 0.005 and the coefficient on ΔSI% from −0.004 to −0.032, and the correction
+worsened percentage error in every one (difference +0.1 to +0.4 points, all 95% CIs
+excluding zero). Neither a third kernel nor either alternative amplitude definition raised
+the explained fraction. The two variants that discard the noisiest windows — the stricter
+noise target, retaining 144,112 of 161,737 windows, and the stricter quality threshold,
+retaining 137,600 — did not raise it either (0.005 and −0.036), so the null is not produced
+by dilution from measurement noise. The two variants whose ΔSI% coefficient differed
+materially, onset-to-onset timing and the three-kernel fit, were also the two with the
+lowest within-case sign consistency (61% and 67%, against 78% in the primary analysis),
+consistent with a noisier estimate of the same quantity rather than a different one.
+
+**Table 6. Sensitivity of the premise test and of accuracy to index definition, kernel
+count and pre-processing thresholds.**
+
+| Variant | Cases | Windows | Premise r² | β ΔSI% | β ΔRI% | Sign consistency | ΔPE, points (95% CI) |
+|---|---|---|---|---|---|---|---|
+| Primary analysis, recomputed on the same windows | 862 | 161,737 | 0.000 | −0.027 | −0.003 | 78% | +0.2 (+0.1 to +0.3) |
+| Re-extraction, identical definitions | 862 | 161,737 | 0.000 | −0.027 | −0.003 | 78% | +0.2 (+0.1 to +0.3) |
+| Onset-to-onset ΔT, 20% of component peak height | 862 | 161,297 | −0.041 | −0.004 | −0.004 | 61% | +0.1 (+0.0 to +0.2) |
+| Amplitude-parameter ratio a₂/a₁ | 862 | 161,737 | −0.003 | −0.029 | −0.002 | 77% | +0.2 (+0.1 to +0.4) |
+| Component area ratio | 862 | 161,737 | −0.012 | −0.032 | −0.001 | 81% | +0.2 (+0.1 to +0.3) |
+| Three-kernel decomposition | 858 | 153,249 | −0.051 | −0.010 | −0.004 | 67% | +0.3 (+0.2 to +0.4) |
+| Ensemble noise target 0.002, stricter | 852 | 144,112 | 0.005 | −0.024 | −0.003 | 77% | +0.2 (+0.1 to +0.3) |
+| Ensemble noise target 0.004, looser | 862 | 161,542 | −0.001 | −0.029 | −0.002 | 78% | +0.2 (+0.1 to +0.4) |
+| Signal-quality threshold 5%, stricter | 852 | 137,600 | −0.036 | −0.023 | −0.002 | 75% | +0.4 (+0.3 to +0.5) |
+| Signal-quality threshold 20%, looser | 862 | 161,297 | 0.004 | −0.028 | −0.003 | 78% | +0.2 (+0.1 to +0.4) |
+
+Premise r² is the through-origin explained fraction of within-case ΔPWTT% from ΔSI% and
+ΔRI% (§2.6); it can be negative because the model carries no intercept. β are the pooled
+coefficients. Sign consistency is the proportion of cases whose within-case ΔSI%
+coefficient carries the majority sign. ΔPE is the proposed minus the control percentage
+error in percentage points, so a positive value favours the control; control percentage
+error ranged from 26.5% to 27.0% across variants. Rows 1 and 2 differ only in that row 2
+re-ran the decomposition from the raw waveforms.
 
 ---
 
@@ -609,7 +648,8 @@ vasomotor challenge; the cohort characteristics are reported in full so that tra
 can be judged. Fourth, the manufacturer's coefficients are not public, so the control
 estimator reproduces the published PWTT form rather than the commercial device. Fifth,
 component assignment in a two-kernel decomposition is not guaranteed to correspond to
-distinct physical waves [Epstein 2014]. Sixth, stiffness and reflection indices were
+distinct physical waves [Epstein 2014]; a three-kernel decomposition, prespecified as a
+sensitivity analysis, did not raise the explained fraction (Table 6). Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
 change is itself an assumption. Finally, the photoplethysmographic channel is a processed
 monitor output. Timing information demonstrably survives that processing, as the positive

@@ -142,6 +142,41 @@ def build_cases(joined: dict, dt_col: str, ri_col: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------- 点検
+def repro(joined: dict) -> dict | None:
+    """再抽出が主解析の指標をどこまで再現したかを数える。
+
+    11_variants_extract.py は凍結コード（src.pda.fit_beat）を同じウィンドウに
+    当てているので、拍の切り出し・SQI判定・ノイズ推定・アンサンブル群分けまで
+    一致していれば結果は一致するはずである。一致していれば「変種行の差は
+    定義変更だけによる」と言える。一致しなければ、その差は再現性の限界を含む。
+    """
+    dd, dr, n_same_dt, n_same_ri, n = [], [], 0, 0, 0
+    for _cid, j in joined.items():
+        if "dt_rep" not in j.columns or "ri_rep" not in j.columns:
+            return None
+        h = j.attrs["height_m"]
+        a = j["si"].to_numpy(float)
+        b = h / j["dt_rep"].to_numpy(float)     # 変種ΔT から組み直した SI
+        c = j["ri"].to_numpy(float)
+        d = j["ri_rep"].to_numpy(float)
+        m = np.isfinite(a) & np.isfinite(b) & np.isfinite(c) & np.isfinite(d)
+        if not m.any():
+            continue
+        ra = np.abs(b[m] - a[m]) / np.maximum(np.abs(a[m]), 1e-12)
+        rb = np.abs(d[m] - c[m]) / np.maximum(np.abs(c[m]), 1e-12)
+        dd.append(ra)
+        dr.append(rb)
+        n_same_dt += int((ra <= 1e-9).sum())
+        n_same_ri += int((rb <= 1e-9).sum())
+        n += int(m.sum())
+    if not n:
+        return None
+    dd, dr = np.concatenate(dd), np.concatenate(dr)
+    return {"n": n, "same_dt": n_same_dt / n, "same_ri": n_same_ri / n,
+            "med_dt": float(np.median(dd)), "p95_dt": float(np.percentile(dd, 95)),
+            "med_ri": float(np.median(dr)), "p95_ri": float(np.percentile(dr, 95))}
+
+
 def check(joined: dict, inv: dict) -> None:
     say(f"メタ {inv['meta']} 件: 結合できた症例 {inv['joined']}"
         f"（メタ不良 {inv['meta_bad']} / CSV欠落 {inv['csv_missing']} / 読込失敗 {inv['read_error']}"
@@ -160,6 +195,17 @@ def check(joined: dict, inv: dict) -> None:
     say()
     say("欠損率は「結合ウィンドウのうち、その変種が計算できなかった割合」。")
     say("3カーネルとノイズ目標0.002は計算条件が厳しいので高めになる。")
+
+    r = repro(joined)
+    if r:
+        say()
+        say("== 再抽出の再現性（同一定義で当てはめ直した値 vs 主解析の値） ==")
+        say(f"  比較できたウィンドウ {r['n']:,}")
+        say(f"  ΔT系(SI): 完全一致 {r['same_dt']:.1%} / 相対差 中央値 {r['med_dt']:.2e}"
+            f" 95%点 {r['p95_dt']:.2e}")
+        say(f"  RI      : 完全一致 {r['same_ri']:.1%} / 相対差 中央値 {r['med_ri']:.2e}"
+            f" 95%点 {r['p95_ri']:.2e}")
+        say("  完全一致がほぼ100%なら、変種行の差は定義変更だけによる。")
 
 
 # ---------------------------------------------------------------- 集計
@@ -282,6 +328,11 @@ def selftest() -> int:
 
         c_3k = build_cases(joined, "dt3", "ri3")
         rep("3カーネルが全滅の症例は落ちる", len(c_3k) == 27, f"{len(c_3k)} 症例")
+
+        r = repro(joined)
+        rep("再現性の診断が動く（合成データは dt を 1.05 倍にしてあるので不一致）",
+            r is not None and r["same_dt"] < 0.01 and abs(r["med_dt"] - (1 - 1 / 1.05)) < 1e-9,
+            f"完全一致 {r['same_dt']:.1%} / 中央値 {r['med_dt']:.4f}" if r else "None")
 
         out_csv = data / "variants_table.csv"
         df = run(joined, out_csv)
