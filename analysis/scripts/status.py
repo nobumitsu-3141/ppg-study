@@ -18,9 +18,9 @@ DATA = ROOT / "data"
 
 # (表示名, 出力glob, 総数の目安, プロセス名の一部, ログファイル)
 JOBS = [
-    ("変種抽出",   DATA / "features_variants", "case_*.csv", 873, "11_variants_extract", "variants_run.log"),
-    ("動脈圧指標", DATA / "features_art",      "case_*.csv", 873, "15_art_indices",      "art_run.log"),
-    ("血管トーヌス", DATA / "vasotone",        "case_*.csv", 446, "16_vasotone",         "vaso_run.log"),
+    ("変種抽出",   DATA / "features_variants", "case_*.csv", 862, "11_variants_extract", "variants_run.log"),
+    ("動脈圧指標", DATA / "features_art",      "case_*.csv", 862, "15_art_indices",      "art_run.log"),
+    ("血管トーヌス", DATA / "vasotone",        "case_*.csv", 232, "16_vasotone",         "vaso_run.log"),
     ("PWDB検証",   DATA / "pwdb",              "*.csv",        1, "20_pwdb_validity",    "pwdb_run.log"),
 ]
 
