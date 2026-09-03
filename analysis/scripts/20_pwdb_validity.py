@@ -38,8 +38,10 @@ Am J Physiol Heart Circ Physiol 2019. doi:10.5281/zenodo.3275625
 
 使い方
 ------
-    python scripts/20_pwdb_validity.py --pwdb ~/pwdb/exported_data
-    python scripts/20_pwdb_validity.py --pwdb ~/pwdb/exported_data --limit 200 --jobs 4
+    python scripts/20_pwdb_validity.py --pwdb ~/pwdb
+        ~/pwdb は Zenodo から取得した配布物を置いたフォルダ。zip のままでも展開済みでもよく、
+        必要な3ファイル（haemod_params・model_configs・Digital_PPG）を再帰的に探す
+    python scripts/20_pwdb_validity.py --pwdb ~/pwdb --limit 200 --jobs 4
     python scripts/20_pwdb_validity.py --selftest
         ネットワーク不要・模擬データ
 """
@@ -85,16 +87,80 @@ def _read_positional(path: Path, names: list[str]):
     return df
 
 
+# 配布物の中で探すファイル。Zenodo の zip の階層は配布版で変わりうるので、名前の
+# パターンで root 以下を再帰的に探す（大文字小文字は無視）。
+NEEDED = {
+    "haemod": ("*haemod*param*.csv", "血行動態の真値 pwdb_haemod_params.csv"),
+    "config": ("*model*config*.csv", "モデル入力 pwdb_model_configs.csv"),
+    "ppg":    ("*digital*ppg*.csv",  "指尖PPG PWs_Digital_PPG.csv"),
+}
+
+
+def _find_one(root: Path, pattern: str):
+    """root 以下で pattern に合う CSV を1つ返す（見つからなければ None）。"""
+    import fnmatch
+    hits = [q for q in root.rglob("*.csv") if fnmatch.fnmatch(q.name.lower(), pattern)]
+    if not hits:
+        return None
+    # 同名が複数あるとき（例: mat 版と csv 版の展開が混在）は最も浅いものを採る
+    hits.sort(key=lambda q: (len(q.parts), str(q)))
+    return hits[0]
+
+
+def _extract_from_zips(root: Path) -> list:
+    """root 以下の zip の中に必要ファイルがあれば、その3つだけを取り出す。"""
+    import fnmatch
+    import zipfile
+    got = []
+    for z in sorted(root.rglob("*.zip")):
+        try:
+            with zipfile.ZipFile(z) as zf:
+                for member in zf.namelist():
+                    name = Path(member).name.lower()
+                    if any(fnmatch.fnmatch(name, pat) for pat, _ in NEEDED.values()):
+                        dest = root / "extracted"
+                        dest.mkdir(parents=True, exist_ok=True)
+                        zf.extract(member, dest)
+                        got.append(dest / member)
+        except zipfile.BadZipFile:
+            continue
+    return got
+
+
+def locate_pwdb_files(root: Path) -> dict:
+    """必要な3ファイルの実パスを返す。無ければ何があったかを添えて例外を出す。"""
+    root = Path(root).expanduser()
+    if not root.exists():
+        raise FileNotFoundError(
+            f"ディレクトリがありません: {root}\n"
+            "Zenodo（doi:10.5281/zenodo.3275625）から CSV 形式の配布物を取得し、"
+            "そのフォルダ（zip のままでもよい）を --pwdb に渡してください。")
+    found = {k: _find_one(root, pat) for k, (pat, _) in NEEDED.items()}
+    if any(v is None for v in found.values()):
+        got = _extract_from_zips(root)
+        if got:
+            print(f"  zip から {len(got)} ファイルを取り出した: {root / 'extracted'}", flush=True)
+            found = {k: _find_one(root, pat) for k, (pat, _) in NEEDED.items()}
+    missing = [NEEDED[k][1] for k, v in found.items() if v is None]
+    if missing:
+        listing = sorted(str(q.relative_to(root)) for q in root.rglob("*")
+                         if q.is_file())[:40]
+        raise FileNotFoundError(
+            "必要なファイルが見つかりません: " + " / ".join(missing) + "\n"
+            f"{root} 以下にあるもの（先頭40件）:\n  " + "\n  ".join(listing) +
+            "\n.mat 形式のみの配布物には対応していません。CSV 形式を取得してください。")
+    return found
+
+
 def load_pwdb(root: Path):
-    """PWDB の exported_data から真値と指尖PPGを読む。"""
+    """PWDB の配布物から真値と指尖PPGを読む。root は配布物を置いた任意の親フォルダでよい。"""
     import pandas as pd
-    hae = _read_positional(root / "pwdb_haemod_params.csv", HAEMOD_PARAMS)
-    cfg_p = root / "pwdb_model_configs.csv"
-    cfg = _read_positional(cfg_p, CONFIG_PARAMS) if cfg_p.exists() else None
-    ppg_p = root / "PWs" / "csv" / "PWs_Digital_PPG.csv"
-    if not ppg_p.exists():
-        raise FileNotFoundError(f"指尖PPGが見つかりません: {ppg_p}")
-    ppg = pd.read_csv(ppg_p, skipinitialspace=True)
+    f = locate_pwdb_files(root)
+    print(f"  読み込み元: {f['haemod']}\n            {f['config']}\n            {f['ppg']}",
+          flush=True)
+    hae = _read_positional(f["haemod"], HAEMOD_PARAMS)
+    cfg = _read_positional(f["config"], CONFIG_PARAMS)
+    ppg = pd.read_csv(f["ppg"], skipinitialspace=True)
     return hae, cfg, ppg
 
 
