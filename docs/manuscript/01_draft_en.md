@@ -390,7 +390,7 @@ windows per case.
 | Anaesthesia | general, 862 (100%) |
 | Recording length, min | 257 (182–338) |
 | Valid 60-s windows per case | 177 (104–255) |
-| Photoplethysmographic channel delay, ms | 660 (644–676) |
+| Photoplethysmographic channel apparent lag, ms | 660 (644–676) |
 | Reference CO device: EV1000 / Vigileo / CardioQ / Vigilance II | 545 (63%) / 301 (35%) / 11 (1%) / 5 (1%) |
 
 Values are median (IQR) or n (%).
@@ -576,9 +576,15 @@ term directly — phonocardiography, impedance cardiography or bioreactance to t
 valve opening — or that abandon drift modelling in favour of more frequent recalibration.
 
 **A caution for users of open waveform databases.** The photoplethysmographic channel of
-this database carries a fixed processing delay relative to the electrocardiogram — in this
-cohort a case-level median of 660 ms with a tight interquartile range (644–676 ms),
-consistent with a device processing constant rather than physiology. Device-induced timing artefacts of this class have been documented at
+this database lags the electrocardiogram by a large, case-specific and near-constant
+interval — in this cohort a case-level median of 660 ms with a tight interquartile range
+(644–676 ms). This apparent lag comprises the device's processing delay plus the
+physiological transit time. Using the arterial line to separate them, the interval from the
+R wave to the radial pressure upstroke was 180 ms (IQR 166–192), a value consistent with a
+pre-ejection period of 80–120 ms plus an aortic-to-radial transit of 60–100 ms; the
+remaining 479 ms (IQR 464–492) is the device processing delay plus the short radial-to-finger
+transit. The processing delay itself is therefore of the order of 440–460 ms, and the
+balance is physiology. Device-induced timing artefacts of this class have been documented at
 scale elsewhere and are not a new phenomenon [Ruffolo 2025]; what we add is their
 quantification and correction in this specific, widely used resource, where waveform
 synchronisation has been assumed adequate and that assumption has been propagated into a
