@@ -1,9 +1,11 @@
 # DRAFT — Manuscript v0.1 (working draft, 2026-08-29)
 
 **Status**: Complete draft; all confirmatory-run numbers, Tables 1 and 6, references and
-the Zenodo DOI are in. The only `[[ ]]` left is the author's conflict-of-interest
-attestation. Outstanding before submission: assembly of display Tables 2–5 from the
-Results text at submission formatting.
+the Zenodo DOI are in. Exploratory analyses added after the freeze (SVR, PWTT decomposition at the
+arterial line, in-silico construct validity on the Pulse Wave Database) were integrated on
+2026-09-03 (§2.10, §3.6, Discussion, Conclusion, Abstract). The only `[[ ]]` left is the
+author's conflict-of-interest attestation. Outstanding before submission: assembly of
+display Tables 2–5 from the Results text at submission formatting.
 Reference list at the end; all previously flagged entries verified against
 PubMed/publisher records on 2026-08-30 (two corrections applied: Sugo & Ochiai journal;
 Basso author list and DOI).
@@ -27,11 +29,14 @@ vascular state those indices measure.
 
 **Methods.** From the VitalDB open perioperative database, 874 cases had photoplethysmogram,
 ECG, arterial pressure and a continuous cardiac output track; 862 were analysable under a
-statistical analysis plan frozen before any waveform was examined. The primary analysis
+statistical analysis plan frozen before the confirmatory analysis. The primary analysis
 used no reference cardiac output: within-case change in PWTT was regressed on concurrent
 relative changes in the pulse-decomposition component interval (ΔT, as stiffness index) and
 reflection index. An exploratory positive control tested whether the indices reproduce the
-known association of arterial stiffness with age.
+known association of arterial stiffness with age. After the freeze, two further exploratory
+analyses were added: decomposition of PWTT at the radial arterial line, and a test of
+construct validity in a virtual population with known pulse wave velocity and peripheral
+resistance (Pulse Wave Database, 4,374 subjects).
 
 **Results.** Across 161,737 sixty-second windows, vascular indices explained essentially
 none of the within-case PWTT variation (prespecified through-origin pooled r² = 0.000; with
@@ -40,16 +45,24 @@ arterial pressure alone explained 0.139 — three times more — so a vascular c
 PWTT exists but is not captured by these indices. The coefficient's sign was consistent with the vascular hypothesis in 78% of
 cases, indicating a directionally correct but quantitatively negligible vascular component.
 Signals were reproducible (lag-1 autocorrelation: PWTT +0.75, ΔT +0.50), and ΔT reproduced
-the expected age association, whereas the reflection index did not and was judged
-uninterpretable in this signal source. Correcting the calibration constant did not improve
+the expected age association, whereas the reflection index did not and was judged uninterpretable in this signal source.
+In the virtual population, ΔT correlated with aortic pulse wave velocity in the predicted
+direction in every age group but weakly (median |ρ| 0.22) and did not track the true
+transit time (ρ 0.19); RI did not track peripheral resistance (median |ρ| 0.21). Splitting
+PWTT at the radial line, the term containing the pre-ejection period accounted for 7% of
+within-case variance; most variation lay in the distal photoplethysmographic segment.
+Correcting the calibration constant did not improve
 accuracy (percentage error 27.2% versus 26.9%; difference +0.2 percentage points, 95% CI
 +0.1 to +0.4).
 
 **Conclusions.** The premise underlying vascular correction of PWTT-based cardiac output
 fails quantitatively: the vascular component of intraoperative PWTT variation, though
 directionally detectable, is two orders of magnitude too small to support calibration
-correction from single-site photoplethysmography. This is consistent with dominance of the
-pre-ejection period.
+correction from single-site photoplethysmography. The limitation lies with the indices
+rather than the signal: tested against ground truth, neither tracks its target. Most
+intraoperative PWTT variation lay in the distal photoplethysmographic segment, so the
+measurement of transit time itself, rather than vascular correction, is the more promising
+target.
 
 ---
 
@@ -108,7 +121,7 @@ If intraoperative PWTT variation is dominated by its cardiac component, or if th
 do not track the vascular component that remains, then no correction built on them can
 succeed, however well the indices are measured. We therefore asked whether the premise
 holds before asking whether the correction works. Using a public perioperative waveform
-database and an analysis plan frozen before any waveform was examined, we quantified how
+database and an analysis plan frozen before the confirmatory analysis, we quantified how
 much of the within-case, beat-to-beat variation in PWTT is explained by simultaneously
 measured pulse-decomposition indices. This primary question requires no reference CO
 measurement, and is therefore unaffected by the limitations of the reference standards such
@@ -129,9 +142,15 @@ consulted and responded that ethics committee review was not required. The writt
 response is retained by the authors.
 
 The statistical analysis plan, including all index definitions, quality thresholds, the
-model specification and the interpretation rules, was finalised and frozen before any
-waveform data were analysed. Development and verification of the measurement pipeline used
-synthetic signals with known ground truth. The frozen plan and the complete analysis code
+model specification and the interpretation rules, was finalised and frozen before the
+confirmatory analysis. Development and verification of the measurement pipeline used
+synthetic signals with known ground truth, followed by a 15-case pilot on real waveforms
+that revealed the device delay described in §2.3; the pipeline was frozen after that pilot
+(plan version 0.3, 28 August 2026), and the 15 pilot cases were excluded in a prespecified
+sensitivity analysis (§2.9). Two exploratory analyses (the positive control and the
+window-length sensitivity analysis) were added on 29 August (version 0.3.1) and three more
+after the confirmatory run (§2.10); all are labelled as such. The frozen plan and the
+complete analysis code
 are publicly available at https://github.com/nobumitsu-3141/ppg-study, with a third-party
 timestamp of the freeze (Zenodo, doi:10.5281/zenodo.22167118, archiving tag sap-v0.3 at
 commit 407f226; frozen 28 August 2026). The study is reported in accordance with the
@@ -345,7 +364,35 @@ taking PWTT, heart rate, pressure and reference CO from the primary run; a re-ru
 identical definitions was included as a check that this harness reproduces the primary
 indices.
 
-### 2.10 Software
+### 2.10 Exploratory analyses added after the plan was frozen
+
+Three analyses were added after the confirmatory run and are reported as exploratory; none
+alters a prespecified endpoint. (a) *Association with systemic vascular resistance.* In the
+204 cases with a resistance track from the EV1000, within-case Spearman correlations of the
+windowed SI, RI and mean arterial pressure with SVR were computed and summarised as medians
+with a sign test across cases. SVR from this monitor is (MAP − CVP)/CO with CO taken from
+the arterial waveform, so it is partly circular and was used descriptively. (b)
+*Decomposition of PWTT at the arterial line.* PWTT was split at the radial pressure
+upstroke into T1 (R wave to radial upstroke: pre-ejection period plus central transit) and
+T2 − T1 (radial upstroke to the photoplethysmographic foot: distal transit plus the
+constant device delay), with a measurability gate fixed in advance (lag-1 autocorrelation of
+Δ(T2 − T1) ≥ 0.30 and within-case coefficient of variation ≤ 0.50). The premise regression
+was repeated with Δ(T2 − T1) as the dependent variable, which excludes the pre-ejection
+period by construction, and the within-case variance of ΔPWTT was decomposed into the two
+terms. (c) *Construct validity in silico.* The frozen decomposition was applied to the
+digital photoplethysmogram of the 4,374 virtual subjects of the Pulse Wave Database
+[Charlton 2019], a validated one-dimensional model population spanning six age decades in
+which aortic diameter, heart rate, ejection duration, mean pressure, pulse wave velocity and
+stroke volume are each varied over three levels in a full factorial design, and in which
+aortic pulse wave velocity, peripheral resistance and the onset time of the pulse at every
+site are known exactly. Because pulse wave velocity and ΔT both change with age, the
+primary test was the Spearman correlation within each age group, with a criterion fixed
+before the data were examined: an association was accepted if the correlation carried the
+predicted sign in every age group and its median absolute value was at least 0.3. Main
+effects of each varied factor and the true transit times from the onset-time table were
+reported descriptively.
+
+### 2.11 Software
 
 Analyses were performed in Python 3.9.6 with NumPy 2.0.2, SciPy 1.13.1 and pandas 2.3.3.
 All analysis code, the frozen analysis plan and the synthetic-data verification suite are
@@ -506,6 +553,42 @@ error in percentage points, so a positive value favours the control; control per
 error ranged from 26.5% to 27.0% across variants. Rows 1 and 2 differ only in that row 2
 re-ran the decomposition from the raw waveforms.
 
+### 3.6 Exploratory analyses added after the plan was frozen
+
+**Systemic vascular resistance.** In 204 cases the within-case correlation of RI with SVR
+had a median of +0.098 (sign test p = 1.7 × 10⁻⁵), in the predicted direction, whereas SI
+was unrelated to SVR (median +0.049, p = 0.14); mean arterial pressure correlated at +0.334
+(p = 4.8 × 10⁻¹⁵).
+
+**Decomposition of PWTT.** The distal term passed the measurability gate (lag-1
+autocorrelation +0.654, coefficient of variation 0.037, no within-case drift). The interval
+from the R wave to the radial upstroke, T1, was 180 ms (IQR 166–192). Δ(T2 − T1), which
+contains no pre-ejection period, was explained by ΔT no better than ΔPWTT was (r² = 0.008;
+within-case ρ +0.122 against +0.216 for ΔPWTT), so the null of the primary analysis is not
+produced by opposing movements of the pre-ejection period and transit time. Within cases the
+distal term accounted for most of the variance of ΔPWTT (r² 0.534 against 0.073 for ΔT1;
+both terms together 0.977), with the caveat that any timing error in the
+photoplethysmographic foot falls entirely in the distal term. Indices derived from the
+arterial pressure waveform (diastolic decay time constant and maximal dP/dt) explained ΔPWTT
+no better (r² = 0.015).
+
+**Construct validity in silico.** Of 4,374 virtual subjects, 4,036 (92%) passed the
+convergence checks. Within age groups ΔT correlated with aortic pulse wave velocity in the
+predicted, negative direction in all six groups but weakly (ρ −0.14, −0.12, −0.09, −0.31,
+−0.52 and −0.61 from age 25 to 75; median |ρ| 0.22), below the prespecified 0.3; RI
+correlated with peripheral resistance positively in five of six groups (median |ρ| 0.21;
++0.49 at age 25 falling to −0.01 at 75). Neither criterion was met. In the factorial
+design, pulse wave velocity had the largest main effect on ΔT (−17% from −1 SD to +1 SD),
+but heart rate (−11%, ρ −0.54) and aortic diameter (−13%) were of the same order, and the
+response to pulse wave velocity was not monotonic: with every other factor at baseline, ΔT
+was 332, 353 and 251 ms at −1 SD, baseline and +1 SD, and RI 0.325, 0.254 and 0.647,
+consistent with a change in which wave the second component captures. RI was moved most by
+heart rate (−40%) and aortic diameter (+33%). Three-kernel variants performed worse. The
+true transit time from the aortic root to the finger, taken from the model's onset times,
+was 96 ms (5th–95th percentile 66–120) and correlated with aortic pulse wave velocity at
+ρ −0.99 within age groups, whereas ΔT correlated with that same true transit time at only
++0.19. The true radial-to-finger transit was 8 ms (4–16 ms) across the whole population.
+
 ---
 
 ## 4. Discussion
@@ -563,6 +646,24 @@ vascular reference they tested [Couceiro 2015]. **This decision rests on the pos
 control alone, which is independent of the primary endpoint, and was made without reference
 to the premise-test result; the prespecified primary analysis was not altered.**
 
+**What the indices measure, tested against ground truth.** The positive control shows that
+ΔT carries vascular information, but not how much of ΔT is vascular. We therefore applied
+the frozen decomposition to a virtual population in which the quantities the indices are
+meant to index are known exactly [Charlton 2019] (§3.6). The result bounds the concept
+rather than the signal chain: on ideal waveforms with no monitor processing, ΔT correlated
+with aortic pulse wave velocity within age groups at a median of only 0.22, and with the true
+aortic-root-to-finger transit time at 0.19, while that transit time itself tracked pulse
+wave velocity at 0.99. ΔT is sensitive to stiffness in the predicted direction but not
+specific to it: heart rate and aortic diameter moved it as much, and its response to
+stiffness was discontinuous, which is the behaviour expected when the second component
+switches between waves [Epstein 2014]. RI was moved most by heart rate and was related to
+peripheral resistance only in the youngest, most compliant vessels. Two conclusions follow.
+First, the null of the primary analysis is not an artefact of the monitor's
+photoplethysmographic channel; the indices do not track their targets even when the signal
+is perfect. Second, the weak but significant association of RI with systemic vascular
+resistance in the clinical data (§3.6) is what the model predicts for compliant vessels and
+should not be read as validation of RI as a resistance index.
+
 **Physiological interpretation.** Our result is what the mechanistic literature predicts
 rather than an anomaly. PWTT measured from the R wave contains the pre-ejection period in
 addition to arterial transit time [Ochiai 1999], and this cardiac term is not a small
@@ -574,9 +675,13 @@ tens of milliseconds under sympathetic activation [Pilz 2023]; and it can move o
 vascular transit time in the same subject [Djupedal 2022], which is a direct mechanism for a
 large change in PWTT accompanied by no change in vascular indices. Most pointedly, the
 manufacturer's own investigators reported that the pre-ejection period accounted for
-approximately half of the change in PWTT [Sugo 2012]. The present study is the human,
-intraoperative, reference-free confirmation of that mechanism, and it explains why improving
-the calibration procedure alone does not repair the method [Smetkin 2017]. Consistent with
+approximately half of the change in PWTT [Sugo 2012]. The present study confirms the first
+half of that mechanism — the vascular indices do not explain PWTT — but not the second: when
+PWTT was split at the radial line (§3.6), the term containing the pre-ejection period
+accounted for only 7% of its within-case variance, and removing it did not unmask a vascular
+relationship. In this intraoperative cohort the dominant variation lay in the distal,
+photoplethysmographic segment. Either way, the result explains why improving the
+calibration procedure alone does not repair the method [Smetkin 2017]. Consistent with
 it, when heart rate — a marker of chronotropic and autonomic state — was added to the
 primary regression as an exploratory analysis, it alone explained 7.7% of within-case PWTT
 variation where the vascular indices explained none, and their coefficients were unchanged
@@ -605,8 +710,11 @@ and is measurable; it is simply not what the pulse-decomposition indices capture
 all measured variables together (indices, pressure, heart rate) explained 0.196, whereas the
 lag-1 autocorrelation of PWTT (+0.75) implies a reproducible, non-noise component of roughly
 0.56–0.75. A substantial reproducible fraction of PWTT variation therefore remains
-unexplained by anything we measured — plausibly the pre-ejection period, which we could not
-measure. The honest statement is not that vascular correction has no room, but that the room
+unexplained by anything we measured. Splitting PWTT at the radial line (§3.6) located most
+of that variance in the distal segment, whose true physiological range in a virtual
+population is only 4–16 ms against a within-case standard deviation of about 18 ms here,
+so it is more plausibly a property of how the photoplethysmographic foot is timed than of
+the vasculature or the heart. The honest statement is not that vascular correction has no room, but that the room
 lies outside what single-site photoplethysmographic decomposition indices reach.
 
 **Implications.** The structured, vascular-state-related error of transit-time cardiac
@@ -616,9 +724,11 @@ achieve from single-site photoplethysmography: if the quantity to be corrected d
 covary with the correction variable, the correction cannot work regardless of how well the
 index is measured. Notably, even mean arterial pressure — which explains three times more of
 the PWTT variation — did not improve accuracy when added to the estimator (§3.4), so a
-larger explained fraction alone does not guarantee a usable correction. More promising directions are those that measure and remove the cardiac
-term directly — phonocardiography, impedance cardiography or bioreactance to time aortic
-valve opening — or that abandon drift modelling in favour of more frequent recalibration.
+larger explained fraction alone does not guarantee a usable correction. More promising directions are those that address the measurement of transit time itself —
+the timing of the photoplethysmographic foot and the device delay that precedes it — or
+that abandon drift modelling in favour of more frequent recalibration. Measuring the cardiac
+term directly, by phonocardiography, impedance cardiography or bioreactance, remains worth
+testing, but this cohort does not support it as the dominant term.
 
 **A caution for users of open waveform databases.** The photoplethysmographic channel of
 this database lags the electrocardiogram by a large, case-specific and near-constant
@@ -627,9 +737,9 @@ interval — in this cohort a case-level median of 660 ms with a tight interquar
 physiological transit time. Using the arterial line to separate them, the interval from the
 R wave to the radial pressure upstroke was 180 ms (IQR 166–192), a value consistent with a
 pre-ejection period of 80–120 ms plus an aortic-to-radial transit of 60–100 ms; the
-remaining 479 ms (IQR 464–492) is the device processing delay plus the short radial-to-finger
-transit. The processing delay itself is therefore of the order of 440–460 ms, and the
-balance is physiology. Device-induced timing artefacts of this class have been documented at
+remaining 479 ms (IQR 464–492) is the device processing delay plus the radial-to-finger
+transit, which is 4–16 ms in a validated virtual population (§3.6); the processing delay
+itself is therefore of the order of 460–475 ms. Device-induced timing artefacts of this class have been documented at
 scale elsewhere and are not a new phenomenon [Ruffolo 2025]; what we add is their
 quantification and correction in this specific, widely used resource, where waveform
 synchronisation has been assumed adequate and that assumption has been propagated into a
@@ -655,10 +765,14 @@ can be judged. Fourth, the manufacturer's coefficients are not public, so the co
 estimator reproduces the published PWTT form rather than the commercial device. Fifth,
 component assignment in a two-kernel decomposition is not guaranteed to correspond to
 distinct physical waves [Epstein 2014]; a three-kernel decomposition, prespecified as a
-sensitivity analysis, did not raise the explained fraction (Table 6). Sixth, stiffness and reflection indices were
+sensitivity analysis, did not raise the explained fraction (Table 6), and in silico the
+response of both indices to stiffness was discontinuous (§3.6). Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
-change is itself an assumption. Finally, the photoplethysmographic channel is a processed
-monitor output. Timing information demonstrably survives that processing, as the positive
+change is itself an assumption. Seventh, the three analyses in §3.6 were added after the
+plan was frozen and are exploratory; the virtual population models healthy ageing without
+anaesthesia or vasoactive drugs, so it tests how the indices are constructed, not how they
+behave intraoperatively. Finally, the photoplethysmographic channel is a processed monitor
+output. Timing information demonstrably survives that processing, as the positive
 control shows, but amplitude information appears not to: the reflection index failed the
 same control, so this study can say nothing about whether wave reflection tracks PWTT.
 Testing that would require a photoplethysmographic source with documented gain behaviour.
@@ -667,13 +781,16 @@ Testing that would require a photoplethysmographic source with documented gain b
 wave transit time was largely unexplained by a photoplethysmography-derived index of
 arterial stiffness, despite evidence that this index was measured well enough to detect a
 known vascular signal; the corresponding amplitude-derived index could not be validated in
-this signal source and remains untested. Dynamic correction of the calibration
-constant of transit-time cardiac output estimation using these indices therefore has little
-room to work. This is a statement about the indices, not about the concept: arterial
-pressure explained three times more of the same variation, so a vascular component exists
-but lies outside what these indices reach. Methods that resolve the cardiac component of
-transit time, or that capture pressure-dependent stiffness directly, are the more promising
-direction.
+this signal source. Tested against ground truth in a virtual population, neither index
+tracked its intended target closely enough to serve as a correction variable, so the
+limitation lies in what pulse decomposition extracts rather than in the monitor's signal.
+Dynamic correction of the calibration constant of transit-time cardiac output estimation
+using these indices therefore has little room to work. Arterial pressure explained three
+times more of the same variation, so a vascular component exists, but most of the
+intraoperative variation in transit time lay in the distal photoplethysmographic segment,
+whose physiological range is far too narrow to account for it. The measurement of transit
+time itself — the timing of the photoplethysmographic foot and the device delay that
+precedes it — is the more promising target.
 
 ## Statements
 
@@ -839,3 +956,11 @@ direction.
     photoplethysmography markers? A systematic review. Int J Environ Res Public Health.
     2020;17(7):2591. PMID 32290168.
     **← 実はPPG血管指標へのHR交絡の系統的レビュー。感度解析Bの引用として最適**
+
+### 仮想集団（研究0・in silico 検証）
+
+39. Charlton PH, Mariscal Harana J, Vennin S, Li Y, Chowienczyk P, Alastruey J. Modeling
+    arterial pulse waves in healthy aging: a database for in silico evaluation of
+    hemodynamics and pulse wave indexes. Am J Physiol Heart Circ Physiol.
+    2019;317(5):H1062-H1085. PMID 31442381. doi:10.1152/ajpheart.00218.2019
+    **← 要照合（巻号・PMID を PubMed で確認してから投稿）。データ: doi:10.5281/zenodo.3275625**
