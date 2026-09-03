@@ -161,6 +161,10 @@ Q1 ΔT×大動脈PWV: 6/6 で負だが中央値 |ρ| 0.223。Q2 RI×末梢血管
 
 ## 並行トラック（いつでも進められる）
 
+- [x] 別端末で継続する手順を用意（09-03）— `analysis/scripts/setup_new_mac.sh` と
+      `docs/research/setup_new_machine.md`。**`data/features*` だけは複製が要る**（再計算に数日・容量は 200 MB 程度）
+- [ ] 元の Mac の `analysis/data/` を外付けドライブに退避する（ここにしか無い）
+
 - [ ] IRB 第1.2版（倫理委員会が判断した版）の所在確認と保管。研究計画書 第2.0版の起草と変更申請
       — 現行の方針と第1.0版の食い違いは `consistency_check.md` に7点整理済み
 - [ ] **[先にやる]** PhysioNet の credentialing を取る
