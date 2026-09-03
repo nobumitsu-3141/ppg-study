@@ -407,7 +407,7 @@ def _onsets_ms(on):
     return on
 
 
-def report(df, hae, cfg, extras: dict | None = None) -> dict:
+def report(df, hae, cfg, extras: dict | None = None, out_dir: Path | None = None) -> dict:
     import pandas as pd
     extras = extras or {}
     d = df.merge(hae, on="subj_no", how="left")
@@ -539,8 +539,9 @@ def report(df, hae, cfg, extras: dict | None = None) -> dict:
                   f"（向きの揃った層 {j['n_ok']}/{j['n_ages']}、中央値 |ρ| {j['med_abs']:.3f}）")
     print("  VitalDB では不成立だったので、in silico 成立なら信号鎖の問題、不成立なら概念の限界（roadmap §3）。")
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / "pwdb_indices.csv"
+    out_dir = OUT if out_dir is None else Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    p = out_dir / "pwdb_indices.csv"
     d.to_csv(p, index=False)
     print(f"\n被験者別の結果（真値・因子・立ち上がり時刻を結合済み）: {p}")
     return summary
@@ -652,7 +653,7 @@ def selftest() -> int:
             f"{float(np.nanmedian(df['fs'])):.0f} Hz")
         rep("3カーネルの当てはめ成功率 > 50%", df["ok3"].mean() > 0.5, f"{df['ok3'].mean():.0%}")
 
-        summ = report(df, hae, cfg, extras)
+        summ = report(df, hae, cfg, extras, out_dir=Path(td) / "out")
         q1, q2 = summ.get("q1"), summ.get("q2")
         rep("Q1 仕込んだ ΔT×PWV の関係を年齢層内で復元（成立判定）",
             bool(q1 and q1["pass"]), f"{q1}" if q1 else "None")
