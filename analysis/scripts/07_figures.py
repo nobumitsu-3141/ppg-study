@@ -22,9 +22,12 @@
 
 使い方
 ------
-    python scripts/07_figures.py              # 全図
-    python scripts/07_figures.py --only 2 3   # 図2と図3のみ
-    python scripts/07_figures.py --dpi 600    # 投稿用の解像度
+    python scripts/07_figures.py
+        全図
+    python scripts/07_figures.py --only 2 3
+        図2と図3のみ
+    python scripts/07_figures.py --dpi 600
+        投稿用の解像度
 """
 from __future__ import annotations
 

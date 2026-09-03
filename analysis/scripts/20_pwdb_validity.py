@@ -40,7 +40,8 @@ Am J Physiol Heart Circ Physiol 2019. doi:10.5281/zenodo.3275625
 ------
     python scripts/20_pwdb_validity.py --pwdb ~/pwdb/exported_data
     python scripts/20_pwdb_validity.py --pwdb ~/pwdb/exported_data --limit 200 --jobs 4
-    python scripts/20_pwdb_validity.py --selftest      # ネットワーク不要・模擬データ
+    python scripts/20_pwdb_validity.py --selftest
+        ネットワーク不要・模擬データ
 """
 from __future__ import annotations
 

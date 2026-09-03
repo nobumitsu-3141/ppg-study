@@ -42,8 +42,10 @@ data/vasotone/case_{id}.csv … 主解析と同じ t0 で1行（svr, svri, phen,
 ------
     python scripts/16_vasotone.py --limit 874 --jobs 4
     python scripts/16_vasotone.py --stats-only
-    python scripts/16_vasotone.py --stats-only --peek     # C-1 の効果量を覗く
-    python scripts/16_vasotone.py --selftest              # ネットワーク不要
+    python scripts/16_vasotone.py --stats-only --peek
+        C-1 の効果量を覗く
+    python scripts/16_vasotone.py --selftest
+        ネットワーク不要
 """
 from __future__ import annotations
 

@@ -28,8 +28,10 @@
 出力は data/features_slope/ に別置きする。
 
 使い方:
-    python scripts/14_slope_features.py --limit 874 --jobs 4     # 抽出＋集計
-    python scripts/14_slope_features.py --stats-only             # 集計のみ
+    python scripts/14_slope_features.py --limit 874 --jobs 4
+        抽出＋集計
+    python scripts/14_slope_features.py --stats-only
+        集計のみ
 """
 from __future__ import annotations
 

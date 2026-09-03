@@ -6,10 +6,13 @@
 主解析と同じ機構（src.models）で再計算する。PWTT・HR・MAP・CO は
 主解析キャッシュの値を (caseid, t0) で結合して使う。
 
-使い方:
-    python scripts/12_variants_stats.py --check    # データの点検だけ（数秒）
-    python scripts/12_variants_stats.py            # 集計（862例で1分前後）
-    python scripts/12_variants_stats.py --selftest # 合成データで配管を検算
+使い方（zsh は行末の # をコメントと見なさないので、説明は別行に置く）:
+    python scripts/12_variants_stats.py --check
+        データの点検だけ（数秒）
+    python scripts/12_variants_stats.py
+        集計（862例で1分前後）
+    python scripts/12_variants_stats.py --selftest
+        合成データで配管を検算
 
 出力は画面に加えて data/variants_table.csv にも書く。
 `| tail` で受けると tail が全入力を読み終えるまで何も表示されないので、
