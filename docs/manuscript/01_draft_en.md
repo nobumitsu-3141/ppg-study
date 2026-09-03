@@ -46,9 +46,11 @@ PWTT exists but is not captured by these indices. The coefficient's sign was con
 cases, indicating a directionally correct but quantitatively negligible vascular component.
 Signals were reproducible (lag-1 autocorrelation: PWTT +0.75, ΔT +0.50), and ΔT reproduced
 the expected age association, whereas the reflection index did not and was judged uninterpretable in this signal source.
-In the virtual population, ΔT correlated with aortic pulse wave velocity in the predicted
-direction in every age group but weakly (median |ρ| 0.22) and did not track the true
-transit time (ρ 0.19); RI did not track peripheral resistance (median |ρ| 0.21). Splitting
+In the virtual population, the decomposition-derived ΔT correlated with aortic pulse
+wave velocity in the predicted direction in every age group but weakly (median |ρ| 0.22),
+and RI with peripheral resistance at 0.21; landmark-derived indices computed from the same
+waveforms met the same criterion (ΔT 0.71, reflection index 0.50, second-derivative ageing
+index 0.89). Splitting
 PWTT at the radial line, the term containing the pre-ejection period accounted for 7% of
 within-case variance; most variation lay in the distal photoplethysmographic segment.
 Correcting the calibration constant did not improve
@@ -58,11 +60,12 @@ accuracy (percentage error 27.2% versus 26.9%; difference +0.2 percentage points
 **Conclusions.** The premise underlying vascular correction of PWTT-based cardiac output
 fails quantitatively: the vascular component of intraoperative PWTT variation, though
 directionally detectable, is two orders of magnitude too small to support calibration
-correction from single-site photoplethysmography. The limitation lies with the indices
-rather than the signal: tested against ground truth, neither tracks its target. Most
-intraoperative PWTT variation lay in the distal photoplethysmographic segment, so the
-measurement of transit time itself, rather than vascular correction, is the more promising
-target.
+correction from single-site photoplethysmography. Against ground truth the limitation is
+specific to the decomposition: landmark features of the same waveforms recovered pulse wave
+velocity, so how the index is extracted matters more than the fact that it comes from
+photoplethysmography. Most intraoperative PWTT variation lay in the distal
+photoplethysmographic segment, whose true physiological range is far narrower, so the
+measurement of transit time itself is also a target.
 
 ---
 
@@ -388,9 +391,15 @@ aortic pulse wave velocity, peripheral resistance and the onset time of the puls
 site are known exactly. Because pulse wave velocity and ΔT both change with age, the
 primary test was the Spearman correlation within each age group, with a criterion fixed
 before the data were examined: an association was accepted if the correlation carried the
-predicted sign in every age group and its median absolute value was at least 0.3. Main
-effects of each varied factor and the true transit times from the onset-time table were
-reported descriptively.
+predicted sign in every age group and its median absolute value was at least 0.3. Main effects of each varied factor and the true transit times from the onset-time table
+were reported descriptively. To separate a limitation of the decomposition from a limitation
+of photoplethysmographic morphology in general, the same criterion was applied to the
+landmark-derived indices distributed with the database — the interval between the systolic
+and diastolic peaks, the stiffness and reflection indices, the augmentation index, the
+second-derivative ageing index and the model's own pulse transit time — which are computed
+by the database's authors from the identical waveforms. Subjects, waveforms, ground truth,
+age strata and criterion are therefore shared, and the only difference is how the index is
+extracted.
 
 ### 2.11 Software
 
@@ -589,6 +598,19 @@ was 96 ms (5th–95th percentile 66–120) and correlated with aortic pulse wave
 ρ −0.99 within age groups, whereas ΔT correlated with that same true transit time at only
 +0.19. The true radial-to-finger transit was 8 ms (4–16 ms) across the whole population.
 
+Applying the same criterion to the landmark-derived indices distributed with the database
+separated the two readings. The landmark interval between the systolic and diastolic peaks
+correlated with aortic pulse wave velocity at a median |ρ| of 0.71 (negative in all six age
+groups), the landmark stiffness index at 0.71, the second-derivative ageing index at 0.89
+and the landmark reflection index with peripheral resistance at 0.50 — all meeting the
+criterion that the decomposition-derived indices failed. The model's own pulse transit time,
+included as a control on the comparison itself, gave 0.57. The landmark augmentation index
+did not meet it (0.14). In the factorial design the landmark interval was about twice as
+sensitive to pulse wave velocity as the decomposition-derived one (−31% against −17% from
+−1 SD to +1 SD) and about a quarter as sensitive to heart rate (−2.6% against −10.9%).
+Descriptively, the landmark reflection index tracked pulse wave velocity (0.69) more
+closely than peripheral resistance (0.50).
+
 ---
 
 ## 4. Discussion
@@ -649,20 +671,35 @@ to the premise-test result; the prespecified primary analysis was not altered.**
 **What the indices measure, tested against ground truth.** The positive control shows that
 ΔT carries vascular information, but not how much of ΔT is vascular. We therefore applied
 the frozen decomposition to a virtual population in which the quantities the indices are
-meant to index are known exactly [Charlton 2019] (§3.6). The result bounds the concept
-rather than the signal chain: on ideal waveforms with no monitor processing, ΔT correlated
-with aortic pulse wave velocity within age groups at a median of only 0.22, and with the true
-aortic-root-to-finger transit time at 0.19, while that transit time itself tracked pulse
-wave velocity at 0.99. ΔT is sensitive to stiffness in the predicted direction but not
-specific to it: heart rate and aortic diameter moved it as much, and its response to
-stiffness was discontinuous, which is the behaviour expected when the second component
-switches between waves [Epstein 2014]. RI was moved most by heart rate and was related to
-peripheral resistance only in the youngest, most compliant vessels. Two conclusions follow.
-First, the null of the primary analysis is not an artefact of the monitor's
-photoplethysmographic channel; the indices do not track their targets even when the signal
-is perfect. Second, the weak but significant association of RI with systemic vascular
-resistance in the clinical data (§3.6) is what the model predicts for compliant vessels and
-should not be read as validation of RI as a resistance index.
+meant to index are known exactly [Charlton 2019] (§3.6). On ideal waveforms with no monitor
+processing, ΔT correlated with aortic pulse wave velocity within age groups at a median of
+only 0.22 and with the true aortic-root-to-finger transit time at 0.19, while that transit
+time itself tracked pulse wave velocity at 0.99. ΔT is sensitive to stiffness in the
+predicted direction but not specific to it: heart rate and aortic diameter moved it as much,
+and its response to stiffness was discontinuous, which is the behaviour expected when the
+second component switches between waves [Epstein 2014]. The null of the primary analysis is
+therefore not an artefact of the monitor's photoplethysmographic channel; these indices do
+not track their targets even when the signal is perfect.
+
+The same experiment, however, locates that failure precisely, because the database also
+provides landmark-derived indices computed from the identical waveforms. Those met the
+criterion the decomposition failed: the systolic-to-diastolic peak interval reached 0.71
+against pulse wave velocity, the second-derivative ageing index 0.89, and the landmark
+reflection index 0.50 against peripheral resistance. With subjects, waveforms, ground truth
+and criterion held fixed, the only difference is the extraction, so the limitation is
+specific to the two-kernel decomposition as implemented here and not to
+photoplethysmographic morphology in general. The factorial main effects show where the
+difference lies: the landmark interval was twice as sensitive to pulse wave velocity and a
+quarter as sensitive to heart rate, consistent with a fitted component whose position is
+constrained by the length of the beat rather than by the arrival of a wave. This is a
+constructive result — it identifies which part of the method to change — but it does not
+transfer directly to clinical signals, because the decomposition was adopted precisely
+because landmark features are frequently absent from real finger pulses; whether they are
+identifiable in a processed monitor photoplethysmogram is an open question and the natural
+next experiment. Finally, the weak but significant association of RI with systemic vascular
+resistance in the clinical data (§3.6) should not be read as validation of RI as a
+resistance index: in silico even the landmark reflection index tracked pulse wave velocity
+(0.69) more closely than resistance (0.50).
 
 **Physiological interpretation.** Our result is what the mechanistic literature predicts
 rather than an anomaly. PWTT measured from the R wave contains the pre-ejection period in
@@ -768,10 +805,13 @@ distinct physical waves [Epstein 2014]; a three-kernel decomposition, prespecifi
 sensitivity analysis, did not raise the explained fraction (Table 6), and in silico the
 response of both indices to stiffness was discontinuous (§3.6). Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
-change is itself an assumption. Seventh, the three analyses in §3.6 were added after the
-plan was frozen and are exploratory; the virtual population models healthy ageing without
+change is itself an assumption. Seventh, the three analyses in §3.6 were added after the plan
+was frozen and are exploratory; the virtual population models healthy ageing without
 anaesthesia or vasoactive drugs, so it tests how the indices are constructed, not how they
-behave intraoperatively. Finally, the photoplethysmographic channel is a processed monitor
+behave intraoperatively. Relatedly, this study tested decomposition-derived indices, which
+were prespecified; the in-silico comparison indicates that a landmark-derived index might
+have behaved differently, and our findings should not be read as a statement about
+photoplethysmographic vascular indices in general. Finally, the photoplethysmographic channel is a processed monitor
 output. Timing information demonstrably survives that processing, as the positive
 control shows, but amplitude information appears not to: the reflection index failed the
 same control, so this study can say nothing about whether wave reflection tracks PWTT.
@@ -781,16 +821,17 @@ Testing that would require a photoplethysmographic source with documented gain b
 wave transit time was largely unexplained by a photoplethysmography-derived index of
 arterial stiffness, despite evidence that this index was measured well enough to detect a
 known vascular signal; the corresponding amplitude-derived index could not be validated in
-this signal source. Tested against ground truth in a virtual population, neither index
-tracked its intended target closely enough to serve as a correction variable, so the
-limitation lies in what pulse decomposition extracts rather than in the monitor's signal.
-Dynamic correction of the calibration constant of transit-time cardiac output estimation
-using these indices therefore has little room to work. Arterial pressure explained three
-times more of the same variation, so a vascular component exists, but most of the
-intraoperative variation in transit time lay in the distal photoplethysmographic segment,
-whose physiological range is far too narrow to account for it. The measurement of transit
-time itself — the timing of the photoplethysmographic foot and the device delay that
-precedes it — is the more promising target.
+this signal source. Tested against ground truth in a virtual population, neither
+decomposition-derived index tracked its intended target closely enough to serve as a
+correction variable, whereas landmark-derived indices of the same waveforms did; the
+limitation therefore lies in what this decomposition extracts rather than in the monitor's
+signal or in photoplethysmographic morphology as such. Dynamic correction of the calibration
+constant of transit-time cardiac output estimation using these indices has little room to
+work. Two directions follow, and both are testable in existing data: whether landmark
+features survive in a processed monitor photoplethysmogram well enough to repeat the premise
+test, and the measurement of transit time itself, since most of the intraoperative variation
+lay in the distal photoplethysmographic segment, whose true physiological range is far too
+narrow to account for it.
 
 ## Statements
 
