@@ -266,6 +266,78 @@ def find_landmarks(t: np.ndarray, y: np.ndarray) -> dict:
     return out
 
 
+def early_features(t: np.ndarray, y: np.ndarray) -> dict:
+    """Hellqvist 2024 の早期振幅比 Am_b/Am_p1 と、その母点 p1・b を返す。
+
+    Hellqvist 2024（Front Cardiovasc Med 11:1350726）は指尖 PPG から既知の特徴量 136 と
+    新規 13 を作り、機械学習で大動脈硬化を推定した（33名・頸大腿PWV を参照）。
+    最も重要だったのは新しい振幅比 **Am_b / Am_p1** で、頸大腿PWV と r = −0.81、
+    大動脈PWV と r = −0.75。既報のどれより強い（硬さ指数と中枢PWV は r = 0.58〜0.66、
+    加齢指数 (b−c−d−e)/a は r = 0.65、ばね定数は r = −0.72）。
+
+    同論文は明示的にこう書いている ──
+      「大動脈硬化を推定するには、硬さ指数のように S と D の**ピーク間の時間**に頼る
+        指標ではなく、波形のこの早期部分にもっと注目すべきである」
+
+    **我々の ΔT はまさに「S と D のピーク間の時間」である。** だから同じ土俵に並べる。
+
+    定義
+    ----
+    p1  収縮期ピークの新しい求め方。1次微分の最初の山 w（最大傾斜）の後、下降の
+        初期の直線部分に接線を引き、その零交点を p1 とする。ここでは下降が最も急な点
+        （＝2次微分の最初の谷。標準命名の b 波）で接線を取る:
+
+            t_p1 = t_b − d1(t_b) / d2(t_b)
+
+        Hellqvist は「6つの波形型すべてで機能した」と報告している。型1では収縮期ピーク S と
+        一致することが多く、他の型では前収縮期切痕と一致することがある。
+        **切痕の無い波形（我々の未解決問題）でも収縮期ピークを定義できる**点が要である。
+    b   2次微分の最初の谷。
+    比  Am_b / Am_p1 = y(t_b) / y(t_p1)。どちらも拍の立ち上がり側の振幅である。
+        伝播が速いほど（硬いほど）比は小さくなる、というのが報告されている向き。
+
+    y は前処理済み（基線 0・最大 1）を想定する。比なので正規化は打ち消し合う。
+    """
+    t = np.asarray(t, float)
+    y = np.asarray(y, float)
+    n = len(t)
+    out = {"p1_t": np.nan, "p1_v": np.nan, "b_t": np.nan, "b_v": np.nan,
+           "w_t": np.nan, "amb_amp1": np.nan}
+    if n < 16:
+        return out
+    dt = float(np.median(np.diff(t)))
+    if not np.isfinite(dt) or dt <= 0:
+        return out
+    d1 = np.gradient(y, dt)
+    d2 = np.gradient(d1, dt)
+    i_sys = int(np.argmax(y))
+    if i_sys < 4:
+        return out
+    i_w = int(np.argmax(d1[:i_sys]))                     # 1次微分の最初の山
+    out["w_t"] = float(t[i_w])
+    lo, hi = max(i_w + 1, 2), min(i_sys + 1, n - 2)      # b は w と収縮期ピークの間
+    if hi - lo < 2:
+        return out
+    i_b = lo + int(np.argmin(d2[lo:hi]))
+    t_b = _refine(t, -d2, i_b)[0]                        # 副標本精度で谷を取る
+    if not np.isfinite(t_b):
+        t_b = float(t[i_b])
+    d1_b = float(np.interp(t_b, t, d1))
+    d2_b = float(np.interp(t_b, t, d2))
+    if not (d2_b < 0):                                   # 下降していなければ接線を引けない
+        return out
+    t_p1 = t_b - d1_b / d2_b                             # 接線の零交点
+    if not (t_b < t_p1 <= t[-1]):
+        return out
+    am_b = float(np.interp(t_b, t, y))
+    am_p1 = float(np.interp(t_p1, t, y))
+    if not (am_p1 > 1e-6):
+        return out
+    out.update(p1_t=float(t_p1), p1_v=am_p1, b_t=float(t_b), b_v=am_b,
+               amb_amp1=am_b / am_p1)
+    return out
+
+
 def _key_indices(t: np.ndarray, lm: dict) -> np.ndarray:
     """鍵点（収縮期ピーク・切痕・拡張期ピーク）の標本番号。"""
     idx = [lm["i_sys"]]

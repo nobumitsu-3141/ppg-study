@@ -75,6 +75,7 @@ METHODS = [
     ("v2",  "第2版 二段(歪みガウス)",     "dt_v2_ms",  "ri_v2",      "ok_v2"),
     ("v2g", "第2版 ガンマ3",              "dt_v2g_ms", "ri_v2g",     "ok_v2g"),
     ("lm",  "ランドマーク法",             "dt_lm_ms",  "digital_ri", None),
+    ("hq",  "早期振幅比（Hellqvist）",     "dt_p1_ms",  "amb_amp1",   None),
 ]
 
 # (列, 真値, 予測符号, 採否列, 表示名)
@@ -98,6 +99,17 @@ PAIRS = [
     # 主要目標（PWV_a）は凍結したまま、頸大腿 PWV を副次として並べる。
     ("dt_v2_ms",       "PWV_cf", -1, "ok_v2",  "副次 ΔT   第2版 二段 × 頸大腿PWV"),
     ("dt_lm_ms",       "PWV_cf", -1, None,     "副次 ΔT   ランドマーク × 頸大腿PWV"),
+    # --- 第4の手法: 分解を使わない早期振幅比（Hellqvist 2024）---
+    # 33名・頸大腿PWV 参照で r = −0.81、大動脈PWV で −0.75。硬さ指数（中枢PWV と
+    # r = 0.58〜0.66）や加齢指数（0.65）、ばね定数（−0.72）のいずれより強い。
+    # 同論文は「硬さ指数のように S と D のピーク間の時間に頼る指標ではなく、
+    # 波形の早期部分に注目すべき」と明記している。我々の ΔT はまさにその時間である。
+    ("amb_amp1",       "PWV_a",  -1, None,     "Am_b/Am_p1  早期振幅比（Hellqvist）"),
+    ("amb_amp1",       "PWV_cf", -1, None,     "副次 Am_b/Am_p1 × 頸大腿PWV"),
+    # Hellqvist の p1（1次微分の下降への接線の零交点）を収縮期ピークに使った ΔT。
+    # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
+    # 収縮期ピークを定義できる。我々の未解決問題（型3〜4で ΔT 誤差 38〜55 ms）に効くか
+    ("dt_p1_ms",       "PWV_a",  -1, None,     "ΔT  p1基準（Hellqvist の収縮期ピーク）"),
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
     # 真値との向きの予測までは立てられないので記述にとどめる。
@@ -109,7 +121,8 @@ IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA"), ("dt_v2_ms", "ΔT 第2版二�
                    ("dt_v2g_ms", "ΔT 第2版ガンマ"), ("dt_lm_ms", "ΔT ランドマーク"),
                    ("ri_v1", "RI 凍結PDA"), ("ri_v2", "RI 第2版二段"),
                    ("ri_v2g", "RI 第2版ガンマ"), ("digital_ri", "RI ランドマーク"),
-                   ("dps_v2_ms", "DPS 第2版二段")]
+                   ("dps_v2_ms", "DPS 第2版二段"), ("amb_amp1", "Am_b/Am_p1"),
+                   ("dt_p1_ms", "ΔT p1基準")]
 
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
 # 20番の `_by_age` は年齢層ごとに 8 名以上を要求する。全体の人数だけで門番を作ると、
@@ -145,6 +158,23 @@ def indices_for_subject(args_tuple):
         t = np.arange(y.size) / fs
         out["fs"] = float(fs)
         out["n_samp"] = int(y.size)
+
+        # --- 波形そのものから取る指標（分解を要しない）
+        try:
+            ys, _amp = pda2.preprocess(t, y, fs)
+            if ys is not None:
+                lmo = pda2.find_landmarks(t, ys)
+                ef = pda2.early_features(t, ys)
+                out["klass_own"] = lmo["klass"]
+                out["sys_own_ms"] = lmo["sys_t"] * 1000.0
+                out["dia_own_ms"] = lmo["dia_t"] * 1000.0
+                out["p1_t_ms"] = ef["p1_t"] * 1000.0
+                out["amb_amp1"] = ef["amb_amp1"]          # Hellqvist 2024 の早期振幅比
+                # Hellqvist の p1 を収縮期ピークに使った ΔT。切痕の無い波形でも
+                # 収縮期ピークが定義できるので、我々の未解決問題に効くかを見る
+                out["dt_p1_ms"] = (lmo["dia_t"] - ef["p1_t"]) * 1000.0
+        except Exception:
+            pass
 
         try:                                    # --- 凍結版（研究1と同一コード）
             fit = fit_beat(t, y)
@@ -325,6 +355,22 @@ def report(d, out_dir: Path | None = None) -> dict:
     print("  指標そのものの改善ではない。3 段を必ず一緒に読むこと。")
 
     # ---- 波形型ごと
+    if "klass_own" in d and d["klass_own"].notna().any():
+        print(f"\n{'-' * 78}\n2a. 波形型ごとの p1 と収縮期ピークの一致\n{'-' * 78}")
+        print("  Hellqvist の p1 は『6つの波形型すべてで機能した』とされる。切痕の無い型でも")
+        print("  収縮期ピークを定義できるなら、我々の未解決問題（型3〜4で ΔT 誤差 38〜55 ms）に効く。")
+        print(f"{'型':<6}{'n':>7}{'p1が取れた率':>13}{'|p1 − S| 中央値':>16}"
+              f"{'Am_b/Am_p1 中央値':>18}{'ΔT p1基準 中央値':>17}")
+        for k in sorted(d["klass_own"].dropna().unique().tolist()):
+            g = d[d["klass_own"] == k]
+            got = float(g["p1_t_ms"].notna().mean()) if "p1_t_ms" in g else np.nan
+            gap = (float(np.nanmedian(np.abs(g["p1_t_ms"] - g["sys_own_ms"])))
+                   if "p1_t_ms" in g and g["p1_t_ms"].notna().any() else np.nan)
+            r_ = (float(np.nanmedian(g["amb_amp1"])) if g["amb_amp1"].notna().any() else np.nan)
+            dp = (float(np.nanmedian(g["dt_p1_ms"])) if g["dt_p1_ms"].notna().any() else np.nan)
+            print(f"{int(k):<6}{len(g):>7}{got:>12.1%}{gap:>14.1f} ms"
+                  f"{r_:>18.4f}{dp:>14.0f} ms")
+
     if "klass_v2" in d and d["klass_v2"].notna().any():
         print(f"\n{'-' * 78}\n2. 波形型（Dawber 分類）ごとの採択率と ΔT\n{'-' * 78}")
         print(f"{'型':<6}{'n':>7}{'第2版採択':>11}{'凍結採択':>10}"
