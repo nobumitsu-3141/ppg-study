@@ -686,17 +686,25 @@ provides landmark-derived indices computed from the identical waveforms. Those m
 criterion the decomposition failed: the systolic-to-diastolic peak interval reached 0.71
 against pulse wave velocity, the second-derivative ageing index 0.89, and the landmark
 reflection index 0.50 against peripheral resistance. With subjects, waveforms, ground truth
-and criterion held fixed, the only difference is the extraction, so the limitation is
-specific to the two-kernel decomposition as implemented here and not to
+and criterion held fixed, the only difference is the extraction, so the limitation is specific to the two-kernel decomposition as implemented here and not to
 photoplethysmographic morphology in general. The factorial main effects show where the
 difference lies: the landmark interval was twice as sensitive to pulse wave velocity and a
 quarter as sensitive to heart rate, consistent with a fitted component whose position is
-constrained by the length of the beat rather than by the arrival of a wave. This is a
-constructive result — it identifies which part of the method to change — but it does not
-transfer directly to clinical signals, because the decomposition was adopted precisely
-because landmark features are frequently absent from real finger pulses; whether they are
-identifiable in a processed monitor photoplethysmogram is an open question and the natural
-next experiment. Finally, the weak but significant association of RI with systemic vascular
+constrained by the length of the beat rather than by the arrival of a wave. Two qualifications keep this from being read as a general ranking of the two approaches.
+First, the virtual waveforms are noise-free and carry a clear dicrotic notch and diastolic
+peak, which is the condition in which landmark detection is easiest; decomposition is
+advocated precisely for waveforms in which those features are absent, so its claimed
+advantage cannot appear in this comparison, and whether landmark features are identifiable
+in a processed monitor photoplethysmogram is an open question and the natural next
+experiment. Second, our decomposition is one implementation among many: it uses two kernels
+with no diastolic decay term and constrains both components to positive skew, choices made
+to preserve amplitude identifiability in monitor waveforms without a visible notch, and
+those same choices let the second kernel absorb the diastolic downslope, whose duration
+scales with the cardiac cycle — which is consistent with the heart-rate confounding we
+observe. A decomposition with more components and an explicit rule for identifying the
+forward and reflected waves, as used elsewhere [Couceiro 2015], was not tested here. What
+the comparison establishes is therefore that the information is present in the waveform and
+that this decomposition does not recover it, not that decomposition as a class cannot. Finally, the weak but significant association of RI with systemic vascular
 resistance in the clinical data (§3.6) should not be read as validation of RI as a
 resistance index: in silico even the landmark reflection index tracked pulse wave velocity
 (0.69) more closely than resistance (0.50).
@@ -811,7 +819,10 @@ anaesthesia or vasoactive drugs, so it tests how the indices are constructed, no
 behave intraoperatively. Relatedly, this study tested decomposition-derived indices, which
 were prespecified; the in-silico comparison indicates that a landmark-derived index might
 have behaved differently, and our findings should not be read as a statement about
-photoplethysmographic vascular indices in general. Finally, the photoplethysmographic channel is a processed monitor
+photoplethysmographic vascular indices in general. Nor should the in-silico comparison be
+read as a general ranking of decomposition against landmark analysis: the virtual waveforms
+are noise-free with clearly visible landmarks, the condition least favourable to
+decomposition, and our two-kernel implementation was configured for the opposite case. Finally, the photoplethysmographic channel is a processed monitor
 output. Timing information demonstrably survives that processing, as the positive
 control shows, but amplitude information appears not to: the reflection index failed the
 same control, so this study can say nothing about whether wave reflection tracks PWTT.
@@ -823,9 +834,10 @@ arterial stiffness, despite evidence that this index was measured well enough to
 known vascular signal; the corresponding amplitude-derived index could not be validated in
 this signal source. Tested against ground truth in a virtual population, neither
 decomposition-derived index tracked its intended target closely enough to serve as a
-correction variable, whereas landmark-derived indices of the same waveforms did; the
-limitation therefore lies in what this decomposition extracts rather than in the monitor's
-signal or in photoplethysmographic morphology as such. Dynamic correction of the calibration
+correction variable, whereas landmark-derived indices of the same waveforms did; the limitation therefore lies in
+what this decomposition extracts rather than in the monitor's signal or in
+photoplethysmographic morphology as such. Whether a different decomposition would recover
+the same information was not tested. Dynamic correction of the calibration
 constant of transit-time cardiac output estimation using these indices has little room to
 work. Two directions follow, and both are testable in existing data: whether landmark
 features survive in a processed monitor photoplethysmogram well enough to repeat the premise
