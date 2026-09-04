@@ -243,8 +243,16 @@ before fitting.
 ### 2.4 Pulse decomposition and index definitions
 
 Ensemble-averaged beats were decomposed into two skewed-Gaussian components (Azzalini
-form), representing the forward and reflected waves, by non-linear least squares from eight
-starting points [Fleischhauer 2020; Basso 2024]. A fit was accepted only if it
+form) [Basso 2024], taken to represent the forward and reflected waves, by non-linear least
+squares from eight starting points. Two kernels were chosen because a systematic comparison
+of decomposition algorithms found that two-kernel models are the most robust to noise and
+motion artefact while preserving morphology as well as models with more kernels
+[Fleischhauer 2020]. That comparison also states a limitation of two-kernel models that
+bears directly on the present indices and which we did not weigh sufficiently at the design
+stage: with two kernels all reflections are condensed into a single component, which the
+authors say rules out assessing the relationship between the systolic component and
+specific reflections. Our indices are exactly such a relationship. We report this in the
+Limitations and in the interpretation of the in-silico comparison (§4). A fit was accepted only if it
 passed three convergence checks: no parameter resting on a bound (excluding the skewness
 bounds), no component collapsed to zero amplitude, and no competing solution of comparable
 residual.
@@ -807,11 +815,22 @@ apply to the beat-level, reference-free primary analysis. Third, the study is a
 retrospective analysis of a single database from a single centre, without a controlled
 vasomotor challenge; the cohort characteristics are reported in full so that transportability
 can be judged. Fourth, the manufacturer's coefficients are not public, so the control
-estimator reproduces the published PWTT form rather than the commercial device. Fifth,
-component assignment in a two-kernel decomposition is not guaranteed to correspond to
-distinct physical waves [Epstein 2014]; a three-kernel decomposition, prespecified as a
+estimator reproduces the published PWTT form rather than the commercial device. Fifth, component assignment in a two-kernel decomposition is not guaranteed to correspond
+to distinct physical waves [Epstein 2014]; a three-kernel decomposition, prespecified as a
 sensitivity analysis, did not raise the explained fraction (Table 6), and in silico the
-response of both indices to stiffness was discontinuous (§3.6). Sixth, stiffness and reflection indices were
+response of both indices to stiffness was discontinuous (§3.6). More specifically, the
+comparison of decomposition algorithms we relied on for the choice of two kernels also
+reports that two kernels condense all reflections into one component and thereby preclude
+assessing the relationship between the systolic component and specific reflections
+[Fleischhauer 2020]; our indices are such a relationship, so the model order was not
+well matched to the quantity we set out to measure. Related choices point the same way:
+the model carries no term for the diastolic decay, so a component must absorb it, and a
+data-driven comparison of basis functions on 7805 real pulses selected a three-component
+Gamma model — whose exponential tail can represent that decay — far more often than any
+two-component model [Tigges 2017]. Nor did our convergence checks test whether the fitted
+components landed on the intended waveform landmarks, a criterion argued to be essential
+because vascular indices depend on landmark positions rather than on overall fit quality
+[Wang 2013]. Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
 change is itself an assumption. Seventh, the three analyses in §3.6 were added after the plan
 was frozen and are exploratory; the virtual population models healthy ageing without
@@ -947,11 +966,15 @@ narrow to account for it.
 22. Couceiro R, Carvalho P, Paiva RP, et al. Assessment of cardiovascular function from
     multi-Gaussian fitting of a finger photoplethysmogram. Physiol Meas.
     2015;36(9):1801-25. PMID 26235798. **← 振幅比がすべての血管参照に対して失敗**
-23. Tigges T, et al. Model selection for the pulse decomposition analysis of fingertip
-    photoplethysmograms. Annu Int Conf IEEE Eng Med Biol Soc. 2017. PMID 29060777.
+23. Tigges T, Pielmus A, Klum M, Feldheiser A, Hunsicker O, Orglmeister R. Model selection
+    for the pulse decomposition analysis of fingertip photoplethysmograms. Annu Int Conf
+    IEEE Eng Med Biol Soc. 2017;2017:4014-4017. PMID 29060777.
+    **← 実測7,805拍・AICc で 3ガンマが最良（28.1%）、Normal 2成分は 1.2%。Limitations で引く**
 24. Fleischhauer V, Ruprecht N, Sorelli M, Bocchi L, Zaunseder S. Pulse decomposition
     analysis in photoplethysmography imaging. Physiol Meas. 2020;41(9):095009.
-    PMID 33021236. **← 2カーネル選択の根拠（Methods）。投稿先第一候補と同じ誌**
+    PMID 33021236. **← 2カーネル選択の根拠（Methods）。ただし同論文は「2カーネルでは
+    反射が単一成分に凝縮され、収縮期成分と特定の反射との関係を評価できない」とも述べており、
+    Methods と Limitations の両方でこの留保を引く。投稿先第一候補と同じ誌**
 25. Basso G, Haakma R, Vullings R. A skewed-Gaussian model for pulse decomposition
     analysis of photoplethysmography signals. Physiol Meas. 2024;45(11):115006.
     PMID 39577084. doi:10.1088/1361-6579/ad9662
@@ -1017,3 +1040,10 @@ narrow to account for it.
     hemodynamics and pulse wave indexes. Am J Physiol Heart Circ Physiol.
     2019;317(5):H1062-H1085. PMID 31442381. doi:10.1152/ajpheart.00218.2019
     **← 要照合（巻号・PMID を PubMed で確認してから投稿）。データ: doi:10.5281/zenodo.3275625**
+
+### 当てはめの規準（凍結後の考察で引く）
+
+29. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform
+    using weighted least squares and multi-criteria decision making method. Comput Biol
+    Med. 2013;43(11):1661-1672. PMID 24209920.
+    **← 鍵点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。要照合**
