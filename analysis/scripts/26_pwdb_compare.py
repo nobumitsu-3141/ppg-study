@@ -152,6 +152,12 @@ def indices_for_subject(args_tuple):
                 out[f"rise_{tag}"] = r.get("ri_se", np.nan)
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)
+                # 閾値感度解析（27番）が当てはめ直しなしで採否を再計算できるよう、
+                # 採否に使った診断量をすべて残す
+                out[f"erry_{tag}"] = r.get("erry", np.nan)
+                out[f"nlm_{tag}"] = r.get("n_landmark_matched", np.nan)
+                out[f"amb_{tag}"] = int(bool(r.get("ambiguous")))
+                out[f"noref_{tag}"] = int(r.get("role_rule") == "none")
                 out[f"klass_{tag}"] = r.get("klass", np.nan)
                 out[f"nw_{tag}"] = r.get("n_waves", np.nan)
                 out[f"esc_{tag}"] = int(bool(r.get("escalated")))

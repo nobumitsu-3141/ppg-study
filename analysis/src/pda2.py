@@ -489,7 +489,8 @@ def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
 
 
 # ============================================================ 採否の検算
-def acceptance(t, y, yhat, lm, w=None) -> dict:
+def acceptance(t, y, yhat, lm, w=None, nrmse_max: float = NRMSE_MAX,
+               errx_ms: float = ERRX_MS, erry_max: float = ERRY) -> dict:
     """Wang 2013 の規準で当てはめの採否を決める。
 
     **当てはまりの良さではなく、鍵点が正しい位置に来たかを見る。**
@@ -514,10 +515,12 @@ def acceptance(t, y, yhat, lm, w=None) -> dict:
                 if np.isfinite(va) and np.isfinite(vb):
                     erry += abs(va - vb)
         elif np.isfinite(a) and not np.isfinite(b):
-            errx += ERRX_MS * 2.0      # 模型側で鍵点が消えたら不合格に倒す
+            # 模型側で鍵点が消えたら不合格に倒す。閾値を緩めて走らせる感度解析では
+            # 罰則も一緒に緩むが、それは Errx 規準を切ったという意味なので整合する。
+            errx += (errx_ms if np.isfinite(errx_ms) else ERRX_MS) * 2.0
     return {"nrmse": nrmse, "errx_ms": float(errx), "erry": float(erry),
             "n_landmark_matched": n_match, "klass": lm["klass"],
-            "ok": bool(nrmse <= NRMSE_MAX and errx <= ERRX_MS and erry <= ERRY
+            "ok": bool(nrmse <= nrmse_max and errx <= errx_ms and erry <= erry_max
                        and n_match >= 2)}
 
 
@@ -664,7 +667,10 @@ def _ambiguous(sols, step, roles, tol_cost: float = 1.15, tol_dt: float = 0.20) 
 # ============================================================ 入口
 def decompose(t, y, fs: float, route: str = "two_stage",
               n_waves: int = None, escalate: bool = True,
-              w_key: float = W_KEY, preprocessed: bool = False) -> dict:
+              w_key: float = W_KEY, preprocessed: bool = False,
+              lowpass_hz: float = LOWPASS_HZ, min_gap: float = 0.03,
+              nrmse_max: float = NRMSE_MAX, errx_ms: float = ERRX_MS,
+              erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
 
     route="two_stage"  貯留槽を差し引いてから歪みガウス2成分
@@ -684,7 +690,7 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     if preprocessed:
         ys, amp = np.asarray(y, float), 1.0
     else:
-        ys, amp = preprocess(t, y, fs)
+        ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
     if ys is None:
         return {"ok": False, "reason": "amplitude"}
 
@@ -694,13 +700,13 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     def _run(nw, starts=None, n_generic=None):
         if route == "two_stage":
             rp = estimate_reservoir_tau(t, ys, lm)
-            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp,
+            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp, min_gap=min_gap,
                             starts=starts, n_generic=n_generic)
             if fit is None:
                 return None
             rp = dict(rp, d=float(fit["sols"][0].x[4 * nw]))
             return fit, fit["model"](fit["sols"][0].x), rp, True
-        fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w,
+        fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w, min_gap=min_gap,
                         starts=starts, n_generic=n_generic)
         if fit is None:
             return None
@@ -714,7 +720,8 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     peaks, cov, step = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
                                      fit.get("lo"), fit.get("hi"))
     roles = assign_roles(peaks, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
-    acc = acceptance(t, ys, yhat, lm, w)
+    acc = acceptance(t, ys, yhat, lm, w, nrmse_max=nrmse_max,
+                     errx_ms=errx_ms, erry_max=erry_max)
     amb = _ambiguous(fit["sols"], step, roles)
     n_used = nw0
     escalated = False
@@ -731,7 +738,8 @@ def decompose(t, y, fs: float, route: str = "two_stage",
             peaks2, cov2, step2 = _peaks_and_se(fit2["sols"][0], fit2["n"], fit2["kind"], t,
                                                 fit2.get("lo"), fit2.get("hi"))
             roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
-            acc2 = acceptance(t, ys, yhat2, lm, w)
+            acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
+                          errx_ms=errx_ms, erry_max=erry_max)
             amb2 = _ambiguous(fit2["sols"], step2, roles2)
             if acc2["ok"] and not amb2:
                 fit, yhat, rp = fit2, yhat2, rp2
@@ -740,7 +748,7 @@ def decompose(t, y, fs: float, route: str = "two_stage",
                 n_used, escalated = nw0 + 1, True
 
     ix = indices(peaks, cov, step, roles)
-    se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= SE_DT_MAX_MS
+    se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= se_dt_max_ms
     reason = ""
     if not acc["ok"]:
         reason = "landmark_or_fit"
