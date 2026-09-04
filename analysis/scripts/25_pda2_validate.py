@@ -62,8 +62,8 @@ def make_beat(hr=70.0, dt_true=0.28, ri_true=0.45, tau_res=0.35, d_res=0.40,
         w_f, a_f, w_r, a_r = 0.055, 2.0, 0.090, 0.0
     tp_r = tp_f + dt_true
     if basis == "gamma":
-        fwd = pda2.gamma_peak(t, 1.0, tp_f, 5.0)
-        ref = pda2.gamma_peak(t, ri_true, tp_r, 9.0 if notch else 4.0)
+        fwd = pda2.gamma_peak(t, 1.0, tp_f, 0.09, 5.0)
+        ref = pda2.gamma_peak(t, ri_true, tp_r, 0.11, 9.0 if notch else 4.0)
     else:
         fwd = pda2.skew_peak(t, 1.0, tp_f, w_f, a_f)
         ref = pda2.skew_peak(t, ri_true, tp_r, w_r, a_r)
@@ -114,7 +114,7 @@ def selftest(quick: bool = False) -> int:
     print("T1 ピーク母数化")
     tt = np.arange(0, 0.9, 1 / FS)
     s = pda2.skew_peak(tt, 1.0, 0.12, 0.05, 2.0)
-    g = pda2.gamma_peak(tt, 0.8, 0.30, 6.0)
+    g = pda2.gamma_peak(tt, 0.8, 0.30, 0.12, 6.0)
     rep("歪みガウスのピークが母数どおり",
         abs(s.max() - 1.0) < 1e-6 and abs(tt[int(np.argmax(s))] - 0.12) < 0.003)
     rep("ガンマのピークが母数どおり（Γ(α) を陽に計算しない）",
@@ -141,8 +141,11 @@ def selftest(quick: bool = False) -> int:
     rep("ガンマ真値では gamma 経路が two_stage より良い（2×2 が働いている）",
         abs(t2[("gamma", "gamma3")][0]) < abs(t2[("gamma", "two_stage")][0]),
         f"gamma3 {t2[('gamma','gamma3')][0]:+.1f} 対 two_stage {t2[('gamma','two_stage')][0]:+.1f}")
-    print("       注: ガンマ基底は位置母数を持たず（Tigges の定義どおり）成分が t=0 から立ち上がる。")
-    print("           遅れて到達する反射波を表しきれないので、ガンマ真値の行は頑健性の確認に留める。")
+    print("       注: ガンマ基底には Tigges 2017 の定義に無い到達時刻の母数を足してある。")
+    print("           これが無いと全成分が拍の先頭から立ち上がり、遅れて届く反射波を表せない。")
+    print("       注: ガンマ真値の波は成分の裾が速く（時定数 20〜45 ms）、貯留槽の緩い下降を")
+    print("           どちらの経路も表しきれない。両経路とも Errx で不採用になるのが正しい。")
+    print("           採否規準そのものが基底の当てはめやすさに依存することを意味する。")
     t, y, tr = make_beat()
     dtf, rif, _ = frozen_indices(t, y)
     rep("**RI の誤差が凍結版より小さい**（歪みガウス真値で比較）",
@@ -178,34 +181,87 @@ def selftest(quick: bool = False) -> int:
     print("       注: 本合成では凍結版の交絡が 15 ms 程度にしか出ない。PWDB では ΔT の心拍数主効果が")
     print("           −10.9%（≒38 ms）であり、**合成データは交絡を過小に再現している**。")
     print("           改善の可否を決めるのは PWDB での実測であって、この表ではない。")
-    print("       注: gamma3 は高心拍で破綻する（下記）。位置母数が無いガンマでは、拍が短いとき")
-    print("           遅い反射波を置けず、成分が入れ替わる。ガンマ経路には位置母数の追加が要る。")
+    print("       注: gamma3 の交絡は two_stage より大きい。到達時刻の母数を足す前は幅 155 ms で")
+    print("           完全に破綻していたが、足した後も 55 ms 残る。ガンマの裾は形状母数ひとつで")
+    print("           立ち上がりと下降の両方を決めるため、拍が短いと下降を優先して形が歪む。")
 
     # ---- T4 雑音耐性
     print("\nT4 雑音耐性（HR 70・雑音の標準偏差を振る）")
     noises = [0.0, 0.01, 0.03, 0.06] if not quick else [0.0, 0.06]
-    reps = 3 if quick else 5
-    print(f"       {'雑音':<10}{'経路':<12}{'ΔT誤差 中央値':>16}{'採用率':>9}{'ΔT の SE 中央値':>18}")
-    se_by_noise = {r: [] for r in ROUTES}
+    reps = 6 if quick else 12
+    print(f"       {'雑音':<10}{'経路':<12}{'ΔT誤差 中央値':>16}{'採用率':>9}"
+          f"{'採用分の SE 中央値':>20}{'SE>20ms の割合':>16}")
+    ok_rate = {r: [] for r in ROUTES}
+    pool = {r: [] for r in ROUTES}          # (採否, ΔT の絶対誤差)
     for nz in noises:
         for route in ROUTES:
-            errs, oks, ses = [], [], []
+            errs, oks, se_ok, bad = [], [], [], []
             for k in range(reps):
                 t, y, tr = make_beat(noise=nz, seed=100 + k)
                 r = _run(t, y, route)
                 oks.append(r["ok"])
-                if np.isfinite(r["dt_ms"]):
-                    errs.append(abs(r["dt_ms"] - tr["dt_ms"]))
-                if np.isfinite(r["dt_se_ms"]):
-                    ses.append(r["dt_se_ms"])
-            med = float(np.median(errs)) if errs else np.nan
-            se = float(np.median(ses)) if ses else np.nan
-            se_by_noise[route].append(se)
-            print(f"       {nz:<10.3f}{route:<12}{med:>16.1f}{np.mean(oks):>9.0%}{se:>18.2f}")
+                e = abs(r["dt_ms"] - tr["dt_ms"]) if np.isfinite(r["dt_ms"]) else np.nan
+                if np.isfinite(e):
+                    errs.append(e)
+                    pool[route].append((bool(r["ok"]), e))
+                se = r["dt_se_ms"]
+                bad.append(not np.isfinite(se) or se > pda2.SE_DT_MAX_MS)
+                if r["ok"] and np.isfinite(se):
+                    se_ok.append(se)
+            ok_rate[route].append(float(np.mean(oks)))
+            sm = float(np.median(se_ok)) if se_ok else np.nan
+            print(f"       {nz:<10.3f}{route:<12}{float(np.median(errs)) if errs else np.nan:>16.1f}"
+                  f"{np.mean(oks):>9.0%}{sm:>20.2f}{float(np.mean(bad)):>16.0%}")
+    print(f"       ΔT の標準誤差が {pda2.SE_DT_MAX_MS:.0f} ms を超える解は採否で落とす。振幅が潰れた")
+    print("       成分のピーク時刻は本当に同定できないので、その標準誤差は秒の桁になる。")
+    print("       これは異常値ではなく正しい報告であり、当てはまりの規準だけでは落とせない。")
     for route in ROUTES:
-        v = [x for x in se_by_noise[route] if np.isfinite(x)]
-        rep(f"{route}: 雑音が増えると ΔT の標準誤差も増える（選別に使える）",
-            len(v) >= 2 and v[-1] > v[0], f"{v[0]:.2f} → {v[-1]:.2f} ms")
+        v = ok_rate[route]
+        rep(f"{route}: 雑音が増えると採択率が下がる", len(v) >= 2 and v[-1] < v[0],
+            f"{v[0]:.0%} → {v[-1]:.0%}")
+
+    # 選別が効いているかは**雑音を固定して**見る。水準をまたいで採用・不採用を比べると、
+    # 低雑音での系統誤差（two_stage は雑音ゼロでも +5.9 ms ずれる）と高雑音での偶然誤差を
+    # 比べることになり、交絡する。採否は真値を見ていないので、固定水準での比較は循環しない。
+    nz_sel = 0.02
+    n_sel = 12 if quick else 30
+    print(f"\n       選別と標準誤差の較正（雑音 {nz_sel} に固定・{n_sel} 回）")
+    print(f"       {'経路':<12}{'採択率':>8}{'採用のΔT誤差':>14}{'不採用のΔT誤差':>16}"
+          f"{'採用のSE中央値':>16}{'採用のΔTのσ':>15}{'成分を増やした割合':>19}")
+    for route in ROUTES:
+        eo, en, vo, se_o, esc = [], [], [], [], []
+        for k in range(n_sel):
+            t, y, tr = make_beat(noise=nz_sel, seed=300 + k)
+            r = _run(t, y, route)
+            if not np.isfinite(r["dt_ms"]):
+                continue
+            e = abs(r["dt_ms"] - tr["dt_ms"])
+            if r["ok"]:
+                eo.append(e); vo.append(r["dt_ms"]); esc.append(bool(r["escalated"]))
+                if np.isfinite(r["dt_se_ms"]):
+                    se_o.append(r["dt_se_ms"])
+            else:
+                en.append(e)
+        mo = float(np.median(eo)) if eo else np.nan
+        mn = float(np.median(en)) if en else np.nan
+        sm = float(np.median(se_o)) if se_o else np.nan
+        # 拍間のばらつきの頑健推定（四分位範囲 ÷ 1.349）。SE がこれと同じ桁なら較正できている
+        sig = (float(np.subtract(*np.percentile(vo, [75, 25]))) / 1.349
+               if len(vo) >= 4 else np.nan)
+        print(f"       {route:<12}{len(eo) / max(len(eo) + len(en), 1):>8.0%}"
+              f"{mo:>11.1f} ms{mn:>13.1f} ms{sm:>13.2f} ms{sig:>12.2f} ms"
+              f"{np.mean(esc) if esc else np.nan:>19.0%}")
+        # 較正の検査。壊れた共分散は 10^5〜10^6 ms を返していたので、この検査は空でない
+        rep(f"{route}: ΔT の標準誤差が拍間のばらつきと同じ桁（共分散が壊れていない）",
+            np.isfinite(sm) and np.isfinite(sig) and 0.2 <= sm / max(sig, 1e-9) <= 5.0,
+            f"SE {sm:.2f} ms 対 拍間σ {sig:.2f} ms（比 {sm / sig:.2f}）"
+            if np.isfinite(sm) and np.isfinite(sig) else "推定できず")
+    print("       ΔT 誤差の 2 列は**合否にしない**。採否規準は当てはまりを見ており、")
+    print("       当てはまりが足りない拍では成分を1つ増やす。増やすと波形は良く合うが")
+    print("       反射波が2つに割れ、ΔT は真値から 2 ms ほど遠ざかる。だから採用側のほうが")
+    print("       ΔT 誤差が大きくなりうる。系統誤差が偶然誤差より大きいということでもある。")
+    print("       症例内の変化を見る本研究では一定の偏りは相殺されるが、**ΔT の絶対値を")
+    print("       他研究と比べてはならない**。下流では必ず『成分を増やしたか』で層別すること。")
 
     # ---- T5 波形型
     print("\nT5 波形型（重複切痕あり／なし）")

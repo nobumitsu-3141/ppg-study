@@ -63,6 +63,11 @@ ERRY = 0.01        # 鍵点の振幅の絶対誤差の総和
 NRMSE_MAX = 0.02   # 重み付き正規化二乗平均平方根誤差
 W_KEY = 20.0       # 鍵点に置く重み（Wang は 1〜100 を探索。既定は中間）
 LOWPASS_HZ = 18.0  # Tigges 2017・Couceiro 2015 に合わせる
+# ΔT の標準誤差の上限 [ms]。研究1で観測した症例内 ΔPWTT の標準偏差が 18 ms なので、
+# それを超える誤差の拍は問いに何も寄与しない。当てはまりの規準（NRMSE・Errx・Erry）
+# だけでは、成分の振幅が潰れて時刻が同定できていない解を通してしまう
+# （`scripts/25_pda2_validate.py` T4 で σ=11,725 ms の解が採用されるのを確認した）。
+SE_DT_MAX_MS = 20.0
 
 
 # ============================================================ 基底関数
@@ -104,20 +109,34 @@ def skew_peak(t: np.ndarray, h: float, tp: float, w: float, alpha: float) -> np.
     return (h / v) * np.exp(-0.5 * z * z) * (1.0 + erf(alpha * z / SQRT2))
 
 
-def gamma_peak(t: np.ndarray, h: float, tp: float, shape: float) -> np.ndarray:
-    """ガンマ関数。ピーク高さ h をちょうど時刻 tp でとるよう母数化した対数安定形。
+def gamma_peak(t: np.ndarray, h: float, tp: float, rise: float,
+               shape: float) -> np.ndarray:
+    """ガンマ関数。到達時刻 tp−rise から立ち上がり、ピーク高さ h を時刻 tp でとる。
 
-        g(t) = h · exp[(α−1)·ln(t/tp) − β(t−tp)],   β = (α−1)/tp
+        u = t − (tp − rise)
+        g = h · exp[(α−1)·(ln u − ln rise) − β(u − rise)],   β = (α−1)/rise,  u > 0
 
     Γ(α) を陽に計算しないので、Fleischhauer 2020 が報告した倍精度の発散が起きない。
-    裾が exp(−βt) なので**拡張期の下降をそのまま表せる**。shape=α>1 を要求する。
+    裾が exp(−βu) なので**拡張期の下降をそのまま表せる**。shape=α>1 を要求する。
+
+    位置母数について
+    ----------------
+    Tigges 2017 のガンマには到達時刻の母数が無く、全成分が拍の先頭から立ち上がる。
+    そのため遅れて到達する反射波を表しきれず、拍が短い（心拍が速い）ときに成分が
+    入れ替わって破綻する（`scripts/25_pda2_validate.py` T3 で HR 80 以上で確認。
+    ΔT の心拍を通じた幅 155 ms）。Couceiro 2015 のガウスは位置母数を持つ。
+    基底関数の形だけを比べる 2×2 の対照を成り立たせるため、形はガンマのまま
+    **到達時刻だけ**を母数に加えた。立ち上がり時間 rise = tp − 到達時刻 として持つので、
+    箱型の境界だけで「到達は必ずピークより前」が保証でき、ピーク母数化も保たれる。
     """
+    r = max(float(rise), 1e-4)
     a1 = max(shape - 1.0, 1e-6)
-    beta = a1 / max(tp, 1e-6)
+    beta = a1 / r
     out = np.zeros_like(t)
-    pos = t > 1e-9
-    tt = t[pos]
-    out[pos] = h * np.exp(a1 * (np.log(tt) - np.log(max(tp, 1e-6))) - beta * (tt - tp))
+    u = np.asarray(t, float) - (float(tp) - r)
+    pos = u > 1e-9
+    uu = u[pos]
+    out[pos] = h * np.exp(a1 * (np.log(uu) - np.log(r)) - beta * (uu - r))
     return out
 
 
@@ -289,12 +308,19 @@ def estimate_reservoir_tau(t: np.ndarray, y: np.ndarray, lm: dict) -> dict:
 
 
 # ============================================================ 当てはめ
-def _multistart(resid, starts, lo, hi, max_nfev=3000):
+def _multistart(resid, starts, lo, hi, max_nfev=1200):
+    """複数の初期値から当てはめ、残差の小さい順に返す。
+
+    x_scale="jac" は母数ごとの尺度をヤコビアンから自動で決める。本問題は母数の
+    列ノルムが 0.2〜140 と 600 倍開いており（振幅・時刻・幅・歪みが混在する）、
+    既定の等倍尺度だと信頼領域が最も敏感な母数に合わせて縮み、反復回数が跳ね上がる。
+    """
     sols = []
     for x0 in starts:
         try:
             r = least_squares(resid, np.clip(x0, lo + 1e-9, hi - 1e-9),
-                              bounds=(lo, hi), method="trf", max_nfev=max_nfev)
+                              bounds=(lo, hi), method="trf", x_scale="jac",
+                              max_nfev=max_nfev)
             sols.append(r)
         except Exception:
             continue
@@ -331,6 +357,26 @@ def _wave_starts(t, y, lm, n_waves: int):
     return out
 
 
+def _augment_start(x, n: int, has_tail: bool, step: int = 4):
+    """n 成分の解に、最も間隔の広いところへ小さい成分を1つ挟んだ初期値を作る。
+
+    増やす前の解は既に良い場所にいるので、そこから温め直した1点を汎用初期値に
+    **足す**。汎用初期値の代わりにはしない（1点に絞ったら良い最適解を取り逃し、
+    当てはまりが半分に落ちて採択率が 0% になった）。
+    """
+    tail = list(np.asarray(x, float)[step * n:]) if has_tail else []
+    ks = [list(np.asarray(x, float)[step * k:step * (k + 1)]) for k in range(n)]
+    ks.sort(key=lambda c: c[1])
+    i = 0
+    if len(ks) > 1:
+        i = int(np.argmax([ks[j + 1][1] - ks[j][1] for j in range(len(ks) - 1)]))
+    hmax = max(c[0] for c in ks)
+    new = [0.25 * hmax, 0.5 * (ks[i][1] + ks[i + 1][1]) if len(ks) > 1 else ks[0][1] + 0.1,
+           float(np.mean([c[2] for c in ks])), float(np.mean([c[3] for c in ks]))]
+    ks.insert(i + 1, new)
+    return np.array([v for c in ks for v in c] + tail, float)
+
+
 def _wave_bounds(t, n_waves: int, min_gap: float = 0.03):
     T = float(t[-1] - t[0])
     t0 = float(t[0])
@@ -355,7 +401,8 @@ def _order_penalty(p, n_waves: int, min_gap: float):
     return np.array(pen)
 
 
-def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=None):
+def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=None,
+              starts=None, n_generic=None):
     """歪みガウス n 本を当てはめる。res を渡すと貯留槽項を同時に当てはめる。
 
     貯留槽は**時定数を固定し振幅だけ自由**にする。時定数は進行波の無い区間で
@@ -382,58 +429,63 @@ def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=Non
     def resid(p):
         return np.concatenate([(model(p) - y) * sw, _order_penalty(p, n_waves, gap)])
 
-    starts = _wave_starts(t, y, lm, n_waves)
+    gen = _wave_starts(t, y, lm, n_waves)
+    if n_generic is not None:
+        gen = gen[:max(n_generic, 0)]
+    starts = (list(starts) if starts is not None else []) + gen
     if rshape is not None:
         d0 = float(res.get("d_hint", 0.3))
-        starts = [np.append(x, np.clip(d0, 0.0, 1.2)) for x in starts]
+        starts = [x if len(x) == 4 * n_waves + 1 else np.append(x, np.clip(d0, 0.0, 1.2))
+                  for x in starts]
     sols = _multistart(resid, starts, lo, hi)
     if not sols:
         return None
     return {"sols": sols, "model": model, "n": n_waves, "kind": "skew",
-            "reservoir_shape": rshape}
+            "reservoir_shape": rshape, "lo": lo, "hi": hi}
 
 
-def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03):
-    """ガンマ n 本を同時に当てはめる（最も遅い成分が貯留槽の役をする）。"""
+def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
+              starts=None, n_generic=None):
+    """ガンマ n 本を同時に当てはめる（最も遅い成分が貯留槽の役をする）。
+
+    母数は成分ごとに (高さ, ピーク時刻, 立ち上がり時間, 形状) の 4 つ。歪みガウス側と
+    同じ並びなので、標準誤差の伝播も採否の検算も共通のコードで扱える。
+    """
     T = float(t[-1] - t[0])
     t0 = float(t[0])
     lo, hi = [], []
     for k in range(n_kernels):
-        lo += [0.02 if k else 0.30, max(t0, 1e-3) + 0.01, 1.05]
-        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 40.0]
+        lo += [0.02 if k else 0.30, t0 + 0.02, 0.015, 1.05]
+        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.35, 40.0]
     lo, hi = np.array(lo, float), np.array(hi, float)
     w = np.ones_like(t) if w is None else w
     sw = np.sqrt(w)
-    tt = t - t[0] + 1e-4          # ガンマは t>0 を要求する
 
     def model(p):
         out = np.zeros_like(t)
         for k in range(n_kernels):
-            out = out + gamma_peak(tt, p[3 * k], p[3 * k + 1] - t[0] + 1e-4, p[3 * k + 2])
+            out = out + gamma_peak(t, p[4 * k], p[4 * k + 1], p[4 * k + 2], p[4 * k + 3])
         return out
 
-    def pen(p):
-        tp = [p[3 * k + 1] for k in range(n_kernels)]
-        h = [p[3 * k] for k in range(n_kernels)]
-        q = []
-        for k in range(1, n_kernels):
-            q.append(50.0 * max(0.0, min_gap - (tp[k] - tp[k - 1])))
-            q.append(50.0 * max(0.0, h[k] - h[0]))
-        return np.array(q)
-
     def resid(p):
-        return np.concatenate([(model(p) - y) * sw, pen(p)])
+        return np.concatenate([(model(p) - y) * sw,
+                               _order_penalty(p, n_kernels, min_gap)])
 
-    starts = []
-    for s4 in _wave_starts(t, y, lm, n_kernels):
-        s3 = []
+    gen4 = _wave_starts(t, y, lm, n_kernels)
+    if n_generic is not None:
+        gen4 = gen4[:max(n_generic, 0)]
+    xs = [np.clip(np.asarray(x, float), lo, hi) for x in (starts or [])]
+    for s4 in gen4:
+        g = []
         for k in range(n_kernels):
-            s3 += [s4[4 * k], s4[4 * k + 1], 4.0 + 2.0 * k]
-        starts.append(np.array(s3, float))
-    sols = _multistart(resid, starts, lo, hi)
+            g += [s4[4 * k], s4[4 * k + 1],
+                  min(max(1.6 * s4[4 * k + 2], 0.02), 0.30), 4.0 + 2.0 * k]
+        xs.append(np.clip(np.array(g, float), lo, hi))
+    sols = _multistart(resid, xs, lo, hi)
     if not sols:
         return None
-    return {"sols": sols, "model": model, "n": n_kernels, "kind": "gamma"}
+    return {"sols": sols, "model": model, "n": n_kernels, "kind": "gamma",
+            "lo": lo, "hi": hi}
 
 
 # ============================================================ 採否の検算
@@ -470,20 +522,34 @@ def acceptance(t, y, yhat, lm, w=None) -> dict:
 
 
 # ============================================================ 役割と指標
-def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool) -> dict:
+def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> dict:
     """成分に前進波・反射波・貯留槽の役を割り当てる。
 
     **当てはめに決めさせない。** 規則を先に決め、制約で順序を固定したうえで、
     ランドマークに最も近い成分を反射波とする。決められなければその旨を返す。
+
+    貯留槽カーネルの見分け方
+    ------------------------
+    以前は「最も遅くピークをとる成分」を無条件に貯留槽としていた。ガンマに位置母数を
+    入れてからはこれが成り立たない。裾で拡張期の下降を担う成分が、拡張期ピークより
+    手前でピークをとりうるからである（実際、ガンマ真値の波形で真の反射波が貯留槽と
+    誤認され、手前の小さい成分が反射波にされていた）。
+    そこで**拡張期ピークより十分後ろ、かつ拍の後半でピークをとる成分だけ**を貯留槽の
+    候補とし、該当が無ければ貯留槽カーネルは無いものとして扱う。
     """
     order = sorted(range(len(peaks)), key=lambda i: peaks[i][0])
     fwd = order[0]
     cand = order[1:]
+    res = None
     if has_reservoir_kernel and len(cand) >= 2:
-        res = cand[-1]              # 最も遅い成分を貯留槽とする
-        cand = cand[:-1]
-    else:
-        res = None
+        lim = -np.inf
+        if np.isfinite(lm.get("dia_t", np.nan)):
+            lim = max(lim, lm["dia_t"] + 0.08)
+        if t is not None and len(t) > 1:
+            lim = max(lim, float(t[0]) + 0.60 * float(t[-1] - t[0]))
+        if peaks[cand[-1]][0] > lim:
+            res = cand[-1]
+            cand = cand[:-1]
     if not cand:
         return {"forward": fwd, "reflected": None, "reservoir": res, "rule": "none"}
     if np.isfinite(lm["dia_t"]) and len(cand) > 1:
@@ -495,24 +561,60 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool) -> dict:
     return {"forward": fwd, "reflected": ref, "reservoir": res, "rule": rule}
 
 
-def _peaks_and_se(sol, n, kind, t):
+def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
     """成分のピーク（時刻・高さ）と、母数の共分散行列を返す。
 
     ピーク母数化してあるので、ΔT と RI は母数の差と比になり、
     誤差伝播がそのまま書ける。
     """
     p = sol.x
-    step = 4 if kind == "skew" else 3
+    step = 4          # 歪みガウス・ガンマとも (高さ, ピーク時刻, 幅, 形) の 4 母数
     peaks = [(float(p[step * k + 1]), float(p[step * k])) for k in range(n)]
     cov = None
     try:
-        J = sol.jac
+        J = np.asarray(sol.jac, float)
         m, q = J.shape
-        dof = max(m - q, 1)
+        # 境界に張り付いた母数は動けない。線形化した共分散は境界を知らないので、
+        # そのままだと平坦な方向の曲率を分散に化けさせる。まず least_squares の
+        # active_mask で自由な母数だけを残す。
+        try:
+            free = np.asarray(sol.active_mask, int) == 0
+        except Exception:
+            free = np.ones(q, bool)
+        # scipy の active_mask は「厳密に境界上」しか印を付けない。実際には境界の
+        # ごく近くまで潰れた母数（たとえば反射波の歪み α が 3e-4）でモデルが
+        # ほぼ無感応になり、規格化ヤコビアンの最小特異値が 3e-7 まで落ちる。
+        # この平坦方向を逆行列に含めると分散が 10^14 桁に化け、共分散を通じて
+        # ΔT の標準誤差まで壊す。境界に十分近い母数は固定として扱う。
+        if lo is not None and hi is not None:
+            lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
+            if lo_a.size == q and hi_a.size == q:
+                rng = np.maximum(hi_a - lo_a, 1e-12)
+                pinned = ((np.abs(p - lo_a) <= 1e-3 * rng)
+                          | (np.abs(hi_a - p) <= 1e-3 * rng))
+                free = free & ~pinned
+        Jf = J[:, free]
+        dof = max(m - int(free.sum()), 1)
         s2 = 2.0 * sol.cost / dof
-        cov = s2 * np.linalg.pinv(J.T @ J)
+        # 列の尺度が桁違いなので規格化してから、**J そのものの**特異値分解で逆行列を作る
+        # （JᵀJ を作ると条件数が二乗される）。
+        sc = np.sqrt((Jf * Jf).sum(axis=0))
+        sc[~np.isfinite(sc) | (sc <= 0)] = 1.0
+        Jn = Jf / sc
+        if not np.isfinite(Jn).all():
+            raise ValueError("jacobian not finite")
+        with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+            _u, sv, Vt = np.linalg.svd(Jn, full_matrices=False)
+            if sv[-1] <= sv[0] * 1e-6:      # 規格化しても特異 → 本当に同定できていない
+                raise ValueError("rank deficient")
+            cf = s2 * ((Vt.T / sv ** 2) @ Vt) / np.outer(sc, sc)
+        cov = np.zeros((q, q), float)
+        ix = np.flatnonzero(free)
+        cov[np.ix_(ix, ix)] = cf
+        if not np.isfinite(cov).all():
+            cov = None
     except Exception:
-        pass
+        cov = None
     return peaks, cov, step
 
 
@@ -567,8 +669,16 @@ def decompose(t, y, fs: float, route: str = "two_stage",
 
     route="two_stage"  貯留槽を差し引いてから歪みガウス2成分
     route="gamma3"     ガンマ3成分を同時に当てはめ、最も遅い成分を貯留槽とみなす
-    escalate=True      同定性の規準を満たさない場合のみ成分を1つ増やす
-                       （**当てはまりでは増やさない**）
+    escalate=True      採否（当てはまり）または同定性の規準を満たさない場合に成分を1つ増やす
+
+    成分を増やすことの代償
+    ----------------------
+    合成波（真値は2成分＋貯留槽）で確かめたところ、3波に増やすと波形の当てはまりは
+    良くなる（NRMSE 0.017〜0.029 → 0.007〜0.013）が、**ΔT は真値から遠ざかる**
+    （+3.7 ms → +5.9 ms）。反射波が2つに割れ、後ろ側が反射波の役を取るためである。
+    採否規準は当てはまりを見ているので、採用された拍のほうが ΔT の誤差が大きい、
+    という一見あべこべな結果になる。増やしたかどうかは `escalated` で返すので、
+    下流では**必ず層別して読むこと**。
     """
     t = np.asarray(t, float)
     if preprocessed:
@@ -581,15 +691,17 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     lm = find_landmarks(t, ys)
     w = _weights(t, lm, w_key)
 
-    def _run(nw):
+    def _run(nw, starts=None, n_generic=None):
         if route == "two_stage":
             rp = estimate_reservoir_tau(t, ys, lm)
-            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp)
+            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp,
+                            starts=starts, n_generic=n_generic)
             if fit is None:
                 return None
             rp = dict(rp, d=float(fit["sols"][0].x[4 * nw]))
             return fit, fit["model"](fit["sols"][0].x), rp, True
-        fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w)
+        fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w,
+                        starts=starts, n_generic=n_generic)
         if fit is None:
             return None
         return fit, fit["model"](fit["sols"][0].x), {"ok": False}, True
@@ -599,20 +711,26 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     if got is None:
         return {"ok": False, "reason": "fit_failed", "klass": lm["klass"]}
     fit, yhat, rp, _ = got
-    peaks, cov, step = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t)
-    roles = assign_roles(peaks, lm, has_reservoir_kernel=(route != "two_stage"))
+    peaks, cov, step = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
+                                     fit.get("lo"), fit.get("hi"))
+    roles = assign_roles(peaks, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
     acc = acceptance(t, ys, yhat, lm, w)
     amb = _ambiguous(fit["sols"], step, roles)
     n_used = nw0
     escalated = False
 
-    # --- 同定性が損なわれた場合のみ成分を増やす（収縮後期波を足す）
+    # --- 採否または同定性の規準を満たさない場合に成分を増やす（収縮後期波を足す）
     if escalate and (not acc["ok"] or amb):
-        got2 = _run(nw0 + 1)
+        warm = [_augment_start(fit["sols"][0].x, nw0, has_tail=(route == "two_stage"))]
+        # 汎用初期値は削らない。1点に絞ると良い最適解を取り逃し、当てはまりが
+        # 半分に落ちて採択率が 0% になった（NRMSE 0.0067 → 0.0132）。温め初期値は
+        # **足すだけ**にして、速さは x_scale="jac" の分だけ取る。
+        got2 = _run(nw0 + 1, starts=warm)
         if got2 is not None:
             fit2, yhat2, rp2, _ = got2
-            peaks2, cov2, step2 = _peaks_and_se(fit2["sols"][0], fit2["n"], fit2["kind"], t)
-            roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=(route != "two_stage"))
+            peaks2, cov2, step2 = _peaks_and_se(fit2["sols"][0], fit2["n"], fit2["kind"], t,
+                                                fit2.get("lo"), fit2.get("hi"))
+            roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w)
             amb2 = _ambiguous(fit2["sols"], step2, roles2)
             if acc2["ok"] and not amb2:
@@ -622,9 +740,19 @@ def decompose(t, y, fs: float, route: str = "two_stage",
                 n_used, escalated = nw0 + 1, True
 
     ix = indices(peaks, cov, step, roles)
+    se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= SE_DT_MAX_MS
+    reason = ""
+    if not acc["ok"]:
+        reason = "landmark_or_fit"
+    elif amb:
+        reason = "ambiguous"
+    elif roles["reflected"] is None:
+        reason = "no_reflected"
+    elif not se_ok:
+        reason = "dt_se"
     return {
-        "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None),
-        "reason": "" if acc["ok"] else "landmark_or_fit",
+        "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None and se_ok),
+        "reason": reason,
         "route": route, "n_components": n_used + (1 if route == "two_stage" else 0),
         "n_waves": n_used, "escalated": escalated, "ambiguous": amb,
         "role_rule": roles["rule"], "klass": lm["klass"], "lm_source": lm["source"],
