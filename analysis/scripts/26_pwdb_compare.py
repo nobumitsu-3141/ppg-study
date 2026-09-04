@@ -91,12 +91,25 @@ PAIRS = [
     ("ri_v2g",         "pvr",   +1, "ok_v2g", "RI       第2版 ガンマ3"),
     ("digital_ri",     "pvr",   +1, None,     "RI       ランドマーク法"),
     ("digital_ai",     "pvr",   +1, None,     "AI       ランドマーク法"),
+    # --- 事前指定の副次（Epstein 2014 を読んで 26番の実行前に追加した）---
+    # Epstein 2014 は 1次元 75動脈モデルで、SI は**導管動脈全体**の硬さに支配され、
+    # 大動脈だけを硬くすると PPT はむしろ延びる（SI は下がる）ことを示した。
+    # つまり ΔT を「大動脈 PWV の代替」として検定するのは的を外しうる。
+    # 主要目標（PWV_a）は凍結したまま、頸大腿 PWV を副次として並べる。
+    ("dt_v2_ms",       "PWV_cf", -1, "ok_v2",  "副次 ΔT   第2版 二段 × 頸大腿PWV"),
+    ("dt_lm_ms",       "PWV_cf", -1, None,     "副次 ΔT   ランドマーク × 頸大腿PWV"),
+    # --- 記述のみ（予測の向きを事前に決めない）---
+    # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
+    # 真値との向きの予測までは立てられないので記述にとどめる。
+    ("dps_v2_ms",      "PWV_a",  0, "ok_v2",   "（記述）DPS 第2版 二段 × 大動脈PWV"),
+    ("dps_v2_ms",      "pvr",    0, "ok_v2",   "（記述）DPS 第2版 二段 × 末梢血管抵抗"),
 ]
 
 IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA"), ("dt_v2_ms", "ΔT 第2版二段"),
                    ("dt_v2g_ms", "ΔT 第2版ガンマ"), ("dt_lm_ms", "ΔT ランドマーク"),
                    ("ri_v1", "RI 凍結PDA"), ("ri_v2", "RI 第2版二段"),
-                   ("ri_v2g", "RI 第2版ガンマ"), ("digital_ri", "RI ランドマーク")]
+                   ("ri_v2g", "RI 第2版ガンマ"), ("digital_ri", "RI ランドマーク"),
+                   ("dps_v2_ms", "DPS 第2版二段")]
 
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
 # 20番の `_by_age` は年齢層ごとに 8 名以上を要求する。全体の人数だけで門番を作ると、
@@ -149,6 +162,7 @@ def indices_for_subject(args_tuple):
                 out[f"dt_{tag}_ms"] = r.get("dt_ms", np.nan)
                 out[f"ri_{tag}"] = r.get("ri", np.nan)
                 out[f"dtse_{tag}_ms"] = r.get("dt_se_ms", np.nan)
+                out[f"dps_{tag}_ms"] = r.get("dps_ms", np.nan)   # Goswami 2010
                 out[f"rise_{tag}"] = r.get("ri_se", np.nan)
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)

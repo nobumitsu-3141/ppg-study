@@ -71,14 +71,17 @@ SE_DT_MAX_MS = 20.0
 
 
 # ============================================================ 基底関数
-def _skew_tables(n: int = 801):
+def _skew_tables(n: int = 1601):
     """歪みガウスの形状 f(z)=exp(−z²/2)(1+erf(αz/√2)) について、
     α ごとのピーク位置 m(α)[z単位] とピーク値 v(α) を数値表にする。
 
     これがあると (ピーク高さ, ピーク時刻) で母数化できる。閉じた式が無いので表引きする。
     """
-    alphas = np.linspace(0.0, 8.0, n)
-    zz = np.linspace(-1.0, 6.0, 4001)
+    # Basso 2024 は α に境界を置かない（左歪みも許す）。左歪みを禁じると、
+    # 反射波の歪みが下限 0 に潰れてモデルが α に無感応になり、共分散が壊れる
+    # （実際に起きた。25番 T4 参照）。ここでは対称に [−8, 8] とする。
+    alphas = np.linspace(-8.0, 8.0, n)
+    zz = np.linspace(-6.0, 6.0, 6001)
     m = np.empty(n)
     v = np.empty(n)
     for i, a in enumerate(alphas):
@@ -138,6 +141,23 @@ def gamma_peak(t: np.ndarray, h: float, tp: float, rise: float,
     uu = u[pos]
     out[pos] = h * np.exp(a1 * (np.log(uu) - np.log(r)) - beta * (uu - r))
     return out
+
+
+def component_sd(kind: str, w: float, shape: float) -> float:
+    """成分の標準偏差。基底関数の種類によらず比べられるようにする。
+
+    Goswami 2010 の差分パルス幅 DPS = σ_reflected − σ_forward を計算するために要る。
+    同論文では健常 30 歳で 10 ms、高血圧 55 歳で 90 ms と大きく開いた。
+    Lee 2011（真の熱希釈 SVR 参照）と Awad 2007 も、脈波の幅が反射係数より
+    末梢血管抵抗をよく弁別すると報告しており、幅は独立に支持されている。
+    """
+    if kind == "skew":
+        # 歪み正規分布: σ = ω·sqrt(1 − 2δ²/π),  δ = α/√(1+α²)   （Basso 2024 付録）
+        d = float(shape) / np.sqrt(1.0 + float(shape) ** 2)
+        return float(w) * np.sqrt(max(1.0 - 2.0 * d * d / np.pi, 1e-9))
+    # ガンマ: 形状 α・率 β=(α−1)/rise のとき σ = √α/β = √α·rise/(α−1)
+    a1 = max(float(shape) - 1.0, 1e-6)
+    return float(np.sqrt(max(shape, 1e-9)) * float(w) / a1)
 
 
 # ============================================================ 前処理
@@ -377,12 +397,23 @@ def _augment_start(x, n: int, has_tail: bool, step: int = 4):
     return np.array([v for c in ks for v in c] + tail, float)
 
 
-def _wave_bounds(t, n_waves: int, min_gap: float = 0.03):
+ALPHA_MIN = 0.0    # 歪み母数の下限。0 は「右歪みのみ許す」
+# Basso 2024 は α に境界を置かない（「α の範囲について事前知識がないから」）。
+# しかし**前進波については事前知識がある**。伝播する脈波は立ち上がりが速く減衰が遅い、
+# すなわち右歪みである。左歪み（速く減衰し遅く立ち上がる）は進行波として非生理的である。
+# α を見直すきっかけになった共分散の破綻（α が下限 0 に潰れてモデルが無感応になる）は、
+# 境界近傍の母数を固定する処理で独立に解決済みなので、下限を外す必要はない。
+# ただし文献と割れる選択なので、27番の感度解析で −8 に緩めた場合を検定する。
+# 参考（合成波・真値は α=2.5 と 1.2 の右歪みなので優劣は決められない）:
+#   α≥0: ΔT誤差 +5.9 / 心拍交絡 13.4 ms      α≥−8: ΔT誤差 +8.4 / 心拍交絡 15.7 ms
+
+
+def _wave_bounds(t, n_waves: int, min_gap: float = 0.03, alpha_min: float = ALPHA_MIN):
     T = float(t[-1] - t[0])
     t0 = float(t[0])
     lo, hi = [], []
     for k in range(n_waves):
-        lo += [0.02 if k else 0.30, t0 + 0.01, 0.012, 0.0]
+        lo += [0.02 if k else 0.30, t0 + 0.01, 0.012, alpha_min]
         hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.28, 8.0]
     return np.array(lo, float), np.array(hi, float), min_gap
 
@@ -402,14 +433,14 @@ def _order_penalty(p, n_waves: int, min_gap: float):
 
 
 def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=None,
-              starts=None, n_generic=None):
+              starts=None, n_generic=None, alpha_min: float = ALPHA_MIN):
     """歪みガウス n 本を当てはめる。res を渡すと貯留槽項を同時に当てはめる。
 
     貯留槽は**時定数を固定し振幅だけ自由**にする。時定数は進行波の無い区間で
     決めてあるので、この項が反射波の位置を動かすことはない。振幅を同時に決めるのは、
     先に差し引くと過剰に引いて残差が負に振れるためである。
     """
-    lo, hi, gap = _wave_bounds(t, n_waves, min_gap)
+    lo, hi, gap = _wave_bounds(t, n_waves, min_gap, alpha_min)
     w = np.ones_like(t) if w is None else w
     sw = np.sqrt(w)
     rshape = None
@@ -573,6 +604,7 @@ def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
     p = sol.x
     step = 4          # 歪みガウス・ガンマとも (高さ, ピーク時刻, 幅, 形) の 4 母数
     peaks = [(float(p[step * k + 1]), float(p[step * k])) for k in range(n)]
+    sds = [component_sd(kind, p[step * k + 2], p[step * k + 3]) for k in range(n)]
     cov = None
     try:
         J = np.asarray(sol.jac, float)
@@ -618,14 +650,15 @@ def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
             cov = None
     except Exception:
         cov = None
-    return peaks, cov, step
+    return peaks, cov, step, sds
 
 
-def indices(peaks, cov, step, roles) -> dict:
+def indices(peaks, cov, step, roles, sds=None) -> dict:
     """ΔT と RI を、標準誤差つきで返す。"""
     f, r = roles["forward"], roles["reflected"]
     if r is None:
-        return {"dt_ms": np.nan, "ri": np.nan, "dt_se_ms": np.nan, "ri_se": np.nan}
+        return {"dt_ms": np.nan, "ri": np.nan, "dt_se_ms": np.nan, "ri_se": np.nan,
+                "dps_ms": np.nan}
     tf, hf = peaks[f]
     tr, hr = peaks[r]
     dt = (tr - tf) * 1000.0
@@ -644,7 +677,10 @@ def indices(peaks, cov, step, roles) -> dict:
             ri_se = float(np.sqrt(max(g @ c @ g, 0.0)))
         except Exception:
             pass
-    return {"dt_ms": float(dt), "ri": float(ri), "dt_se_ms": dt_se, "ri_se": ri_se}
+    # Goswami 2010 の差分パルス幅。反射波が前進波よりどれだけ広がったか
+    dps = (sds[r] - sds[f]) * 1000.0 if sds is not None else np.nan
+    return {"dt_ms": float(dt), "ri": float(ri), "dt_se_ms": dt_se, "ri_se": ri_se,
+            "dps_ms": float(dps) if np.isfinite(dps) else np.nan}
 
 
 def _ambiguous(sols, step, roles, tol_cost: float = 1.15, tol_dt: float = 0.20) -> bool:
@@ -669,6 +705,8 @@ def decompose(t, y, fs: float, route: str = "two_stage",
               n_waves: int = None, escalate: bool = True,
               w_key: float = W_KEY, preprocessed: bool = False,
               lowpass_hz: float = LOWPASS_HZ, min_gap: float = 0.03,
+              resample_hz: float = 0.0, fit_frac: float = 1.0,
+              alpha_min: float = ALPHA_MIN,
               nrmse_max: float = NRMSE_MAX, errx_ms: float = ERRX_MS,
               erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
@@ -694,6 +732,22 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     if ys is None:
         return {"ok": False, "reason": "amplitude"}
 
+    # 感度解析用の2条件（既定では何もしない）
+    #   resample_hz  Tigges 2017 は AICc のため 40 Hz へ、Basso 2024 は 1拍 28 標本
+    #                （平均 42 Hz）へ落としている。500 Hz のまま当てはめると標本数が
+    #                15 倍になり、情報の薄い拡張期の裾が二乗和を支配する
+    #   fit_frac     Goswami 2010 は「関心のある母数は 0〜0.9T に収まる」として
+    #                拍の終わりを当てはめていない。貯留槽項を置く代わりの方針
+    if resample_hz and resample_hz > 0:
+        n_new = max(int(round((t[-1] - t[0]) * resample_hz)) + 1, 16)
+        t_new = np.linspace(float(t[0]), float(t[-1]), n_new)
+        ys = np.interp(t_new, t, ys)
+        t = t_new
+    if fit_frac and fit_frac < 1.0:
+        keep = t <= t[0] + fit_frac * (t[-1] - t[0])
+        if keep.sum() >= 16:
+            t, ys = t[keep], ys[keep]
+
     lm = find_landmarks(t, ys)
     w = _weights(t, lm, w_key)
 
@@ -701,7 +755,7 @@ def decompose(t, y, fs: float, route: str = "two_stage",
         if route == "two_stage":
             rp = estimate_reservoir_tau(t, ys, lm)
             fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp, min_gap=min_gap,
-                            starts=starts, n_generic=n_generic)
+                            starts=starts, n_generic=n_generic, alpha_min=alpha_min)
             if fit is None:
                 return None
             rp = dict(rp, d=float(fit["sols"][0].x[4 * nw]))
@@ -717,8 +771,8 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     if got is None:
         return {"ok": False, "reason": "fit_failed", "klass": lm["klass"]}
     fit, yhat, rp, _ = got
-    peaks, cov, step = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
-                                     fit.get("lo"), fit.get("hi"))
+    peaks, cov, step, sds = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
+                                          fit.get("lo"), fit.get("hi"))
     roles = assign_roles(peaks, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
     acc = acceptance(t, ys, yhat, lm, w, nrmse_max=nrmse_max,
                      errx_ms=errx_ms, erry_max=erry_max)
@@ -735,19 +789,20 @@ def decompose(t, y, fs: float, route: str = "two_stage",
         got2 = _run(nw0 + 1, starts=warm)
         if got2 is not None:
             fit2, yhat2, rp2, _ = got2
-            peaks2, cov2, step2 = _peaks_and_se(fit2["sols"][0], fit2["n"], fit2["kind"], t,
-                                                fit2.get("lo"), fit2.get("hi"))
+            peaks2, cov2, step2, sds2 = _peaks_and_se(
+                fit2["sols"][0], fit2["n"], fit2["kind"], t,
+                fit2.get("lo"), fit2.get("hi"))
             roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
                           errx_ms=errx_ms, erry_max=erry_max)
             amb2 = _ambiguous(fit2["sols"], step2, roles2)
             if acc2["ok"] and not amb2:
                 fit, yhat, rp = fit2, yhat2, rp2
-                peaks, cov, step = peaks2, cov2, step2
+                peaks, cov, step, sds = peaks2, cov2, step2, sds2
                 roles, acc, amb = roles2, acc2, amb2
                 n_used, escalated = nw0 + 1, True
 
-    ix = indices(peaks, cov, step, roles)
+    ix = indices(peaks, cov, step, roles, sds)
     se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= se_dt_max_ms
     reason = ""
     if not acc["ok"]:
