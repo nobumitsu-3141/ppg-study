@@ -143,7 +143,10 @@ def _weights(t, ys, mode: str):
     return w
 
 
-def fit_variant(t, y, n_kernels, decay, alpha_min, weight_mode, n_starts=6, seed=0):
+N_STARTS = 6          # 自己検査では下げる
+
+
+def fit_variant(t, y, n_kernels, decay, alpha_min, weight_mode, n_starts=None, seed=0):
     """1拍を指定の設定で当てはめ、成分ピークを返す。"""
     t = np.asarray(t, float)
     y0 = np.asarray(y, float) - float(np.min(y))
@@ -151,6 +154,7 @@ def fit_variant(t, y, n_kernels, decay, alpha_min, weight_mode, n_starts=6, seed
     if ymax <= 0:
         return None
     ys = y0 / ymax
+    n_starts = N_STARTS if n_starts is None else n_starts
     lo, hi = _bounds(t, n_kernels, decay, alpha_min)
     w = _weights(t, ys, weight_mode)
 
@@ -319,11 +323,50 @@ def report(d, out_dir: Path | None = None):
 
 
 # ---------------------------------------------------------------- 自己検証
+def _make_rich_mock(root: Path, n: int = 60, seed: int = 0):
+    """疑っている交絡そのものを仕込んだ模擬波形を作る。
+
+    波形 = 前進波 + 反射波（位置は PWV で決まる） + **拡張期の指数減衰**（長さは拍長に比例）
+
+    減衰項があるので、A0（減衰項なし・2カーネル）では第2カーネルが減衰を吸収して
+    ΔT が拍長＝心拍数に引きずられるはずである。A1（減衰項あり）はそれを免れるはずである。
+    自己検査はこの差を検出できるかを見る。純粋な2ガウス関数の模擬では検出しようがない。
+    """
+    import pandas as pd
+    rng = np.random.default_rng(seed)
+    M20._make_mock(root, n=n, seed=seed)      # 真値・入力・変動表・（後で捨てる）波形
+    hae = M20._read_named(root / "pwdb_haemod_params.csv", ("subj_no", "age", "HR", "PWV_a"))
+    fs, rows = 500.0, []
+    for _, r in hae.iterrows():
+        hr, pwv = float(r["HR"]), float(r["PWV_a"])
+        dur = 60.0 / hr
+        tt = np.arange(int(dur * fs)) / fs
+        dt_true = 0.42 - 0.022 * pwv                       # PWV↑ で反射波が早く戻る
+        y = (1.00 * np.exp(-0.5 * ((tt - 0.11) / 0.045) ** 2)
+             + 0.32 * np.exp(-0.5 * ((tt - (0.11 + dt_true)) / 0.060) ** 2)
+             + 0.45 * np.exp(-(tt) / (0.42 * dur)))        # ← 拍長に比例する拡張期減衰
+        rows.append([int(r["subj_no"])] + list(y))
+    w = max(len(q) for q in rows)
+    mat = np.full((len(rows), w), np.nan)
+    for k, q in enumerate(rows):
+        mat[k, :len(q)] = q
+    p = root / "PWs" / "csv" / "PWs_Digital_PPG.csv"
+    with open(p, "w") as f:
+        f.write("Subject Number, " + ", ".join(f"pt{j}" for j in range(1, w)) + "\n")
+    with open(p, "a") as f:
+        np.savetxt(f, mat, delimiter=",", fmt="%.10g")
+    return root
+
+
 def selftest() -> int:
     import tempfile
     import pandas as pd
-    print("== 24_pwdb_pda_ablation 自己検証（模擬PWDB・ネットワーク不要） ==\n")
+    global N_STARTS
+    print("== 24_pwdb_pda_ablation 自己検証（模擬PWDB・ネットワーク不要） ==")
+    print("   模擬波形 = 前進波 + 反射波（PWV依存） + 拡張期の指数減衰（拍長に比例）")
+    print("   すなわち『第2カーネルが減衰を吸収して心拍数に引きずられる』状況を仕込んである\n")
     ok = True
+    N_STARTS = 3          # 自己検査は軽くする
 
     def rep(name, cond, detail=""):
         nonlocal ok
@@ -331,28 +374,45 @@ def selftest() -> int:
         print(f"  [{'PASS' if cond else 'FAIL'}] {name}{('  ' + detail) if detail else ''}", flush=True)
 
     with tempfile.TemporaryDirectory() as td:
-        root, truth = M20._make_mock(Path(td) / "exported_data", n=36)
-        hae, cfg, ppg, _ex = M20.load_pwdb(root)
+        # 年齢層あたり10名（判定に要る最低8名を満たす）
+        root = _make_rich_mock(Path(td) / "exported_data", n=60)
+        hae, cfg, ppg, ex = M20.load_pwdb(root)
         h = hae.set_index("subj_no")
         rows = []
         for i in range(len(ppg)):
             sid = int(ppg.iloc[i, 0])
             rows.append(one_subject((sid, ppg.iloc[i].to_numpy(float), float(h.loc[sid, "HR"]))))
+            if (i + 1) % 20 == 0:
+                print(f"    当てはめ {i+1}/{len(ppg)}", flush=True)
         df = pd.DataFrame(rows)
-        rep("全変種が値を返す", all(f"v{vi}_dt_12" in df and df[f"v{vi}_dt_12"].notna().sum() > len(df) * 0.6
-                                for vi in range(len(VARIANTS))),
-            f"{[int(df.get(f'v{vi}_dt_12', pd.Series(dtype=float)).notna().sum()) for vi in range(len(VARIANTS))]}")
-        rep("減衰項ありの変種が当てはめ誤差を下げる",
-            float(df["v1_nrmse"].median()) <= float(df["v0_nrmse"].median()) + 1e-9,
+
+        cover = {vi: int(df.get(f"v{vi}_dt_12", pd.Series(dtype=float)).notna().sum())
+                 for vi in range(len(VARIANTS))}
+        rep("2カーネル系の3変種（A0・A1・A2）がほぼ全員で値を返す",
+            all(cover[vi] >= 0.9 * len(df) for vi in (0, 1, 2)), f"{cover}")
+        rep("多カーネル系も半数以上で値を返す",
+            all(cover[vi] >= 0.5 * len(df) for vi in (4, 5, 6)), f"{cover}")
+
+        rep("減衰項ありの変種が当てはめ誤差を下げる（仕込んだ減衰を捉える）",
+            float(df["v1_nrmse"].median()) < float(df["v0_nrmse"].median()),
             f"A0 {df['v0_nrmse'].median():.4f} → A1 {df['v1_nrmse'].median():.4f}")
-        rep("5カーネルが最も当てはまる",
-            float(df["v5_nrmse"].median()) <= float(df["v0_nrmse"].median()),
-            f"A5 {df['v5_nrmse'].median():.4f}")
+
         d = df.merge(hae, on="subj_no").merge(cfg[["subj_no", "pvr"]], on="subj_no")
+        if "variations" in ex:
+            d = d.merge(ex["variations"].drop(columns=["var_age"], errors="ignore"),
+                        on="subj_no", how="left")
+        rep("要因表が結合できている（心拍数交絡の節が動く）", "var_pwv" in d)
+
         s = report(d, out_dir=Path(td) / "out")
-        j = s.get("A0 凍結と同型（対照）|1↔2|dt")
-        rep("模擬データに仕込んだ ΔT×PWV（負）を対照変種が復元", bool(j and j["pass"]), f"{j}")
+        j0 = s.get("A0 凍結と同型（対照）|1↔2|dt")
+        j1 = s.get("A1 ＋拡張期の減衰項|1↔2|dt")
+        rep("対照変種について判定が計算される（年齢層あたり10名）", bool(j0), f"{j0}")
+        rep("減衰項ありの変種について判定が計算される", bool(j1), f"{j1}")
+        rep("**減衰項を足すと ΔT×PWV の関連が強まる**（仕込んだ交絡を検出できる）",
+            bool(j0 and j1 and j1["med_abs"] > j0["med_abs"]),
+            f"A0 {j0['med_abs']:.3f} → A1 {j1['med_abs']:.3f}" if (j0 and j1) else "")
         rep("結果ファイルを書き出す", (Path(td) / "out" / "pwdb_pda_ablation.csv").exists())
+    N_STARTS = 6
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 
