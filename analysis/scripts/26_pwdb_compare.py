@@ -325,6 +325,13 @@ def _sub(d, ok_col, mode: str):
     return d if ok_col is None else d[d[ok_col] == 1]
 
 
+def _straddles_zero(v) -> bool:
+    """層平均で割った % が定義できない量か（平均が SD の半分未満 = 0 をまたぐ）。"""
+    v = np.asarray(v, float)
+    v = v[np.isfinite(v)]
+    return bool(v.size and abs(np.mean(v)) < 0.5 * np.std(v))
+
+
 def _fmt_j(j):
     if not j:
         return f"{'—':>9}{'—':>9}{'—':>8}"
@@ -586,9 +593,7 @@ def report(d, out_dir: Path | None = None) -> dict:
                 continue
             # 主効果は「層平均で割った %」なので、0 をまたぐ量では発散して意味を持たない
             # （DPS = σ_reflected − σ_forward は符号が変わりうる）。比を出さずに飛ばす
-            v_ = src[col].to_numpy(float)
-            v_ = v_[np.isfinite(v_)]
-            if v_.size and abs(np.mean(v_)) < 0.5 * np.std(v_):
+            if _straddles_zero(src[col].to_numpy(float)):
                 skipped.append(lab)
                 continue
             e, _r = M._factor_effects(src, col)
@@ -792,11 +797,8 @@ def selftest(jobs: int = 2) -> int:
         rep("足で切り出した模擬拍では両端の値が 0.05 未満（F7 の診断が動く）",
             bool(d["edge_hi"].notna().any()) and float(np.nanmedian(d["edge_hi"])) < 0.05,
             f"高い側の中央値 {float(np.nanmedian(d['edge_hi'])):.4f}")
-        v_ = d.loc[d["ok_v2"] == 1, "dps_v2_ms"].to_numpy(float)
-        v_ = v_[np.isfinite(v_)]
-        rep("0 をまたぐ量（DPS）は因子主効果の % を飛ばす条件に該当する（F3）",
-            v_.size > 3 and abs(np.mean(v_)) < 0.5 * np.std(v_),
-            f"平均 {np.mean(v_):.1f} / SD {np.std(v_):.1f}" if v_.size else "")
+        rep("0 をまたぐ量は因子主効果の % を飛ばし、0 から離れた量は飛ばさない（F3）",
+            _straddles_zero([-3.0, 2.0, -1.0, 4.0, -2.5]) and not _straddles_zero([10.0, 11.0, 12.0, 9.0]))
         hae_, cfg_, ppg_, _x = M.load_pwdb(root)
         sub = _stride(ppg_, 12)
         idx = np.flatnonzero(ppg_.iloc[:, 0].isin(sub.iloc[:, 0]).to_numpy())

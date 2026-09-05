@@ -121,6 +121,10 @@ REFIT = [
     # --- 6巡目: 根拠なく決めた 3 つ目の閾値（競合解とみなす残差の許容）も当てはめ層で振る
     ("一意性の残差許容 1.05",      {"tol_cost": 1.05}),
     ("一意性の残差許容 1.5",       {"tol_cost": 1.5}),
+    # --- 7巡目: ガンマ経路は模擬で採用の 96% が立ち上がり・形状の上限に張り付いた。
+    # 探索範囲が結論を決めていないかを、ガンマ経路のときだけ検定する（skew では飛ばす）
+    ("ガンマの探索範囲を広げる（形状 ≤ 100・立ち上がり ≤ 0.6T）",
+     {"gamma_shape_max": 100.0, "gamma_rise_max": 0.60}),
 ]
 
 ROUTES = [("v2", "第2版 歪みガウス"), ("v2g", "第2版 ガンマ")]
@@ -335,6 +339,8 @@ def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None,
         Path(out_dir).mkdir(parents=True, exist_ok=True)
     rows = {}
     for lab, opts in (REFIT if conditions is None else conditions):
+        if route != "gamma" and any(k.startswith("gamma_") for k in opts):
+            continue                            # ガンマ専用の条件
         work = [(s, r, h, dict(opts, route=route)) for s, r, h in base]
         if jobs > 1:
             from concurrent.futures import ProcessPoolExecutor

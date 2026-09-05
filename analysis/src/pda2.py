@@ -610,12 +610,21 @@ def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03,
     return {"sols": sols, "model": model, "n": n_waves, "kind": "skew", "lo": lo, "hi": hi}
 
 
+GAMMA_SHAPE_MAX = 40.0     # 形状の上限。40 でほぼガウス（1 は指数）
+GAMMA_RISE_MAX = 0.35      # 立ち上がり時間の上限（× T/T_REF）
+
+
 def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
-              starts=None, n_generic=None):
+              starts=None, n_generic=None, shape_max: float = GAMMA_SHAPE_MAX,
+              rise_max: float = GAMMA_RISE_MAX):
     """ガンマ n 本を同時に当てはめる（最も遅い成分が貯留槽の役をする）。
 
     母数は成分ごとに (高さ, ピーク時刻, 立ち上がり時間, 形状) の 4 つ。歪みガウス側と
     同じ並びなので、標準誤差の伝播も採否の検算も共通のコードで扱える。
+
+    探索範囲の上限（shape_max・rise_max）は 27番 B 層で広げて検定する。7 巡目の模擬
+    （2 ガウスの真値）では採用した拍の 96% で立ち上がりか形状が上限に張り付いた。ガウスに
+    近づこうとする基底の性質で、実データでどうかは 26番の表 1 の張り付き率で見る。
     """
     T = float(t[-1] - t[0])
     t0 = float(t[0])
@@ -623,7 +632,7 @@ def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
     lo, hi = [], []
     for k in range(n_kernels):
         lo += [0.02 if k else 0.30, t0 + 0.02, 0.015 * sc, 1.05]
-        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.35 * sc, 40.0]
+        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, rise_max * sc, shape_max]
     lo, hi = np.array(lo, float), np.array(hi, float)
     w = np.ones_like(t) if w is None else w
     sw = np.sqrt(w)
@@ -955,7 +964,9 @@ def decompose(t, y, fs: float, route: str = "skew",
               alpha_min: float = ALPHA_MIN,
               nrmse_max: float = NRMSE_MAX, errx_ms: float = ERRX_MS,
               erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS,
-              tol_cost: float = TOL_COST, accept_proxy: bool = False) -> dict:
+              tol_cost: float = TOL_COST, accept_proxy: bool = False,
+              gamma_shape_max: float = GAMMA_SHAPE_MAX,
+              gamma_rise_max: float = GAMMA_RISE_MAX) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
 
     route="skew"       歪みガウス2成分（不足なら3）。Basso 2024 と同じ混合模型
@@ -995,6 +1006,13 @@ def decompose(t, y, fs: float, route: str = "skew",
     下流では**必ず層別して読むこと**。
     """
     t = np.asarray(t, float)
+    # 入力の検証（7 巡目の独立監査: fs=inf で例外、fs=0・nan で低域通過が黙って外れていた）。
+    # 時刻は秒で単調増加、fs は有限の正で t の間隔と 10% 以内で一致すること
+    if not (np.isfinite(fs) and fs > 0) or t.size < 2 or not np.isfinite(t).all():
+        return {"ok": False, "reason": "bad_input"}
+    dts = np.diff(t)
+    if not (dts > 0).all() or abs(1.0 / float(np.median(dts)) - fs) > 0.10 * fs:
+        return {"ok": False, "reason": "bad_input"}
     if preprocessed:
         ys, amp = np.asarray(y, float), 1.0
         if ys.size < 8 or not np.isfinite(ys).all():
@@ -1003,6 +1021,12 @@ def decompose(t, y, fs: float, route: str = "skew",
         ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
     if ys is None:
         return {"ok": False, "reason": "amplitude"}
+    # 内部の標本化周波数を 500 Hz にそろえる（PWDB は 500 Hz なので何もしない）。
+    # 250 Hz 未満では 1 次微分による代用点（型3）の位置が粗く（100 Hz で肩が 60 ms 動く）、
+    # 1000 Hz 超では標本数に比例して当てはめが遅くなる（1 拍 200 s）。18 Hz の低域通過の後なので
+    # 500 Hz への再標本化で情報は失われない。感度解析の resample_hz が指定されていればそちらを優先する
+    if not (resample_hz and resample_hz > 0) and (fs < 250.0 or fs > 1000.0):
+        resample_hz = 500.0
 
     # 感度解析用の2条件（既定では何もしない）
     #   resample_hz  Tigges 2017 は AICc のため 40 Hz へ、Basso 2024 は 1拍 28 標本
@@ -1032,7 +1056,8 @@ def decompose(t, y, fs: float, route: str = "skew",
                             starts=starts, n_generic=n_generic, alpha_min=alpha_min)
         else:
             fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w, min_gap=min_gap,
-                            starts=starts, n_generic=n_generic)
+                            starts=starts, n_generic=n_generic,
+                            shape_max=gamma_shape_max, rise_max=gamma_rise_max)
         if fit is None:
             return None
         return fit, fit["model"](fit["sols"][0].x)
