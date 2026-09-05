@@ -525,11 +525,14 @@ def selftest(quick: bool = False) -> int:
     lm40 = pda2.find_landmarks(t40, y40)
     w40 = pda2._weights(t40, lm40)
     i_s = int(np.argmax(y40))
-    blk = np.flatnonzero(w40 > 1)
-    seg = blk[(blk >= i_s - 10) & (blk <= i_s + 10)]
-    width_s = (seg.max() - seg.min() + 1) / 40.0 if seg.size else np.nan
+    a_, b_ = i_s, i_s                         # 収縮期ピークを含む連続した重み区間
+    while a_ - 1 >= 0 and w40[a_ - 1] > 1:
+        a_ -= 1
+    while b_ + 1 < len(w40) and w40[b_ + 1] > 1:
+        b_ += 1
+    width_s = (b_ - a_ + 1) / 40.0
     rep("鍵点の重みの近傍は 40 Hz でも 0.1 s 未満（標本数ではなく時間で指定: B2）",
-        np.isfinite(width_s) and width_s < 0.10, f"{width_s * 1000:.0f} ms")
+        width_s < 0.10, f"{width_s * 1000:.0f} ms（標本数で ±3 なら 175 ms）")
     # 退化した入力は例外を出さず理由 amplitude（R1）
     bad_inputs = {"全 NaN": np.full_like(t, np.nan), "定数": np.ones_like(t),
                   "内部 NaN": np.where(np.arange(t.size) == 100, np.nan, y),
@@ -593,9 +596,13 @@ def selftest(quick: bool = False) -> int:
     rep("幅の探索範囲が拍長に比例する（D4: T/T_REF で尺度化）",
         np.isclose(hi2[2] / hi1[2], 2.0, rtol=0.02) and np.isclose(lo2[2] / lo1[2], 2.0, rtol=0.02),
         f"上限 {hi1[2] * 1000:.0f} → {hi2[2] * 1000:.0f} ms")
-    # 18 Hz 低域通過が効いている
+    # 18 Hz 低域通過が効いている。基線除去は足の位置が動いて別の差を作るので外し、
+    # 両端 5% は filtfilt の端の影響なので除いて比べる（4 次 18 Hz なら 40 Hz は 4% に落ちる）
     y_hf = y + 0.05 * np.sin(2 * np.pi * 40.0 * t)
-    d_hf = float(np.max(np.abs(pda2.preprocess(t, y_hf, FS)[0] - ys)))
+    base = pda2.preprocess(t, y, FS, detrend=False)[0]
+    filt = pda2.preprocess(t, y_hf, FS, detrend=False)[0]
+    n_ = len(base)
+    d_hf = float(np.max(np.abs(filt - base)[int(0.05 * n_):int(0.95 * n_)]))
     rep("40 Hz の成分（振幅 0.05）は前処理で 0.01 未満に落ちる（18 Hz 低域通過）", d_hf < 0.01,
         f"残差 {d_hf:.4f}")
     # 境界張り付きの検出（1c の探索範囲が解を決めていないかの監視）
