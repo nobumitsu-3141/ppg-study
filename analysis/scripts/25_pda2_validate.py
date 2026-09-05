@@ -612,9 +612,45 @@ def selftest(quick: bool = False) -> int:
     xp[3] = lo[3]                       # α=0 は正当（数えない）
     pins = pda2.pinned_params(NS(x=xp), lo, hi, "skew")
     rep("境界に張り付いた母数を検出し、α=0 は数えない", pins == ["0:w:hi"], f"{pins}")
+    lo8, hi8, _ = pda2._wave_bounds(t, 2, alpha_min=-8.0)
+    xp8 = (lo8 + hi8) / 2.0
+    xp8[3] = lo8[3]                     # α=−8 は対称ガウスではないので張り付きとして数える
+    rep("歪みの下限が −8 のときは α の張り付きを数える（B 層の条件で監視が働く）",
+        pda2.pinned_params(NS(x=xp8), lo8, hi8, "skew") == ["0:a:lo"])
+    # 反射波が無い経路（D5）: 候補が無ければ役割は none、指標は NaN で例外を出さない
+    lm1 = {"dia_t": np.nan, "klass": 4}
+    ro = pda2.assign_roles([(0.12, 1.0)], lm1, has_reservoir_kernel=True, t=t)
+    ix0 = pda2.indices([(0.12, 1.0)], None, 4, ro)
+    rep("成分が 1 つなら反射波なし（rule none）で ΔT・RI は NaN、例外を出さない（D5）",
+        ro["reflected"] is None and ro["rule"] == "none" and not np.isfinite(ix0["dt_ms"])
+        and pda2._ambiguous([], 4, ro))
     r = pda2.decompose(t, y, FS, route="skew")
     rep("decompose が張り付きの数と内訳を返す", "n_pinned" in r and "pinned" in r,
         f"n_pinned={r.get('n_pinned')} {r.get('pinned')!r}")
+
+    # ---- T13 Hellqvist の早期特徴（26番の第 4 の腕。正しさの検査が無かった）
+    print("\nT13 早期特徴（Hellqvist の p1・b・Am_b/Am_p1）")
+    t, y, tr = make_beat()
+    ys, _ = pda2.preprocess(t, y, FS)
+    ef = pda2.early_features(t, ys)
+    lm = pda2.find_landmarks(t, ys)
+    rep("型1 の拍で p1 が定義され、収縮期ピークの 20 ms 以内にある（Hellqvist: 型1 では S と一致することが多い）",
+        np.isfinite(ef["p1_t"]) and abs(ef["p1_t"] - lm["sys_t"]) * 1000.0 < 20.0,
+        f"p1 {ef['p1_t'] * 1000:.1f} ms 対 S {lm['sys_t'] * 1000:.1f} ms")
+    rep("b は最大傾斜点 w と収縮期ピークの間にあり、比 Am_b/Am_p1 は (0, 1] に入る",
+        np.isfinite(ef["b_t"]) and ef["w_t"] < ef["b_t"] < lm["sys_t"] + 1e-9
+        and 0.0 < ef["amb_amp1"] <= 1.0 + 1e-9, f"w {ef['w_t'] * 1000:.1f} < b {ef['b_t'] * 1000:.1f} ms, 比 {ef['amb_amp1']:.3f}")
+    t3, y3, _ = make_beat(notch=False, dt_true=0.08, ri_true=0.60)
+    ef3 = pda2.early_features(t3, pda2.preprocess(t3, y3, FS)[0])
+    rep("切痕なしの拍でも p1 と比が定義される（6 型すべてで機能する、という報告の前提）",
+        np.isfinite(ef3["p1_t"]) and np.isfinite(ef3["amb_amp1"]), f"比 {ef3['amb_amp1']:.3f}")
+    ef_bad = pda2.early_features(t[:10], ys[:10])
+    rep("短すぎる入力では NaN を返し例外を出さない", not np.isfinite(ef_bad["p1_t"]))
+    # 比 y(t_b)/y(t_p1) は倍率には不変だが直流には不変でない。だから 26番は基線を除いた正規化後の
+    # 波形（preprocess の出力）に当てる。ここでは倍率への不変性だけを検査する
+    ef_s = pda2.early_features(t, ys * 3.0)
+    rep("比は振幅の倍率に不変（26番は基線除去後の波形に当てるので直流の影響は受けない）",
+        np.isfinite(ef_s["amb_amp1"]) and abs(ef_s["amb_amp1"] - ef["amb_amp1"]) < 1e-9)
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1

@@ -805,6 +805,23 @@ def selftest(jobs: int = 2) -> int:
         rep("--limit は先頭ではなく全体から等間隔に取る（E7）",
             len(sub) == 12 and idx.max() - idx.min() >= 0.8 * len(ppg_),
             f"添字の範囲 {idx.min()}〜{idx.max()} / {len(ppg_)}")
+        # 例外は握りつぶさず why_* に記録される（G3・H5）: 分解を故意に失敗させて確かめる
+        _orig = pda2.decompose
+
+        def _boom(*a, **k):
+            raise RuntimeError("故意の失敗")
+        pda2.decompose = _boom
+        try:
+            hae_, cfg_, ppg_, _x = M.load_pwdb(root)
+            hr_by_ = dict(zip(hae_["subj_no"].astype(int), hae_["HR"].astype(float)))
+            row_ = indices_for_subject((int(ppg_.iloc[0, 0]), ppg_.iloc[0].to_numpy(float),
+                                        hr_by_[int(ppg_.iloc[0, 0])]))
+        finally:
+            pda2.decompose = _orig
+        rep("分解が例外を出したら why_v2・why_v2g に EXC: として記録され、他の列は生きる（G3・H5）",
+            str(row_.get("why_v2", "")).startswith("EXC:") and str(row_.get("why_v2g", "")).startswith("EXC:")
+            and row_.get("ok_v2") == 0 and np.isfinite(row_.get("dt_v1_ms", np.nan)),
+            f"{row_.get('why_v2')!r}")
         rep("鍵点の顕著さが記録され、型3 は閾値以上・型4 は閾値未満で整合する",
             len(pr) > 0
             and bool((pr.loc[pr["klass_own"] == 3, "prom_own"] >= pda2.PROXY_MIN_PROM).all())

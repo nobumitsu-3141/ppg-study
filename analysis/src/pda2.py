@@ -778,8 +778,8 @@ def pinned_params(sol, lo, hi, kind: str = "skew") -> list:
         k, j = divmod(i, 4)
         name = PARAM_NAMES[j]
         if abs(p[i] - lo_a[i]) <= 1e-3 * rng[i]:
-            if name == "a" and kind == "skew":
-                continue                       # α=0 は正当な解
+            if name == "a" and kind == "skew" and lo_a[i] == 0.0:
+                continue                       # α=0（対称ガウス）は正当な解。下限が −8 なら数える
             out.append(f"{k}:{name}:lo")
         elif abs(hi_a[i] - p[i]) <= 1e-3 * rng[i]:
             out.append(f"{k}:{name}:hi")

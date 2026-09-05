@@ -83,6 +83,7 @@ def _m25():
 DOMAIN = dict(hr=(50.0, 100.0), noise_max=0.01, ri_min=0.30)   # 方法の有効な領域（PWDB の条件）
 I4_MAX_RATE = 0.10        # 領域内・歪みガウス経路の誤採用率の上限（7 巡目の実測 5% の 2 倍。退行の門番）
 I4_MIN_N = 40             # 率の門番に要る採用拍数。少ないと偶然で 10% を超える（採用 22 なら 11% の確率）
+I4_MAX_RATE_GAMMA = 0.20  # ガンマ経路の退行門番（実測 9% の 2 倍。合成波では領域内でも誤採用があり正しさの保証ではない）
 
 
 def in_domain(cond: dict) -> bool:
@@ -169,8 +170,6 @@ def one(args):
                 viol.append(("I5", tag, "採用なのに規準のどれかを満たさない"))
         if np.isfinite(r.get("dt_ms", np.nan)):
             pk = r.get("peaks") or []
-            if pk and abs(min(p[0] for p in pk) - (min(p[0] for p in pk))) > 0:
-                pass
             if r["dt_ms"] <= 0:
                 viol.append(("I6", tag, f"ΔT ≤ 0: {r['dt_ms']:.1f}"))
             if np.isfinite(r.get("dt_se_ms", np.nan)) and r["dt_se_ms"] < 0:
@@ -253,7 +252,9 @@ def main() -> None:
     out = Path(args.out) if args.out else ROOT / "data" / "pwdb" / f"_invariants_seed{args.seed}{'_domain' if args.domain else ''}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     import pandas as pd
-    pd.DataFrame(rows_all).to_csv(out, index=False)
+    df_out = pd.DataFrame(rows_all)
+    df_out["pda2_version"] = pda2.code_version()      # どの版の分解かを残す（26番と同じ）
+    df_out.to_csv(out, index=False)
     print(f"  拍ごとの結果: {out}\n")
     flips = [x for x in info if x[0] == "flip"]
     rows = [x for x in info if x[0] != "flip"]
@@ -310,8 +311,17 @@ def main() -> None:
     verdict = ("不合格" if i4_fail else "合格") if enough else f"判定しない（採用 {len(sk)} < {I4_MIN_N}。--domain --n 150 で回すこと）"
     print(f"\n  I4 の門番（領域内・歪みガウス）: 誤採用 {n_bad}/{len(sk)} = {rate:.1%}"
           f"（上限 {I4_MAX_RATE:.0%}。現状の 5% の 2 倍で、超えたら退行）→ {verdict}")
-    n_fail = len(strict) + int(i4_fail)
-    soft = len(viol) - len(strict) - n_bad
+    gm = [x for x in rows_all if x["route"] == "gamma" and x["ok"] == 1
+          and in_domain({kk: x[kk] for kk in ("hr", "noise", "ri_true")})]
+    n_bad_g = sum(1 for x in gm if abs(x["err_ms"]) >= pda2.SE_DT_MAX_MS)
+    rate_g = n_bad_g / len(gm) if gm else 0.0
+    enough_g = len(gm) >= I4_MIN_N
+    i4_fail_g = enough_g and rate_g > I4_MAX_RATE_GAMMA
+    verdict_g = ("不合格" if i4_fail_g else "合格") if enough_g else f"判定しない（採用 {len(gm)} < {I4_MIN_N}）"
+    print(f"  I4 の門番（領域内・ガンマ）: 誤採用 {n_bad_g}/{len(gm)} = {rate_g:.1%}"
+          f"（上限 {I4_MAX_RATE_GAMMA:.0%}。実測 9% の 2 倍。退行の監視であって正しさの保証ではない）→ {verdict_g}")
+    n_fail = len(strict) + int(i4_fail) + int(i4_fail_g)
+    soft = len(viol) - len(strict) - n_bad - n_bad_g
     print("\n" + ("ALL PASS" if not n_fail else f"不合格 {n_fail} 件")
           + (f"（特性として報告した違反 {soft} 件）" if soft > 0 else ""))
     sys.exit(0 if not n_fail else 1)
