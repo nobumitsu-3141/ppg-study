@@ -1013,6 +1013,18 @@ def decompose(t, y, fs: float, route: str = "skew",
     dts = np.diff(t)
     if not (dts > 0).all() or abs(1.0 / float(np.median(dts)) - fs) > 0.10 * fs:
         return {"ok": False, "reason": "bad_input"}
+    # 内部の標本化周波数を 500 Hz にそろえる（PWDB は 500 Hz なので何もしない）。
+    # 250 Hz 未満では 1 次微分による代用点（型3）の位置が粗く（100 Hz で肩が 60 ms 動く）、
+    # 低域通過の端の影響（padlen 15 標本）も 100 Hz では 150 ms に及ぶ。**低域通過の前に**
+    # 補間で 500 Hz に上げ、前処理を 500 Hz の拍と同じ条件で行う（上げる方向なので折り返しは無い）。
+    # 1000 Hz 超は標本数に比例して当てはめが遅い（1 拍 200 s）ので、低域通過の後に 500 Hz へ落とす
+    # （18 Hz より上は落ちているので情報は失われない）。感度解析の resample_hz が指定されていれば
+    # そちらを優先する
+    if fs < 250.0 and not preprocessed:
+        n_up = int(round((t[-1] - t[0]) * 500.0)) + 1
+        t_up = np.linspace(float(t[0]), float(t[-1]), n_up)
+        y = np.interp(t_up, t, np.asarray(y, float))
+        t, fs = t_up, 500.0
     if preprocessed:
         ys, amp = np.asarray(y, float), 1.0
         if ys.size < 8 or not np.isfinite(ys).all():
@@ -1021,11 +1033,7 @@ def decompose(t, y, fs: float, route: str = "skew",
         ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
     if ys is None:
         return {"ok": False, "reason": "amplitude"}
-    # 内部の標本化周波数を 500 Hz にそろえる（PWDB は 500 Hz なので何もしない）。
-    # 250 Hz 未満では 1 次微分による代用点（型3）の位置が粗く（100 Hz で肩が 60 ms 動く）、
-    # 1000 Hz 超では標本数に比例して当てはめが遅くなる（1 拍 200 s）。18 Hz の低域通過の後なので
-    # 500 Hz への再標本化で情報は失われない。感度解析の resample_hz が指定されていればそちらを優先する
-    if not (resample_hz and resample_hz > 0) and (fs < 250.0 or fs > 1000.0):
+    if not (resample_hz and resample_hz > 0) and fs > 1000.0:
         resample_hz = 500.0
 
     # 感度解析用の2条件（既定では何もしない）
