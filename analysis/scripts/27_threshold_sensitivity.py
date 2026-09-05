@@ -365,7 +365,9 @@ def selftest() -> int:
         "amb_v2": (q > 0.9).astype(int), "noref_v2": 0,
         # 曖昧判定の材料。q > 0.9 の拍だけ競合解の広がりが 20 ms を超えるようにする
         "dtsp_v2_ms": np.where(q > 0.9, 30.0, 2.0), "marg_v2_ms": INF, "fwd0_v2": 1,
-        "klass_v2": np.where(q > 0.95, 3, 1),      # 一部を型3 にして「含める」の行が動くようにする
+        # 10 名に 1 名を型3 にして「含める」の行が動くようにする（当てはまりとは独立に割り当てる。
+        # 当てはまりの悪い拍だけを型3 にすると、含めても他の規準で落ちて行が空振りになる）
+        "klass_v2": np.where(np.arange(n) % 10 == 0, 3, 1),
     })
     d["ok_v2"] = recompute_ok(d, "v2", FROZEN)
     rep("採否を診断量から作り直せる", d["ok_v2"].sum() > 20, f"採択 {int(d['ok_v2'].sum())}/{n}")
