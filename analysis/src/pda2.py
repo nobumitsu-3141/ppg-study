@@ -87,6 +87,10 @@ SE_DT_MAX_MS = 20.0
 # この値は3か所で使う。(1) ΔT の標準誤差の上限、(2) 競合解の ΔT の広がりの許容、
 # (3) 反射波の候補が2つあるときの「僅差」の下限。いずれも「これを超える不確かさの拍は
 # 研究1の症例内 ΔPWTT の標準偏差（18 ms）より大きく、問いに何も寄与しない」という同じ根拠。
+# `decompose(se_dt_max_ms=…)` は 3 か所すべてに同じ値を渡す（1 か所だけ動かすと根拠と食い違う）。
+# 一意性の検査で「競合解」とみなす残差の許容（最良解の何倍まで）。**根拠なく決めた**閾値の
+# 一つで、27番 B 層で 1.05・1.5 を検定する。
+TOL_COST = 1.15
 
 
 # ============================================================ 基底関数
@@ -269,6 +273,10 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
        収縮期ピークの後、下降が最も速い点（d1 の局所極小）を切痕の代用、
        その後で下降が最も緩む点（d1 の局所極大＝肩）を拡張期ピークの代用とする。
        どちらも「傾きの変化」という同じ量の極値なので、定義が単純で安定する。
+       肩の顕著さは**両側**で測る（直前の d1 極小からの立ち上がりと、その後 d1 が再び
+       どれだけ下がるかの小さい方）。片側だけだと、反射波が無く単調に減衰して平坦になる
+       波形で、平坦部の微小な揺らぎが「肩」に化ける（直前の極小が最速下降点なので
+       顕著さが最大傾斜そのものになる）。6巡目の検査で反射波なしの合成波が型3になった
        以前は2次微分の最大を切痕の代用にしていたが、切痕の無い波形では
        **収縮期ピーク自身の曲率**が最大になり、ピーク直後の無意味な点を拾っていた
        （型3〜4で ΔT 誤差 38〜55 ms の一因）。
@@ -286,6 +294,10 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
         3 極値は無いが、下降の緩む肩がある（1次微分の局所極値で代用）
         4 窓の中に肩が見つからない（Dawber IV に相当）
         5 収縮期ピークが拍の末尾にある（波形が不正）
+    prom は鍵点の顕著さ。型1 では拡張期ピーク−切痕の高低差（閾値 EXTREMA_MIN_PROM）、
+    型3〜4 では肩の顕著さ（最大傾斜に対する比。閾値 PROXY_MIN_PROM。型4 は閾値未満だった
+    最大の値）。閾値の近傍にどれだけの拍があるかを 26番が表にして、型の割り当てが
+    閾値に敏感でないかを監視する。
     """
     n = len(t)
     T = float(t[-1] - t[0])
@@ -294,7 +306,7 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
     sys_t, sys_v = _refine(t, y, i_sys)
     out = {"sys_t": sys_t, "sys_v": sys_v, "i_sys": i_sys,
            "notch_t": np.nan, "notch_v": np.nan, "dia_t": np.nan, "dia_v": np.nan,
-           "klass": 5, "source": "none"}
+           "klass": 5, "source": "none", "prom": np.nan}
     if i_sys >= n - 5:
         return out
     i_lo = max(i_sys + 2, int(np.searchsorted(t, sys_t + NOTCH_MIN_FRAC * T)))
@@ -317,7 +329,7 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
                 nt, nv = _refine(t, y, j_min)
                 dt_, dv = _refine(t, y, j_max)
                 out.update(notch_t=nt, notch_v=nv, dia_t=dt_, dia_v=dv,
-                           klass=1, source="extrema")
+                           klass=1, source="extrema", prom=float(y[j_max] - y[j_min]))
                 return out
 
     # --- 2. 1次微分の局所極値で代用（切痕の無い波形）
@@ -328,13 +340,17 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
     mins1, maxs1 = _local_extrema(d1, i_sys + 1, i_dia_hi + 1)
     maxs1 = maxs1[(maxs1 >= i_lo) & (maxs1 <= i_dia_hi)]
     best = None
+    best_any = 0.0                          # 閾値に関係なく最大の顕著さ（型4 の監視用）
     scale = float(np.max(np.abs(d1[i_sys:i_dia_hi + 1]))) or 1.0
     for j in maxs1:
         prev = mins1[mins1 < j]
         if not prev.size:
             continue
         k = int(prev[-1])
-        prom = float(d1[j] - d1[k])
+        # 両側の顕著さ: 直前の極小からの立ち上がり と 以後の再下降 の小さい方。
+        # 以後の再下降は拍の末尾まで見る（肩の後に下降が再開しなければ肩ではなく減衰の終わり）
+        prom = float(min(d1[j] - d1[k], d1[j] - float(np.min(d1[j:]))))
+        best_any = max(best_any, prom / scale)
         if prom >= PROXY_MIN_PROM * scale and (best is None or prom > best[0]):
             best = (prom, k, int(j))
     if best is not None:
@@ -344,9 +360,10 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
         nv = float(np.interp(nt, t, y))
         dv = float(np.interp(dt_, t, y))
         out.update(notch_t=float(nt), notch_v=nv, dia_t=float(dt_), dia_v=dv,
-                   klass=3, source="d1")
+                   klass=3, source="d1", prom=float(best[0] / scale))
         return out
     out["klass"] = 4
+    out["prom"] = float(best_any)
     return out
 
 
@@ -821,7 +838,7 @@ def indices(peaks, cov, step, roles, sds=None) -> dict:
             "dps_ms": float(dps) if np.isfinite(dps) else np.nan}
 
 
-def competing_spread_ms(sols, step, roles, tol_cost: float = 1.15) -> float:
+def competing_spread_ms(sols, step, roles, tol_cost: float = TOL_COST) -> float:
     """残差が最良解の tol_cost 倍以内にある競合解の間で、ΔT が最良解からどれだけ離れるか [ms]。
 
     多点起動の解は無料で手に入る「経験的な不確かさ」である。Wald の標準誤差は線形化に
@@ -856,7 +873,7 @@ def competing_spread_ms(sols, step, roles, tol_cost: float = 1.15) -> float:
     return float(spread)
 
 
-def _ambiguous(sols, step, roles, tol_cost: float = 1.15,
+def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
                tol_dt_ms: float = None) -> bool:
     """ΔT の異なる競合解が残差で拮抗していないか。
 
@@ -875,7 +892,12 @@ def _ambiguous(sols, step, roles, tol_cost: float = 1.15,
     if roles["reflected"] is None:
         return True
     sp = competing_spread_ms(sols, step, roles, tol_cost)
-    return bool(np.isfinite(sp) and sp > tol_dt_ms)
+    # inf は対応づけが潰れた（別の分解に収束した競合解がある）印、nan は反射波なし。
+    # どちらも曖昧。以前は `np.isfinite(sp) and sp > tol` と書いていて inf を
+    # 「曖昧でない」と扱っていた（説明と逆。6巡目 K5）
+    if not np.isfinite(sp):
+        return True
+    return bool(sp > tol_dt_ms)
 
 
 # ============================================================ 入口
@@ -889,13 +911,25 @@ def decompose(t, y, fs: float, route: str = "skew",
               resample_hz: float = 0.0, fit_frac: float = 1.0,
               alpha_min: float = ALPHA_MIN,
               nrmse_max: float = NRMSE_MAX, errx_ms: float = ERRX_MS,
-              erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS) -> dict:
+              erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS,
+              tol_cost: float = TOL_COST) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
 
     route="skew"       歪みガウス2成分（不足なら3）。Basso 2024 と同じ混合模型
     route="gamma"      ガンマ3成分（不足なら4）。Tigges 2017 が AICc で選んだ模型に
                        到達時刻の母数を足したもの。最も遅い成分が拡張期の減衰を担う
-    escalate=True      採否（当てはまり）または同定性の規準を満たさない場合に成分を1つ増やす
+    escalate=True      採否（当てはまり）または曖昧（競合解・役割）の規準を満たさない場合に
+                       成分を1つ増やす。**ΔT の標準誤差の超過では増やさない**。SE が大きいのは
+                       成分が重なって時刻が同定できないことの表れで、成分を増やしても
+                       平坦な谷は平坦なままである（合成波の心拍 130 で確認）
+    se_dt_max_ms       ΔT の不確かさの上限 [ms]。標準誤差・競合解の広がり・反射波の僅差の
+                       3 か所に同じ値を使う（根拠が同じなので 1 か所だけ動かさない）
+    tol_cost           競合解とみなす残差の許容（最良解の何倍まで）
+
+    返り値の診断量（26番が保存し、27番が採否を再計算するのに使う）
+        ambiguous / dt_spread_ms / ref_margin_ms / fwd0   曖昧判定とその材料
+        n_saturated / n_starts / best_saturated          多点起動のうち max_nfev に達した数と、
+                                                         最良解がそうだったか（収束の監視）
 
     成分を増やすことの代償
     ----------------------
@@ -962,8 +996,14 @@ def decompose(t, y, fs: float, route: str = "skew",
                      errx_ms=errx_ms, erry_max=erry_max)
     # 前進波は母数の第0スロットのはず（順序の罰則が守られていれば）。守られていなければ
     # 役割の割り当てそのものが信用できないので、曖昧として扱う
-    amb = (_ambiguous(fit["sols"], step, roles) or roles["forward"] != 0
-           or (np.isfinite(roles["ref_margin_ms"]) and roles["ref_margin_ms"] < SE_DT_MAX_MS))
+    def _amb_of(sols, step_, roles_):
+        # 曖昧: 競合解の ΔT が拮抗／前進波がスロット 0 でない／反射波の候補が僅差
+        return (_ambiguous(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms)
+                or roles_["forward"] != 0
+                or (np.isfinite(roles_["ref_margin_ms"])
+                    and roles_["ref_margin_ms"] < se_dt_max_ms))
+
+    amb = _amb_of(fit["sols"], step, roles)
     n_used = nw0
     escalated = False
     escalation_tried = False
@@ -987,9 +1027,7 @@ def decompose(t, y, fs: float, route: str = "skew",
             roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=True, t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
                           errx_ms=errx_ms, erry_max=erry_max)
-            amb2 = (_ambiguous(fit2["sols"], step2, roles2) or roles2["forward"] != 0
-                    or (np.isfinite(roles2["ref_margin_ms"])
-                        and roles2["ref_margin_ms"] < SE_DT_MAX_MS))
+            amb2 = _amb_of(fit2["sols"], step2, roles2)
             if acc2["ok"] and not amb2:
                 fit, yhat = fit2, yhat2
                 peaks, cov, step, sds = peaks2, cov2, step2, sds2
@@ -997,8 +1035,13 @@ def decompose(t, y, fs: float, route: str = "skew",
                 n_used, escalated = nw0 + 1, True
 
     ix = indices(peaks, cov, step, roles, sds)
-    ix["dt_spread_ms"] = competing_spread_ms(fit["sols"], step, roles)
+    ix["dt_spread_ms"] = competing_spread_ms(fit["sols"], step, roles, tol_cost)
     se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= se_dt_max_ms
+    # 収束の監視。least_squares の status 0 は max_nfev に達して止まった印。最良解がそれなら
+    # ΔT は平坦な谷の途中で止まった値で、Wald の共分散も停留点のものではない。
+    # 採否には使わない（新しい規準を足さない）が、26番が率を報告する
+    n_sat = int(sum(1 for s_ in fit["sols"] if getattr(s_, "status", 1) == 0))
+    best_sat = bool(getattr(fit["sols"][0], "status", 1) == 0)
     reason = ""
     if acc["n_landmark_matched"] < 2 and lm["klass"] >= 4:
         reason = "no_landmarks"                 # データ側に鍵点が無い（型4〜5）
@@ -1009,12 +1052,15 @@ def decompose(t, y, fs: float, route: str = "skew",
     elif amb:
         reason = "ambiguous"
     elif not se_ok:
-        reason = "dt_se"
+        # dt_se: 標準誤差が上限を超えた。no_se: 共分散が計算できない（母数が境界に潰れた・
+        # ヤコビアンが特異）。後者は「同定できていない」の直接の印なので分けて数える
+        reason = "dt_se" if np.isfinite(ix["dt_se_ms"]) else "no_se"
     return {
         "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None and se_ok),
         "reason": reason,
         "route": route, "n_components": n_used, "n_waves": n_used, "escalated": escalated, "escalation_tried": escalation_tried,
-        "ambiguous": amb,
+        "ambiguous": amb, "fwd0": bool(roles["forward"] == 0),
+        "n_saturated": n_sat, "n_starts": int(len(fit["sols"])), "best_saturated": best_sat,
         "role_rule": roles["rule"], "ref_gap_ms": roles["ref_gap_ms"],
         "ref_margin_ms": roles["ref_margin_ms"],
         "klass": lm["klass"], "lm_source": lm["source"],

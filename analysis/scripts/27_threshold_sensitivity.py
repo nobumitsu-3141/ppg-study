@@ -13,8 +13,8 @@
                           標準偏差 18 ms より大きい誤差の拍は問いに寄与しない）
   (c) **根拠なく私が決めたもの**
                           鍵点の重み 20（Wang は 1〜100 を探索、その中間を取っただけ）、
-                          成分間隔の下限 30 ms、肩の顕著さ 5%、一意性の検査 1.15 / 0.20、
-                          max_nfev 1200（第2版で貯留槽の閾値 6 個を削除して 5 個に減った）
+                          成分間隔の下限 30 ms、一意性の検査の残差許容 1.15
+                          （肩の顕著さ 5% と max_nfev 1200 は数値的な守りとして 26番で監視する）
 
 (c) が結論を左右するなら、その結論は閾値の産物である。**26番を実行する前に**
 この台本を書き、振れ幅を固定しておく。結果を見てから閾値をいじれば、それは
@@ -26,6 +26,10 @@
   **後づけ層**（当てはめ直し不要・数秒）
       NRMSE・Errx・Erry・ΔTのSE・一意性の検査。これらは当てはめの**後**に効く
       規準なので、26番が保存した診断量から採否を再計算するだけでよい。
+      ただし一点だけ限界がある。26番は規準を満たさない拍で成分を増やしており、
+      保存されている診断量は**最終解**のもの。閾値を緩めれば増やさずに済んだ拍、
+      厳しくすれば増やして通った拍があり得るが、後づけ層はそれを再現できない。
+      成分を増やすことの影響そのものは当てはめ層の「成分を増やさない」で見る。
   **当てはめ層**（当てはめ直しが要る・部分集合で実施）
       鍵点の重み・低域通過・成分間隔の下限・成分を増やすか。これらは当てはめ
       そのものを変えるので回し直す。全例では時間がかかるので、**被験者番号を
@@ -75,8 +79,10 @@ M = _load("20_pwdb_validity.py", "m20")
 C = _load("26_pwdb_compare.py", "m26")
 
 # 凍結値。ここを動かすときは lab_log に理由を書くこと
+# amb_tol は曖昧判定に使う ΔT の許容 [ms]（競合解の広がりの上限・反射波の僅差の下限）。
+# pda2 では SE の上限と同じ値（根拠が同じ）
 FROZEN = {"nrmse": pda2.NRMSE_MAX, "errx": pda2.ERRX_MS, "erry": pda2.ERRY,
-          "se": pda2.SE_DT_MAX_MS, "amb": True}
+          "se": pda2.SE_DT_MAX_MS, "amb": True, "amb_tol": pda2.SE_DT_MAX_MS}
 
 # 後づけ層の振れ幅（**26番を実行する前に固定した**）
 POST_HOC = [
@@ -84,7 +90,12 @@ POST_HOC = [
     ("errx",  "Errx 上限 [ms]",    [3.0, 6.0, 12.0, 25.0, INF]),
     ("erry",  "Erry 上限",         [0.005, 0.010, 0.020, INF]),
     ("se",    "ΔT の SE 上限 [ms]", [5.0, 10.0, 20.0, 50.0, INF]),
-    ("amb",   "一意性の検査",       [True, False]),
+    # 「なし」は曖昧判定を**すべて**外す（競合解の広がり・前進波のスロット・反射波の僅差の3つ）
+    ("amb",   "曖昧判定（3種まとめて）", [True, False]),
+    # pda2 は同じ 20 ms を SE の上限・競合解の広がりの上限・反射波の僅差の下限の 3 か所に使う
+    # （根拠が同じ）。その値そのものを 3 か所まとめて動かす。∞ は僅差の下限として無意味
+    # （すべて僅差になる）ので入れない。SE だけ ∞ は上の行にある
+    ("joint", "同じ値を 3 か所まとめて [ms]", [5.0, 10.0, 20.0, 50.0]),
 ]
 
 # 当てはめ層（当てはめ直しが要る）
@@ -99,8 +110,13 @@ REFIT = [
     ("成分を増やさない",           {"escalate": False}),
     # --- Basso 2024 / Tigges 2017 / Goswami 2010 を読んで 26番の実行前に追加 ---
     ("40 Hz へ落として当てはめ",   {"resample_hz": 40.0}),
+    # 0.9T に切ると鍵点の窓（0.65T・0.85T）と幅の尺度も 0.9 倍になる（T が短くなるため）。
+    # 生理的な窓の余裕（切痕 ≤ 0.585T・拡張期ピーク ≤ 0.765T）は残るので条件として成り立つ
     ("拍の 0〜0.9T だけ当てはめ",  {"fit_frac": 0.9}),
     ("歪みの下限 −8（左歪みも許す）", {"alpha_min": -8.0}),
+    # --- 6巡目: 根拠なく決めた 3 つ目の閾値（競合解とみなす残差の許容）も当てはめ層で振る
+    ("一意性の残差許容 1.05",      {"tol_cost": 1.05}),
+    ("一意性の残差許容 1.5",       {"tol_cost": 1.5}),
 ]
 
 ROUTES = [("v2", "第2版 歪みガウス"), ("v2g", "第2版 ガンマ")]
@@ -109,17 +125,33 @@ SUBSET_MOD = 7          # 当てはめ層で使う部分集合（subj_no % 7 == 
 
 
 # ---------------------------------------------------------------- 後づけ層
+def recompute_amb(d, tag: str, tol_ms: float):
+    """保存された材料（競合解の ΔT の広がり・反射波の僅差・前進波のスロット）から曖昧判定を
+    作り直す。`pda2.decompose` の `_amb_of` と同じ論理でなければならない（27番の自己検証が
+    26番の実出力で 100% 一致を検算する）。材料の列が無い古い CSV では保存値をそのまま使う。
+    """
+    g = lambda c: d[c].to_numpy(float) if c in d else None  # noqa: E731
+    sp, marg, fwd0 = g(f"dtsp_{tag}_ms"), g(f"marg_{tag}_ms"), g(f"fwd0_{tag}")
+    if sp is None or marg is None or fwd0 is None:
+        stored = g(f"amb_{tag}")
+        return (stored == 1) if stored is not None else np.zeros(len(d), bool)
+    with np.errstate(invalid="ignore"):
+        # 広がりが inf（対応づけが潰れた）や nan（反射波なし）は曖昧。僅差は有限のときだけ効く
+        amb = (~np.isfinite(sp)) | (sp > tol_ms) | (np.isfinite(marg) & (marg < tol_ms)) | (fwd0 != 1)
+    return amb
+
+
 def recompute_ok(d, tag: str, th: dict):
     """保存された診断量から採否を作り直す。26番の判定と同じ論理でなければならない。"""
     g = lambda c: d[c].to_numpy(float) if c in d else np.full(len(d), np.nan)  # noqa: E731
     nrmse, errx = g(f"nrmse_{tag}"), g(f"errx_{tag}_ms")
     erry, nlm = g(f"erry_{tag}"), g(f"nlm_{tag}")
-    se, amb = g(f"dtse_{tag}_ms"), g(f"amb_{tag}")
+    se = g(f"dtse_{tag}_ms")
     noref = g(f"noref_{tag}")
     ok = ((nrmse <= th["nrmse"]) & (errx <= th["errx"]) & (erry <= th["erry"])
           & (nlm >= 2) & np.isfinite(se) & (se <= th["se"]) & (noref != 1))
     if th["amb"]:
-        ok = ok & (amb != 1)
+        ok = ok & ~recompute_amb(d, tag, th.get("amb_tol", pda2.SE_DT_MAX_MS))
     return ok.astype(int)
 
 
@@ -176,7 +208,11 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
         rows[(tag, "frozen", None)] = (n0, v0)
         for key, lab, vals in POST_HOC:
             for v in vals:
-                th = dict(FROZEN); th[key] = v
+                th = dict(FROZEN)
+                if key == "joint":
+                    th["se"] = v; th["amb_tol"] = v
+                else:
+                    th[key] = v
                 if th == FROZEN:
                     continue
                 ok = recompute_ok(d, tag, th)
@@ -189,7 +225,8 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
         # すべて外した場合。26番の C ブロック（採否を完全に無視）とは一点だけ違い、
         # **共分散が計算できなかった拍は落とす**。標準誤差が出せない＝母数が本当に
         # 同定できていない、という意味なので、規準を外しても残すべきではない。
-        allth = {"nrmse": INF, "errx": INF, "erry": INF, "se": INF, "amb": False}
+        allth = {"nrmse": INF, "errx": INF, "erry": INF, "se": INF, "amb": False,
+                 "amb_tol": FROZEN["amb_tol"]}
         ok = recompute_ok(d, tag, allth)
         vv, nn = _verdicts(d, tag, ok)
         print(f"{'すべて外す(SE可算のみ)':<22}{'—':>10}{nn / max(n, 1):>9.1%}"
@@ -213,6 +250,8 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
     print("  閾値によって割れる     → その閾値が結論を作っている。論文には割れる範囲を書く。")
     print("  「すべて外す」の行が凍結値と違う → 採否そのものが選択になっている。")
     print("    この行は共分散が計算できた拍のみ。26番の C ブロックとは分母が少し違う。")
+    print("  限界: 保存されている診断量は最終解（規準を満たさず成分を増やした拍ではその 3 波）のもの。")
+    print("    閾値を変えたときに増やすかどうかまでは再現しない。それは B 層の「成分を増やさない」で見る。")
     if out_dir is not None:
         Path(out_dir).mkdir(parents=True, exist_ok=True)
     return rows
@@ -239,8 +278,12 @@ def _one(args_tuple):
         return out
 
 
-def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None) -> dict:
-    """当てはめそのものを変える閾値を、固定した部分集合で回し直す。"""
+def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None,
+          conditions=None) -> dict:
+    """当てはめそのものを変える閾値を、固定した部分集合で回し直す。
+
+    conditions は REFIT の部分列（自己検証が短く回すために使う）。既定は REFIT 全部。
+    """
     import pandas as pd
     hae, cfg, ppg, _ = M.load_pwdb(Path(root).expanduser())
     keep = ppg.iloc[:, 0].astype(int) % SUBSET_MOD == 0
@@ -257,7 +300,7 @@ def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None) -> dict:
     if out_dir is not None:
         Path(out_dir).mkdir(parents=True, exist_ok=True)
     rows = {}
-    for lab, opts in REFIT:
+    for lab, opts in (REFIT if conditions is None else conditions):
         work = [(s, r, h, dict(opts, route=route)) for s, r, h in base]
         if jobs > 1:
             from concurrent.futures import ProcessPoolExecutor
@@ -312,12 +355,17 @@ def selftest() -> int:
         "nrmse_v2": 0.004 + 0.05 * q, "errx_v2_ms": 1.0 + 30.0 * q,
         "erry_v2": 0.002 + 0.03 * q, "nlm_v2": 3, "dtse_v2_ms": 0.3 + 60.0 * q,
         "amb_v2": (q > 0.9).astype(int), "noref_v2": 0,
+        # 曖昧判定の材料。q > 0.9 の拍だけ競合解の広がりが 20 ms を超えるようにする
+        "dtsp_v2_ms": np.where(q > 0.9, 30.0, 2.0), "marg_v2_ms": INF, "fwd0_v2": 1,
     })
     d["ok_v2"] = recompute_ok(d, "v2", FROZEN)
     rep("採否を診断量から作り直せる", d["ok_v2"].sum() > 20, f"採択 {int(d['ok_v2'].sum())}/{n}")
 
     rows = post_hoc(d, out_dir=None)
     rep("凍結値の行が出た", ("v2", "frozen", None) in rows)
+    rep("曖昧判定を材料から作り直せる（合成データで保存値と一致）",
+        bool(np.all(recompute_amb(d, "v2", FROZEN["amb_tol"]) == (d["amb_v2"].to_numpy(int) == 1))))
+    rep("3 か所まとめての行が出た", ("v2", "joint", 5.0) in rows and ("v2", "joint", 50.0) in rows)
     n_fro = rows[("v2", "frozen", None)][0]
     n_none = rows[("v2", "none", None)][0]
     rep("規準をすべて外すと採択が増える", n_none > n_fro, f"{n_fro} → {n_none}")
@@ -334,6 +382,7 @@ def selftest() -> int:
     # 26番の自己検証が残した模擬 CSV があれば、採否の再計算が保存値と一致するかを通しで検算する。
     # これが 100% でなければ、A 層の表は 26番と論理がずれており信用できない
     e2e = OUT / "_selftest_pwdb_compare.csv"
+    same = False
     if e2e.exists():
         dd = pd.read_csv(e2e)
         agree = []
@@ -343,6 +392,16 @@ def selftest() -> int:
         rep("26番の実出力で採否の再計算が保存値と 100% 一致（通し検算）",
             bool(agree) and min(agree) >= 0.999999,
             f"一致率 {[f'{a:.4%}' for a in agree]}" if agree else "列が無い")
+        agree_amb = []
+        for tag in ("v2", "v2g"):
+            if f"amb_{tag}" in dd and f"dtsp_{tag}_ms" in dd:
+                agree_amb.append(float(np.mean(recompute_amb(dd, tag, FROZEN["amb_tol"])
+                                               == (dd[f"amb_{tag}"].to_numpy(int) == 1))))
+        rep("26番の実出力で曖昧判定の再計算が保存値と 100% 一致（材料から作り直せる）",
+            bool(agree_amb) and min(agree_amb) >= 0.999999,
+            f"一致率 {[f'{a:.4%}' for a in agree_amb]}" if agree_amb else "材料の列が無い")
+        n_amb = int(sum(int((dd[f"amb_{t}"] == 1).sum()) for t in ("v2", "v2g") if f"amb_{t}" in dd))
+        print(f"      （曖昧と判定された拍 {n_amb} 例を含む。0 なら一致の検算は空振りである）")
         same = ("pda2_version" in dd and str(dd["pda2_version"].iloc[0]) == pda2.code_version())
         rep("26番の出力に pda2 の版が記録され、現在の版と一致する", same,
             f"CSV {dd['pda2_version'].iloc[0] if 'pda2_version' in dd else '—'} / 現在 {pda2.code_version()}")
@@ -350,7 +409,11 @@ def selftest() -> int:
         print("  （26番の自己検証の出力が無いので通し検算は省略。先に 26番 --selftest を回すと検算できる）")
     rep("凍結値が pda2 の定数と一致している",
         FROZEN["nrmse"] == pda2.NRMSE_MAX and FROZEN["errx"] == pda2.ERRX_MS
-        and FROZEN["erry"] == pda2.ERRY and FROZEN["se"] == pda2.SE_DT_MAX_MS)
+        and FROZEN["erry"] == pda2.ERRY and FROZEN["se"] == pda2.SE_DT_MAX_MS
+        and FROZEN["amb_tol"] == pda2.SE_DT_MAX_MS)
+    rep("B 層の条件に、根拠なく決めた 3 つの閾値（重み・間隔・残差許容）がすべて入っている",
+        any("w_key" in o for _l, o in REFIT) and any("min_gap" in o for _l, o in REFIT)
+        and any("tol_cost" in o for _l, o in REFIT))
 
     # 当てはめ層が decompose に閾値を渡せること（1拍だけ）
     with tempfile.TemporaryDirectory() as _td:
@@ -367,6 +430,36 @@ def selftest() -> int:
         r3 = pda2.decompose(t, y, 500.0, route="skew", escalate=False,
                             nrmse_max=INF, errx_ms=INF, erry_max=INF, se_dt_max_ms=INF)
         rep("採否の閾値も decompose に届いている", bool(r3.get("ok")))
+        r4 = pda2.decompose(t, y, 500.0, route="skew", escalate=False, tol_cost=1.5)
+        rep("一意性の残差許容 tol_cost が decompose に届いている（結果が返る）",
+            np.isfinite(r4.get("dt_ms", np.nan)))
+
+    # --- B 層の通し検算: 26番と同じ模擬 PWDB を作り、部分集合で 2 条件だけ当てはめ直す。
+    # 「凍結値」の条件は 26番の自己検証の出力（同じ模擬・同じ版）と ΔT・採否が一致しなければならない。
+    # ここがずれていれば、B 層の配管（_one）が 26番の配管（indices_for_subject）と別の前処理をしている
+    if e2e.exists() and same:
+        with tempfile.TemporaryDirectory() as td:
+            root, _kinds = C._selftest_root(Path(td))
+            conds = [REFIT[0], ("成分を増やさない", {"escalate": False})]
+            rows_b = refit(root, jobs=1, route="skew", out_dir=Path(td) / "out", conditions=conds)
+            rep("B 層が模擬 PWDB で通しで動く（部分集合・2 条件）", len(rows_b) == 2)
+            import pandas as pd
+            fz = pd.read_csv(Path(td) / "out" / "refit_skew____.csv") if (Path(td) / "out" / "refit_skew____.csv").exists() else None
+            if fz is None:
+                cands = sorted((Path(td) / "out").glob("refit_skew_*.csv"))
+                fz = pd.read_csv(cands[0]) if cands else None
+            if fz is not None:
+                m_ = fz.merge(dd[["subj_no", "ok_v2", "dt_v2_ms"]], on="subj_no", how="inner")
+                same_ok = bool((m_["ok"].astype(int) == m_["ok_v2"].astype(int)).all())
+                both = m_[np.isfinite(m_["dt_ms"]) & np.isfinite(m_["dt_v2_ms"])]
+                same_dt = bool(np.allclose(both["dt_ms"], both["dt_v2_ms"], atol=1e-6)) if len(both) else True
+                rep("B 層の「凍結値」が 26番の同じ被験者と採否・ΔT で一致（配管が同一）",
+                    len(m_) > 0 and same_ok and same_dt,
+                    f"n={len(m_)} 採否一致 {same_ok} ΔT一致 {same_dt}")
+            else:
+                rep("B 層が条件ごとの CSV を残す", False)
+    else:
+        print("  （26番の自己検証の出力が無い／版が違うので B 層の通し検算は省略）")
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 

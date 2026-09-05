@@ -188,6 +188,7 @@ def indices_for_subject(args_tuple):
                 lmo = pda2.find_landmarks(t, ys)
                 ef = pda2.early_features(t, ys)
                 out["klass_own"] = lmo["klass"]
+                out["prom_own"] = lmo.get("prom", np.nan)   # 鍵点の顕著さ（閾値の近傍を監視する）
                 out["sys_own_ms"] = lmo["sys_t"] * 1000.0
                 out["dia_own_ms"] = lmo["dia_t"] * 1000.0
                 out["p1_t_ms"] = ef["p1_t"] * 1000.0
@@ -245,6 +246,10 @@ def indices_for_subject(args_tuple):
                 out[f"nlm_{tag}"] = r.get("n_landmark_matched", np.nan)
                 out[f"amb_{tag}"] = int(bool(r.get("ambiguous")))
                 out[f"noref_{tag}"] = int(r.get("role_rule") == "none")
+                out[f"fwd0_{tag}"] = int(bool(r.get("fwd0", True)))     # 前進波がスロット 0 か（曖昧判定の再計算用）
+                out[f"sat_{tag}"] = r.get("n_saturated", np.nan)         # max_nfev に達した起動の数（収束の監視）
+                out[f"nst_{tag}"] = r.get("n_starts", np.nan)            # 起動の総数
+                out[f"bsat_{tag}"] = int(bool(r.get("best_saturated")))  # 最良解が未収束
                 out[f"klass_{tag}"] = r.get("klass", np.nan)
                 out[f"nw_{tag}"] = r.get("n_waves", np.nan)
                 out[f"esc_{tag}"] = int(bool(r.get("escalated")))
@@ -355,6 +360,17 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"{lab:<26}{rate:>8}{_m(nr):>9}{exm:>10}{dtm:>14}{sem:>12}")
     print("  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<2%・Errx<6ms・"
           "Erry<0.01 かつ解が一意）。")
+    print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は鍵点に重みを置いた")
+    print("  RMS で正規化。同じ列に並ぶが同じ量ではないので、腕をまたいで比べないこと。")
+    for key, lab, _dtc, _ric, _okc in METHODS:
+        sc_, nc_, bc_ = f"sat_{key}", f"nst_{key}", f"bsat_{key}"
+        if sc_ in d and d[sc_].notna().any():
+            tot = float(np.nansum(d[sc_])); nst = float(np.nansum(d[nc_]))
+            bs = float(np.nanmean(d[bc_]))
+            print(f"  {lab}: 多点起動の飽和率（max_nfev={1200} に達した起動） "
+                  f"全起動 {100.0 * tot / max(nst, 1):.1f}% / 最良解 {100.0 * bs:.1f}%")
+    print("  最良解の飽和率が数 % を超えるなら、その ΔT は平坦な谷の途中で止まった値を含む。")
+    print("  採否には使わない（規準を足さない）が、max_nfev を上げて回し直す根拠になる。")
 
     # ---- 拍の切り出しの前提
     if "edge_lo" in d and d["edge_lo"].notna().any():
@@ -370,6 +386,8 @@ def report(d, out_dir: Path | None = None) -> dict:
     print(f"\n{'-' * 78}\n1b. 不採用の理由（第2版）\n{'-' * 78}")
     print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に鍵点が無い（型4〜5）拍で、")
     print("  分解の失敗ではない。landmark_or_fit は Wang の規準（NRMSE・Errx・Erry）の不合格。")
+    print("  ambiguous は競合解・役割の曖昧さ、dt_se は ΔT の標準誤差が上限超、no_se は共分散が")
+    print("  計算できない（母数が境界に潰れた・特異）。no_se が多ければ同定性の問題である。")
     for key, lab, _dtc, _ric, okc in METHODS:
         wc = f"why_{key}"
         if wc not in d or okc is None:
@@ -462,6 +480,22 @@ def report(d, out_dir: Path | None = None) -> dict:
             print(f"{int(k):<6}{len(g):>7}{got:>12.1%}{gap:>14.1f} ms"
                   f"{r_:>18.4f}{dp:>14.0f} ms")
 
+    if "prom_own" in d and d["prom_own"].notna().any():
+        print(f"\n{'-' * 78}\n2c. 鍵点の顕著さ（型を分ける閾値の近傍にどれだけあるか）\n{'-' * 78}")
+        print(f"  型1 は拡張期ピーク−切痕の高低差（閾値 {pda2.EXTREMA_MIN_PROM}）、型3〜4 は肩の顕著さ")
+        print(f"  （最大傾斜に対する比。閾値 {pda2.PROXY_MIN_PROM}。型4 は閾値未満で肩と認めなかった値）。")
+        print("  閾値の 2 倍以内に多くの拍があれば、型の割り当てが閾値に敏感である。")
+        print(f"{'型':<6}{'n':>7}{'中央値':>10}{'10%点':>10}{'閾値の2倍以内':>14}{'閾値の半分以上(型4)':>20}")
+        for k in sorted(d["klass_own"].dropna().unique().tolist()):
+            g = d[d["klass_own"] == k]["prom_own"].dropna()
+            if not len(g):
+                continue
+            thr = pda2.EXTREMA_MIN_PROM if k == 1 else pda2.PROXY_MIN_PROM
+            near = int((g < 2.0 * thr).sum()) if k in (1, 3) else 0
+            half = int((g >= 0.5 * thr).sum()) if k == 4 else 0
+            print(f"{int(k):<6}{len(g):>7}{float(np.median(g)):>10.3f}{float(np.percentile(g, 10)):>10.3f}"
+                  f"{near:>14}{half:>20}")
+
     if "klass_v2" in d and d["klass_v2"].notna().any():
         print(f"\n{'-' * 78}\n2. 波形型（Dawber 分類）ごとの採択率と ΔT\n{'-' * 78}")
         print(f"{'型':<6}{'n':>7}{'第2版採択':>11}{'凍結採択':>10}"
@@ -474,8 +508,10 @@ def report(d, out_dir: Path | None = None) -> dict:
             ml = float(np.nanmedian(g["dt_lm_ms"])) if g["dt_lm_ms"].notna().any() else np.nan
             print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%"
                   f"{m2:>11.0f}{ml:>16.0f}")
-        print("  型3（切痕なし・肩で代用）は合成波でも 30 ms 前後の誤差が残る。ここが実際に")
-        print("  どれだけ効いているかは、この行の n と採択率で読む。")
+        print("  型3（切痕なし・肩で代用）は合成波では第2版のどちらの経路も不採用になる（分解が同定できず、")
+        print("  規準を外して採用させても ΔT が +50 ms ずれる。不採用が正しい）。型3 の n と採択率を必ず読み、")
+        print("  第2版の判定が型1 の拍だけで下されているなら、その旨を併記する。型3 はランドマーク・p1・")
+        print("  早期振幅比で読む。ランドマークの肩は真のピークより 30 ms ほど遅れる（合成波）。")
 
     # ---- 成分を増やしたかどうか
     for key, lab, dtc, ric, okc in METHODS:
@@ -543,12 +579,98 @@ def report(d, out_dir: Path | None = None) -> dict:
 
 
 # ---------------------------------------------------------------- 自己検証
-def selftest() -> int:
+HARD_KINDS = ("notchless", "noisy", "fast", "noreflect")
+
+
+def _inject_hard_beats(root: Path, every: int = 4) -> dict:
+    """模擬 PPG の every 名に 1 名を難しい拍に差し替える（4 種を順繰り）。subj_no → 種別 を返す。
+
+    残りは 2 ガウスのまま。仕込んだ真値との関係を判定するには年齢層ごとに 8 名以上の
+    合格例が要るので、差し替えは 4 名に 1 名にとどめる（5 巡目は 4 名に 3 名を差し替えて
+    層が消え、判定できなくなった）。
+
+      notchless  切痕なし（型3。肩の代用点）
+      noisy      雑音 0.03（採否が割れる水準）
+      fast       心拍 135（成分が重なり ΔT の標準誤差が上限を超える → dt_se）
+      noreflect  反射波なし・減衰なし（肩が無い → 型4 → no_landmarks）
+
+    2 ガウスだけの模擬では no_landmarks・dt_se の経路が一度も通らず、27番の
+    「採否の再計算が保存値と一致する」検算がそれらを覆えない。拍の長さは元の心拍に
+    合わせるので、心拍から復元する標本化周波数（模擬は 500 Hz）は変わらない。
+    """
+    import pandas as pd
+    spec = importlib.util.spec_from_file_location(
+        "m25", Path(__file__).resolve().parent / "25_pda2_validate.py")
+    m25 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m25)
+    hae = M._read_named(root / "pwdb_haemod_params.csv", ("subj_no", "HR"))
+    hr_by = dict(zip(hae["subj_no"].astype(int), hae["HR"].astype(float)))
+    p = root / "PWs" / "csv" / "PWs_Digital_PPG.csv"
+    ppg = pd.read_csv(p, skipinitialspace=True)
+    mat = ppg.to_numpy(float)
+    kinds = {}
+    for i in range(len(mat)):
+        if i % every != every - 1:
+            continue                                   # 元の 2 ガウスのまま
+        subj = int(mat[i, 0]); hr = hr_by.get(subj, 70.0)
+        kind = HARD_KINDS[(i // every) % len(HARD_KINDS)]
+        if kind == "notchless":
+            _, y, _ = m25.make_beat(hr=hr, notch=False, dt_true=0.08, ri_true=0.60)
+        elif kind == "noisy":
+            _, y, _ = m25.make_beat(hr=hr, noise=0.03, seed=subj)
+        elif kind == "fast":
+            _, y, _ = m25.make_beat(hr=135.0, dt_true=0.20)
+        else:
+            _, y, _ = m25.make_beat(hr=hr, ri_true=0.0, d_res=0.0)
+        n_old = int(np.isfinite(mat[i, 1:]).sum())
+        fs_old = n_old * hr / 60.0
+        row = np.full(mat.shape[1] - 1, np.nan)
+        m = min(len(y), row.size)
+        row[:m] = y[:m]
+        mat[i, 1:] = row
+        if kind == "fast":                             # 拍が短いので心拍も合わせる（fs は不変）
+            hr_by[subj] = 60.0 * fs_old / m
+        kinds[subj] = kind
+    hdr = "Subject Number, " + ", ".join(f"pt{j}" for j in range(1, mat.shape[1]))
+    with open(p, "w") as f:
+        f.write(hdr + "\n")
+    with open(p, "a") as f:
+        np.savetxt(f, mat, delimiter=",", fmt="%.10g")
+    # 高心拍の被験者の HR を haemod に書き戻す（見出しは実配布版のまま）
+    hp = root / "pwdb_haemod_params.csv"
+    lines = hp.read_text().splitlines()
+    head = [c.strip() for c in lines[0].split(",")]
+    i_subj = [k for k, c in enumerate(head) if c.lower().startswith("subject")][0]
+    i_hr = [k for k, c in enumerate(head) if c.lower().startswith("hr")][0]
+    out = [lines[0]]
+    for ln in lines[1:]:
+        cells = ln.split(",")
+        try:
+            sj = int(float(cells[i_subj]))
+        except ValueError:
+            out.append(ln); continue
+        if sj in hr_by:
+            cells[i_hr] = f"{hr_by[sj]:.6g}"
+        out.append(",".join(cells))
+    hp.write_text("\n".join(out) + "\n")
+    return kinds
+
+
+def _selftest_root(td: Path, n: int = 96):
+    """自己検証用の模擬 PWDB（決定的）。27番の通し検算も同じものを作って使う。"""
+    root = L._make_mock(Path(td) / "exported_data", n=n)
+    kinds = _inject_hard_beats(root)
+    return root, kinds
+
+
+def selftest(jobs: int = 2) -> int:
     import tempfile
     print("== 26_pwdb_compare 自己検証（模擬PWDB・ネットワーク不要） ==\n")
-    print("  注意: 模擬波は 2 ガウスの和なので、どの手法も通って当然である。")
+    print("  注意: 模擬波の基本は 2 ガウスの和で、どの手法も通って当然である。")
     print("        ここで検査するのは配管（読み込み・結合・判定の共有）であって、")
-    print("        手法の優劣ではない。優劣は実 PWDB でしか決まらない。\n")
+    print("        手法の優劣ではない。優劣は実 PWDB でしか決まらない。")
+    print("        ただし 4 名に 1 名ずつ、切痕なし・雑音・高心拍・反射波なしの拍を混ぜ、")
+    print("        不採用の理由コードが一度は通ることを確かめる（27番の通し検算の範囲を広げるため）。\n")
     ok = True
 
     def rep(name, cond, detail=""):
@@ -558,12 +680,13 @@ def selftest() -> int:
               flush=True)
 
     with tempfile.TemporaryDirectory() as td:
-        root = L._make_mock(Path(td) / "exported_data", n=60)
-        d = build(root, jobs=1)
+        root, kinds = _selftest_root(Path(td))
+        n_sub = 96
+        d = build(root, jobs=jobs)
         rep("3 手法すべての列が揃った",
             all(c in d for c in ("dt_v1_ms", "dt_v2_ms", "dt_v2g_ms", "dt_lm_ms",
                                  "ri_v1", "ri_v2", "ri_v2g", "digital_ri")))
-        rep("被験者が重複せず結合された", len(d) == 60 and d["subj_no"].is_unique)
+        rep("被験者が重複せず結合された", len(d) == n_sub and d["subj_no"].is_unique)
         rep("第2版が標準誤差を返している（凍結版にはない量）",
             "dtse_v2_ms" in d and np.isfinite(d["dtse_v2_ms"]).any(),
             f"中央値 {float(np.nanmedian(d['dtse_v2_ms'])):.2f} ms"
@@ -590,6 +713,40 @@ def selftest() -> int:
             f"共通 n={n_common} / 8名以上の年齢層 {ns}")
         rep("判定規準を 20 番・23 番と共有している", M.CRIT_RHO == 0.30 and L.M is not None)
         rep("結果 CSV が書かれた", (Path(td) / "out" / "pwdb_compare.csv").exists())
+
+        # --- 難しい拍が意図した経路を通ったか
+        kind_of = d["subj_no"].astype(int).map(kinds).fillna("plain")
+        seen = set(d["why_v2"].dropna().astype(str)) | set(d["why_v2g"].dropna().astype(str))
+        need = {"landmark_or_fit", "no_landmarks", "dt_se"}
+        rep("不採用の主要な理由コード（landmark_or_fit・no_landmarks・dt_se）がすべて出る",
+            need <= seen, f"出た: {sorted(seen - {''})} / 出ない: {sorted(need - seen)}"
+            + ("" if {"ambiguous", "no_se"} & seen else "（ambiguous・no_se は今回出ていない）"))
+        g_nr = d[kind_of == "noreflect"]
+        rep("反射波なしの拍は型4で no_landmarks になる",
+            len(g_nr) > 0 and bool((g_nr["klass_own"] == 4).all())
+            and bool((g_nr["why_v2"] == "no_landmarks").all()),
+            f"n={len(g_nr)} 型 {g_nr['klass_own'].value_counts().to_dict()} 理由 {g_nr['why_v2'].value_counts().to_dict()}")
+        g_f = d[kind_of == "fast"]
+        rep("心拍 135 の拍は理由つきで不採用になる（黙って通さない）",
+            len(g_f) > 0 and int(g_f["ok_v2"].sum()) == 0,
+            f"n={len(g_f)} 理由 {g_f['why_v2'].value_counts().to_dict()}")
+        g_n = d[kind_of == "notchless"]
+        rep("切痕なしの拍が型3（肩の代用点）として存在する",
+            len(g_n) > 0 and bool((g_n["klass_own"] == 3).all()),
+            f"n={len(g_n)} 型 {g_n['klass_own'].value_counts().to_dict()} "
+            f"採択 v2 {int(g_n['ok_v2'].sum())} / v2g {int(g_n['ok_v2g'].sum())}")
+        rep("曖昧判定の材料（fwd0・競合広がり・僅差）と収束の監視列が保存されている",
+            all(c in d for c in ("fwd0_v2", "dtsp_v2_ms", "marg_v2_ms", "sat_v2", "nst_v2", "bsat_v2"))
+            and bool(np.isfinite(d.loc[d["ok_v2"] == 1, "sat_v2"]).all()),
+            f"飽和 全起動 {float(np.nansum(d['sat_v2']))/max(float(np.nansum(d['nst_v2'])),1):.1%}"
+            f" / 最良解 {float(np.nanmean(d['bsat_v2'])):.1%}" if "sat_v2" in d else "")
+        pr = d[["klass_own", "prom_own"]].dropna()
+        rep("鍵点の顕著さが記録され、型3 は閾値以上・型4 は閾値未満で整合する",
+            len(pr) > 0
+            and bool((pr.loc[pr["klass_own"] == 3, "prom_own"] >= pda2.PROXY_MIN_PROM).all())
+            and bool((pr.loc[pr["klass_own"] == 4, "prom_own"] < pda2.PROXY_MIN_PROM).all()),
+            f"型3 最小 {pr.loc[pr['klass_own'] == 3, 'prom_own'].min():.3f} / "
+            f"型4 最大 {pr.loc[pr['klass_own'] == 4, 'prom_own'].max():.3f}" if len(pr) else "")
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 
@@ -604,7 +761,7 @@ def main() -> None:
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
     if args.selftest:
-        sys.exit(selftest())
+        sys.exit(selftest(jobs=max(1, min(args.jobs, 4)) if args.jobs > 1 else 2))
     if not args.pwdb:
         ap.error("--pwdb を指定してください（--selftest なら不要）")
     report(build(Path(args.pwdb), limit=args.limit, jobs=args.jobs))

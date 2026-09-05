@@ -15,6 +15,7 @@
   T8 減衰の担い手      合成波の指数減衰を反射波が吸収していないか（幅が膨らんでいないか）
   T9 不変性と高心拍    決定性・時間原点・切り出しずれへの不変性、高心拍での挙動
   T10 役割の割り当て   反射波の選択が僅差のとき曖昧として落ちるか（くじ引きを通さないか）
+  T11 一意性の検査     競合解の対応づけ（同じ解・遠い解・ΔT の違う解・対応が潰れた解）
 
 合成脈波
 --------
@@ -234,9 +235,12 @@ def selftest(quick: bool = False) -> int:
           f"{'採用のSE中央値':>16}{'採用のΔTのσ':>15}{'成分を増やした割合':>19}")
     for route in ROUTES:
         eo, en, vo, se_o, esc = [], [], [], [], []
+        sat_all, sat_best = [], []
         for k in range(n_sel):
             t, y, tr = make_beat(noise=nz_sel, seed=300 + k)
             r = _run(t, y, route)
+            if "n_starts" in r:
+                sat_all.append((r["n_saturated"], r["n_starts"])); sat_best.append(bool(r["best_saturated"]))
             if not np.isfinite(r["dt_ms"]):
                 continue
             e = abs(r["dt_ms"] - tr["dt_ms"])
@@ -260,6 +264,10 @@ def selftest(quick: bool = False) -> int:
             np.isfinite(sm) and np.isfinite(sig) and 0.2 <= sm / max(sig, 1e-9) <= 5.0,
             f"SE {sm:.2f} ms 対 拍間σ {sig:.2f} ms（比 {sm / sig:.2f}）"
             if np.isfinite(sm) and np.isfinite(sig) else "推定できず")
+        if sat_all:
+            tot = sum(a for a, _b in sat_all); nst = sum(b for _a, b in sat_all)
+            print(f"       {route}: 多点起動の飽和率（max_nfev 到達） 全起動 {tot / max(nst, 1):.1%} / "
+                  f"最良解 {np.mean(sat_best):.1%}（監視のみ。採否には使わない）")
     print("       ΔT 誤差の 2 列は**合否にしない**。採否規準は当てはまりを見ており、")
     print("       当てはまりが足りない拍では成分を1つ増やす。増やすと波形は良く合うが")
     print("       反射波が2つに割れ、ΔT は真値から 2 ms ほど遠ざかる。だから採用側のほうが")
@@ -281,6 +289,28 @@ def selftest(quick: bool = False) -> int:
     t, y, tr = make_beat(notch=False, dt_true=0.08, ri_true=0.60)
     ks = [pda2.find_landmarks(t, pda2.preprocess(t, y, FS)[0])["klass"]]
     rep("切痕の無い波形が型1（明瞭な切痕）と判定されない", ks[0] != 1, f"型 {ks[0]}")
+    # 切痕なし波形の分解は**同定できない**。Errx・Erry を外して 3 波を採用させると ΔT が
+    # +50 ms（歪みガウス）／+20 ms（ガンマ）ずれる（当てはまりは NRMSE 0.003 と良い）。
+    # 採否規準はこれを正しく落としている。1巡目の「+3.3 ms で採用」は Errx 5.8 ms の際どい通過で、
+    # 2巡目の基線の変更で解の盆地が変わり +65 ms になった（6巡目の二分探索で判明。文書を訂正した）。
+    # 不変条件は「**採用するなら ΔT 誤差 15 ms 未満**」。不採用であることは要求しない
+    print("       切痕なし・心拍を振る（採用するなら誤差 15 ms 未満であること）")
+    print(f"       {'HR':>5} {'経路':<7}{'採用':<6}{'誤差':>8}  理由              | Errx・Erry を外すと: 成分  採用   誤差")
+    inv_ok = True
+    for hr in ((70,) if quick else (55, 70, 85, 100)):
+        t, y, tr = make_beat(hr=hr, notch=False, dt_true=0.08, ri_true=0.60)
+        for route in ROUTES:
+            r = _run(t, y, route)
+            rx = pda2.decompose(t, y, FS, route=route, errx_ms=np.inf, erry_max=np.inf)
+            e = r["dt_ms"] - tr["dt_ms"]
+            ex = rx["dt_ms"] - tr["dt_ms"]
+            if r["ok"] and abs(e) >= 15.0:
+                inv_ok = False
+            print(f"       {hr:>5} {route:<7}{str(r['ok']):<6}{e:>+8.1f}  {r['reason']:<16}  | "
+                  f"{rx['n_waves']:>4}  {str(rx['ok']):<6}{ex:>+7.1f}")
+    rep("切痕なし波形で採用された ΔT は誤差 15 ms 未満（誤った ΔT を黙って通さない）", inv_ok)
+    print("       注: 切痕なし波形は現状どちらの経路も不採用になる。それは規準が正しく働いた結果であって、")
+    print("           型3 の拍で PDA の ΔT が得られないことは第2版の限界として先に書いておく。")
 
     # ---- T6 採否規準
     print("\nT6 採否規準（Errx）が壊れた当てはめを弾くか")
@@ -319,6 +349,15 @@ def selftest(quick: bool = False) -> int:
     rep("切痕なしの波形でも代用点が定義でき、誤差が 40 ms 未満",
         all(np.isfinite(err_plain)) and max(err_plain) < 40.0,
         f"最大 {max(err_plain):.1f} ms（肩は構造的に真のピークより遅れる）")
+    # 反射波が無く単調に減衰する波形は肩を持たない。肩の顕著さを片側で測っていたときは、
+    # 平坦になった裾の微小な揺らぎが「肩」に化けて型3になっていた（6巡目 K8）
+    k4 = []
+    for hr in (55, 85):
+        t, y, tr = make_beat(hr=hr, ri_true=0.0, d_res=0.0)
+        lm = pda2.find_landmarks(t, pda2.preprocess(t, y, FS)[0])
+        k4.append((lm["klass"], lm["prom"]))
+    rep("反射波の無い単調減衰は肩（型3）に化けず型4になる",
+        all(k == 4 for k, _p in k4), f"型 {[k for k, _p in k4]} 顕著さ {[round(p_, 3) for _k, p_ in k4]}")
 
     # ---- T8 減衰の担い手
     print("\nT8 減衰の担い手（合成波の指数減衰 d=0.40, τ=0.35 を反射波が吸収していないか）")
@@ -356,14 +395,16 @@ def selftest(quick: bool = False) -> int:
     rep("時間軸の原点に依存しない（最適化の丸めを除く）",
         abs(r1["dt_ms"] - r3["dt_ms"]) < 1e-3 and abs(r1["ri"] - r3["ri"]) < 1e-6,
         f"|ΔΔT| {abs(r1['dt_ms'] - r3['dt_ms']):.1e} ms, |ΔRI| {abs(r1['ri'] - r3['ri']):.1e}")
-    # 切り出し位置のずれ（±4 ms）。ΔT は時刻の差なので不変、RI は基線に依存するので上限を置く
+    # 切り出し位置のずれ（onset が 0〜8 ms 遅い）。ΔT は時刻の差なので不変、RI は基線に依存する。
+    # 前方のずれだけを検査する。合成波は周期的でない（末尾が足に戻らない）ので、前に継ぎ足すと
+    # 継ぎ目に段差が出て検査側の人工物になる。onset が遅れる方向が実際の切り出し誤差でも多い
     dts, ris = [], []
-    for sh in (-2, 0, 2):
-        yy = np.r_[y[-50:], y, y[:50]]; i0 = 50 + sh; seg = yy[i0:i0 + len(y)]
+    for sh in (0, 2, 4):
+        seg = y[sh:]
         r = pda2.decompose(np.arange(len(seg)) / FS, seg, FS, route="skew")
         dts.append(r["dt_ms"]); ris.append(r["ri"])
-    rep("切り出しが ±4 ms ずれても ΔT は 1 ms 以内", np.ptp(dts) < 1.0, f"幅 {np.ptp(dts):.2f} ms")
-    rep("切り出しが ±4 ms ずれても RI は 0.05 以内（足→足の基線）", np.ptp(ris) < 0.05, f"幅 {np.ptp(ris):.3f}")
+    rep("切り出しが 0〜8 ms 遅れても ΔT は 1 ms 以内", np.ptp(dts) < 1.0, f"幅 {np.ptp(dts):.2f} ms")
+    rep("切り出しが 0〜8 ms 遅れても RI は 0.05 以内（足→足の基線）", np.ptp(ris) < 0.05, f"幅 {np.ptp(ris):.3f}")
     # 高心拍: 成分が重なって分解が同定できなくなる。黙って採用せず、理由つきで落とすこと
     print(f"       {'HR':>5}{'ΔT':>8}{'真':>6}{'Wald SE':>9}{'競合広がり':>11}{'採用':>6}  理由")
     hi_ok = True
@@ -404,6 +445,27 @@ def selftest(quick: bool = False) -> int:
     # 前進波が第0スロットでない解は曖昧に倒れる
     bad = pda2.assign_roles([(0.40, 0.5), (0.12, 1.0)], lm, has_reservoir_kernel=True, t=t)
     rep("ピーク時刻が最小の成分が前進波（スロット順ではなく時刻順）", bad["forward"] == 1)
+
+    # ---- T11 一意性の検査（競合解の対応づけ）
+    print("\nT11 一意性の検査（競合解の対応づけ）")
+    from types import SimpleNamespace as NS
+    x0 = np.array([1.0, 0.12, 0.05, 2.0, 0.45, 0.40, 0.07, 1.0])   # 2 成分 (h, tp, w, α) × 2
+    best = NS(x=x0, cost=1.0)
+    same = NS(x=x0.copy(), cost=1.05)
+    far = NS(x=x0.copy(), cost=2.0); far.x[5] = 0.30              # 残差が大きい → 競合ではない
+    near = NS(x=x0.copy(), cost=1.10); near.x[5] = 0.43            # 競合で ΔT が 30 ms 違う
+    coll = NS(x=x0.copy(), cost=1.10); coll.x[1] = 0.40; coll.x[5] = 0.41   # 両成分が反射波の位置に潰れた
+    roles = {"forward": 0, "reflected": 1}
+    rep("同じ解しか無ければ曖昧でない", not pda2._ambiguous([best, same], 4, roles))
+    rep("残差が許容（1.15 倍）を超える解は競合とみなさない", not pda2._ambiguous([best, far], 4, roles))
+    rep("競合解の ΔT が 20 ms 以上違えば曖昧", pda2._ambiguous([best, near], 4, roles),
+        f"広がり {pda2.competing_spread_ms([best, near], 4, roles):.0f} ms")
+    rep("対応づけが潰れた競合解（広がり inf）は曖昧（6巡目 K5: 以前は inf を曖昧でないと扱っていた）",
+        pda2._ambiguous([best, coll], 4, roles) and np.isinf(pda2.competing_spread_ms([best, coll], 4, roles)))
+    rep("残差許容を緩めると遠い解も競合になる（tol_cost が効く）",
+        pda2._ambiguous([best, far], 4, roles, tol_cost=2.5))
+    rep("ΔT の許容を広げると曖昧でなくなる（tol_dt_ms が効く）",
+        not pda2._ambiguous([best, near], 4, roles, tol_dt_ms=50.0))
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1
