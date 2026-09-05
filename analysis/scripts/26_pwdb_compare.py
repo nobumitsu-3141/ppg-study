@@ -17,8 +17,8 @@
 差は指標の作り方だけに帰せる。
 
   凍結PDA 2カーネル            src/pda.py（研究1で凍結した実装そのもの）
-  PDA 第2版 二段（歪みガウス） src/pda2.py route="two_stage"
-  PDA 第2版 ガンマ3            src/pda2.py route="gamma3"
+  PDA 第2版 歪みガウス        src/pda2.py route="skew"
+  PDA 第2版 ガンマ            src/pda2.py route="gamma"
   ランドマーク法               Charlton らの同梱値（Digital_RI・SI・AI・AGI_mod）
   モデル出力 PTT               配管の陽性対照
 
@@ -72,8 +72,8 @@ L = _load("23_pwdb_landmarks.py", "m23")
 # (キー, 表示名, ΔT列, RI列, 採否列)
 METHODS = [
     ("v1",  "凍結PDA 2カーネル",          "dt_v1_ms",  "ri_v1",      "ok_v1"),
-    ("v2",  "第2版 二段(歪みガウス)",     "dt_v2_ms",  "ri_v2",      "ok_v2"),
-    ("v2g", "第2版 ガンマ3",              "dt_v2g_ms", "ri_v2g",     "ok_v2g"),
+    ("v2",  "第2版 歪みガウス",     "dt_v2_ms",  "ri_v2",      "ok_v2"),
+    ("v2g", "第2版 ガンマ",              "dt_v2g_ms", "ri_v2g",     "ok_v2g"),
     ("lm",  "ランドマーク法",             "dt_lm_ms",  "digital_ri", None),
     ("hq",  "早期振幅比（Hellqvist）",     "dt_p1_ms",  "amb_amp1",   None),
 ]
@@ -81,15 +81,15 @@ METHODS = [
 # (列, 真値, 予測符号, 採否列, 表示名)
 PAIRS = [
     ("dt_v1_ms",       "PWV_a", -1, "ok_v1",  "ΔT       凍結PDA 2カーネル"),
-    ("dt_v2_ms",       "PWV_a", -1, "ok_v2",  "ΔT       第2版 二段(歪みガウス)"),
-    ("dt_v2g_ms",      "PWV_a", -1, "ok_v2g", "ΔT       第2版 ガンマ3"),
+    ("dt_v2_ms",       "PWV_a", -1, "ok_v2",  "ΔT       第2版 歪みガウス"),
+    ("dt_v2g_ms",      "PWV_a", -1, "ok_v2g", "ΔT       第2版 ガンマ"),
     ("dt_lm_ms",       "PWV_a", -1, None,     "ΔT       ランドマーク法"),
     ("digital_si",     "PWV_a", +1, None,     "SI       ランドマーク法"),
     ("digital_agi_mod", "PWV_a", +1, None,    "AGI_mod  ランドマーク法"),
     ("digital_ptt",    "PWV_a", -1, None,     "PTT      モデル出力（陽性対照）"),
     ("ri_v1",          "pvr",   +1, "ok_v1",  "RI       凍結PDA 2カーネル"),
-    ("ri_v2",          "pvr",   +1, "ok_v2",  "RI       第2版 二段(歪みガウス)"),
-    ("ri_v2g",         "pvr",   +1, "ok_v2g", "RI       第2版 ガンマ3"),
+    ("ri_v2",          "pvr",   +1, "ok_v2",  "RI       第2版 歪みガウス"),
+    ("ri_v2g",         "pvr",   +1, "ok_v2g", "RI       第2版 ガンマ"),
     ("digital_ri",     "pvr",   +1, None,     "RI       ランドマーク法"),
     ("digital_ai",     "pvr",   +1, None,     "AI       ランドマーク法"),
     # --- 事前指定の副次（Epstein 2014 を読んで 26番の実行前に追加した）---
@@ -108,7 +108,7 @@ PAIRS = [
     ("amb_amp1",       "PWV_cf", -1, None,     "副次 Am_b/Am_p1 × 頸大腿PWV"),
     # Hellqvist の p1（1次微分の下降への接線の零交点）を収縮期ピークに使った ΔT。
     # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
-    # 収縮期ピークを定義できる。我々の未解決問題（型3〜4で ΔT 誤差 38〜55 ms）に効くか
+    # 収縮期ピークを定義できる。我々の未解決問題（型3で ΔT 誤差 約30 ms）に効くか
     ("dt_p1_ms",       "PWV_a",  -1, None,     "ΔT  p1基準（Hellqvist の収縮期ピーク）"),
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
@@ -117,11 +117,11 @@ PAIRS = [
     ("dps_v2_ms",      "pvr",    0, "ok_v2",   "（記述）DPS 第2版 二段 × 末梢血管抵抗"),
 ]
 
-IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA"), ("dt_v2_ms", "ΔT 第2版二段"),
+IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA"), ("dt_v2_ms", "ΔT 第2版歪み"),
                    ("dt_v2g_ms", "ΔT 第2版ガンマ"), ("dt_lm_ms", "ΔT ランドマーク"),
-                   ("ri_v1", "RI 凍結PDA"), ("ri_v2", "RI 第2版二段"),
+                   ("ri_v1", "RI 凍結PDA"), ("ri_v2", "RI 第2版歪み"),
                    ("ri_v2g", "RI 第2版ガンマ"), ("digital_ri", "RI ランドマーク"),
-                   ("dps_v2_ms", "DPS 第2版二段"), ("amb_amp1", "Am_b/Am_p1"),
+                   ("dps_v2_ms", "DPS 第2版歪み"), ("amb_amp1", "Am_b/Am_p1"),
                    ("dt_p1_ms", "ΔT p1基準")]
 
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
@@ -185,7 +185,7 @@ def indices_for_subject(args_tuple):
         except Exception:
             pass
 
-        for tag, route in (("v2", "two_stage"), ("v2g", "gamma3")):
+        for tag, route in (("v2", "skew"), ("v2g", "gamma")):
             try:                                # --- 第2版
                 r = pda2.decompose(t, y, fs, route=route)
                 out[f"ok_{tag}"] = int(bool(r.get("ok")))
@@ -358,7 +358,7 @@ def report(d, out_dir: Path | None = None) -> dict:
     if "klass_own" in d and d["klass_own"].notna().any():
         print(f"\n{'-' * 78}\n2a. 波形型ごとの p1 と収縮期ピークの一致\n{'-' * 78}")
         print("  Hellqvist の p1 は『6つの波形型すべてで機能した』とされる。切痕の無い型でも")
-        print("  収縮期ピークを定義できるなら、我々の未解決問題（型3〜4で ΔT 誤差 38〜55 ms）に効く。")
+        print("  収縮期ピークを定義できるなら、我々の未解決問題（型3で ΔT 誤差 約30 ms）に効く。")
         print(f"{'型':<6}{'n':>7}{'p1が取れた率':>13}{'|p1 − S| 中央値':>16}"
               f"{'Am_b/Am_p1 中央値':>18}{'ΔT p1基準 中央値':>17}")
         for k in sorted(d["klass_own"].dropna().unique().tolist()):
@@ -383,7 +383,7 @@ def report(d, out_dir: Path | None = None) -> dict:
             ml = float(np.nanmedian(g["dt_lm_ms"])) if g["dt_lm_ms"].notna().any() else np.nan
             print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%"
                   f"{m2:>11.0f}{ml:>16.0f}")
-        print("  型4（切痕なし）は合成波でも 40〜55 ms の誤差が残っている。ここが実際に")
+        print("  型3（切痕なし・肩で代用）は合成波でも 30 ms 前後の誤差が残る。ここが実際に")
         print("  どれだけ効いているかは、この行の n と採択率で読む。")
 
     # ---- 成分を増やしたかどうか

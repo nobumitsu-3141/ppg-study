@@ -13,9 +13,8 @@
                           標準偏差 18 ms より大きい誤差の拍は問いに寄与しない）
   (c) **根拠なく私が決めたもの**
                           鍵点の重み 20（Wang は 1〜100 を探索、その中間を取っただけ）、
-                          成分間隔の下限 30 ms、貯留槽の窓 0.62T、立ち上がりの次数 2、
-                          貯留槽カーネルの判定 0.60T、境界近傍の許容 0.1%、
-                          一意性の検査 1.15 / 0.20
+                          成分間隔の下限 30 ms、肩の顕著さ 5%、一意性の検査 1.15 / 0.20、
+                          max_nfev 1200（第2版で貯留槽の閾値 6 個を削除して 5 個に減った）
 
 (c) が結論を左右するなら、その結論は閾値の産物である。**26番を実行する前に**
 この台本を書き、振れ幅を固定しておく。結果を見てから閾値をいじれば、それは
@@ -102,7 +101,7 @@ REFIT = [
     ("歪みの下限 −8（左歪みも許す）", {"alpha_min": -8.0}),
 ]
 
-ROUTES = [("v2", "第2版 二段(歪みガウス)"), ("v2g", "第2版 ガンマ3")]
+ROUTES = [("v2", "第2版 歪みガウス"), ("v2g", "第2版 ガンマ")]
 TARGETS = [("dt", "PWV_a", -1, "ΔT × 大動脈PWV"), ("ri", "pvr", +1, "RI × 末梢血管抵抗")]
 SUBSET_MOD = 7          # 当てはめ層で使う部分集合（subj_no % 7 == 0）
 
@@ -212,7 +211,7 @@ def _one(args_tuple):
         if y is None:
             return out
         t = np.arange(y.size) / fs
-        r = pda2.decompose(t, y, fs, route=opts.pop("route", "two_stage"), **opts)
+        r = pda2.decompose(t, y, fs, route=opts.pop("route", "skew"), **opts)
         out.update(ok=int(bool(r.get("ok"))), dt_ms=r.get("dt_ms", np.nan),
                    ri=r.get("ri", np.nan), nrmse=r.get("nrmse", np.nan))
         return out
@@ -220,7 +219,7 @@ def _one(args_tuple):
         return out
 
 
-def refit(root: Path, jobs: int = 1, route: str = "two_stage", out_dir=None) -> dict:
+def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None) -> dict:
     """当てはめそのものを変える閾値を、固定した部分集合で回し直す。"""
     import pandas as pd
     hae, cfg, ppg, _ = M.load_pwdb(Path(root).expanduser())
@@ -314,14 +313,14 @@ def selftest() -> int:
         t = np.arange(0, 0.857, 1 / 500.0)
         y = (np.exp(-0.5 * ((t - 0.12) / 0.045) ** 2)
              + 0.45 * np.exp(-0.5 * ((t - 0.40) / 0.065) ** 2))
-        r1 = pda2.decompose(t, y, 500.0, route="two_stage", escalate=False)
-        r2 = pda2.decompose(t, y, 500.0, route="two_stage", escalate=False,
+        r1 = pda2.decompose(t, y, 500.0, route="skew", escalate=False)
+        r2 = pda2.decompose(t, y, 500.0, route="skew", escalate=False,
                             lowpass_hz=10.0, min_gap=0.06, w_key=1.0)
         rep("当てはめ層の引数が decompose に届いている（結果が変わる）",
             np.isfinite(r1.get("dt_ms", np.nan)) and np.isfinite(r2.get("dt_ms", np.nan))
             and abs(r1["dt_ms"] - r2["dt_ms"]) > 1e-9,
             f"{r1['dt_ms']:.1f} 対 {r2['dt_ms']:.1f} ms")
-        r3 = pda2.decompose(t, y, 500.0, route="two_stage", escalate=False,
+        r3 = pda2.decompose(t, y, 500.0, route="skew", escalate=False,
                             nrmse_max=INF, errx_ms=INF, erry_max=INF, se_dt_max_ms=INF)
         rep("採否の閾値も decompose に届いている", bool(r3.get("ok")))
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
@@ -335,8 +334,8 @@ def main() -> None:
     ap.add_argument("--csv", type=str, default=str(OUT / "pwdb_compare.csv"),
                     help="26番の出力")
     ap.add_argument("--pwdb", type=str, help="指定すると当てはめ層も回す")
-    ap.add_argument("--route", type=str, default="two_stage",
-                    choices=["two_stage", "gamma3"])
+    ap.add_argument("--route", type=str, default="skew",
+                    choices=["skew", "gamma"])
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()

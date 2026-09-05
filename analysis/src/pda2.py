@@ -6,8 +6,8 @@
 
 対処した問題（`docs/research/pda_literature_review.md` 参照）
 -----------------------------------------------------------
-(1) 拡張期の減衰を表す項が無く、第2カーネルが吸収して拍長に引きずられていた
-    → **貯留槽を明示的に扱う。2つの経路を用意して同じ規準で比べる**
+(1) 拡張期の減衰を第2カーネルが吸収して拍長に引きずられていた
+    → **成分を1つ増やして減衰を担わせる。歪みガウスとガンマの2経路を同じ規準で比べる**
 (2) 鍵点の位置が正しいかを検算していなかった（Wang 2013）
     → **Errx・Erry・NRMSE を採否の規準にする**
 (3) 基底関数の裾が拡張期に合わない
@@ -23,16 +23,18 @@
 
 2つの経路
 ---------
-    route="two_stage"   貯留槽を拡張期後半だけで当てはめて差し引き、
-                        残差を歪みガウス2成分に分解する。
-                        歪みガウスは進行波に適した形であり、貯留槽は
-                        進行波の無い区間で錨づけるので反射波から振幅を盗まない
-    route="gamma3"      ガンマ3成分を同時に当てはめ、最も遅い成分を貯留槽とみなす。
-                        Tigges 2017 が実測7,805拍の AICc で選んだ模型
+    route="skew"    歪みガウス2成分（不足なら3）。Basso 2024 と同じ混合模型。
+                    歪みガウスは進行波に適した形（立ち上がりが速く減衰が遅い）
+    route="gamma"   ガンマ3成分（不足なら4）。Tigges 2017 が実測7,805拍の AICc で選んだ
+                    模型に、到達時刻の母数を足したもの。裾が exp(−βt) なので
+                    最も遅い成分が拡張期の減衰をそのまま担える
 
-どちらも**成分は3つ**（前進波・反射波・貯留槽）である。物理的に数えるべき対象の数と、
-AICc がデータから選んだ数が一致する。18 Hz に帯域制限した1拍の独立な標本は 24〜40 点しか
-なく、成分あたり3母数として5成分（16母数）は過剰母数化になる。
+貯留槽項は置かない。1拍を線形ベースライン除去した波形では減衰が末尾で強制的に 0 になり、
+時定数を正しく推定できない（合成波で真値の半分以下）。膝をどこに置いても振幅が 0 に潰れるか
+当てはまりが壊れるかで、機能しなかった。減衰は成分を1つ増やすことで担わせる。
+
+18 Hz に帯域制限した1拍の独立な標本は 24〜40 点しかなく、成分あたり4母数として
+5成分（20母数）は過剰母数化になる。既定は 2〜3 成分（歪みガウス）・3〜4 成分（ガンマ）。
 
 母数の取り方
 ------------
@@ -43,10 +45,10 @@ AICc がデータから選んだ数が一致する。18 Hz に帯域制限した
 
 次数の適応
 ----------
-既定は3成分。**当てはまりでは上げない**（カーネルを増やせば必ず当てはまるので全例が上がる）。
-上げるのは同定性が損なわれたときだけである。すなわち Errx が閾値を超えるか、
+既定は歪みガウス2成分・ガンマ3成分。採否の規準（NRMSE・Errx・Erry）を満たさないか、
 ΔT の異なる競合解が残差で拮抗する場合に、収縮後期波を1つ足して4成分にする。
-上げた拍の割合を必ず報告すること。
+増やした拍では波形の当てはまりは良くなるが ΔT は真値から約 2 ms 遠ざかる（合成波）ので、
+**増やしたかどうかを必ず返し、下流で層別する**。
 """
 from __future__ import annotations
 
@@ -77,9 +79,8 @@ def _skew_tables(n: int = 1601):
 
     これがあると (ピーク高さ, ピーク時刻) で母数化できる。閉じた式が無いので表引きする。
     """
-    # Basso 2024 は α に境界を置かない（左歪みも許す）。左歪みを禁じると、
-    # 反射波の歪みが下限 0 に潰れてモデルが α に無感応になり、共分散が壊れる
-    # （実際に起きた。25番 T4 参照）。ここでは対称に [−8, 8] とする。
+    # 表は [−8, 8] で作る。既定の下限は ALPHA_MIN=0（右歪みのみ）だが、感度解析で
+    # −8 まで緩めるので、表はその範囲を覆っておく。
     alphas = np.linspace(-8.0, 8.0, n)
     zz = np.linspace(-6.0, 6.0, 6001)
     m = np.empty(n)
@@ -168,9 +169,13 @@ def preprocess(t: np.ndarray, y: np.ndarray, fs: float,
     Tigges 2017・Wang 2013 の前処理に合わせる。凍結版は最小値を引くだけだった。
     """
     y = np.asarray(y, float)
+    if y.size < 8 or not np.isfinite(y).all() or float(np.ptp(y)) <= 0:
+        return None, 0.0
     if lowpass_hz and fs > 2.5 * lowpass_hz:
         b, a = butter(4, lowpass_hz / (fs / 2.0), btype="low")
-        y = filtfilt(b, a, y)
+        padlen = 3 * max(len(a), len(b))
+        if y.size > padlen:                       # filtfilt は padlen より長い列を要求する
+            y = filtfilt(b, a, y)
     if detrend and len(y) > 3:
         # 両端を結ぶ直線を引く（拍は極小点で切り出してある前提）
         base = np.linspace(y[0], y[-1], len(y))
@@ -201,21 +206,54 @@ def _refine(t: np.ndarray, y: np.ndarray, i: int):
     return float(t[i] + d * dt), float(b - 0.25 * (a - c) * d)
 
 
-def find_landmarks(t: np.ndarray, y: np.ndarray) -> dict:
+# 切痕・拡張期ピークを探す窓（拍の先頭からの割合）。駆出時間は心拍 50〜120 で
+# 0.30〜0.55T なので、切痕が 0.65T より後ろに来ることは生理的にない。
+NOTCH_MAX_FRAC = 0.65
+DIA_MAX_FRAC = 0.85
+NOTCH_MIN_FRAC = 0.05      # 収縮期ピークからこれだけ離す（ピーク自身の曲率を拾わない）
+EXTREMA_MIN_PROM = 0.01    # 極値による切痕・拡張期ピークに要求する最小の高低差（振幅 1 の波形）
+PROXY_MIN_PROM = 0.05      # 肩（1次微分の局所極大）に要求する顕著さ（最大傾斜に対する割合）
+
+
+def _local_extrema(v: np.ndarray, lo: int, hi: int):
+    """v[lo:hi] の局所極小・局所極大の添字（元配列の添字で返す）。"""
+    seg = v[lo:hi]
+    d = np.diff(seg)
+    mins = np.flatnonzero((d[:-1] <= 0) & (d[1:] > 0)) + 1 + lo
+    maxs = np.flatnonzero((d[:-1] > 0) & (d[1:] <= 0)) + 1 + lo
+    return mins, maxs
+
+
+def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> dict:
     """収縮期ピーク・重複切痕・拡張期ピークを探し、波形型を判定する。
 
-    まず波形そのものの極値を探し、見つからなければ2次微分の特徴点で代用する。
-    Dawber の分類に倣い、どこまで見つかったかで型を返す。
-    型ごとに成績を出せるようにするための情報でもある。
+    手順
+    ----
+    1. 波形そのものの極小（切痕）→ 極大（拡張期ピーク）。Wang 2013 の鍵点そのもの。
+       窓は切痕 ≤ 0.65T、拡張期ピーク ≤ 0.85T に限る（生理的上限）
+    2. 極値が無い波形（Dawber II〜III）では **1次微分の局所極値**で代用する。
+       収縮期ピークの後、下降が最も速い点（d1 の局所極小）を切痕の代用、
+       その後で下降が最も緩む点（d1 の局所極大＝肩）を拡張期ピークの代用とする。
+       どちらも「傾きの変化」という同じ量の極値なので、定義が単純で安定する。
+       以前は2次微分の最大を切痕の代用にしていたが、切痕の無い波形では
+       **収縮期ピーク自身の曲率**が最大になり、ピーク直後の無意味な点を拾っていた
+       （型3〜4で ΔT 誤差 38〜55 ms の一因）。
+    3. 以前あった「立ち上がり側で2次微分の谷を探して型4とする」手順は削除した。
+       立ち上がり側の d2 の谷は b 波（最大減速点）であって肩ではなく、
+       dia_t < sys_t という無意味な鍵点を作っていた。
+
+    force_proxy=True は、データ側が代用点（型3）だったときに**模型側も同じ方法で**
+    鍵点を取るための指定。定義の違う鍵点同士で Errx を取らないため。
 
     返り値の klass:
-        1 明瞭な重複切痕と拡張期ピークがある
-        2 切痕は無いが下降が水平になる（2次微分で代用）
-        3 切痕は無いが下降の角度が明瞭に変わる（2次微分で代用）
-        4 収縮期内に反射波が乗る（拡張期ピークが収縮期側にある）
-        5 何も見つからない
+        1 明瞭な重複切痕と拡張期ピークがある（極値）
+        3 極値は無いが、下降の緩む肩がある（1次微分の局所極値で代用）
+        4 窓の中に肩が見つからない（Dawber IV に相当）
+        5 収縮期ピークが拍の末尾にある（波形が不正）
     """
     n = len(t)
+    T = float(t[-1] - t[0])
+    t0 = float(t[0])
     i_sys = int(np.argmax(y))
     sys_t, sys_v = _refine(t, y, i_sys)
     out = {"sys_t": sys_t, "sys_v": sys_v, "i_sys": i_sys,
@@ -223,46 +261,50 @@ def find_landmarks(t: np.ndarray, y: np.ndarray) -> dict:
            "klass": 5, "source": "none"}
     if i_sys >= n - 5:
         return out
+    i_lo = max(i_sys + 2, int(np.searchsorted(t, sys_t + NOTCH_MIN_FRAC * T)))
+    i_notch_hi = min(n - 2, int(np.searchsorted(t, t0 + NOTCH_MAX_FRAC * T)))
+    i_dia_hi = min(n - 2, int(np.searchsorted(t, t0 + DIA_MAX_FRAC * T)))
+    if i_lo >= i_notch_hi - 2:
+        out["klass"] = 4
+        return out
 
-    seg = y[i_sys:]
-    ts = t[i_sys:]
     # --- 1. 波形そのものの極小 → 極大
-    d = np.diff(seg)
-    up = np.flatnonzero((d[:-1] <= 0) & (d[1:] > 0))    # 極小
-    if up.size:
-        j_min = int(up[0]) + 1
-        rest = seg[j_min:]
-        if rest.size > 3:
-            d2 = np.diff(rest)
-            dn = np.flatnonzero((d2[:-1] > 0) & (d2[1:] <= 0))   # 極大
-            if dn.size:
-                j_max = j_min + int(dn[0]) + 1
-                nt, _ = _refine(t, y, i_sys + j_min)
-                dt_, dv = _refine(t, y, i_sys + j_max)
+    if not force_proxy:
+        mins, _ = _local_extrema(y, i_lo, i_notch_hi + 1)
+        if mins.size:
+            j_min = int(mins[0])
+            _, maxs = _local_extrema(y, j_min, i_dia_hi + 1)
+            # 拡張期ピークは切痕より EXTREMA_MIN_PROM 以上高いこと（振幅 1 の波形で 1%）。
+            # 微小な揺らぎを「明瞭な切痕」と誤認して、その位置で Errx を取らないため
+            if maxs.size and float(y[int(maxs[0])] - y[j_min]) >= EXTREMA_MIN_PROM:
+                j_max = int(maxs[0])
+                nt, _ = _refine(t, y, j_min)
+                dt_, dv = _refine(t, y, j_max)
                 out.update(notch_t=nt, dia_t=dt_, dia_v=dv, klass=1, source="extrema")
                 return out
 
-    # --- 2. 2次微分で代用（切痕が見えない波形）
-    d2y = np.gradient(np.gradient(y))
-    k0 = i_sys + max(3, int(0.04 * n))
-    k1 = int(0.92 * n)
-    if k0 < k1:
-        j = k0 + int(np.argmax(d2y[k0:k1]))          # 下降が緩む点＝切痕の代用
-        out["notch_t"] = _refine(t, d2y, j)[0]
-        k2 = j + max(3, int(0.03 * n))
-        if k2 < k1:
-            j2 = k2 + int(np.argmin(d2y[k2:k1]))     # その後の凸＝拡張期ピークの代用
-            out.update(dia_t=_refine(t, -d2y, j2)[0], dia_v=float(y[j2]),
-                       klass=3, source="d2")
-        else:
-            out.update(klass=2, source="d2")
-    # --- 3. 収縮期内の肩（型4）
-    if not np.isfinite(out["dia_t"]):
-        k0b, k1b = max(3, int(0.25 * i_sys)), i_sys
-        if k1b - k0b > 4:
-            j3 = k0b + int(np.argmin(d2y[k0b:k1b]))
-            if y[j3] > 0.3:
-                out.update(dia_t=float(t[j3]), dia_v=float(y[j3]), klass=4, source="d2_sys")
+    # --- 2. 1次微分の局所極値で代用（切痕の無い波形）
+    d1 = np.gradient(y)
+    mins1, maxs1 = _local_extrema(d1, i_sys + 1, i_dia_hi + 1)
+    maxs1 = maxs1[(maxs1 >= i_lo) & (maxs1 <= i_dia_hi)]
+    best = None
+    scale = float(np.max(np.abs(d1[i_sys:i_dia_hi + 1]))) or 1.0
+    for j in maxs1:
+        prev = mins1[mins1 < j]
+        if not prev.size:
+            continue
+        k = int(prev[-1])
+        prom = float(d1[j] - d1[k])
+        if prom >= PROXY_MIN_PROM * scale and (best is None or prom > best[0]):
+            best = (prom, k, int(j))
+    if best is not None:
+        _, k, j = best
+        nt, _ = _refine(t, -d1, k)          # 最速下降点
+        dt_, _ = _refine(t, d1, j)          # 肩
+        dv = float(np.interp(dt_, t, y))
+        out.update(notch_t=float(nt), dia_t=float(dt_), dia_v=dv, klass=3, source="d1")
+        return out
+    out["klass"] = 4
     return out
 
 
@@ -347,56 +389,19 @@ def _key_indices(t: np.ndarray, lm: dict) -> np.ndarray:
     return np.unique(np.array(idx, int))
 
 
-def _weights(t: np.ndarray, lm: dict, w_key: float = W_KEY, halfwidth: int = 3):
-    """鍵点とその近傍に重みを置く（Wang 2013 の WLS）。"""
+def _weights(t: np.ndarray, lm: dict, w_key: float = W_KEY, halfwidth_s: float = 0.006):
+    """鍵点とその近傍（±6 ms）に重みを置く（Wang 2013 の WLS）。
+
+    近傍の幅は**時間**で指定する。標本数で指定すると、40 Hz へ落とす感度条件で
+    ±3 標本が ±75 ms に膨らみ、比較にならない。
+    """
     w = np.ones_like(t)
+    dt = float(np.median(np.diff(t))) if len(t) > 1 else 1.0
+    halfwidth = max(1, int(round(halfwidth_s / max(dt, 1e-9))))
     for i in _key_indices(t, lm):
         a, b = max(0, i - halfwidth), min(len(t), i + halfwidth + 1)
         w[a:b] = w_key
     return w
-
-
-# ============================================================ 貯留槽
-def reservoir_shape(t: np.ndarray, t_a: float, tau: float, rise_exp: float = 2.0):
-    """貯留槽の形（振幅1に正規化）。立ち上がりの形は固定し、当てはめない。"""
-    s = np.clip((t - t[0]) / max(t_a - t[0], 1e-6), 0.0, 1.0) ** rise_exp
-    return s * np.exp(-np.maximum(t - t_a, 0.0) / max(tau, 1e-3))
-
-
-def estimate_reservoir_tau(t: np.ndarray, y: np.ndarray, lm: dict) -> dict:
-    """**進行波が消えたあとの区間だけ**で時定数 τ を決める。
-
-    最初の実装では窓の開始を拡張期ピークに置いたが、そこは反射波の頂上であり、
-    その裾は窓の中まで伸びる。反射波を貯留槽と誤認して振幅を過大に見積もり、
-    差し引いた残差が負に振れて当てはめが破綻した。
-    窓は**拡張期ピークから十分に離した位置**から始める。
-
-    振幅 d はここでは決めない。波と同時に決めることで、貯留槽が
-    収縮期の波から振幅を盗むことも、過剰に差し引くことも防ぐ。
-    """
-    T = float(t[-1] - t[0])
-    base = lm["dia_t"] + 0.10 if np.isfinite(lm["dia_t"]) else t[0] + 0.62 * T
-    t_a = float(np.clip(max(base, t[0] + 0.62 * T), t[0] + 0.45 * T, t[0] + 0.85 * T))
-    m = t >= t_a
-    if m.sum() < 6:
-        return {"t_a": t_a, "tau": 0.35, "ok": False}
-    tt, yy = t[m] - t_a, y[m]
-
-    def resid(p):
-        return p[0] * np.exp(-tt / max(p[1], 1e-3)) - yy
-
-    best = None
-    for tau0 in (0.15, 0.30, 0.60, 1.00):
-        try:
-            r = least_squares(resid, [max(float(yy[0]), 1e-3), tau0],
-                              bounds=([0.0, 0.08], [1.5, 2.0]), max_nfev=400)
-        except Exception:
-            continue
-        if best is None or r.cost < best.cost:
-            best = r
-    if best is None:
-        return {"t_a": t_a, "tau": 0.35, "ok": False}
-    return {"t_a": t_a, "tau": float(best.x[1]), "d_hint": float(best.x[0]), "ok": True}
 
 
 # ============================================================ 当てはめ
@@ -427,36 +432,38 @@ def _wave_starts(t, y, lm, n_waves: int):
     """
     T = float(t[-1] - t[0])
     t0 = float(t[0])
+    sc = T / T_REF                         # 幅は拍長で尺度化する（Basso 2024）
+    wf, wr = 0.06 * sc, 0.09 * sc
     sys_t, sys_v = lm["sys_t"], lm["sys_v"]
-    generic = [(sys_v, sys_t, 0.06, 2.0)]
+    generic = [(sys_v, sys_t, wf, 2.0)]
     for k in range(1, n_waves):
-        generic.append((0.35 * sys_v, t0 + (0.30 + 0.22 * k) * T, 0.09, 1.0))
+        generic.append((0.35 * sys_v, t0 + (0.30 + 0.22 * k) * T, wr, 1.0))
     out = [np.array([v for c in generic for v in c], float)]
 
     if np.isfinite(lm["dia_t"]):
-        lmk = [(sys_v, sys_t, 0.06, 2.0)]
+        lmk = [(sys_v, sys_t, wf, 2.0)]
         dia_v = lm["dia_v"] if np.isfinite(lm["dia_v"]) else 0.35 * sys_v
-        lmk.append((max(dia_v, 0.05), lm["dia_t"], 0.09, 1.0))
+        lmk.append((max(dia_v, 0.05), lm["dia_t"], wr, 1.0))
         for k in range(2, n_waves):
-            lmk.append((0.15 * sys_v, min(lm["dia_t"] + 0.18 * k, t0 + 0.9 * T), 0.10, 1.0))
+            lmk.append((0.15 * sys_v, min(lm["dia_t"] + 0.18 * k * sc, t0 + 0.9 * T),
+                        0.10 * sc, 1.0))
         out.append(np.array([v for c in lmk for v in c], float))
 
     for frac in (0.34, 0.46, 0.58):
-        g = [(sys_v, sys_t, 0.06, 2.0)]
+        g = [(sys_v, sys_t, wf, 2.0)]
         for k in range(1, n_waves):
-            g.append((0.35 * sys_v, t0 + min(frac + 0.20 * (k - 1), 0.88) * T, 0.09, 1.0))
+            g.append((0.35 * sys_v, t0 + min(frac + 0.20 * (k - 1), 0.88) * T, wr, 1.0))
         out.append(np.array([v for c in g for v in c], float))
     return out
 
 
-def _augment_start(x, n: int, has_tail: bool, step: int = 4):
+def _augment_start(x, n: int, step: int = 4):
     """n 成分の解に、最も間隔の広いところへ小さい成分を1つ挟んだ初期値を作る。
 
     増やす前の解は既に良い場所にいるので、そこから温め直した1点を汎用初期値に
     **足す**。汎用初期値の代わりにはしない（1点に絞ったら良い最適解を取り逃し、
     当てはまりが半分に落ちて採択率が 0% になった）。
     """
-    tail = list(np.asarray(x, float)[step * n:]) if has_tail else []
     ks = [list(np.asarray(x, float)[step * k:step * (k + 1)]) for k in range(n)]
     ks.sort(key=lambda c: c[1])
     i = 0
@@ -466,7 +473,7 @@ def _augment_start(x, n: int, has_tail: bool, step: int = 4):
     new = [0.25 * hmax, 0.5 * (ks[i][1] + ks[i + 1][1]) if len(ks) > 1 else ks[0][1] + 0.1,
            float(np.mean([c[2] for c in ks])), float(np.mean([c[3] for c in ks]))]
     ks.insert(i + 1, new)
-    return np.array([v for c in ks for v in c] + tail, float)
+    return np.array([v for c in ks for v in c], float)
 
 
 ALPHA_MIN = 0.0    # 歪み母数の下限。0 は「右歪みのみ許す」
@@ -480,13 +487,17 @@ ALPHA_MIN = 0.0    # 歪み母数の下限。0 は「右歪みのみ許す」
 #   α≥0: ΔT誤差 +5.9 / 心拍交絡 13.4 ms      α≥−8: ΔT誤差 +8.4 / 心拍交絡 15.7 ms
 
 
+T_REF = 60.0 / 70.0    # 幅の尺度の基準拍長（心拍 70）。ここでは従来値と一致する
+
+
 def _wave_bounds(t, n_waves: int, min_gap: float = 0.03, alpha_min: float = ALPHA_MIN):
     T = float(t[-1] - t[0])
     t0 = float(t[0])
+    sc = T / T_REF
     lo, hi = [], []
     for k in range(n_waves):
-        lo += [0.02 if k else 0.30, t0 + 0.01, 0.012, alpha_min]
-        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.28, 8.0]
+        lo += [0.02 if k else 0.30, t0 + 0.01, 0.012 * sc, alpha_min]
+        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.28 * sc, 8.0]
     return np.array(lo, float), np.array(hi, float), min_gap
 
 
@@ -504,29 +515,27 @@ def _order_penalty(p, n_waves: int, min_gap: float):
     return np.array(pen)
 
 
-def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=None,
+def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03,
               starts=None, n_generic=None, alpha_min: float = ALPHA_MIN):
-    """歪みガウス n 本を当てはめる。res を渡すと貯留槽項を同時に当てはめる。
+    """歪みガウス n 本を当てはめる（Basso 2024 と同じ混合模型）。
 
-    貯留槽は**時定数を固定し振幅だけ自由**にする。時定数は進行波の無い区間で
-    決めてあるので、この項が反射波の位置を動かすことはない。振幅を同時に決めるのは、
-    先に差し引くと過剰に引いて残差が負に振れるためである。
+    貯留槽項について
+    ----------------
+    以前は Windkessel の減衰を表す貯留槽項を同時に当てはめていたが、削除した。
+    理由は2つ。(1) 1拍を線形ベースライン除去した波形では減衰が末尾で強制的に 0 になり、
+    時定数が真値の半分以下に過小推定される（合成波で 0.151 対 0.35）。膝をどこに置いても
+    振幅が 0 に潰れるか当てはまりが壊れるかのどちらかで、機能しなかった。
+    (2) 減衰は成分を1つ増やせば担える（合成波で 90% の拍がそうなっていた）。
+    Basso 2024・Tigges 2017・Goswami 2010 のいずれも貯留槽項を持たない。
     """
     lo, hi, gap = _wave_bounds(t, n_waves, min_gap, alpha_min)
     w = np.ones_like(t) if w is None else w
     sw = np.sqrt(w)
-    rshape = None
-    if res is not None:
-        rshape = reservoir_shape(t, res["t_a"], res["tau"])
-        lo = np.append(lo, 0.0)
-        hi = np.append(hi, 1.2)
 
     def model(p):
         out = np.zeros_like(t)
         for k in range(n_waves):
             out = out + skew_peak(t, p[4 * k], p[4 * k + 1], p[4 * k + 2], p[4 * k + 3])
-        if rshape is not None:
-            out = out + p[4 * n_waves] * rshape
         return out
 
     def resid(p):
@@ -536,15 +545,10 @@ def fit_waves(t, y, lm, n_waves: int = 2, w=None, min_gap: float = 0.03, res=Non
     if n_generic is not None:
         gen = gen[:max(n_generic, 0)]
     starts = (list(starts) if starts is not None else []) + gen
-    if rshape is not None:
-        d0 = float(res.get("d_hint", 0.3))
-        starts = [x if len(x) == 4 * n_waves + 1 else np.append(x, np.clip(d0, 0.0, 1.2))
-                  for x in starts]
     sols = _multistart(resid, starts, lo, hi)
     if not sols:
         return None
-    return {"sols": sols, "model": model, "n": n_waves, "kind": "skew",
-            "reservoir_shape": rshape, "lo": lo, "hi": hi}
+    return {"sols": sols, "model": model, "n": n_waves, "kind": "skew", "lo": lo, "hi": hi}
 
 
 def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
@@ -556,10 +560,11 @@ def fit_gamma(t, y, lm, n_kernels: int = 3, w=None, min_gap: float = 0.03,
     """
     T = float(t[-1] - t[0])
     t0 = float(t[0])
+    sc = T / T_REF
     lo, hi = [], []
     for k in range(n_kernels):
-        lo += [0.02 if k else 0.30, t0 + 0.02, 0.015, 1.05]
-        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.35, 40.0]
+        lo += [0.02 if k else 0.30, t0 + 0.02, 0.015 * sc, 1.05]
+        hi += [1.60, t0 + (0.55 if k == 0 else 0.95) * T, 0.35 * sc, 40.0]
     lo, hi = np.array(lo, float), np.array(hi, float)
     w = np.ones_like(t) if w is None else w
     sw = np.sqrt(w)
@@ -604,7 +609,8 @@ def acceptance(t, y, yhat, lm, w=None, nrmse_max: float = NRMSE_MAX,
     denom = np.sum(w * y * y)
     nrmse = float(np.sqrt(np.sum(w * (y - yhat) ** 2) / max(denom, 1e-12)))
 
-    lm_hat = find_landmarks(t, yhat)
+    # データ側が代用点なら模型側も代用点で取る（定義の違う鍵点を比べない）
+    lm_hat = find_landmarks(t, yhat, force_proxy=(lm.get("source") == "d1"))
     errx = 0.0
     erry = 0.0
     n_match = 0
@@ -634,14 +640,13 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
     **当てはめに決めさせない。** 規則を先に決め、制約で順序を固定したうえで、
     ランドマークに最も近い成分を反射波とする。決められなければその旨を返す。
 
-    貯留槽カーネルの見分け方
+    減衰を担う成分の見分け方
     ------------------------
-    以前は「最も遅くピークをとる成分」を無条件に貯留槽としていた。ガンマに位置母数を
-    入れてからはこれが成り立たない。裾で拡張期の下降を担う成分が、拡張期ピークより
-    手前でピークをとりうるからである（実際、ガンマ真値の波形で真の反射波が貯留槽と
-    誤認され、手前の小さい成分が反射波にされていた）。
-    そこで**拡張期ピークより十分後ろ、かつ拍の後半でピークをとる成分だけ**を貯留槽の
-    候補とし、該当が無ければ貯留槽カーネルは無いものとして扱う。
+    成分が3つ以上あるとき、最も遅い成分が拡張期の減衰を担っている（進行波ではない）
+    ことがある。以前は「最も遅くピークをとる成分」を無条件にそう扱っていたが、
+    ガンマに位置母数を入れてからは成り立たない（真の反射波が減衰成分と誤認された）。
+    そこで**拡張期ピークより十分後ろ、かつ拍の後半でピークをとる成分だけ**を減衰成分の
+    候補とし、該当が無ければ全成分を進行波として扱う。歪みガウス・ガンマ両経路に同じ規則を使う。
     """
     order = sorted(range(len(peaks)), key=lambda i: peaks[i][0])
     fwd = order[0]
@@ -773,7 +778,10 @@ def _ambiguous(sols, step, roles, tol_cost: float = 1.15, tol_dt: float = 0.20) 
 
 
 # ============================================================ 入口
-def decompose(t, y, fs: float, route: str = "two_stage",
+ROUTES = ("skew", "gamma")
+
+
+def decompose(t, y, fs: float, route: str = "skew",
               n_waves: int = None, escalate: bool = True,
               w_key: float = W_KEY, preprocessed: bool = False,
               lowpass_hz: float = LOWPASS_HZ, min_gap: float = 0.03,
@@ -783,8 +791,9 @@ def decompose(t, y, fs: float, route: str = "two_stage",
               erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
 
-    route="two_stage"  貯留槽を差し引いてから歪みガウス2成分
-    route="gamma3"     ガンマ3成分を同時に当てはめ、最も遅い成分を貯留槽とみなす
+    route="skew"       歪みガウス2成分（不足なら3）。Basso 2024 と同じ混合模型
+    route="gamma"      ガンマ3成分（不足なら4）。Tigges 2017 が AICc で選んだ模型に
+                       到達時刻の母数を足したもの。最も遅い成分が拡張期の減衰を担う
     escalate=True      採否（当てはまり）または同定性の規準を満たさない場合に成分を1つ増やす
 
     成分を増やすことの代償
@@ -799,6 +808,8 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     t = np.asarray(t, float)
     if preprocessed:
         ys, amp = np.asarray(y, float), 1.0
+        if ys.size < 8 or not np.isfinite(ys).all():
+            ys = None
     else:
         ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
     if ys is None:
@@ -823,53 +834,57 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     lm = find_landmarks(t, ys)
     w = _weights(t, lm, w_key)
 
+    if route not in ROUTES:
+        raise ValueError(f"route は {ROUTES} のいずれか: {route!r}")
+
     def _run(nw, starts=None, n_generic=None):
-        if route == "two_stage":
-            rp = estimate_reservoir_tau(t, ys, lm)
-            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, res=rp, min_gap=min_gap,
+        if route == "skew":
+            fit = fit_waves(t, ys, lm, n_waves=nw, w=w, min_gap=min_gap,
                             starts=starts, n_generic=n_generic, alpha_min=alpha_min)
-            if fit is None:
-                return None
-            rp = dict(rp, d=float(fit["sols"][0].x[4 * nw]))
-            return fit, fit["model"](fit["sols"][0].x), rp, True
-        fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w, min_gap=min_gap,
-                        starts=starts, n_generic=n_generic)
+        else:
+            fit = fit_gamma(t, ys, lm, n_kernels=nw, w=w, min_gap=min_gap,
+                            starts=starts, n_generic=n_generic)
         if fit is None:
             return None
-        return fit, fit["model"](fit["sols"][0].x), {"ok": False}, True
+        return fit, fit["model"](fit["sols"][0].x)
 
-    nw0 = n_waves if n_waves else (2 if route == "two_stage" else 3)
+    nw0 = n_waves if n_waves else (2 if route == "skew" else 3)
     got = _run(nw0)
     if got is None:
         return {"ok": False, "reason": "fit_failed", "klass": lm["klass"]}
-    fit, yhat, rp, _ = got
+    fit, yhat = got
     peaks, cov, step, sds = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
                                           fit.get("lo"), fit.get("hi"))
-    roles = assign_roles(peaks, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
+    # 成分が3つ以上あれば、最も遅い成分が拡張期の減衰を担っている可能性を両経路とも同じ規則で見る
+    roles = assign_roles(peaks, lm, has_reservoir_kernel=True, t=t)
     acc = acceptance(t, ys, yhat, lm, w, nrmse_max=nrmse_max,
                      errx_ms=errx_ms, erry_max=erry_max)
-    amb = _ambiguous(fit["sols"], step, roles)
+    # 前進波は母数の第0スロットのはず（順序の罰則が守られていれば）。守られていなければ
+    # 役割の割り当てそのものが信用できないので、曖昧として扱う
+    amb = _ambiguous(fit["sols"], step, roles) or roles["forward"] != 0
     n_used = nw0
     escalated = False
+    escalation_tried = False
 
     # --- 採否または同定性の規準を満たさない場合に成分を増やす（収縮後期波を足す）
     if escalate and (not acc["ok"] or amb):
-        warm = [_augment_start(fit["sols"][0].x, nw0, has_tail=(route == "two_stage"))]
+        escalation_tried = True
+        warm = [_augment_start(fit["sols"][0].x, nw0)]
         # 汎用初期値は削らない。1点に絞ると良い最適解を取り逃し、当てはまりが
         # 半分に落ちて採択率が 0% になった（NRMSE 0.0067 → 0.0132）。温め初期値は
         # **足すだけ**にして、速さは x_scale="jac" の分だけ取る。
         got2 = _run(nw0 + 1, starts=warm)
         if got2 is not None:
-            fit2, yhat2, rp2, _ = got2
+            fit2, yhat2 = got2
             peaks2, cov2, step2, sds2 = _peaks_and_se(
                 fit2["sols"][0], fit2["n"], fit2["kind"], t,
                 fit2.get("lo"), fit2.get("hi"))
-            roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=(route != "two_stage"), t=t)
+            roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=True, t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
                           errx_ms=errx_ms, erry_max=erry_max)
-            amb2 = _ambiguous(fit2["sols"], step2, roles2)
+            amb2 = _ambiguous(fit2["sols"], step2, roles2) or roles2["forward"] != 0
             if acc2["ok"] and not amb2:
-                fit, yhat, rp = fit2, yhat2, rp2
+                fit, yhat = fit2, yhat2
                 peaks, cov, step, sds = peaks2, cov2, step2, sds2
                 roles, acc, amb = roles2, acc2, amb2
                 n_used, escalated = nw0 + 1, True
@@ -879,18 +894,18 @@ def decompose(t, y, fs: float, route: str = "two_stage",
     reason = ""
     if not acc["ok"]:
         reason = "landmark_or_fit"
+    elif roles["reflected"] is None:       # _ambiguous は反射波が無いとき True を返すので先に見る
+        reason = "no_reflected"
     elif amb:
         reason = "ambiguous"
-    elif roles["reflected"] is None:
-        reason = "no_reflected"
     elif not se_ok:
         reason = "dt_se"
     return {
         "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None and se_ok),
         "reason": reason,
-        "route": route, "n_components": n_used + (1 if route == "two_stage" else 0),
-        "n_waves": n_used, "escalated": escalated, "ambiguous": amb,
+        "route": route, "n_components": n_used, "n_waves": n_used, "escalated": escalated, "escalation_tried": escalation_tried,
+        "ambiguous": amb,
         "role_rule": roles["rule"], "klass": lm["klass"], "lm_source": lm["source"],
-        "amp": amp, "reservoir": rp, "landmarks": lm, "peaks": peaks,
+        "amp": amp, "landmarks": lm, "peaks": peaks,
         **ix, **{k: acc[k] for k in ("nrmse", "errx_ms", "erry", "n_landmark_matched")},
     }

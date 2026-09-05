@@ -11,14 +11,16 @@
   T4 雑音耐性          SNR を下げたときの ΔT の誤差と、採否規準の効き方
   T5 波形型            重複切痕のある型と無い型の両方で動くか
   T6 採否規準          壊れた当てはめを弾けるか（Errx）
-  T7 標準誤差          雑音が増えると ΔT の標準誤差も増えるか（選別に使えるか）
+  T7 ランドマーク      心拍 50〜100・切痕あり／なしで鍵点が破綻しないか（dia < sys を作らないか）
+  T8 減衰の担い手      合成波の指数減衰を反射波が吸収していないか（幅が膨らんでいないか）
 
 合成脈波
 --------
     y(t) = 前進波（歪みガウス） + 反射波（歪みガウス） + 貯留槽（指数減衰）
 
-貯留槽の時定数は生理的に固定し、**拍長だけを変える**。凍結版は貯留槽を表す項が無いので
-第2カーネルがこれを吸収し、その位置が拍長に引きずられるはずである。第2版はそうならないはず。
+貯留槽の時定数は生理的に固定し、**拍長だけを変える**。凍結版は第2カーネルがこれを吸収し、
+その位置が拍長に引きずられるはずである。第2版は成分を1つ増やして減衰を担わせる。
+**第2版に貯留槽項は無い**（機能しなかったので削除した。`pda2.fit_waves` の説明を参照）。
 
 使い方
 ------
@@ -91,7 +93,7 @@ def frozen_indices(t, y):
     return (t2 - t1) * 1000.0, h2 / max(h1, 1e-9), bool(f.get("ok", False))
 
 
-ROUTES = ("two_stage", "gamma3")
+ROUTES = ("skew", "gamma")
 
 
 def _run(t, y, route):
@@ -138,9 +140,9 @@ def selftest(quick: bool = False) -> int:
     rep("歪みガウス真値でどちらの経路も ΔT の誤差が 15 ms 未満",
         all(abs(t2[("skew", r)][0]) < 15.0 for r in ROUTES),
         ", ".join(f"{r} {t2[('skew', r)][0]:+.1f}" for r in ROUTES))
-    rep("ガンマ真値では gamma 経路が two_stage より良い（2×2 が働いている）",
-        abs(t2[("gamma", "gamma3")][0]) < abs(t2[("gamma", "two_stage")][0]),
-        f"gamma3 {t2[('gamma','gamma3')][0]:+.1f} 対 two_stage {t2[('gamma','two_stage')][0]:+.1f}")
+    rep("ガンマ真値では gamma 経路が skew より良い（2×2 が働いている）",
+        abs(t2[("gamma", "gamma")][0]) < abs(t2[("gamma", "skew")][0]),
+        f"gamma {t2[('gamma','gamma')][0]:+.1f} 対 skew {t2[('gamma','skew')][0]:+.1f}")
     print("       注: ガンマ基底には Tigges 2017 の定義に無い到達時刻の母数を足してある。")
     print("           これが無いと全成分が拍の先頭から立ち上がり、遅れて届く反射波を表せない。")
     print("       注: ガンマ真値の波は成分の裾が速く（時定数 20〜45 ms）、貯留槽の緩い下降を")
@@ -149,8 +151,8 @@ def selftest(quick: bool = False) -> int:
     t, y, tr = make_beat()
     dtf, rif, _ = frozen_indices(t, y)
     rep("**RI の誤差が凍結版より小さい**（歪みガウス真値で比較）",
-        abs(t2[("skew", "two_stage")][1]) < abs(rif - tr["ri"]),
-        f"two_stage {t2[('skew','two_stage')][1]:+.3f} 対 凍結版 {rif - tr['ri']:+.3f}")
+        abs(t2[("skew", "skew")][1]) < abs(rif - tr["ri"]),
+        f"skew {t2[('skew','skew')][1]:+.3f} 対 凍結版 {rif - tr['ri']:+.3f}")
 
     # ---- T3 心拍数交絡（本番）
     print("\nT3 心拍数交絡（ΔT の真値を 280 ms に固定し、心拍数だけ 50〜100 に振る）")
@@ -175,13 +177,13 @@ def selftest(quick: bool = False) -> int:
         print(f"       {lab:<12}" + "".join(f"{x:>9.1f}" if np.isfinite(x) else f"{'—':>9}" for x in v)
               + f"{sp:>10.1f}{slope:>12.3f}")
     print("       幅 = 心拍数を通じた ΔT の最大差 [ms]。真値は一定なので 0 が理想。傾きは ms/bpm")
-    rep("two_stage の心拍数交絡が凍結版以下",
-        np.isfinite(spread["two_stage"]) and spread["two_stage"] <= spread["frozen"],
-        f"two_stage {spread['two_stage']:.1f} ms 対 凍結版 {spread['frozen']:.1f} ms")
+    rep("skew の心拍数交絡が凍結版以下",
+        np.isfinite(spread["skew"]) and spread["skew"] <= spread["frozen"],
+        f"skew {spread['skew']:.1f} ms 対 凍結版 {spread['frozen']:.1f} ms")
     print("       注: 本合成では凍結版の交絡が 15 ms 程度にしか出ない。PWDB では ΔT の心拍数主効果が")
     print("           −10.9%（≒38 ms）であり、**合成データは交絡を過小に再現している**。")
     print("           改善の可否を決めるのは PWDB での実測であって、この表ではない。")
-    print("       注: gamma3 の交絡は two_stage より大きい。到達時刻の母数を足す前は幅 155 ms で")
+    print("       注: gamma の交絡は skew より大きい。到達時刻の母数を足す前は幅 155 ms で")
     print("           完全に破綻していたが、足した後も 55 ms 残る。ガンマの裾は形状母数ひとつで")
     print("           立ち上がりと下降の両方を決めるため、拍が短いと下降を優先して形が歪む。")
 
@@ -221,7 +223,7 @@ def selftest(quick: bool = False) -> int:
             f"{v[0]:.0%} → {v[-1]:.0%}")
 
     # 選別が効いているかは**雑音を固定して**見る。水準をまたいで採用・不採用を比べると、
-    # 低雑音での系統誤差（two_stage は雑音ゼロでも +5.9 ms ずれる）と高雑音での偶然誤差を
+    # 低雑音での系統誤差（skew は雑音ゼロでも +5.9 ms ずれる）と高雑音での偶然誤差を
     # 比べることになり、交絡する。採否は真値を見ていないので、固定水準での比較は循環しない。
     nz_sel = 0.02
     n_sel = 12 if quick else 30
@@ -289,22 +291,58 @@ def selftest(quick: bool = False) -> int:
     rep("同じ波形なら合格", good["ok"], f"Errx {good['errx_ms']:.2f} ms")
     rep("30 ms ずれた波形は不合格", not bad["ok"], f"Errx {bad['errx_ms']:.1f} ms")
 
-    # ---- T7 貯留槽（前処理で線形成分を引くため、植えた τ とは一致しない。役割で検査する）
-    print("\nT7 貯留槽（拡張期後半で錨づけ、収縮期を食わないか）")
+    # ---- T7 ランドマーク
+    print("\nT7 ランドマーク（心拍 50〜100・切痕あり／なし）")
+    print(f"       {'HR':>4}{'切痕':>6}{'型':>4}{'S[ms]':>8}{'notch':>8}{'dia':>8}{'真dia':>8}{'誤差':>8}")
+    bad_order = 0
+    err_notch, err_plain = [], []
+    for notch in (True, False):
+        for hr in (50, 70, 85, 100):
+            dt_true = 0.28 if notch else 0.08
+            t, y, tr = make_beat(hr=hr, notch=notch, dt_true=dt_true,
+                                 ri_true=0.45 if notch else 0.60)
+            ys, _ = pda2.preprocess(t, y, FS)
+            lm = pda2.find_landmarks(t, ys)
+            true_dia = (0.12 + dt_true) * 1000.0
+            e = (lm["dia_t"] * 1000.0 - true_dia) if np.isfinite(lm["dia_t"]) else np.nan
+            (err_notch if notch else err_plain).append(abs(e))
+            if np.isfinite(lm["dia_t"]) and lm["dia_t"] <= lm["sys_t"]:
+                bad_order += 1
+            print(f"       {hr:>4}{'あり' if notch else 'なし':>6}{lm['klass']:>4}"
+                  f"{lm['sys_t'] * 1000:>8.1f}{lm['notch_t'] * 1000:>8.1f}"
+                  f"{lm['dia_t'] * 1000:>8.1f}{true_dia:>8.0f}{e:>+8.1f}")
+    rep("拡張期の鍵点が収縮期ピークより前に来ることがない（旧・型4の欠陥）", bad_order == 0)
+    rep("切痕ありの波形で拡張期ピークの誤差が 15 ms 未満（心拍 50〜100）",
+        all(np.isfinite(err_notch)) and max(err_notch) < 15.0, f"最大 {max(err_notch):.1f} ms")
+    rep("切痕なしの波形でも代用点が定義でき、誤差が 40 ms 未満",
+        all(np.isfinite(err_plain)) and max(err_plain) < 40.0,
+        f"最大 {max(err_plain):.1f} ms（肩は構造的に真のピークより遅れる）")
+
+    # ---- T8 減衰の担い手
+    print("\nT8 減衰の担い手（合成波の指数減衰 d=0.40, τ=0.35 を反射波が吸収していないか）")
     t, y, tr = make_beat(tau_res=0.35, d_res=0.40)
+    r = _run(t, y, "skew")
     ys, _ = pda2.preprocess(t, y, FS)
     lm = pda2.find_landmarks(t, ys)
-    rp = pda2.estimate_reservoir_tau(t, ys, lm)
-    rep("時定数の推定窓が拡張期ピークより後にある",
-        rp["ok"] and rp["t_a"] > lm["dia_t"],
-        f"t_a {rp['t_a']:.3f} s / 拡張期ピーク {lm['dia_t']:.3f} s / τ {rp['tau']:.3f} s")
-    r = _run(t, y, "two_stage")
-    shape = pda2.reservoir_shape(t, rp["t_a"], rp["tau"])
-    d = r["reservoir"].get("d", 0.0)
-    rep("貯留槽が収縮期ピークを食っていない",
-        d * float(shape[lm["i_sys"]]) < 0.35 * float(ys[lm["i_sys"]]),
-        f"収縮期ピークでの割合 {d * shape[lm['i_sys']] / max(ys[lm['i_sys']], 1e-9):.2f}")
-    rep("貯留槽の振幅が過大でない（差し引きすぎない）", 0.0 <= d <= 1.0, f"d {d:.3f}")
+    # 反射波の真の幅: skew_peak(w=0.065, α=1.2) → σ = ω·sqrt(1−2δ²/π)
+    sd_true = pda2.component_sd("skew", 0.065, 1.2) * 1000.0
+    sd_ref = np.nan
+    if r.get("peaks") is not None and r.get("ok") is not None:
+        rr = pda2.decompose(t, y, FS, route="skew")
+        # indices() は幅を返さないので、分解をやり直して成分の幅を読む
+        fit = pda2.fit_waves(t, ys, lm, n_waves=rr["n_waves"], w=pda2._weights(t, lm))
+        x = fit["sols"][0].x
+        peaks = [(x[4 * k + 1], x[4 * k]) for k in range(rr["n_waves"])]
+        roles = pda2.assign_roles(peaks, lm, has_reservoir_kernel=True, t=t)
+        k = roles["reflected"]
+        if k is not None:
+            sd_ref = pda2.component_sd("skew", x[4 * k + 2], x[4 * k + 3]) * 1000.0
+    print(f"       採用 {r.get('ok')}  成分 {r.get('n_waves')}  増やした {r.get('escalated')}  "
+          f"ΔT {r.get('dt_ms', float('nan')):.1f}（真 {tr['dt_ms']:.0f}）  "
+          f"反射波の幅 σ {sd_ref:.1f} ms（真 {sd_true:.1f}）")
+    rep("減衰を含む合成波でも採用される", bool(r.get("ok")))
+    rep("反射波の幅が真値の 2 倍未満（減衰を反射波が吸収していない）",
+        np.isfinite(sd_ref) and sd_ref < 2.0 * sd_true, f"{sd_ref:.1f} 対 {sd_true:.1f} ms")
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1
