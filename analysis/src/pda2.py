@@ -750,6 +750,33 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
     return out
 
 
+PARAM_NAMES = ("h", "tp", "w", "a")     # 成分ごとの母数の並び（高さ・ピーク時刻・幅／立ち上がり・形）
+
+
+def pinned_params(sol, lo, hi, kind: str = "skew") -> list:
+    """境界に張り付いた母数の一覧（"k:名前:lo|hi"）。
+
+    探索範囲（1c の定数）が解を決めていないかを監視する。歪み α の下限 0 は対称ガウスという
+    正当な解なので数えない。26番が採用分の割合と内訳を表 1 に出す。
+    """
+    p = np.asarray(sol.x, float)
+    lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
+    out = []
+    if lo_a.size != p.size or hi_a.size != p.size:
+        return out
+    rng = np.maximum(hi_a - lo_a, 1e-12)
+    for i in range(p.size):
+        k, j = divmod(i, 4)
+        name = PARAM_NAMES[j]
+        if abs(p[i] - lo_a[i]) <= 1e-3 * rng[i]:
+            if name == "a" and kind == "skew":
+                continue                       # α=0 は正当な解
+            out.append(f"{k}:{name}:lo")
+        elif abs(hi_a[i] - p[i]) <= 1e-3 * rng[i]:
+            out.append(f"{k}:{name}:hi")
+    return out
+
+
 def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
     """成分のピーク（時刻・高さ）と、母数の共分散行列を返す。
 
@@ -900,6 +927,22 @@ def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
     return bool(sp > tol_dt_ms)
 
 
+def ambiguity_flags(sols, step, roles, tol_cost: float = TOL_COST,
+                    tol_dt_ms: float = SE_DT_MAX_MS) -> bool:
+    """`decompose` が使う曖昧判定の合成。3 つのどれかで曖昧とする。
+
+      (1) 競合解の ΔT が拮抗する（`_ambiguous`: 広がり > tol_dt_ms、対応づけが潰れた inf、反射波なし）
+      (2) 前進波がスロット 0 でない（順序の罰則が守られておらず役割が信用できない）
+      (3) 反射波の候補が 2 つ以上あって僅差（ref_margin_ms < tol_dt_ms。選択がくじ引き）
+
+    27番 A 層は同じ論理を保存された材料（dtsp・marg・fwd0）から再計算する（`recompute_amb`）。
+    ここを変えたらそちらも変えること。自己検証が 26番の実出力で 100% 一致を検算する。
+    """
+    return bool(_ambiguous(sols, step, roles, tol_cost=tol_cost, tol_dt_ms=tol_dt_ms)
+                or roles["forward"] != 0
+                or (np.isfinite(roles["ref_margin_ms"]) and roles["ref_margin_ms"] < tol_dt_ms))
+
+
 # ============================================================ 入口
 ROUTES = ("skew", "gamma")
 
@@ -1008,11 +1051,7 @@ def decompose(t, y, fs: float, route: str = "skew",
     # 前進波は母数の第0スロットのはず（順序の罰則が守られていれば）。守られていなければ
     # 役割の割り当てそのものが信用できないので、曖昧として扱う
     def _amb_of(sols, step_, roles_):
-        # 曖昧: 競合解の ΔT が拮抗／前進波がスロット 0 でない／反射波の候補が僅差
-        return (_ambiguous(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms)
-                or roles_["forward"] != 0
-                or (np.isfinite(roles_["ref_margin_ms"])
-                    and roles_["ref_margin_ms"] < se_dt_max_ms))
+        return ambiguity_flags(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms)
 
     amb = _amb_of(fit["sols"], step, roles)
     n_used = nw0
@@ -1053,6 +1092,8 @@ def decompose(t, y, fs: float, route: str = "skew",
     # 採否には使わない（新しい規準を足さない）が、26番が率を報告する
     n_sat = int(sum(1 for s_ in fit["sols"] if getattr(s_, "status", 1) == 0))
     best_sat = bool(getattr(fit["sols"][0], "status", 1) == 0)
+    # 探索範囲の境界に張り付いた母数（表 1 で監視。採否には使わない）
+    pinned = pinned_params(fit["sols"][0], fit.get("lo"), fit.get("hi"), fit["kind"])
     proxy_ok = bool(accept_proxy or lm["klass"] != 3)
     reason = ""
     if acc["n_landmark_matched"] < 2 and lm["klass"] >= 4:
@@ -1075,6 +1116,7 @@ def decompose(t, y, fs: float, route: str = "skew",
         "route": route, "n_components": n_used, "n_waves": n_used, "escalated": escalated, "escalation_tried": escalation_tried,
         "ambiguous": amb, "fwd0": bool(roles["forward"] == 0),
         "n_saturated": n_sat, "n_starts": int(len(fit["sols"])), "best_saturated": best_sat,
+        "n_pinned": int(len(pinned)), "pinned": " ".join(pinned),
         "role_rule": roles["rule"], "ref_gap_ms": roles["ref_gap_ms"],
         "ref_margin_ms": roles["ref_margin_ms"],
         "klass": lm["klass"], "lm_source": lm["source"],

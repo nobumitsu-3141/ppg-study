@@ -128,6 +128,21 @@ TARGETS = [("dt", "PWV_a", -1, "ΔT × 大動脈PWV"), ("ri", "pvr", +1, "RI × 
 SUBSET_MOD = 7          # 当てはめ層で使う部分集合（subj_no % 7 == 0）
 
 
+def _check_version(d) -> None:
+    """26番の CSV に記録された pda2 の版が現在と違えば止める（E8）。"""
+    if "pda2_version" in d:
+        v_csv = str(d["pda2_version"].iloc[0])
+        v_now = pda2.code_version()
+        if v_csv != v_now:
+            raise SystemExit(
+                f"pwdb_compare.csv は pda2 版 {v_csv} で作られたが、現在の pda2 は {v_now} です。\n"
+                "分解のコードが変わっています。先に 26番を回し直してください:\n"
+                "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
+        print(f"  pda2 版 {v_now}（CSV と一致）")
+    else:
+        print("  （CSV に pda2 版の記録がない。古い 26番の出力の可能性がある）")
+
+
 # ---------------------------------------------------------------- 後づけ層
 def recompute_amb(d, tag: str, tol_ms: float):
     """保存された材料（競合解の ΔT の広がり・反射波の僅差・前進波のスロット）から曖昧判定を
@@ -384,6 +399,17 @@ def selftest() -> int:
 
     rows = post_hoc(d, out_dir=None)
     rep("凍結値の行が出た", ("v2", "frozen", None) in rows)
+    rep("層不足の判定に * が付く（H1: B 層も同じ規則）",
+        _fmt({"pass": True, "n_ages": 2, "med_abs": 0.9}, 6).endswith("成立*")
+        and _fmt({"pass": True, "n_ages": 6, "med_abs": 0.9}, 6).endswith("成立")
+        and not _fmt({"pass": True, "n_ages": 6, "med_abs": 0.9}, 6).endswith("*"))
+    stale = pd.DataFrame({"pda2_version": ["000000000000"]})
+    try:
+        _check_version(stale)
+        stopped = False
+    except SystemExit:
+        stopped = True
+    rep("pda2 の版が CSV と違えば止まる（E8）", stopped)
     rep("曖昧判定を材料から作り直せる（合成データで保存値と一致）",
         bool(np.all(recompute_amb(d, "v2", FROZEN["amb_tol"]) == (d["amb_v2"].to_numpy(int) == 1))))
     rep("3 か所まとめての行が出た", ("v2", "joint", 5.0) in rows and ("v2", "joint", 50.0) in rows)
@@ -466,9 +492,10 @@ def selftest() -> int:
     if e2e.exists() and same:
         with tempfile.TemporaryDirectory() as td:
             root, _kinds = C._selftest_root(Path(td))
-            conds = [REFIT[0], ("成分を増やさない", {"escalate": False})]
+            conds = [REFIT[0], ("成分を増やさない", {"escalate": False}),
+                     ("歪みの下限 −8（左歪みも許す）", {"alpha_min": -8.0})]
             rows_b = refit(root, jobs=1, route="skew", out_dir=Path(td) / "out", conditions=conds)
-            rep("B 層が模擬 PWDB で通しで動く（部分集合・2 条件）", len(rows_b) == 2)
+            rep("B 層が模擬 PWDB で通しで動く（部分集合・3 条件。歪みの下限 −8 を含む）", len(rows_b) == 3)
             import pandas as pd
             fz_p = Path(td) / "out" / _refit_csv_name("skew", REFIT[0][0])
             fz = pd.read_csv(fz_p) if fz_p.exists() else None
@@ -510,17 +537,7 @@ def main() -> None:
             f"{p} がありません。先に 26番を実行してください:\n"
             "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
     d = pd.read_csv(p)
-    if "pda2_version" in d:
-        v_csv = str(d["pda2_version"].iloc[0])
-        v_now = pda2.code_version()
-        if v_csv != v_now:
-            raise SystemExit(
-                f"pwdb_compare.csv は pda2 版 {v_csv} で作られたが、現在の pda2 は {v_now} です。\n"
-                "分解のコードが変わっています。先に 26番を回し直してください:\n"
-                "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
-        print(f"  pda2 版 {v_now}（CSV と一致）")
-    else:
-        print("  （CSV に pda2 版の記録がない。古い 26番の出力の可能性がある）")
+    _check_version(d)
     post_hoc(d, out_dir=OUT)
     if args.pwdb:
         refit(Path(args.pwdb), jobs=args.jobs, route=args.route, out_dir=OUT)

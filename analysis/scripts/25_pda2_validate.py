@@ -16,6 +16,9 @@
   T9 不変性と高心拍    決定性・時間原点・切り出しずれへの不変性、高心拍での挙動
   T10 役割の割り当て   反射波の選択が僅差のとき曖昧として落ちるか（くじ引きを通さないか）
   T11 一意性の検査     競合解の対応づけ（同じ解・遠い解・ΔT の違う解・対応が潰れた解）
+  T12 保護されていなかった修正  7 巡目の独立監査で「元に戻しても落ちる検査が無い」と判った
+                       修正に、単体の検査を付ける（曖昧判定の配線・重みの近傍・退化入力・
+                       no_se・幅の尺度化・低域通過・境界張り付き）
 
 合成脈波
 --------
@@ -183,6 +186,11 @@ def selftest(quick: bool = False) -> int:
     rep("skew の心拍数交絡が凍結版以下",
         np.isfinite(spread["skew"]) and spread["skew"] <= spread["frozen"],
         f"skew {spread['skew']:.1f} ms 対 凍結版 {spread['frozen']:.1f} ms")
+    # 7 巡目: gamma の交絡は表示されるだけで合否が無く、到達時刻の母数（rise）を外しても
+    # 落ちる検査が無かった。外すと 155 ms に戻るので、凍結版の 2 倍未満を要求する
+    rep("gamma の心拍数交絡が凍結版の 2 倍未満（到達時刻の母数が効いている）",
+        np.isfinite(spread["gamma"]) and spread["gamma"] < 2.0 * spread["frozen"],
+        f"gamma {spread['gamma']:.1f} ms 対 凍結版 {spread['frozen']:.1f} ms")
     print("       注: 本合成では凍結版の交絡が 15 ms 程度にしか出ない。PWDB では ΔT の心拍数主効果が")
     print("           −10.9%（≒38 ms）であり、**合成データは交絡を過小に再現している**。")
     print("           改善の可否を決めるのは PWDB での実測であって、この表ではない。")
@@ -335,6 +343,21 @@ def selftest(quick: bool = False) -> int:
     bad = pda2.acceptance(t, ys, shifted, lm)
     rep("同じ波形なら合格", good["ok"], f"Errx {good['errx_ms']:.2f} ms")
     rep("30 ms ずれた波形は不合格", not bad["ok"], f"Errx {bad['errx_ms']:.1f} ms")
+    # 7 巡目: データが型1（極値）なのに模型側に極値が無い場合、代用点で合わせてはいけない（E3）。
+    # 模型側の鍵点が消えたことを Errx の罰則で落とす
+    t3, y3, _ = make_beat(notch=False, dt_true=0.08, ri_true=0.60)
+    y3s = pda2.preprocess(t3, y3, FS)[0]
+    yhat3 = np.interp(t, t3, y3s, right=0.0)                 # 切痕の無い波形を模型側に置く
+    mis = pda2.acceptance(t, ys, yhat3, lm)
+    rep("データが型1で模型に極値が無ければ鍵点は一致せず不合格（代用点で合わせない: E3）",
+        (not mis["ok"]) and mis["n_landmark_matched"] < 3, f"一致 {mis['n_landmark_matched']}/3")
+    # 切痕の振幅が Erry に入っている（E2）: 切痕の値だけ 0.02 上げた波形は Erry で落ちる
+    yb = ys.copy()
+    i_n = int(np.argmin(np.abs(t - lm["notch_t"])))
+    yb[max(0, i_n - 8): i_n + 9] += 0.02
+    e2 = pda2.acceptance(t, ys, yb, lm)
+    rep("切痕の振幅のずれ 0.02 は Erry で不合格（E2: Erry に切痕を含む）",
+        (not e2["ok"]) and e2["erry"] > pda2.ERRY, f"Erry {e2['erry']:.3f}")
 
     # ---- T7 ランドマーク
     print("\nT7 ランドマーク（心拍 50〜100・切痕あり／なし）")
@@ -479,6 +502,112 @@ def selftest(quick: bool = False) -> int:
         pda2._ambiguous([best, far], 4, roles, tol_cost=2.5))
     rep("ΔT の許容を広げると曖昧でなくなる（tol_dt_ms が効く）",
         not pda2._ambiguous([best, near], 4, roles, tol_dt_ms=50.0))
+
+    # ---- T12 保護されていなかった修正（7 巡目の独立監査で見つかった検査の穴）
+    print("\nT12 保護されていなかった修正の検査")
+    # 曖昧判定の合成（decompose の配線）: 僅差の反射波・前進波がスロット 0 でない → 曖昧（G1・R2）
+    roles_ok = {"forward": 0, "reflected": 1, "ref_margin_ms": np.inf}
+    rep("曖昧判定の合成: 明瞭な解は曖昧でない",
+        not pda2.ambiguity_flags([best], 4, roles_ok))
+    rep("曖昧判定の合成: 反射波の候補が僅差（5 ms）なら曖昧（G1 の配線）",
+        pda2.ambiguity_flags([best], 4, {"forward": 0, "reflected": 1, "ref_margin_ms": 5.0}))
+    rep("曖昧判定の合成: 前進波がスロット 0 でなければ曖昧（R2 の配線）",
+        pda2.ambiguity_flags([best], 4, {"forward": 1, "reflected": 0, "ref_margin_ms": np.inf}))
+    rep("曖昧判定の合成: 僅差の下限は tol_dt_ms で動く（3 か所同じ値: K4）",
+        not pda2.ambiguity_flags([best], 4, {"forward": 0, "reflected": 1, "ref_margin_ms": 5.0},
+                                 tol_dt_ms=3.0))
+    # 鍵点の重みの近傍は時間で指定（B2）: 40 Hz でも近傍が数十 ms に収まる
+    t, y, tr = make_beat()
+    ys, _ = pda2.preprocess(t, y, FS)
+    lm = pda2.find_landmarks(t, ys)
+    t40 = np.arange(0, t[-1], 1 / 40.0)
+    y40 = np.interp(t40, t, ys)
+    lm40 = pda2.find_landmarks(t40, y40)
+    w40 = pda2._weights(t40, lm40)
+    i_s = int(np.argmax(y40))
+    blk = np.flatnonzero(w40 > 1)
+    seg = blk[(blk >= i_s - 10) & (blk <= i_s + 10)]
+    width_s = (seg.max() - seg.min() + 1) / 40.0 if seg.size else np.nan
+    rep("鍵点の重みの近傍は 40 Hz でも 0.1 s 未満（標本数ではなく時間で指定: B2）",
+        np.isfinite(width_s) and width_s < 0.10, f"{width_s * 1000:.0f} ms")
+    # 退化した入力は例外を出さず理由 amplitude（R1）
+    bad_inputs = {"全 NaN": np.full_like(t, np.nan), "定数": np.ones_like(t),
+                  "内部 NaN": np.where(np.arange(t.size) == 100, np.nan, y),
+                  "inf": np.where(np.arange(t.size) == 100, np.inf, y)}
+    r1_ok = True
+    for name, yy in bad_inputs.items():
+        try:
+            r = pda2.decompose(t, yy, FS, route="skew")
+            if r.get("reason") != "amplitude" or r.get("ok"):
+                r1_ok = False
+        except Exception:                                # noqa: BLE001
+            r1_ok = False
+    try:
+        r = pda2.decompose(t[:5], y[:5], FS, route="skew")
+        r1_ok &= (r.get("reason") == "amplitude")
+    except Exception:                                    # noqa: BLE001
+        r1_ok = False
+    rep("退化した入力（NaN・定数・内部 NaN・inf・5 標本）は例外を出さず理由 amplitude（R1）", r1_ok)
+    # 7 巡目の独立監査: fs=inf で例外、fs=0・NaN で低域通過が黙って外れていた。
+    # fs・t の検証で理由 bad_input になること、t を ms で渡す誤りも bad_input で止まること
+    bad_fs = True
+    for fs_bad in (np.inf, 0.0, np.nan, -500.0):
+        try:
+            r = pda2.decompose(t, y, fs_bad, route="skew")
+            bad_fs &= (r.get("reason") == "bad_input") and not r.get("ok")
+        except Exception:                                # noqa: BLE001
+            bad_fs = False
+    try:
+        r = pda2.decompose(t * 1000.0, y, FS, route="skew")
+        bad_fs &= (r.get("reason") == "bad_input")
+        r = pda2.decompose(t[::-1], y, FS, route="skew")
+        bad_fs &= (r.get("reason") == "bad_input")
+    except Exception:                                    # noqa: BLE001
+        bad_fs = False
+    rep("fs が inf・0・NaN・負、t が ms や逆順なら例外を出さず理由 bad_input", bad_fs)
+    # 内部の標本化周波数を 500 Hz にそろえる: 100 Hz の拍でも型・採否・ΔT が 500 Hz と一致する
+    t100 = np.arange(0, t[-1], 1 / 100.0)
+    y100 = np.interp(t100, t, y)
+    r500 = pda2.decompose(t, y, FS, route="skew")
+    r100 = pda2.decompose(t100, y100, 100.0, route="skew")
+    rep("100 Hz の拍は内部で 500 Hz に再標本化され、採否と ΔT（2 ms 以内）が 500 Hz と一致する",
+        r100.get("ok") == r500.get("ok") and r100.get("klass") == r500.get("klass")
+        and abs(r100.get("dt_ms", np.nan) - r500.get("dt_ms", np.nan)) < 2.0,
+        f"ΔT {r500.get('dt_ms', np.nan):.1f} 対 {r100.get('dt_ms', np.nan):.1f} ms")
+    # 共分散が計算できない拍は no_se（K6）: 共分散を None にして配線を確かめる
+    orig = pda2._peaks_and_se
+
+    def _no_cov(*a, **k):
+        pk, cov, step, sds = orig(*a, **k)
+        return pk, None, step, sds
+    pda2._peaks_and_se = _no_cov
+    try:
+        r = pda2.decompose(t, y, FS, route="skew")
+    finally:
+        pda2._peaks_and_se = orig
+    rep("共分散が計算できない拍は理由 no_se で不採用（K6）",
+        (not r["ok"]) and r["reason"] == "no_se" and not np.isfinite(r["dt_se_ms"]))
+    # 幅の探索範囲は拍長で尺度化（D4）
+    lo1, hi1, _ = pda2._wave_bounds(np.arange(0, 0.6, 1 / FS), 2)
+    lo2, hi2, _ = pda2._wave_bounds(np.arange(0, 1.2, 1 / FS), 2)
+    rep("幅の探索範囲が拍長に比例する（D4: T/T_REF で尺度化）",
+        np.isclose(hi2[2] / hi1[2], 2.0, rtol=0.02) and np.isclose(lo2[2] / lo1[2], 2.0, rtol=0.02),
+        f"上限 {hi1[2] * 1000:.0f} → {hi2[2] * 1000:.0f} ms")
+    # 18 Hz 低域通過が効いている
+    y_hf = y + 0.05 * np.sin(2 * np.pi * 40.0 * t)
+    d_hf = float(np.max(np.abs(pda2.preprocess(t, y_hf, FS)[0] - ys)))
+    rep("40 Hz の成分（振幅 0.05）は前処理で 0.01 未満に落ちる（18 Hz 低域通過）", d_hf < 0.01,
+        f"残差 {d_hf:.4f}")
+    # 境界張り付きの検出（1c の探索範囲が解を決めていないかの監視）
+    lo, hi, _ = pda2._wave_bounds(t, 2)
+    xp = (lo + hi) / 2.0
+    xp[2] = hi[2]                       # 幅を上限に張り付ける
+    xp[3] = lo[3]                       # α=0 は正当（数えない）
+    pins = pda2.pinned_params(NS(x=xp), lo, hi, "skew")
+    rep("境界に張り付いた母数を検出し、α=0 は数えない", pins == ["0:w:hi"], f"{pins}")
+    r = pda2.decompose(t, y, FS, route="skew")
+    rep("decompose が張り付きの数と内訳を返す", "n_pinned" in r and "pinned" in r,
+        f"n_pinned={r.get('n_pinned')} {r.get('pinned')!r}")
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1

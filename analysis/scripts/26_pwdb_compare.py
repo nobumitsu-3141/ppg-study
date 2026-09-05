@@ -250,9 +250,12 @@ def indices_for_subject(args_tuple):
                 out[f"sat_{tag}"] = r.get("n_saturated", np.nan)         # max_nfev に達した起動の数（収束の監視）
                 out[f"nst_{tag}"] = r.get("n_starts", np.nan)            # 起動の総数
                 out[f"bsat_{tag}"] = int(bool(r.get("best_saturated")))  # 最良解が未収束
+                out[f"npin_{tag}"] = r.get("n_pinned", np.nan)           # 境界に張り付いた母数の数
+                out[f"pin_{tag}"] = str(r.get("pinned", ""))[:60]         # その内訳（成分:母数:lo|hi）
                 out[f"klass_{tag}"] = r.get("klass", np.nan)
                 out[f"nw_{tag}"] = r.get("n_waves", np.nan)
                 out[f"esc_{tag}"] = int(bool(r.get("escalated")))
+                out[f"esct_{tag}"] = int(bool(r.get("escalation_tried")))   # 増やそうとしたか（戻した拍を含む）
                 out[f"why_{tag}"] = str(r.get("reason", ""))[:24]
             except Exception as e:              # noqa: BLE001
                 out[f"why_{tag}"] = ("EXC:" + str(e))[:24]
@@ -263,17 +266,21 @@ def indices_for_subject(args_tuple):
 
 
 # ---------------------------------------------------------------- 構築
+def _stride(ppg, limit: int):
+    """先頭 N 名ではなく等間隔に N 名。PWDB は被験者が年齢順に並んでいる可能性があり、
+    先頭だけ取ると 1 つの年齢層に偏る。年齢層内の順位相関が判定なので全層が要る。"""
+    step = max(1, len(ppg) // limit)
+    return ppg.iloc[::step].iloc[:limit]
+
+
 def build(root: Path, limit: int = 0, jobs: int = 1):
     """PWDB を読み、3 通りの分解を回し、ランドマーク指標・真値と結合する。"""
     import pandas as pd
     root = Path(root).expanduser()
     hae, cfg, ppg, _extras = M.load_pwdb(root)
     if limit and limit < len(ppg):
-        # 先頭 N 名ではなく等間隔に N 名。PWDB は被験者が年齢順に並んでいる可能性があり、
-        # 先頭だけ取ると 1 つの年齢層に偏る。年齢層内の順位相関が判定なので全層が要る
-        step = max(1, len(ppg) // limit)
-        ppg = ppg.iloc[::step].iloc[:limit]
-        print(f"  --limit: {step} 名おきに {len(ppg)} 名を取る（全年齢層を含めるため）", flush=True)
+        ppg = _stride(ppg, limit)
+        print(f"  --limit: 等間隔に {len(ppg)} 名を取る（全年齢層を含めるため）", flush=True)
     hr_by = dict(zip(hae["subj_no"].astype(int), hae["HR"].astype(float)))
     work = [(int(ppg.iloc[i, 0]), ppg.iloc[i].to_numpy(float),
              hr_by.get(int(ppg.iloc[i, 0]), np.nan)) for i in range(len(ppg))]
@@ -371,6 +378,24 @@ def report(d, out_dir: Path | None = None) -> dict:
                   f"全起動 {100.0 * tot / max(nst, 1):.1f}% / 最良解 {100.0 * bs:.1f}%")
     print("  最良解の飽和率が数 % を超えるなら、その ΔT は平坦な谷の途中で止まった値を含む。")
     print("  採否には使わない（規準を足さない）が、max_nfev を上げて回し直す根拠になる。")
+    for key, lab, _dtc, _ric, okc in METHODS:
+        if okc is None or f"npin_{key}" not in d:
+            continue
+        go = d[d[okc] == 1]
+        if not len(go) or not go[f"npin_{key}"].notna().any():
+            continue
+        share = float((go[f"npin_{key}"] > 0).mean())
+        cnt = {}
+        for s_ in go[f"pin_{key}"].dropna().astype(str):
+            for tok in s_.split():
+                parts = tok.split(":")
+                if len(parts) == 3:
+                    kk = f"{parts[1]}{'↓' if parts[2] == 'lo' else '↑'}"
+                    cnt[kk] = cnt.get(kk, 0) + 1
+        top = "  ".join(f"{k} {v}" for k, v in sorted(cnt.items(), key=lambda kv: -kv[1])[:4])
+        print(f"  {lab}: 採用分で探索範囲の境界に張り付いた母数がある拍 {100.0 * share:.1f}%"
+              f"（内訳 {top or 'なし'}。h 高さ・tp ピーク時刻・w 幅／立ち上がり・a 形）")
+    print("  張り付きが多い母数は、その探索範囲（生理的な範囲として決めた設計値）が解を決めている印。")
 
     # ---- 拍の切り出しの前提
     if "edge_lo" in d and d["edge_lo"].notna().any():
@@ -531,6 +556,10 @@ def report(d, out_dir: Path | None = None) -> dict:
         print("  ΔT が真値から約 2 ms 遠ざかった。実データでも分けて読む。")
         print(f"{'':<20}{'n':>8}{'採択率':>9}{'ΔT中央値[ms]':>14}"
               f"{'ΔT×PWV 中央値|ρ|':>18}{'判定':>8}")
+        tc = f"esct_{key}"
+        if tc in d and d[tc].notna().any():
+            n_back = int(((d[tc] == 1) & (d[ec] == 0)).sum())
+            print(f"  増やそうとして規準を満たさず元に戻した拍: {n_back}（増やさなかった側に含まれる）")
         for v, name in ((0, "増やさなかった"), (1, "増やした")):
             g = d[d[ec] == v]
             if len(g) < MIN_N:
@@ -751,6 +780,29 @@ def selftest(jobs: int = 2) -> int:
             f"飽和 全起動 {float(np.nansum(d['sat_v2']))/max(float(np.nansum(d['nst_v2'])),1):.1%}"
             f" / 最良解 {float(np.nanmean(d['bsat_v2'])):.1%}" if "sat_v2" in d else "")
         pr = d[["klass_own", "prom_own"]].dropna()
+        # --- 7 巡目: 元に戻しても落ちる検査が無かった修正に、単体の検査を付ける
+        rep("層不足の判定に * が付く（F1）。層が揃えば付かない",
+            _verdict({"pass": True, "n_ages": 2, "n_ok": 2, "med_abs": 0.9}, -1, 6) == "成立*"
+            and _verdict({"pass": True, "n_ages": 6, "n_ok": 6, "med_abs": 0.9}, -1, 6) == "成立"
+            and _verdict({"pass": False, "n_ages": 3, "n_ok": 1, "med_abs": 0.2}, -1, 6) == "不成立*"
+            and _verdict({"pass": True, "n_ages": 6, "n_ok": 6, "med_abs": 0.9}, 0, 6) == "記述")
+        own = d[["dt_own_ms", "dia_own_ms", "sys_own_ms"]].dropna()
+        rep("自前ランドマーク ΔT は拡張期−収縮期の鍵点そのもの（F2）",
+            len(own) > 0 and bool(np.allclose(own["dt_own_ms"], own["dia_own_ms"] - own["sys_own_ms"], atol=1e-6)))
+        rep("足で切り出した模擬拍では両端の値が 0.05 未満（F7 の診断が動く）",
+            bool(d["edge_hi"].notna().any()) and float(np.nanmedian(d["edge_hi"])) < 0.05,
+            f"高い側の中央値 {float(np.nanmedian(d['edge_hi'])):.4f}")
+        v_ = d.loc[d["ok_v2"] == 1, "dps_v2_ms"].to_numpy(float)
+        v_ = v_[np.isfinite(v_)]
+        rep("0 をまたぐ量（DPS）は因子主効果の % を飛ばす条件に該当する（F3）",
+            v_.size > 3 and abs(np.mean(v_)) < 0.5 * np.std(v_),
+            f"平均 {np.mean(v_):.1f} / SD {np.std(v_):.1f}" if v_.size else "")
+        hae_, cfg_, ppg_, _x = M.load_pwdb(root)
+        sub = _stride(ppg_, 12)
+        idx = np.flatnonzero(ppg_.iloc[:, 0].isin(sub.iloc[:, 0]).to_numpy())
+        rep("--limit は先頭ではなく全体から等間隔に取る（E7）",
+            len(sub) == 12 and idx.max() - idx.min() >= 0.8 * len(ppg_),
+            f"添字の範囲 {idx.min()}〜{idx.max()} / {len(ppg_)}")
         rep("鍵点の顕著さが記録され、型3 は閾値以上・型4 は閾値未満で整合する",
             len(pr) > 0
             and bool((pr.loc[pr["klass_own"] == 3, "prom_own"] >= pda2.PROXY_MIN_PROM).all())
