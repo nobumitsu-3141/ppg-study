@@ -293,6 +293,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/26_pwdb_compare.py` | 研究0 決定試験: 第2版・凍結版・ランドマーク・早期振幅比を同じ真値・同じ規準で並べる。出力は `data/pwdb/pwdb_compare[_limitN].csv` と表の全文 `pwdb_compare_report[_limitN].txt`（予備実行は全例の実行に上書きされない） |
 | `scripts/27_threshold_sensitivity.py` | 閾値の感度解析（A 層: 当てはめ直し不要、B 層: 部分集合で当てはめ直し） |
 | `scripts/28_pda2_invariants.py` | 乱数で作った拍での不変条件の検査（例に依存しない門番） |
+| `scripts/29_pwdb_reject_diag.py` | 研究0: 予備実行で第2版の採択率が極端に低いときに、原因を**記述**する（型・規準ごとの通過率・模型側の鍵点の有無・数拍の再分解と図）。閾値は動かさない |
 | `scripts/30_c1_dose_steps.py` | 研究1c C-1: 昇圧薬の用量ステップに対する PWTT 構成要素（T2−T1・T1・PWTT）の応答。抽出（`--extract`。参照 CO 不要）→ 統計（`--stats`。SAP-1c の凍結タグが要る）。`--selftest` で合成データの検算 |
 
 研究0 の総括（固まった関数と条件・文献との一致と違い・理由・次のステップ）は `docs/research/pda2_final_summary.md`、
