@@ -46,9 +46,10 @@ I8 の採否の反転は違反とはせず、件数を報告する（規準の�
 
 使い方
 ------
-    python3 scripts/28_pda2_invariants.py --n 60 --jobs 4
-    python3 scripts/28_pda2_invariants.py --n 150 --jobs 8 --seed 1
-    python3 scripts/28_pda2_invariants.py --n 150 --jobs 8 --domain   （領域内だけを引く）
+    python3 scripts/28_pda2_invariants.py --n 150 --jobs 8              （全域。特性の報告）
+    python3 scripts/28_pda2_invariants.py --n 150 --jobs 8 --domain     （領域内。I4 の率の門番）
+    seed 0・n 150 なら 7 巡目の結果（歪みガウス 3/55・ガンマ 7/75）を決定的に再現する。
+    率の門番は採用拍数 40 以上でしか判定しない（少ないと偶然で上限を超える）。
 """
 from __future__ import annotations
 
@@ -81,6 +82,7 @@ def _m25():
 
 DOMAIN = dict(hr=(50.0, 100.0), noise_max=0.01, ri_min=0.30)   # 方法の有効な領域（PWDB の条件）
 I4_MAX_RATE = 0.10        # 領域内・歪みガウス経路の誤採用率の上限（7 巡目の実測 5% の 2 倍。退行の門番）
+I4_MIN_N = 40             # 率の門番に要る採用拍数。少ないと偶然で 10% を超える（採用 22 なら 11% の確率）
 
 
 def in_domain(cond: dict) -> bool:
@@ -299,9 +301,11 @@ def main() -> None:
           and in_domain({kk: x[kk] for kk in ("hr", "noise", "ri_true")})]
     n_bad = sum(1 for x in sk if abs(x["err_ms"]) >= pda2.SE_DT_MAX_MS)
     rate = n_bad / len(sk) if sk else 0.0
-    i4_fail = bool(sk) and rate > I4_MAX_RATE
+    enough = len(sk) >= I4_MIN_N
+    i4_fail = enough and rate > I4_MAX_RATE
+    verdict = ("不合格" if i4_fail else "合格") if enough else f"判定しない（採用 {len(sk)} < {I4_MIN_N}。--domain --n 150 で回すこと）"
     print(f"\n  I4 の門番（領域内・歪みガウス）: 誤採用 {n_bad}/{len(sk)} = {rate:.1%}"
-          f"（上限 {I4_MAX_RATE:.0%}。現状の 5% の 2 倍で、超えたら退行）→ {'不合格' if i4_fail else '合格'}")
+          f"（上限 {I4_MAX_RATE:.0%}。現状の 5% の 2 倍で、超えたら退行）→ {verdict}")
     n_fail = len(strict) + int(i4_fail)
     soft = len(viol) - len(strict) - n_bad
     print("\n" + ("ALL PASS" if not n_fail else f"不合格 {n_fail} 件")

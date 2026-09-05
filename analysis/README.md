@@ -282,6 +282,16 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/05_diagnose_waveform.py` | 実波形の素性診断（値の分布・R波揃え平均テンプレート・テンプレートへのPDA当てはめ） |
 | `scripts/00〜02` | VitalDB のデータ取得と P1-1 集計（要インターネット。クラウドセッションからは vitaldb.net に接続不可のためMacで実行する） |
 | `scripts/03_run_analysis.py` | 本解析ランナー: 特徴量抽出（キャッシュ付き）→CV→統計。Macで実行 |
+| `src/pda2.py` | PDA 第2版（歪みガウス／ガンマの 2 経路、Wang 2013 の採否規準、ΔT の標準誤差、曖昧判定、型3 は採用しない）。凍結版 `src/pda.py` は研究1 用に残す |
+| `scripts/20_pwdb_validity.py` | 研究0（PWDB）: 凍結版 PDA の妥当性（判定規準 `_judge` の本家） |
+| `scripts/23_pwdb_landmarks.py` | 研究0: ランドマーク指標（Charlton 同梱値）の妥当性、模擬 PWDB の生成 |
+| `scripts/25_pda2_validate.py` | PDA 第2版の合成波検証 T1〜T12（52 検査） |
+| `scripts/26_pwdb_compare.py` | 研究0 決定試験: 第2版・凍結版・ランドマーク・早期振幅比を同じ真値・同じ規準で並べる |
+| `scripts/27_threshold_sensitivity.py` | 閾値の感度解析（A 層: 当てはめ直し不要、B 層: 部分集合で当てはめ直し） |
+| `scripts/28_pda2_invariants.py` | 乱数で作った拍での不変条件の検査（例に依存しない門番） |
+
+研究0 の実行順と読み方は `docs/research/gate0_rules_v2.md`、閾値の由来は `docs/research/pda2_thresholds_v2.md`、
+「何を主張し何がそれを保証しているか」は `docs/research/pda2_verification_matrix.md` に固定してある。
 
 ## 注意
 
