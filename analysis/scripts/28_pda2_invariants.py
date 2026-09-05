@@ -256,7 +256,9 @@ def main() -> None:
     flips = [x for x in info if x[0] == "flip"]
     rows = [x for x in info if x[0] != "flip"]
     def _hard(v):
-        if v[0] in ("I4", "I8"):
+        if v[0] == "I4":
+            return False                       # I4 は率で判定する（下の門番）。個別の行は報告のみ
+        if v[0] == "I8":
             return bool(v[3]["hard"])
         return True
     print(f"{'不変条件':<6}{'違反':>6}{'うち不合格':>10}")
