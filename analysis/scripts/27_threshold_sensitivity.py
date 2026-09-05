@@ -39,7 +39,9 @@
     python3 scripts/27_threshold_sensitivity.py
         後づけ層のみ（data/pwdb/pwdb_compare.csv が要る。数秒）
     python3 scripts/27_threshold_sensitivity.py --pwdb ~/pwdb --jobs 8
-        当てはめ層も回す（部分集合。20〜30分）
+        当てはめ層も回す（歪みガウス経路。部分集合。20〜30分）
+    python3 scripts/27_threshold_sensitivity.py --pwdb ~/pwdb --jobs 8 --route gamma
+        ガンマ経路の当てはめ層
     python3 scripts/27_threshold_sensitivity.py --selftest
 """
 from __future__ import annotations
@@ -131,10 +133,21 @@ def _verdicts(d, tag: str, ok):
     return out, int(ok.sum())
 
 
-def _fmt(j):
+N_AGES_FULL = 6          # PWDB の年齢層（25〜75 の 10 歳刻み）
+
+
+def _fmt(j, n_full: int = N_AGES_FULL):
+    """中央値 |ρ| と判定。**層が揃っていなければ * を付ける**（26番と同じ規則）。
+
+    判定は「有限の ρ を持つ層すべてで予測の向き」なので、採択率が低くて層が減った条件ほど
+    通りやすい。閾値を厳しくすると層が減るので、この感度解析ではとくに効いてくる。
+    """
     if not j:
         return f"{'—':>9}{'—':>8}"
-    return f"{j['med_abs']:>9.3f}{('成立' if j['pass'] else '不成立'):>8}"
+    v = "成立" if j["pass"] else "不成立"
+    if j["n_ages"] < n_full:
+        v += "*"
+    return f"{j['med_abs']:>9.3f}{v:>8}"
 
 
 def post_hoc(d, out_dir: Path | None = None) -> dict:
@@ -192,6 +205,9 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
             ps = {bool(j["pass"]) for j in js}
             print(f"  {lab}: 判定は" + ("**閾値によって割れる**" if len(ps) > 1
                                         else f"どの閾値でも {'成立' if ps.pop() else '不成立'}"))
+            n_short = sum(1 for j in js if j["n_ages"] < N_AGES_FULL)
+            if n_short:
+                print(f"    （うち {n_short}/{len(js)} 条件は層不足 * ── 層が減ると通りやすくなる）")
     print(f"\n{'-' * 78}\n読み方\n{'-' * 78}")
     print("  どの閾値でも同じ判定 → 結論は閾値の産物ではない。")
     print("  閾値によって割れる     → その閾値が結論を作っている。論文には割れる範囲を書く。")
@@ -205,17 +221,21 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
 # ---------------------------------------------------------------- 当てはめ層
 def _one(args_tuple):
     subj, row, hr, opts = args_tuple
-    out = {"subj_no": subj, "ok": 0}
+    out = {"subj_no": subj, "ok": 0, "why": ""}
     try:
         y, fs = M.beat_of(row, hr)
         if y is None:
+            out["why"] = "no_beat"
             return out
         t = np.arange(y.size) / fs
         r = pda2.decompose(t, y, fs, route=opts.pop("route", "skew"), **opts)
         out.update(ok=int(bool(r.get("ok"))), dt_ms=r.get("dt_ms", np.nan),
-                   ri=r.get("ri", np.nan), nrmse=r.get("nrmse", np.nan))
+                   ri=r.get("ri", np.nan), nrmse=r.get("nrmse", np.nan),
+                   why=str(r.get("reason", "")), klass=r.get("klass", np.nan),
+                   n_waves=r.get("n_waves", np.nan))
         return out
-    except Exception:
+    except Exception as e:                      # noqa: BLE001
+        out["why"] = ("EXC:" + str(e))[:40]
         return out
 
 
@@ -234,6 +254,8 @@ def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None) -> dict:
     print(f"  経路: {route}")
     print(f"\n{'条件':<26}{'採択率':>9}{'ΔT中央値[ms]':>14}"
           f"{'ΔT×PWV |ρ|':>12}{'判定':>8}{'RI×pvr |ρ|':>12}{'判定':>8}")
+    if out_dir is not None:
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
     rows = {}
     for lab, opts in REFIT:
         work = [(s, r, h, dict(opts, route=route)) for s, r, h in base]
@@ -244,6 +266,10 @@ def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None) -> dict:
         else:
             res = [_one(x) for x in work]
         d = truth.merge(pd.DataFrame(res), on="subj_no", how="inner")
+        if out_dir is not None:                 # 驚く結果が出たときに中身を見られるように残す
+            od = Path(out_dir); od.mkdir(parents=True, exist_ok=True)
+            safe = "".join(c if c.isalnum() else "_" for c in lab)[:32]
+            d.to_csv(od / f"refit_{route}_{safe}.csv", index=False)
         go = d[d["ok"] == 1]
         jd = C._judge_or_none(go, "dt_ms", "PWV_a", -1)
         jr = C._judge_or_none(go, "ri", "pvr", +1)

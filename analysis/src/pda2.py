@@ -84,6 +84,9 @@ FOOT_SEARCH_FRAC = 0.08   # 基線の足を探す範囲（拍の両端それぞ�
 # だけでは、成分の振幅が潰れて時刻が同定できていない解を通してしまう
 # （`scripts/25_pda2_validate.py` T4 で σ=11,725 ms の解が採用されるのを確認した）。
 SE_DT_MAX_MS = 20.0
+# この値は3か所で使う。(1) ΔT の標準誤差の上限、(2) 競合解の ΔT の広がりの許容、
+# (3) 反射波の候補が2つあるときの「僅差」の下限。いずれも「これを超える不確かさの拍は
+# 研究1の症例内 ΔPWTT の標準偏差（18 ms）より大きく、問いに何も寄与しない」という同じ根拠。
 
 
 # ============================================================ 基底関数
@@ -183,6 +186,8 @@ def preprocess(t: np.ndarray, y: np.ndarray, fs: float,
     Tigges 2017・Wang 2013 の前処理に合わせる。凍結版は最小値を引くだけだった。
     """
     y = np.asarray(y, float)
+    # NaN・定数・短すぎる拍を弾く。内部に NaN があると呼び出し側が詰めて波形を
+    # つなぎ合わせてしまうので、ここで落とす（PWDB は末尾を NaN で埋めている）
     if y.size < 8 or not np.isfinite(y).all() or float(np.ptp(y)) <= 0:
         return None, 0.0
     if lowpass_hz and fs > 2.5 * lowpass_hz:
@@ -232,9 +237,13 @@ def _refine(t: np.ndarray, y: np.ndarray, i: int):
 
 # 切痕・拡張期ピークを探す窓（拍の先頭からの割合）。駆出時間は心拍 50〜120 で
 # 0.30〜0.55T なので、切痕が 0.65T より後ろに来ることは生理的にない。
+# 鍵点を探す窓。駆出時間は心拍 50〜120 で 0.30〜0.55T なので、切痕が 0.65T より後に
+# 来ることは生理的にない。拡張期ピークは切痕から 0.25T 以内
 NOTCH_MAX_FRAC = 0.65
 DIA_MAX_FRAC = 0.85
 NOTCH_MIN_FRAC = 0.05      # 収縮期ピークからこれだけ離す（ピーク自身の曲率を拾わない）
+# 以下2つは数値的な守り（微小な揺らぎを特徴と誤認しない）であって科学的な閾値ではない。
+# 18 Hz に帯域制限した後なので、この程度の揺らぎは残らない
 EXTREMA_MIN_PROM = 0.01    # 極値による切痕・拡張期ピークに要求する最小の高低差（振幅 1 の波形）
 PROXY_MIN_PROM = 0.05      # 肩（1次微分の局所極大）に要求する顕著さ（最大傾斜に対する割合）
 
@@ -682,11 +691,20 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
     ガンマに位置母数を入れてからは成り立たない（真の反射波が減衰成分と誤認された）。
     そこで**拡張期ピークより十分後ろ、かつ拍の後半でピークをとる成分だけ**を減衰成分の
     候補とし、該当が無ければ全成分を進行波として扱う。歪みガウス・ガンマ両経路に同じ規則を使う。
+
+    迷いの記録
+    ----------
+    候補が2つ以上あるとき、拡張期の鍵点に最も近い成分を反射波とするが、**2番目の候補との
+    差（ref_margin_ms）**を残す。僅差なら選択は実質くじ引きで、ΔT はその差だけ動く。
+    `decompose` はこれが 20 ms 未満なら曖昧として落とす（ΔT の標準誤差の上限と同じ根拠）。
+    ref_gap_ms は選んだ成分と拡張期の鍵点の距離で、役割の妥当性を事後に検算するために残す。
     """
     order = sorted(range(len(peaks)), key=lambda i: peaks[i][0])
     fwd = order[0]
     cand = order[1:]
     res = None
+    out = {"forward": fwd, "reflected": None, "reservoir": None, "rule": "none",
+           "ref_gap_ms": np.nan, "ref_margin_ms": np.nan}
     if has_reservoir_kernel and len(cand) >= 2:
         lim = -np.inf
         if np.isfinite(lm.get("dia_t", np.nan)):
@@ -696,15 +714,23 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
         if peaks[cand[-1]][0] > lim:
             res = cand[-1]
             cand = cand[:-1]
+    out["reservoir"] = res
     if not cand:
-        return {"forward": fwd, "reflected": None, "reservoir": res, "rule": "none"}
-    if np.isfinite(lm["dia_t"]) and len(cand) > 1:
-        ref = min(cand, key=lambda i: abs(peaks[i][0] - lm["dia_t"]))
-        rule = "landmark"
-    else:
-        ref = cand[0]
-        rule = "order"
-    return {"forward": fwd, "reflected": ref, "reservoir": res, "rule": rule}
+        return out
+    dia = lm.get("dia_t", np.nan)
+    if np.isfinite(dia) and len(cand) > 1:
+        # 拡張期の鍵点に最も近い成分を反射波とする。**どれだけ僅差だったかを残す。**
+        # 2つの候補が拡張期の鍵点からほぼ等距離なら、どちらを選ぶかは実質くじ引きであり、
+        # ΔT はその差だけ動く。僅差の下限は ΔT の標準誤差の上限（20 ms）に結ぶ。
+        ds = sorted((abs(peaks[i][0] - dia) * 1000.0, i) for i in cand)
+        out.update(reflected=ds[0][1], rule="landmark",
+                   ref_gap_ms=float(ds[0][0]), ref_margin_ms=float(ds[1][0] - ds[0][0]))
+        return out
+    ref = cand[0]
+    out.update(reflected=ref, rule="single" if len(cand) == 1 else "order",
+               ref_gap_ms=float(abs(peaks[ref][0] - dia) * 1000.0) if np.isfinite(dia) else np.nan,
+               ref_margin_ms=np.inf)
+    return out
 
 
 def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
@@ -936,13 +962,17 @@ def decompose(t, y, fs: float, route: str = "skew",
                      errx_ms=errx_ms, erry_max=erry_max)
     # 前進波は母数の第0スロットのはず（順序の罰則が守られていれば）。守られていなければ
     # 役割の割り当てそのものが信用できないので、曖昧として扱う
-    amb = _ambiguous(fit["sols"], step, roles) or roles["forward"] != 0
+    amb = (_ambiguous(fit["sols"], step, roles) or roles["forward"] != 0
+           or (np.isfinite(roles["ref_margin_ms"]) and roles["ref_margin_ms"] < SE_DT_MAX_MS))
     n_used = nw0
     escalated = False
     escalation_tried = False
 
     # --- 採否または同定性の規準を満たさない場合に成分を増やす（収縮後期波を足す）
-    if escalate and (not acc["ok"] or amb):
+    # 鍵点が 2 つ揃わない拍（型4〜5）は、成分を増やしても Errx が計算できないので増やさない。
+    # 4,374 名の 1 割がこれなら、無駄な当てはめを 1 割分省ける
+    can_help = acc["n_landmark_matched"] >= 2
+    if escalate and can_help and (not acc["ok"] or amb):
         escalation_tried = True
         warm = [_augment_start(fit["sols"][0].x, nw0)]
         # 汎用初期値は削らない。1点に絞ると良い最適解を取り逃し、当てはまりが
@@ -957,7 +987,9 @@ def decompose(t, y, fs: float, route: str = "skew",
             roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=True, t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
                           errx_ms=errx_ms, erry_max=erry_max)
-            amb2 = _ambiguous(fit2["sols"], step2, roles2) or roles2["forward"] != 0
+            amb2 = (_ambiguous(fit2["sols"], step2, roles2) or roles2["forward"] != 0
+                    or (np.isfinite(roles2["ref_margin_ms"])
+                        and roles2["ref_margin_ms"] < SE_DT_MAX_MS))
             if acc2["ok"] and not amb2:
                 fit, yhat = fit2, yhat2
                 peaks, cov, step, sds = peaks2, cov2, step2, sds2
@@ -983,7 +1015,9 @@ def decompose(t, y, fs: float, route: str = "skew",
         "reason": reason,
         "route": route, "n_components": n_used, "n_waves": n_used, "escalated": escalated, "escalation_tried": escalation_tried,
         "ambiguous": amb,
-        "role_rule": roles["rule"], "klass": lm["klass"], "lm_source": lm["source"],
+        "role_rule": roles["rule"], "ref_gap_ms": roles["ref_gap_ms"],
+        "ref_margin_ms": roles["ref_margin_ms"],
+        "klass": lm["klass"], "lm_source": lm["source"],
         "amp": amp, "landmarks": lm, "peaks": peaks,
         **ix, **{k: acc[k] for k in ("nrmse", "errx_ms", "erry", "n_landmark_matched")},
     }

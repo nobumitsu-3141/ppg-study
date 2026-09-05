@@ -110,6 +110,9 @@ PAIRS = [
     # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
     # 収縮期ピークを定義できる。我々の未解決問題（型3で ΔT 誤差 約30 ms）に効くか
     ("dt_p1_ms",       "PWV_a",  -1, None,     "ΔT  p1基準（Hellqvist の収縮期ピーク）"),
+    # 同じ拡張期の錨で、収縮期の錨だけを我々の収縮期ピークにしたもの。
+    # dt_p1_ms との差は収縮期の錨だけなので、p1 の寄与を交絡なく読める
+    ("dt_own_ms",      "PWV_a",  -1, None,     "ΔT  自前ランドマーク（p1 との対照）"),
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
     # 真値との向きの予測までは立てられないので記述にとどめる。
@@ -123,7 +126,7 @@ IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA", "ok_v1"), ("dt_v2_ms", "ΔT 第
                    ("ri_v1", "RI 凍結PDA", "ok_v1"), ("ri_v2", "RI 第2版歪み", "ok_v2"),
                    ("ri_v2g", "RI 第2版ガンマ", "ok_v2g"), ("digital_ri", "RI ランドマーク", None),
                    ("dps_v2_ms", "DPS 第2版歪み", "ok_v2"), ("amb_amp1", "Am_b/Am_p1", None),
-                   ("dt_p1_ms", "ΔT p1基準", None)]
+                   ("dt_p1_ms", "ΔT p1基準", None), ("dt_own_ms", "ΔT 自前ランドマーク", None)]
 
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
 # 20番の `_by_age` は年齢層ごとに 8 名以上を要求する。全体の人数だけで門番を作ると、
@@ -145,6 +148,24 @@ def _judge_or_none(src, col: str, tgt: str, sign: int):
     if col not in src or tgt not in src or _n_strata(src, col) == 0:
         return None
     return M._judge(M._by_age(src, col, tgt), sign)
+
+
+def _verdict(j, sign: int, n_ages_full: int) -> str:
+    """判定の文字列。**層が揃っていなければ印を付ける。**
+
+    事前規準は「年齢層内の順位相関が**全層で**予測の向き」である。`_judge` の実装は
+    「有限の ρ を持つ層すべて」で判定するので、採択率が低くて層が減った手法ほど
+    通りやすくなる（2層なら 2/2 で足りる）。規準そのものは凍結したまま動かさないが、
+    **層が揃っていない判定は揃っている判定と同列に読んではいけない**ので印で区別する。
+    """
+    if not j:
+        return "—"
+    if not sign:
+        return "記述"
+    v = "成立" if j["pass"] else "不成立"
+    if j["n_ages"] < n_ages_full:
+        v += "*"          # 層不足。* の付いた「成立」は層が揃った「成立」より弱い
+    return v
 
 
 # ---------------------------------------------------------------- 1被験者
@@ -174,8 +195,15 @@ def indices_for_subject(args_tuple):
                 # Hellqvist の p1 を収縮期ピークに使った ΔT。切痕の無い波形でも
                 # 収縮期ピークが定義できるので、我々の未解決問題に効くかを見る
                 out["dt_p1_ms"] = (lmo["dia_t"] - ef["p1_t"]) * 1000.0
-        except Exception:
-            pass
+                # 自前のランドマークだけで作った ΔT。dt_p1_ms との差は**収縮期の錨だけ**に
+                # なるので、「p1 が切痕なし波形を救うか」を交絡なく見られる。
+                # dt_lm_ms（Charlton 同梱値）とは拡張期の錨も違うので直接は比べられない
+                out["dt_own_ms"] = (lmo["dia_t"] - lmo["sys_t"]) * 1000.0
+                # 拍が足で切り出されているか（前処理の足→足基線の前提）を実データで確かめる
+                out["edge_lo"] = float(min(ys[0], ys[-1]))
+                out["edge_hi"] = float(max(ys[0], ys[-1]))
+        except Exception as e:                  # noqa: BLE001
+            out["why_lm"] = ("EXC:" + str(e))[:40]
 
         try:                                    # --- 凍結版（研究1と同一コード）
             fit = fit_beat(t, y)
@@ -183,8 +211,8 @@ def indices_for_subject(args_tuple):
             out.update(dt_v1_ms=ix["dt_s"] * 1000.0, ri_v1=ix["ri"],
                        nrmse_v1=float(fit.get("nrmse", np.nan)),
                        ok_v1=int(bool(fit.get("ok", False))))
-        except Exception:
-            pass
+        except Exception as e:                  # noqa: BLE001
+            out["why_v1"] = ("EXC:" + str(e))[:40]
 
         for tag, route in (("v2", "skew"), ("v2g", "gamma")):
             try:                                # --- 第2版
@@ -206,7 +234,9 @@ def indices_for_subject(args_tuple):
                     out[f"tf_{tag}_ms"] = tf * 1000.0
                     out[f"tr_{tag}_ms"] = tf * 1000.0 + r["dt_ms"]
                 out[f"sys_lm_{tag}_ms"] = float(lmr.get("sys_t", np.nan)) * 1000.0
-                out[f"rise_{tag}"] = r.get("ri_se", np.nan)
+                out[f"gap_{tag}_ms"] = r.get("ref_gap_ms", np.nan)      # 反射波と拡張期鍵点の距離
+                out[f"marg_{tag}_ms"] = r.get("ref_margin_ms", np.nan)  # 2番目の候補との差
+                out[f"rise_{tag}"] = r.get("ri_se", np.nan)   # RI の標準誤差（ガンマの rise 母数ではない）
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)
                 # 閾値感度解析（27番）が当てはめ直しなしで採否を再計算できるよう、
@@ -291,6 +321,7 @@ def _fmt_j(j):
 
 def report(d, out_dir: Path | None = None) -> dict:
     ages = sorted(d["age"].dropna().unique().tolist())
+    n_ages_full = len(ages)
     n = len(d)
     print(f"\n{'=' * 78}")
     print("研究0 決定試験: PDA第2版・凍結版・ランドマーク法を同じ規準で比べる")
@@ -325,6 +356,16 @@ def report(d, out_dir: Path | None = None) -> dict:
     print("  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<2%・Errx<6ms・"
           "Erry<0.01 かつ解が一意）。")
 
+    # ---- 拍の切り出しの前提
+    if "edge_lo" in d and d["edge_lo"].notna().any():
+        lo_ = float(np.nanmedian(d["edge_lo"])); hi_ = float(np.nanmedian(d["edge_hi"]))
+        print(f"\n{'-' * 78}\n1a. 拍の切り出し（前処理の足→足基線の前提）\n{'-' * 78}")
+        print(f"  正規化後の波形の両端の値（中央値）: 低い側 {lo_:.4f} / 高い側 {hi_:.4f}")
+        print("  どちらも 0 に近ければ、拍は足で切り出されており基線の前提が成り立つ。")
+        if hi_ > 0.15:
+            print("  **高い側が 0.15 を超えている。拍が足で切り出されていない疑いがある。**")
+            print("  この場合 RI（振幅の比）が基線の傾きに引きずられる。ΔT は時刻の差なので影響は小さい。")
+
     # ---- 不採用の理由
     print(f"\n{'-' * 78}\n1b. 不採用の理由（第2版）\n{'-' * 78}")
     print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に鍵点が無い（型4〜5）拍で、")
@@ -343,6 +384,9 @@ def report(d, out_dir: Path | None = None) -> dict:
 
     # ---- A. 各手法の合格例
     print(f"\n{'-' * 78}\nA. 各手法が合格とした例だけで判定（20番・23番と同じ扱い）\n{'-' * 78}")
+    print("  行の役割: 「副次」「（記述）」と書いていない行が事前指定の主要比較（12 行）。")
+    print("  多重性の調整はしない。**主要行のうち一つでも通れば良い、という読み方をしない**こと。")
+    print("  読み方は docs/research/gate0_rules_v2.md の表に従う（結果を見る前に固定してある）。")
     hdr = (f"{'指標 × 真値':<34}" + "".join(f"{int(a):>7}" for a in ages)
            + f"{'中央値':>8}{'向き':>8}  判定")
     print(hdr)
@@ -364,7 +408,7 @@ def report(d, out_dir: Path | None = None) -> dict:
         if j:
             exp = {-1: "負", 1: "正", 0: "—"}[sign]
             line += f"{j['med_abs']:>8.3f}{j['n_ok']:>4}/{j['n_ages']:<3}{exp}  "
-            line += ("成立" if j["pass"] else "不成立") if sign else "記述"
+            line += _verdict(j, sign, n_ages_full)
             summary[f"A|{col}|{tgt}"] = j
         print(line)
 
@@ -388,11 +432,18 @@ def report(d, out_dir: Path | None = None) -> dict:
                 line += f"{'—':>9}{'—':>9}{'—':>7}"
                 continue
             summary[f"{mode}|{col}|{tgt}"] = j
-            v = ("成立" if j["pass"] else "不成立") if sign else "記述"
+            v = _verdict(j, sign, n_ages_full)
             line += f"{j['med_abs']:>9.3f}{j['n_ok']:>5}/{j['n_ages']:<3}{v:>7}"
         print(line)
     print("  A だけ成立して B・C が不成立なら、それは難しい拍を捨てた効果であって")
     print("  指標そのものの改善ではない。3 段を必ず一緒に読むこと。")
+    short = [(k, v) for k, v in summary.items() if v and v["n_ages"] < n_ages_full]
+    if short:
+        print(f"\n  **層不足（* 印）**: 判定は「有限の ρ を持つ層すべて」で下している。層が減った手法は")
+        print(f"  少ない層で全一致すればよいので**通りやすくなる**（全 {n_ages_full} 層）。")
+        for k, v in short:
+            print(f"    {k}  {v['n_ok']}/{v['n_ages']} 層")
+        print("  * の付いた「成立」を、層が揃った「成立」と同列に読んではいけない。")
 
     # ---- 波形型ごと
     if "klass_own" in d and d["klass_own"].notna().any():
@@ -446,7 +497,7 @@ def report(d, out_dir: Path | None = None) -> dict:
                    if len(go) and go[dtc].notna().any() else "—")
             j = _judge_or_none(go, dtc, "PWV_a", -1)
             med = f"{j['med_abs']:.3f}" if j else "—"
-            ver = (("成立" if j["pass"] else "不成立") if j else "—")
+            ver = _verdict(j, -1, n_ages_full)
             print(f"{name:<20}{len(g):>8}{100.0 * g[okc].mean():>8.1f}%"
                   f"{dtm:>14}{med:>18}{ver:>8}")
 
@@ -455,13 +506,24 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"\n{'-' * 78}\n3. 振った因子ごとの主効果（年齢層内。+1 と −1 の平均差 ÷ 層平均 [%]）"
               f"\n{'-' * 78}")
         print(f"{'指標':<20}" + "".join(f"{M.FACTOR_LABEL[f]:>12}" for f in M.FACTORS))
+        skipped = []
         for col, lab, okc in IDX_FOR_FACTORS:
             src = _sub(d, okc, "own")
             if col not in src or _n_strata(src, col) == 0:
                 continue
+            # 主効果は「層平均で割った %」なので、0 をまたぐ量では発散して意味を持たない
+            # （DPS = σ_reflected − σ_forward は符号が変わりうる）。比を出さずに飛ばす
+            v_ = src[col].to_numpy(float)
+            v_ = v_[np.isfinite(v_)]
+            if v_.size and abs(np.mean(v_)) < 0.5 * np.std(v_):
+                skipped.append(lab)
+                continue
             e, _r = M._factor_effects(src, col)
             print(f"{lab:<20}" + "".join(f"{v:>+12.1f}" if np.isfinite(v) else f"{'—':>12}"
                                          for v in e))
+        if skipped:
+            print(f"  （{'・'.join(skipped)}: 平均が 0 に近く符号が変わりうる量なので、")
+            print("    層平均で割った % は定義できない。飛ばした）")
         print("  概念どおりなら、硬さの指標は『脈波伝播速度』の列が最大になるはずである。")
         print("  『心拍数』の列が最大なら、その指標が拾っているのは主に心拍である。")
 

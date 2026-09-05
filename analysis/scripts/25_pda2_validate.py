@@ -14,6 +14,7 @@
   T7 ランドマーク      心拍 50〜100・切痕あり／なしで鍵点が破綻しないか（dia < sys を作らないか）
   T8 減衰の担い手      合成波の指数減衰を反射波が吸収していないか（幅が膨らんでいないか）
   T9 不変性と高心拍    決定性・時間原点・切り出しずれへの不変性、高心拍での挙動
+  T10 役割の割り当て   反射波の選択が僅差のとき曖昧として落ちるか（くじ引きを通さないか）
 
 合成脈波
 --------
@@ -376,6 +377,33 @@ def selftest(quick: bool = False) -> int:
     rep("心拍 130 以上（成分が重なる）では理由つきで不採用になる", hi_ok)
     print("       注: 心拍 130 では Wald の標準誤差が桁違いに膨らむ（ブートストラップ 15 ms に対し 709 ms）。")
     print("           条件数は採用例でも 1e5 に達し良否を分けない。競合解の広がりを併記して判定する。")
+
+    # ---- T10 役割の割り当て
+    print("\nT10 役割の割り当て（反射波の選択がくじ引きになっていないか）")
+    t, y, tr = make_beat(hr=70, dt_true=0.28, ri_true=0.45)
+    ys, _ = pda2.preprocess(t, y, FS)
+    lm = pda2.find_landmarks(t, ys)
+    # 拡張期の鍵点からほぼ等距離に2つの成分がある場合、選択は実質くじ引きで ΔT はその差だけ動く
+    dia = lm["dia_t"]
+    peaks_tie = [(0.12, 1.0), (dia - 0.005, 0.5), (dia + 0.005, 0.48)]
+    peaks_clear = [(0.12, 1.0), (dia - 0.002, 0.5), (dia + 0.15, 0.2)]
+    r_tie = pda2.assign_roles(peaks_tie, lm, has_reservoir_kernel=True, t=t)
+    r_clear = pda2.assign_roles(peaks_clear, lm, has_reservoir_kernel=True, t=t)
+    print(f"       僅差:   規則 {r_tie['rule']:>9}  gap {r_tie['ref_gap_ms']:5.1f} ms  "
+          f"余裕 {r_tie['ref_margin_ms']:6.1f} ms")
+    print(f"       明瞭:   規則 {r_clear['rule']:>9}  gap {r_clear['ref_gap_ms']:5.1f} ms  "
+          f"余裕 {r_clear['ref_margin_ms']:6.1f} ms")
+    rep("僅差の割り当ては ΔT の SE 上限より小さい余裕として記録される",
+        np.isfinite(r_tie["ref_margin_ms"]) and r_tie["ref_margin_ms"] < pda2.SE_DT_MAX_MS,
+        f"{r_tie['ref_margin_ms']:.1f} ms < {pda2.SE_DT_MAX_MS:.0f} ms")
+    rep("明瞭な割り当ては余裕が十分に大きい",
+        r_clear["ref_margin_ms"] >= pda2.SE_DT_MAX_MS, f"{r_clear['ref_margin_ms']:.1f} ms")
+    rep("成分が2つのときは規則が single になり、余裕は無限大",
+        pda2.assign_roles([(0.12, 1.0), (0.40, 0.5)], lm,
+                          has_reservoir_kernel=True, t=t)["rule"] == "single")
+    # 前進波が第0スロットでない解は曖昧に倒れる
+    bad = pda2.assign_roles([(0.40, 0.5), (0.12, 1.0)], lm, has_reservoir_kernel=True, t=t)
+    rep("ピーク時刻が最小の成分が前進波（スロット順ではなく時刻順）", bad["forward"] == 1)
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1
