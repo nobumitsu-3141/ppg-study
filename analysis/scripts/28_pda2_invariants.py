@@ -92,6 +92,11 @@ DOMAIN = dict(hr=(50.0, 100.0), noise_max=0.01, ri_min=0.30)   # 方法の有効
 I4_MAX_RATE = 0.10        # 領域内・歪みガウス経路の誤採用率の上限（7 巡目の実測 5% の 2 倍。退行の門番）
 I4_MIN_N = 40             # 率の門番に要る採用拍数。少ないと偶然で 10% を超える（採用 22 なら 11% の確率）
 I4_MAX_RATE_GAMMA = 0.20  # ガンマ経路の退行門番（実測 9% の 2 倍。合成波では領域内でも誤採用があり正しさの保証ではない）
+# RI も主要な問い（× 末梢血管抵抗）なのに、これまで精度の門番が ΔT にしか無かった（11 巡目 F3）。
+# |RI − 真値| ≥ 0.15 を「外れ」とする（RI の範囲 0.1〜0.9 のおよそ 1/5）。門番は退行の監視で、
+# 領域内・歪みガウスの実測 21.8% の 2 倍を上限にする。正しさの保証ではない
+RI_ERR_MAX = 0.15
+RI_MAX_RATE = 0.45
 
 
 def in_domain(cond: dict) -> bool:
@@ -330,6 +335,26 @@ def main() -> None:
     verdict = ("不合格" if i4_fail else "合格") if enough else f"判定しない（採用 {len(sk)} < {I4_MIN_N}。--domain --n 150 で回すこと）"
     print(f"\n  I4 の門番（領域内・歪みガウス）: 誤採用 {n_bad}/{len(sk)} = {rate:.1%}"
           f"（上限 {I4_MAX_RATE:.0%}。現状の 5% の 2 倍で、超えたら退行）→ {verdict}")
+    # RI の精度（ΔT と同じ形で報告する。F3）
+    for route in pda2.ROUTES:
+        sel = [x for x in rows_all if x["route"] == route and x["ok"] == 1
+               and in_domain({kk: x[kk] for kk in ("hr", "noise", "ri_true")})]
+        if sel:
+            e = np.array([abs(x["ri_hat"] - x["ri_true"]) for x in sel])
+            print(f"  {route} 領域内 RI: 採用 {len(e)}、|RI誤差| 中央値 {np.median(e):.3f}・"
+                  f"最大 {e.max():.3f}、{RI_ERR_MAX} 以上 {int((e >= RI_ERR_MAX).sum())}"
+                  f"（{100.0 * (e >= RI_ERR_MAX).mean():.0f}%）")
+    ri_sk = [x for x in rows_all if x["route"] == "skew" and x["ok"] == 1
+             and in_domain({kk: x[kk] for kk in ("hr", "noise", "ri_true")})]
+    ri_bad = sum(1 for x in ri_sk if abs(x["ri_hat"] - x["ri_true"]) >= RI_ERR_MAX)
+    ri_rate = ri_bad / len(ri_sk) if ri_sk else 0.0
+    ri_fail = len(ri_sk) >= I4_MIN_N and ri_rate > RI_MAX_RATE
+    print(f"  RI の門番（領域内・歪みガウス）: |RI誤差| ≥ {RI_ERR_MAX} が {ri_bad}/{len(ri_sk)} "
+          f"= {ri_rate:.1%}（上限 {RI_MAX_RATE:.0%}。実測 21.8% の 2 倍）→ "
+          + (("不合格" if ri_fail else "合格") if len(ri_sk) >= I4_MIN_N else "判定しない"))
+    print("  **RI は貯留槽の振幅に感応する**（合成波で貯留槽の振幅だけを 0.15→0.70 に振ると")
+    print("  RI が 0.45→0.57（歪みガウス）・0.45→0.80（ガンマ）動く）。PWDB では末梢抵抗が")
+    print("  貯留槽を決めるので、RI × 末梢血管抵抗の関係の一部は推定器に内蔵されている。")
     gm = [x for x in rows_all if x["route"] == "gamma" and x["ok"] == 1
           and in_domain({kk: x[kk] for kk in ("hr", "noise", "ri_true")})]
     n_bad_g = sum(1 for x in gm if abs(x["err_ms"]) >= pda2.SE_DT_MAX_MS)
@@ -339,7 +364,7 @@ def main() -> None:
     verdict_g = ("不合格" if i4_fail_g else "合格") if enough_g else f"判定しない（採用 {len(gm)} < {I4_MIN_N}）"
     print(f"  I4 の門番（領域内・ガンマ）: 誤採用 {n_bad_g}/{len(gm)} = {rate_g:.1%}"
           f"（上限 {I4_MAX_RATE_GAMMA:.0%}。実測 9% の 2 倍。退行の監視であって正しさの保証ではない）→ {verdict_g}")
-    n_fail = len(strict) + int(i4_fail) + int(i4_fail_g)
+    n_fail = len(strict) + int(i4_fail) + int(i4_fail_g) + int(ri_fail)
     soft = len(viol) - len(strict) - n_bad - n_bad_g
     print("\n" + ("ALL PASS" if not n_fail else f"不合格 {n_fail} 件")
           + (f"（特性として報告した違反 {soft} 件）" if soft > 0 else ""))

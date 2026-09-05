@@ -239,10 +239,9 @@ def _refine(t: np.ndarray, y: np.ndarray, i: int):
     return float(t[i] + d * dt), float(b - 0.25 * (a - c) * d)
 
 
-# 切痕・拡張期ピークを探す窓（拍の先頭からの割合）。駆出時間は心拍 50〜120 で
-# 0.30〜0.55T なので、切痕が 0.65T より後ろに来ることは生理的にない。
-# 鍵点を探す窓。駆出時間は心拍 50〜120 で 0.30〜0.55T なので、切痕が 0.65T より後に
-# 来ることは生理的にない。拡張期ピークは切痕から 0.25T 以内
+# 鍵点を探す窓（いずれも**拍の先頭からの割合**）。駆出時間は心拍 50〜120 で 0.30〜0.55T
+# なので、切痕が 0.65T より後に来ることは生理的にない。拡張期ピークは拍頭から 0.85T 以内
+# （切痕からの距離ではない）。
 NOTCH_MAX_FRAC = 0.65
 DIA_MAX_FRAC = 0.85
 NOTCH_MIN_FRAC = 0.05      # 収縮期ピークからこれだけ離す（ピーク自身の曲率を拾わない）
@@ -464,7 +463,10 @@ def _weights(t: np.ndarray, lm: dict, w_key: float = W_KEY, halfwidth_s: float =
 
 
 # ============================================================ 当てはめ
-def _multistart(resid, starts, lo, hi, max_nfev=1200):
+MAX_NFEV = 1200      # 1 起動あたりの関数評価の上限。飽和率を 26番の表 1 で監視する
+
+
+def _multistart(resid, starts, lo, hi, max_nfev=MAX_NFEV):
     """複数の初期値から当てはめ、残差の小さい順に返す。
 
     x_scale="jac" は母数ごとの尺度をヤコビアンから自動で決める。本問題は母数の
@@ -689,10 +691,9 @@ def acceptance(t, y, yhat, lm, w=None, nrmse_max: float = NRMSE_MAX,
         if np.isfinite(a) and np.isfinite(b):
             errx += abs(a - b) * 1000.0
             n_match += 1
-            if kv:
-                va, vb = lm[kv], lm_hat[kv]
-                if np.isfinite(va) and np.isfinite(vb):
-                    erry += abs(va - vb)
+            va, vb = lm[kv], lm_hat[kv]
+            if np.isfinite(va) and np.isfinite(vb):
+                erry += abs(va - vb)
         elif np.isfinite(a) and not np.isfinite(b):
             # 模型側で鍵点が消えたら不合格に倒す。閾値を緩めて走らせる感度解析では
             # 罰則も一緒に緩むが、それは Errx 規準を切ったという意味なので整合する。
@@ -704,7 +705,7 @@ def acceptance(t, y, yhat, lm, w=None, nrmse_max: float = NRMSE_MAX,
 
 
 # ============================================================ 役割と指標
-def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> dict:
+def assign_roles(peaks: list, lm: dict, t=None) -> dict:
     """成分に前進波・反射波・貯留槽の役を割り当てる。
 
     **当てはめに決めさせない。** 規則を先に決め、制約で順序を固定したうえで、
@@ -724,19 +725,34 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
     差（ref_margin_ms）**を残す。僅差なら選択は実質くじ引きで、ΔT はその差だけ動く。
     `decompose` はこれが 20 ms 未満なら曖昧として落とす（ΔT の標準誤差の上限と同じ根拠）。
     ref_gap_ms は選んだ成分と拡張期の鍵点の距離で、役割の妥当性を事後に検算するために残す。
+
+    貯留槽を切り出したときの迷い（11 巡目に追加）
+    ------------------------------------------------
+    最も遅い成分を貯留槽として外すと候補が 1 つになり、以前はそこで `ref_margin_ms` を
+    無限大（＝迷いなし）にしていた。しかし外した成分も**さっきまで候補だった**のだから、
+    迷いが消えたわけではない。合成波では、この経路を通った拍（採用の 13%）の ΔT 誤差が
+    中央値 +15.1 ms と、通常の経路（+5.3 ms）の 3 倍あった。外した成分との距離の差を
+    `ref_margin_ms` に入れる。
+
+    さらに、貯留槽にするかどうかの境目 `lim` そのものが崖である。境目の 1 µs 手前と奥で
+    反射波が入れ替わり、ΔT が 180 ms 跳ぶ場合がある。境目までの距離 `res_margin_ms` を
+    返し、`decompose` はこれが ΔT の不確かさの上限より小さければ曖昧として落とす。
     """
     order = sorted(range(len(peaks)), key=lambda i: peaks[i][0])
     fwd = order[0]
     cand = order[1:]
     res = None
     out = {"forward": fwd, "reflected": None, "reservoir": None, "rule": "none",
-           "ref_gap_ms": np.nan, "ref_margin_ms": np.nan}
-    if has_reservoir_kernel and len(cand) >= 2:
+           "ref_gap_ms": np.nan, "ref_margin_ms": np.nan, "res_margin_ms": np.nan}
+    if len(cand) >= 2:
         lim = -np.inf
         if np.isfinite(lm.get("dia_t", np.nan)):
             lim = max(lim, lm["dia_t"] + 0.08)
         if t is not None and len(t) > 1:
             lim = max(lim, float(t[0]) + 0.60 * float(t[-1] - t[0]))
+        if np.isfinite(lim):
+            # 貯留槽にするかどうかの判断が境目からどれだけ離れていたか（どちらに転んでも記録）
+            out["res_margin_ms"] = float(abs(peaks[cand[-1]][0] - lim) * 1000.0)
         if peaks[cand[-1]][0] > lim:
             res = cand[-1]
             cand = cand[:-1]
@@ -753,9 +769,13 @@ def assign_roles(peaks: list, lm: dict, has_reservoir_kernel: bool, t=None) -> d
                    ref_gap_ms=float(ds[0][0]), ref_margin_ms=float(ds[1][0] - ds[0][0]))
         return out
     ref = cand[0]
+    gap = float(abs(peaks[ref][0] - dia) * 1000.0) if np.isfinite(dia) else np.nan
+    # 貯留槽として外した成分も候補だったので、迷いを無限大にしない（11 巡目 F1）
+    margin = np.inf
+    if res is not None and np.isfinite(dia):
+        margin = float(abs(peaks[res][0] - dia) * 1000.0) - gap
     out.update(reflected=ref, rule="single" if len(cand) == 1 else "order",
-               ref_gap_ms=float(abs(peaks[ref][0] - dia) * 1000.0) if np.isfinite(dia) else np.nan,
-               ref_margin_ms=np.inf)
+               ref_gap_ms=gap, ref_margin_ms=margin)
     return out
 
 
@@ -786,16 +806,34 @@ def pinned_params(sol, lo, hi, kind: str = "skew") -> list:
     return out
 
 
-def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
+def _peaks_and_se(sol, n, kind, t, lo=None, hi=None, n_penalty: int = 0):
     """成分のピーク（時刻・高さ）と、母数の共分散行列を返す。
 
     ピーク母数化してあるので、ΔT と RI は母数の差と比になり、
     誤差伝播がそのまま書ける。
+
+    `n_penalty` は残差の末尾に付いている順序罰則の行数。最適解では罰則の残差もヤコビアンも
+    ほぼ 0 なので、これを標本数に数えると自由度が過大になり、標準誤差が小さく出る
+    （40 Hz へ落とす感度条件では 7.4% 過小。11 巡目 F6）。
+
+    4 番目の返り値 `tp_pinned` は、**ピーク時刻**が探索範囲の境界に張り付いた成分の番号。
+    張り付いた母数は共分散が 0 になるので、そのままだと ΔT の標準誤差が**小さく**出て
+    採否の門番が緩む（11 巡目 F7）。呼び出し側で ΔT の標準誤差を無限大にする。
     """
     p = sol.x
     step = 4          # 歪みガウス・ガンマとも (高さ, ピーク時刻, 幅, 形) の 4 母数
     peaks = [(float(p[step * k + 1]), float(p[step * k])) for k in range(n)]
     sds = [component_sd(kind, p[step * k + 2], p[step * k + 3]) for k in range(n)]
+    tp_pinned = set()
+    if lo is not None and hi is not None:
+        lo_a0, hi_a0 = np.asarray(lo, float), np.asarray(hi, float)
+        if lo_a0.size == p.size:
+            rng0 = np.maximum(hi_a0 - lo_a0, 1e-12)
+            for k in range(n):
+                i = step * k + 1
+                if (abs(p[i] - lo_a0[i]) <= 1e-3 * rng0[i]
+                        or abs(hi_a0[i] - p[i]) <= 1e-3 * rng0[i]):
+                    tp_pinned.add(k)
     cov = None
     try:
         J = np.asarray(sol.jac, float)
@@ -820,7 +858,7 @@ def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
                           | (np.abs(hi_a - p) <= 1e-3 * rng))
                 free = free & ~pinned
         Jf = J[:, free]
-        dof = max(m - int(free.sum()), 1)
+        dof = max(m - int(n_penalty) - int(free.sum()), 1)
         s2 = 2.0 * sol.cost / dof
         # 列の尺度が桁違いなので規格化してから、**J そのものの**特異値分解で逆行列を作る
         # （JᵀJ を作ると条件数が二乗される）。
@@ -841,10 +879,10 @@ def _peaks_and_se(sol, n, kind, t, lo=None, hi=None):
             cov = None
     except Exception:
         cov = None
-    return peaks, cov, step, sds
+    return peaks, cov, step, sds, tp_pinned
 
 
-def indices(peaks, cov, step, roles, sds=None) -> dict:
+def indices(peaks, cov, step, roles, sds=None, tp_pinned=None) -> dict:
     """ΔT と RI を、標準誤差つきで返す。"""
     f, r = roles["forward"], roles["reflected"]
     if r is None:
@@ -861,6 +899,10 @@ def indices(peaks, cov, step, roles, sds=None) -> dict:
         try:
             v = cov[it_r, it_r] + cov[it_f, it_f] - 2 * cov[it_r, it_f]
             dt_se = float(np.sqrt(max(v, 0.0)) * 1000.0)
+            # 境界に張り付いたピーク時刻は共分散が 0 になる。**同定できていないのに
+            # 標準誤差が小さく出る**ので、無限大にして採否の門番を通さない（11 巡目 F7）
+            if tp_pinned and (f in tp_pinned or r in tp_pinned):
+                dt_se = float("inf")
             # デルタ法: RI = hr/hf
             g = np.array([1.0 / hf, -hr / (hf * hf)])
             c = np.array([[cov[ih_r, ih_r], cov[ih_r, ih_f]],
@@ -874,7 +916,8 @@ def indices(peaks, cov, step, roles, sds=None) -> dict:
             "dps_ms": float(dps) if np.isfinite(dps) else np.nan}
 
 
-def competing_spread_ms(sols, step, roles, tol_cost: float = TOL_COST) -> float:
+def competing_spread_ms(sols, step, roles, tol_cost: float = TOL_COST,
+                        lm=None, t=None) -> float:
     """残差が最良解の tol_cost 倍以内にある競合解の間で、ΔT が最良解からどれだけ離れるか [ms]。
 
     多点起動の解は無料で手に入る「経験的な不確かさ」である。Wald の標準誤差は線形化に
@@ -882,9 +925,11 @@ def competing_spread_ms(sols, step, roles, tol_cost: float = TOL_COST) -> float:
     ブートストラップ 15 ms）。一方で条件数は良否を分けない（採用例でも 1e5 に達する）。
     競合解の広がりは、線形化にも条件数にも頼らない直接の量なので併記する。
 
-    競合解の成分はスロット番号ではなく、**最良解の前進波・反射波にピーク時刻が最も近い成分**で
-    対応づける。3成分のとき、中間成分と最後の成分のどちらが反射波の役かは解ごとに変わりうるので、
-    スロット番号で比べると別の成分同士を比べてしまう。
+    競合解の ΔT は、**その解に役割を割り当て直して**求める（`lm`・`t` を渡したとき）。
+    ピーク時刻で対応づけるだけだと、競合解が実際には別の役割割り当てで報告される場合を
+    見落とす（11 巡目 F5: 最良解 309 ms・競合解 130 ms なのに広がり 1.9 ms と出る例を確認）。
+    `lm` を渡さない場合（単体検査など）は、最良解の前進波・反射波にピーク時刻が最も近い成分で
+    対応づける従来の方法に落ちる。
     """
     if len(sols) < 2:
         return 0.0
@@ -900,17 +945,25 @@ def competing_spread_ms(sols, step, roles, tol_cost: float = TOL_COST) -> float:
         if s.cost > best.cost * tol_cost:
             continue
         tps = np.array([s.x[step * k + 1] for k in range(n)])
-        kf = int(np.argmin(np.abs(tps - tf0)))
-        kr = int(np.argmin(np.abs(tps - tr0)))
-        if kf == kr:                     # 対応づけが潰れたら、その解は別の分解になっている
-            return float("inf")
-        dt1 = (tps[kr] - tps[kf]) * 1000.0
+        if lm is not None:
+            # その解を実際に報告するときの役割で ΔT を出す
+            pk = [(float(s.x[step * k + 1]), float(s.x[step * k])) for k in range(n)]
+            ro = assign_roles(pk, lm, t=t)
+            if ro["reflected"] is None:
+                return float("inf")
+            dt1 = (pk[ro["reflected"]][0] - pk[ro["forward"]][0]) * 1000.0
+        else:
+            kf = int(np.argmin(np.abs(tps - tf0)))
+            kr = int(np.argmin(np.abs(tps - tr0)))
+            if kf == kr:                 # 対応づけが潰れたら、その解は別の分解になっている
+                return float("inf")
+            dt1 = (tps[kr] - tps[kf]) * 1000.0
         spread = max(spread, abs(dt1 - dt0))
     return float(spread)
 
 
 def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
-               tol_dt_ms: float = None) -> bool:
+               tol_dt_ms: float = None, lm=None, t=None) -> bool:
     """ΔT の異なる競合解が残差で拮抗していないか。
 
     競合解（残差が最良解の tol_cost 倍以内）の ΔT が最良解と tol_dt_ms 以上違えば曖昧とする。
@@ -927,7 +980,7 @@ def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
         tol_dt_ms = SE_DT_MAX_MS
     if roles["reflected"] is None:
         return True
-    sp = competing_spread_ms(sols, step, roles, tol_cost)
+    sp = competing_spread_ms(sols, step, roles, tol_cost, lm=lm, t=t)
     # inf は対応づけが潰れた（別の分解に収束した競合解がある）印、nan は反射波なし。
     # どちらも曖昧。以前は `np.isfinite(sp) and sp > tol` と書いていて inf を
     # 「曖昧でない」と扱っていた（説明と逆。6巡目 K5）
@@ -937,19 +990,22 @@ def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
 
 
 def ambiguity_flags(sols, step, roles, tol_cost: float = TOL_COST,
-                    tol_dt_ms: float = SE_DT_MAX_MS) -> bool:
+                    tol_dt_ms: float = SE_DT_MAX_MS, lm=None, t=None) -> bool:
     """`decompose` が使う曖昧判定の合成。3 つのどれかで曖昧とする。
 
       (1) 競合解の ΔT が拮抗する（`_ambiguous`: 広がり > tol_dt_ms、対応づけが潰れた inf、反射波なし）
       (2) 前進波がスロット 0 でない（順序の罰則が守られておらず役割が信用できない）
       (3) 反射波の候補が 2 つ以上あって僅差（ref_margin_ms < tol_dt_ms。選択がくじ引き）
+      (4) 貯留槽にするかどうかの判断が境目に近い（res_margin_ms < tol_dt_ms。11 巡目 F2）
 
     27番 A 層は同じ論理を保存された材料（dtsp・marg・fwd0）から再計算する（`recompute_amb`）。
     ここを変えたらそちらも変えること。自己検証が 26番の実出力で 100% 一致を検算する。
     """
-    return bool(_ambiguous(sols, step, roles, tol_cost=tol_cost, tol_dt_ms=tol_dt_ms)
+    return bool(_ambiguous(sols, step, roles, tol_cost=tol_cost, tol_dt_ms=tol_dt_ms, lm=lm, t=t)
                 or roles["forward"] != 0
-                or (np.isfinite(roles["ref_margin_ms"]) and roles["ref_margin_ms"] < tol_dt_ms))
+                or (np.isfinite(roles["ref_margin_ms"]) and roles["ref_margin_ms"] < tol_dt_ms)
+                or (np.isfinite(roles.get("res_margin_ms", np.nan))
+                    and roles["res_margin_ms"] < tol_dt_ms))
 
 
 # ============================================================ 入口
@@ -1010,8 +1066,13 @@ def decompose(t, y, fs: float, route: str = "skew",
     # 時刻は秒で単調増加、fs は有限の正で t の間隔と 10% 以内で一致すること
     if not (np.isfinite(fs) and fs > 0) or t.size < 2 or not np.isfinite(t).all():
         return {"ok": False, "reason": "bad_input"}
+    if np.asarray(y).shape != t.shape:          # 長さが違えば以降の対応づけが無意味
+        return {"ok": False, "reason": "bad_input"}
     dts = np.diff(t)
     if not (dts > 0).all() or abs(1.0 / float(np.median(dts)) - fs) > 0.10 * fs:
+        return {"ok": False, "reason": "bad_input"}
+    # 等間隔であること。`_refine` と `np.gradient` は等間隔を前提にしている
+    if float(np.ptp(dts)) > 0.01 * float(np.median(dts)):
         return {"ok": False, "reason": "bad_input"}
     # 内部の標本化周波数を 500 Hz にそろえる（PWDB は 500 Hz なので何もしない）。
     # 250 Hz 未満では 1 次微分による代用点（型3）の位置が粗く（100 Hz で肩が 60 ms 動く）、
@@ -1073,14 +1134,16 @@ def decompose(t, y, fs: float, route: str = "skew",
     if got is None:
         return {"ok": False, "reason": "fit_failed", "klass": lm["klass"]}
     fit, yhat = got
-    peaks, cov, step, sds = _peaks_and_se(fit["sols"][0], fit["n"], fit["kind"], t,
-                                          fit.get("lo"), fit.get("hi"))
+    n_pen = 2 * (fit["n"] - 1)          # 残差の末尾に付く順序罰則の行数（自由度から外す）
+    peaks, cov, step, sds, tp_pin = _peaks_and_se(
+        fit["sols"][0], fit["n"], fit["kind"], t, fit.get("lo"), fit.get("hi"), n_pen)
     # 成分が3つ以上あれば、最も遅い成分が拡張期の減衰を担っている可能性を両経路とも同じ規則で見る
-    roles = assign_roles(peaks, lm, has_reservoir_kernel=True, t=t)
+    roles = assign_roles(peaks, lm, t=t)
     acc = acceptance(t, ys, yhat, lm, w, nrmse_max=nrmse_max,
                      errx_ms=errx_ms, erry_max=erry_max)
     def _amb_of(sols, step_, roles_):
-        return ambiguity_flags(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms)
+        return ambiguity_flags(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms,
+                               lm=lm, t=t)
 
     amb = _amb_of(fit["sols"], step, roles)
     n_used = nw0
@@ -1090,7 +1153,10 @@ def decompose(t, y, fs: float, route: str = "skew",
     # --- 採否または同定性の規準を満たさない場合に成分を増やす（収縮後期波を足す）
     # 鍵点が 2 つ揃わない拍（型4〜5）は、成分を増やしても Errx が計算できないので増やさない。
     # 4,374 名の 1 割がこれなら、無駄な当てはめを 1 割分省ける
-    can_help = acc["n_landmark_matched"] >= 2
+    # 説明どおり**データ側**の型で決める。以前は模型側と一致した鍵点の数だったので、
+    # データに切痕があっても最初の当てはめが滑らかすぎて鍵点を持たない拍は、増やす機会を
+    # 奪われていた（増やすことが効くのは、まさにその拍である。11 巡目 F4）
+    can_help = lm["klass"] in (1, 3)
     if escalate and can_help and (not acc["ok"] or amb):
         escalation_tried = True
         warm = [_augment_start(fit["sols"][0].x, nw0)]
@@ -1100,21 +1166,21 @@ def decompose(t, y, fs: float, route: str = "skew",
         got2 = _run(nw0 + 1, starts=warm)
         if got2 is not None:
             fit2, yhat2 = got2
-            peaks2, cov2, step2, sds2 = _peaks_and_se(
+            peaks2, cov2, step2, sds2, tp_pin2 = _peaks_and_se(
                 fit2["sols"][0], fit2["n"], fit2["kind"], t,
-                fit2.get("lo"), fit2.get("hi"))
-            roles2 = assign_roles(peaks2, lm, has_reservoir_kernel=True, t=t)
+                fit2.get("lo"), fit2.get("hi"), 2 * (fit2["n"] - 1))
+            roles2 = assign_roles(peaks2, lm, t=t)
             acc2 = acceptance(t, ys, yhat2, lm, w, nrmse_max=nrmse_max,
                           errx_ms=errx_ms, erry_max=erry_max)
             amb2 = _amb_of(fit2["sols"], step2, roles2)
             if acc2["ok"] and not amb2:
                 fit, yhat = fit2, yhat2
-                peaks, cov, step, sds = peaks2, cov2, step2, sds2
+                peaks, cov, step, sds, tp_pin = peaks2, cov2, step2, sds2, tp_pin2
                 roles, acc, amb = roles2, acc2, amb2
                 n_used, escalated = nw0 + 1, True
 
-    ix = indices(peaks, cov, step, roles, sds)
-    ix["dt_spread_ms"] = competing_spread_ms(fit["sols"], step, roles, tol_cost)
+    ix = indices(peaks, cov, step, roles, sds, tp_pinned=tp_pin)
+    ix["dt_spread_ms"] = competing_spread_ms(fit["sols"], step, roles, tol_cost, lm=lm, t=t)
     se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= se_dt_max_ms
     # 収束の監視。least_squares の status 0 は max_nfev に達して止まった印。最良解がそれなら
     # ΔT は平坦な谷の途中で止まった値で、Wald の共分散も停留点のものではない。
@@ -1147,7 +1213,8 @@ def decompose(t, y, fs: float, route: str = "skew",
         "n_saturated": n_sat, "n_starts": int(len(fit["sols"])), "best_saturated": best_sat,
         "n_pinned": int(len(pinned)), "pinned": " ".join(pinned),
         "role_rule": roles["rule"], "ref_gap_ms": roles["ref_gap_ms"],
-        "ref_margin_ms": roles["ref_margin_ms"],
+        "ref_margin_ms": roles["ref_margin_ms"], "res_margin_ms": roles["res_margin_ms"],
+        "tp_pinned": sorted(tp_pin),
         "klass": lm["klass"], "lm_source": lm["source"],
         "amp": amp, "landmarks": lm, "peaks": peaks,
         **ix, **{k: acc[k] for k in ("nrmse", "errx_ms", "erry", "n_landmark_matched")},

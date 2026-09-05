@@ -161,12 +161,15 @@ def recompute_amb(d, tag: str, tol_ms: float):
     """
     g = lambda c: d[c].to_numpy(float) if c in d else None  # noqa: E731
     sp, marg, fwd0 = g(f"dtsp_{tag}_ms"), g(f"marg_{tag}_ms"), g(f"fwd0_{tag}")
-    if sp is None or marg is None or fwd0 is None:
+    resm = g(f"resm_{tag}_ms")
+    if sp is None or marg is None or fwd0 is None or resm is None:
         stored = g(f"amb_{tag}")
         return (stored == 1) if stored is not None else np.zeros(len(d), bool)
     with np.errstate(invalid="ignore"):
-        # 広がりが inf（対応づけが潰れた）や nan（反射波なし）は曖昧。僅差は有限のときだけ効く
-        amb = (~np.isfinite(sp)) | (sp > tol_ms) | (np.isfinite(marg) & (marg < tol_ms)) | (fwd0 != 1)
+        # 広がりが inf（対応づけが潰れた）や nan（反射波なし）は曖昧。僅差と貯留槽の境目は
+        # 有限のときだけ効く（`pda2.ambiguity_flags` と同じ 4 つの条件）
+        amb = ((~np.isfinite(sp)) | (sp > tol_ms) | (np.isfinite(marg) & (marg < tol_ms))
+               | (fwd0 != 1) | (np.isfinite(resm) & (resm < tol_ms)))
     return amb
 
 
@@ -402,6 +405,7 @@ def selftest() -> int:
         "amb_v2": (q > 0.9).astype(int), "noref_v2": 0,
         # 曖昧判定の材料。q > 0.9 の拍だけ競合解の広がりが 20 ms を超えるようにする
         "dtsp_v2_ms": np.where(q > 0.9, 30.0, 2.0), "marg_v2_ms": INF, "fwd0_v2": 1,
+        "resm_v2_ms": INF,
         # 10 名に 1 名を型3 にして「含める」の行が動くようにする（当てはまりとは独立に割り当てる。
         # 当てはまりの悪い拍だけを型3 にすると、含めても他の規準で落ちて行が空振りになる）
         "klass_v2": np.where(np.arange(n) % 10 == 0, 3, 1),

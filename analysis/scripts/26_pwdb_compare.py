@@ -61,6 +61,9 @@ def _load(stem: str, name: str):
     p = Path(__file__).resolve().parent / stem
     spec = importlib.util.spec_from_file_location(name, p)
     m = importlib.util.module_from_spec(spec)
+    # 子プロセスは関数を「モジュール名＋関数名」で復元する。登録しておかないと、
+    # この台本を（27番のように）ライブラリとして読み込んだ場合に jobs>1 が pickle で落ちる
+    sys.modules[name] = m
     spec.loader.exec_module(m)
     return m
 
@@ -104,15 +107,15 @@ PAIRS = [
     # r = 0.58〜0.66）や加齢指数（0.65）、ばね定数（−0.72）のいずれより強い。
     # 同論文は「硬さ指数のように S と D のピーク間の時間に頼る指標ではなく、
     # 波形の早期部分に注目すべき」と明記している。我々の ΔT はまさにその時間である。
-    ("amb_amp1",       "PWV_a",  -1, None,     "Am_b/Am_p1  早期振幅比（Hellqvist）"),
+    ("amb_amp1",       "PWV_a",  -1, None,     "探索 Am_b/Am_p1  早期振幅比（Hellqvist）"),
     ("amb_amp1",       "PWV_cf", -1, None,     "副次 Am_b/Am_p1 × 頸大腿PWV"),
     # Hellqvist の p1（1次微分の下降への接線の零交点）を収縮期ピークに使った ΔT。
     # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
     # 収縮期ピークを定義できる。我々の未解決問題（型3で ΔT 誤差 約30 ms）に効くか
-    ("dt_p1_ms",       "PWV_a",  -1, None,     "ΔT  p1基準（Hellqvist の収縮期ピーク）"),
+    ("dt_p1_ms",       "PWV_a",  -1, None,     "探索 ΔT  p1基準（Hellqvist の収縮期ピーク）"),
     # 同じ拡張期の錨で、収縮期の錨だけを我々の収縮期ピークにしたもの。
     # dt_p1_ms との差は収縮期の錨だけなので、p1 の寄与を交絡なく読める
-    ("dt_own_ms",      "PWV_a",  -1, None,     "ΔT  自前ランドマーク（p1 との対照）"),
+    ("dt_own_ms",      "PWV_a",  -1, None,     "探索 ΔT  自前ランドマーク（p1 との対照）"),
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
     # 真値との向きの予測までは立てられないので記述にとどめる。
@@ -154,7 +157,7 @@ def _n_strata(src, col: str) -> int:
 def _judge_or_none(src, col: str, tgt: str, sign: int):
     if col not in src or tgt not in src or _n_strata(src, col) == 0:
         return None
-    return M._judge(M._by_age(src, col, tgt), sign)
+    return M._judge(M._by_age(src, col, tgt, min_n=MIN_PER_AGE), sign)
 
 
 def _verdict(j, sign: int, n_ages_full: int) -> str:
@@ -212,6 +215,11 @@ def indices_for_subject(args_tuple):
                 # 拍が足で切り出されているか（前処理の足→足基線の前提）を実データで確かめる
                 out["edge_lo"] = float(min(ys[0], ys[-1]))
                 out["edge_hi"] = float(max(ys[0], ys[-1]))
+                # **前処理の前**の両端。前処理は足→足の直線を引いて引くので、
+                # 処理後の値は「前処理が効いたか」しか見ておらず、切り出しのずれを見ていない
+                rng_ = float(np.ptp(y)) or 1.0
+                out["edge_lo_raw"] = float(min(y[0], y[-1]) - np.min(y)) / rng_
+                out["edge_hi_raw"] = float(max(y[0], y[-1]) - np.min(y)) / rng_
             else:
                 out["why_lm"] = "preprocess_none"   # 前処理で弾かれた（NaN・定数・短すぎる拍）
         except Exception as e:                  # noqa: BLE001
@@ -248,7 +256,9 @@ def indices_for_subject(args_tuple):
                 out[f"sys_lm_{tag}_ms"] = float(lmr.get("sys_t", np.nan)) * 1000.0
                 out[f"gap_{tag}_ms"] = r.get("ref_gap_ms", np.nan)      # 反射波と拡張期鍵点の距離
                 out[f"marg_{tag}_ms"] = r.get("ref_margin_ms", np.nan)  # 2番目の候補との差
-                out[f"rise_{tag}"] = r.get("ri_se", np.nan)   # RI の標準誤差（ガンマの rise 母数ではない）
+                out[f"resm_{tag}_ms"] = r.get("res_margin_ms", np.nan)  # 貯留槽にする境目までの距離
+                out[f"tppin_{tag}"] = len(r.get("tp_pinned") or [])     # 境界に張り付いたピーク時刻の数
+                out[f"ri_se_{tag}"] = r.get("ri_se", np.nan)   # RI の標準誤差
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)
                 # 閾値感度解析（27番）が当てはめ直しなしで採否を再計算できるよう、
@@ -269,6 +279,11 @@ def indices_for_subject(args_tuple):
                 out[f"esct_{tag}"] = int(bool(r.get("escalation_tried")))   # 増やそうとしたか（戻した拍を含む）
                 out[f"why_{tag}"] = str(r.get("reason", ""))[:24]
             except Exception as e:              # noqa: BLE001
+                # 例外は列の取り出しの途中でも起こりうる。採用のまま残すと
+                # 「ok なのに理由がある」拍ができ、27番の再計算と食い違う
+                out[f"ok_{tag}"] = 0
+                out[f"dt_{tag}_ms"] = np.nan
+                out[f"ri_{tag}"] = np.nan
                 out[f"why_{tag}"] = ("EXC:" + str(e))[:24]
         return out
     except Exception as e:                      # noqa: BLE001
@@ -358,12 +373,6 @@ def _straddles_zero(v) -> bool:
     return bool(v.size and abs(np.mean(v)) < 0.5 * np.std(v))
 
 
-def _fmt_j(j):
-    if not j:
-        return f"{'—':>9}{'—':>9}{'—':>8}"
-    return f"{j['med_abs']:>9.3f}{j['n_ok']:>5}/{j['n_ages']:<3}"
-
-
 def report(d, out_dir: Path | None = None) -> dict:
     ages = sorted(d["age"].dropna().unique().tolist())
     n_ages_full = len(ages)
@@ -413,16 +422,18 @@ def report(d, out_dir: Path | None = None) -> dict:
 
         print(f"{lab:<26}{rate:>8}{_m(f'nrmse_{key}'):>9}{_m(f'errx_{key}_ms', '{:.2f}'):>10}"
               f"{_m(dtc, '{:.0f}'):>14}{_m(f'dtse_{key}_ms', '{:.1f}'):>12}")
-    print("  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<2%・Errx<6ms・"
-          "Erry<0.01 かつ解が一意）。")
+    print(f"  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<{pda2.NRMSE_MAX:.0%}・"
+          f"Errx<{pda2.ERRX_MS:.0f}ms・Erry<{pda2.ERRY} かつ解が一意）。")
     print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は鍵点に重みを置いた")
     print("  RMS で正規化。同じ列に並ぶが同じ量ではないので、腕をまたいで比べないこと。")
-    for key, lab, _dtc, _ric, _okc in METHODS:
+    for key, lab, _dtc, _ric, okc in METHODS:
         sc_, nc_, bc_ = f"sat_{key}", f"nst_{key}", f"bsat_{key}"
         if sc_ in d and d[sc_].notna().any():
-            tot = float(np.nansum(d[sc_])); nst = float(np.nansum(d[nc_]))
-            bs = float(np.nanmean(d[bc_]))
-            print(f"  {lab}: 多点起動の飽和率（max_nfev={1200} に達した起動） "
+            # **採用分で出す**（表 1 の他の列と同じ集団。不採用の拍の飽和は判定に入らない）
+            g_ = d if okc is None else d[d[okc] == 1]
+            tot = float(np.nansum(g_[sc_])); nst = float(np.nansum(g_[nc_]))
+            bs = float(np.nanmean(g_[bc_])) if len(g_) else np.nan
+            print(f"  {lab}: 多点起動の飽和率（採用 {len(g_)} 拍・max_nfev={pda2.MAX_NFEV} に達した起動） "
                   f"全起動 {100.0 * tot / max(nst, 1):.1f}% / 最良解 {100.0 * bs:.1f}%")
     print("  最良解の飽和率が数 % を超えるなら、その ΔT は平坦な谷の途中で止まった値を含む。")
     print("  採否には使わない（規準を足さない）が、max_nfev を上げて回し直す根拠になる。")
@@ -433,14 +444,19 @@ def report(d, out_dir: Path | None = None) -> dict:
         if not len(go) or not go[f"npin_{key}"].notna().any():
             continue
         share = float((go[f"npin_{key}"] > 0).mean())
+        # **母数ごとに「張り付いた拍の数」**を数える。母数の延べ数だと採用拍数を超えて
+        # 割合として読めない（判定規則の「採用分の 10% 超」はこの割合を指す）
         cnt = {}
         for s_ in go[f"pin_{key}"].dropna().astype(str):
+            names = set()
             for tok in s_.split():
                 parts = tok.split(":")
                 if len(parts) == 3:
-                    kk = f"{parts[1]}{'↓' if parts[2] == 'lo' else '↑'}"
-                    cnt[kk] = cnt.get(kk, 0) + 1
-        top = "  ".join(f"{k} {v}" for k, v in sorted(cnt.items(), key=lambda kv: -kv[1])[:4])
+                    names.add(f"{parts[1]}{'↓' if parts[2] == 'lo' else '↑'}")
+            for kk in names:
+                cnt[kk] = cnt.get(kk, 0) + 1
+        top = "  ".join(f"{k} {100.0 * v / len(go):.0f}%（{v}拍）"
+                        for k, v in sorted(cnt.items(), key=lambda kv: -kv[1])[:4])
         print(f"  {lab}: 採用分で探索範囲の境界に張り付いた母数がある拍 {100.0 * share:.1f}%"
               f"（内訳 {top or 'なし'}。h 高さ・tp ピーク時刻・w 幅／立ち上がり・a 形）")
     print("  張り付きが多い母数は、その探索範囲（生理的な範囲として決めた設計値）が解を決めている印。")
@@ -478,6 +494,10 @@ def report(d, out_dir: Path | None = None) -> dict:
             return fmt.format(float(np.nanmedian(v))) if np.isfinite(v).any() else "—"
         print(f"{lab:<26}{_mg(f'nrmse_{key}'):>15}{_mg(f'errx_{key}_ms', '{:.2f}'):>10}"
               f"{_mg(f'dtse_{key}_ms', '{:.1f}'):>12}")
+    if "why_lm" in d and d["why_lm"].notna().any():
+        vc = d["why_lm"].dropna().astype(str).value_counts()
+        print("波形そのものの取得の失敗        "
+              + "  ".join(f"{k} {v}（{100.0 * v / max(n, 1):.1f}%）" for k, v in vc.items()))
     for key, lab, _dtc, _ric, okc in METHODS:
         wc = f"why_{key}"
         if wc not in d or okc is None:
@@ -492,10 +512,13 @@ def report(d, out_dir: Path | None = None) -> dict:
 
     # ---- A. 各手法の合格例
     print(f"\n{'-' * 78}\nA. 各手法が合格とした例だけで判定（20番・23番と同じ扱い）\n{'-' * 78}")
-    print("  行の役割: 「副次」「（記述）」と書いていない行が事前指定の主要比較（12 行）。")
+    n_primary = sum(1 for _c, _t, sg, _o, lb in PAIRS
+                    if sg and not lb.startswith(("副次", "（記述）", "探索", "PTT")))
+    print(f"  行の役割: 「副次」「（記述）」「探索」と書いていない行が事前指定の主要比較"
+          f"（{n_primary} 行）。PTT の行は陽性対照で、表 0 が正である。")
     print("  多重性の調整はしない。**主要行のうち一つでも通れば良い、という読み方をしない**こと。")
     print("  読み方は docs/research/gate0_rules_v2.md の表に従う（結果を見る前に固定してある）。")
-    hdr = (f"{'指標 × 真値':<34}" + "".join(f"{int(a):>7}" for a in ages)
+    hdr = (f"{'指標 × 真値':<34}{'n':>6}" + "".join(f"{int(a):>7}" for a in ages)
            + f"{'中央値':>8}{'向き':>8}  判定")
     print(hdr)
     summary = {}
@@ -509,15 +532,17 @@ def report(d, out_dir: Path | None = None) -> dict:
             continue
         rows = M._by_age(src, col, tgt)
         by = {a: r for a, r, _q in rows}
-        line = f"{lab:<34}"
+        line = f"{lab:<34}{int(src[col].notna().sum()):>6}"
         for a in ages:
             r = by.get(a, np.nan)
             line += f"{r:>+7.2f}" if np.isfinite(r) else f"{'—':>7}"
         if j:
             exp = {-1: "負", 1: "正", 0: "—"}[sign]
-            line += f"{j['med_abs']:>8.3f}{j['n_ok']:>4}/{j['n_ages']:<3}{exp}  "
+            nok = f"{j['n_ok']:>4}/{j['n_ages']:<3}" if sign else f"{'—':>4}/{j['n_ages']:<3}"
+            line += f"{j['med_abs']:>8.3f}{nok}{exp}  "
             line += _verdict(j, sign, n_ages_full)
-            summary[f"A|{col}|{tgt}"] = j
+            if sign:                     # 記述行（符号なし）は * が付かないので一覧に入れない
+                summary[f"A|{col}|{tgt}"] = j
         print(line)
 
     # ---- B / C
@@ -526,8 +551,10 @@ def report(d, out_dir: Path | None = None) -> dict:
     print(f"B. 3手法すべてが合格した共通例のみ（n={n_common}） / "
           f"C. 採否を無視して全例（n={n}）")
     print("-" * 78)
-    print(f"{'指標 × 真値':<34}{'B 中央値':>9}{'B 向き':>9}{'B判定':>7}"
-          f"{'C 中央値':>9}{'C 向き':>9}{'C判定':>7}")
+    print(f"{'指標 × 真値':<34}{'Bのn':>6}{'B 中央値':>9}{'B 向き':>9}{'B判定':>7}"
+          f"{'Cのn':>6}{'C 中央値':>9}{'C 向き':>9}{'C判定':>7}")
+    print("  n は**その指標が有限値を持つ人数**。C は「採否を無視した全例」だが、当てはめに失敗した拍は")
+    print("  値が無いので n が減る。C の n が全体より大きく少ない指標は、その分だけ選択が残っている。")
     ns = _n_strata(d[d["ok_all"] == 1], "dt_v2_ms")
     if ns == 0:
         print(f"  （B: 共通例 {n_common} 名では 8 名以上の年齢層が無く、判定を出せない）")
@@ -535,11 +562,13 @@ def report(d, out_dir: Path | None = None) -> dict:
         line = f"{lab:<34}"
         for mode in ("common", "all"):
             src = _sub(d, None, mode)
+            line += f"{int(src[col].notna().sum()) if col in src else 0:>6}"
             j = _judge_or_none(src, col, tgt, sign)
             if not j:
                 line += f"{'—':>9}{'—':>9}{'—':>7}"
                 continue
-            summary[f"{mode}|{col}|{tgt}"] = j
+            if sign:
+                summary[f"{mode}|{col}|{tgt}"] = j
             v = _verdict(j, sign, n_ages_full)
             line += f"{j['med_abs']:>9.3f}{j['n_ok']:>5}/{j['n_ages']:<3}{v:>7}"
         print(line)
@@ -811,8 +840,31 @@ def selftest(jobs: int = 2) -> int:
         OUT.mkdir(parents=True, exist_ok=True)
         d.to_csv(OUT / "_selftest_pwdb_compare.csv", index=False)
         rep("陽性対照が表の先頭で明示的に判定され、要求 0.5 と比べられる",
-            "control" in s and isinstance(s["control"], dict) and "pass" in s["control"],
-            f"{s.get('control', {}).get('pass')}")
+            "control" in s and isinstance(s["control"], dict) and "pass" in s["control"]
+            and s["control"]["pass"] is True and s["control"]["j"]["med_abs"] >= CRIT_RHO_CONTROL,
+            f"|ρ| {s['control']['j']['med_abs']:.3f}" if s.get("control", {}).get("j") else "—")
+        # 0.30 ≤ |ρ| < 0.50 の対照を作り、**主要判定は通るが対照としては不合格**になることを見る
+        d_weak = d.copy()
+        rng_w = np.random.default_rng(0)
+        d_weak["digital_ptt"] = (-d_weak["PWV_a"].to_numpy(float)
+                                 + rng_w.normal(0, 1.6, len(d_weak)))
+        s_weak = report(d_weak, out_dir=Path(td) / "out3")
+        jw = s_weak["control"]["j"]
+        rep("弱い陽性対照（0.30 ≤ |ρ| < 0.50）は主要判定の規準は満たすが対照としては不合格",
+            jw is not None and jw["pass"] and M.CRIT_RHO <= jw["med_abs"] < CRIT_RHO_CONTROL
+            and s_weak["control"]["pass"] is False,
+            f"|ρ| {jw['med_abs']:.3f}" if jw else "—")
+        rep("共通例は 3 手法すべてが合格した拍だけ（ok_all の定義）",
+            bool((d["ok_all"] == ((d["ok_v1"] == 1) & (d["ok_v2"] == 1) & (d["ok_v2g"] == 1)).astype(int)).all())
+            and int(d["ok_all"].sum()) <= min(int(d[c].sum()) for c in ("ok_v1", "ok_v2", "ok_v2g")))
+        # 第4の腕（早期振幅比）が実際に値を返しているか。返さなければ表 2a と A/B/C の
+        # 3 行が黙って「—」になるだけで、これまで誰も気づかなかった
+        rep("早期振幅比の腕が値を返している（Am_b/Am_p1・p1 時刻・p1 基準 ΔT）",
+            all(c in d for c in ("amb_amp1", "p1_t_ms", "dt_p1_ms"))
+            and float(d["amb_amp1"].notna().mean()) > 0.8
+            and bool(((d["amb_amp1"] > 0) & (d["amb_amp1"] <= 1.0)).all())
+            and float(d["dt_p1_ms"].notna().mean()) > 0.5,
+            f"比が取れた率 {d['amb_amp1'].notna().mean():.0%}・ΔT p1基準 {d['dt_p1_ms'].notna().mean():.0%}")
         print("\n  ↓ ここから下は**わざと陽性対照の列を落とした**表である（無効と宣言されるのが正しい）。")
         print("  この 1 回分の『無効』の表示は検査の一部であって、実行が失敗したという意味ではない。")
         d_noctl = d.drop(columns=["digital_ptt"])
@@ -833,7 +885,21 @@ def selftest(jobs: int = 2) -> int:
         rep("B（共通例）は判定できる年齢層があるときだけ判定を出す",
             any(k.startswith("common|") for k in s) == (ns >= 1),
             f"共通 n={n_common} / 8名以上の年齢層 {ns}")
-        rep("判定規準を 20 番・23 番と共有している", M.CRIT_RHO == 0.30 and L.M is not None)
+        import inspect, pickle
+        src_j = inspect.getsource(_judge_or_none)
+        rep("判定規準を 20 番・23 番と共有している（自前で作り直していない・層の人数も一致）",
+            M.CRIT_RHO == 0.30 and L.M.CRIT_RHO == M.CRIT_RHO
+            and "M._judge" in src_j and "M._by_age" in src_j
+            and inspect.signature(M._by_age).parameters["min_n"].default == MIN_PER_AGE,
+            f"CRIT_RHO {M.CRIT_RHO} / 層の人数 {MIN_PER_AGE}")
+        rep("子プロセスに渡せる（jobs>1 で pickle できる。ライブラリとして読み込んだときも）",
+            pickle.dumps(indices_for_subject) is not None)
+        # 拍の内部の欠測は詰めずに落とす（S15）。詰めると波形をつなぎ、標本化周波数もずれる
+        row_ok = np.concatenate([[1.0], np.linspace(0, 1, 300), np.full(50, np.nan)])
+        row_ng = row_ok.copy(); row_ng[100] = np.nan
+        rep("拍の末尾の詰め物は落とし、内部の欠測がある拍は捨てる（S15）",
+            M.beat_of(row_ok, 70.0)[0] is not None and M.beat_of(row_ok, 70.0)[0].size == 300
+            and M.beat_of(row_ng, 70.0)[0] is None)
         rep("結果 CSV が書かれた", (Path(td) / "out" / "pwdb_compare.csv").exists())
 
         # --- 難しい拍が意図した経路を通ったか
@@ -849,8 +915,9 @@ def selftest(jobs: int = 2) -> int:
             and bool((g_nr["why_v2"] == "no_landmarks").all()),
             f"n={len(g_nr)} 型 {g_nr['klass_own'].value_counts().to_dict()} 理由 {g_nr['why_v2'].value_counts().to_dict()}")
         g_f = d[kind_of == "fast"]
-        rep("心拍 135 の拍は理由つきで不採用になる（黙って通さない）",
-            len(g_f) > 0 and int(g_f["ok_v2"].sum()) == 0,
+        rep("心拍 135 の拍は理由 dt_se で不採用になる（黙って通さない）",
+            len(g_f) > 0 and int(g_f["ok_v2"].sum()) == 0
+            and bool((g_f["why_v2"] == "dt_se").all()),
             f"n={len(g_f)} 理由 {g_f['why_v2'].value_counts().to_dict()}")
         g_n = d[kind_of == "notchless"]
         rep("切痕なしの拍が型3（肩の代用点）として存在し、proxy_landmarks で不採用になる",
@@ -859,8 +926,9 @@ def selftest(jobs: int = 2) -> int:
             and bool((g_n["why_v2"] == "proxy_landmarks").all()),
             f"n={len(g_n)} 型 {g_n['klass_own'].value_counts().to_dict()} "
             f"理由 {g_n['why_v2'].value_counts().to_dict()}")
-        rep("曖昧判定の材料（fwd0・競合広がり・僅差）と収束の監視列が保存されている",
-            all(c in d for c in ("fwd0_v2", "dtsp_v2_ms", "marg_v2_ms", "sat_v2", "nst_v2", "bsat_v2"))
+        rep("曖昧判定の材料（fwd0・競合広がり・僅差・貯留槽の境目）と収束の監視列が保存されている",
+            all(c in d for c in ("fwd0_v2", "dtsp_v2_ms", "marg_v2_ms", "resm_v2_ms",
+                                 "tppin_v2", "ri_se_v2", "sat_v2", "nst_v2", "bsat_v2"))
             and bool(np.isfinite(d.loc[d["ok_v2"] == 1, "sat_v2"]).all()),
             f"飽和 全起動 {float(np.nansum(d['sat_v2']))/max(float(np.nansum(d['nst_v2'])),1):.1%}"
             f" / 最良解 {float(np.nanmean(d['bsat_v2'])):.1%}" if "sat_v2" in d else "")
@@ -918,7 +986,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pwdb", type=str, help="PWDB の配布物を置いたフォルダ")
-    ap.add_argument("--limit", type=int, default=0, help="先頭N名だけ処理（0=全員）")
+    ap.add_argument("--limit", type=int, default=0,
+                    help="全体から等間隔に N 名だけ処理（先頭 N 名ではない。0=全員）")
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()

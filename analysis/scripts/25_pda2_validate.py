@@ -410,7 +410,7 @@ def selftest(quick: bool = False) -> int:
         fit = pda2.fit_waves(t, ys, lm, n_waves=rr["n_waves"], w=pda2._weights(t, lm))
         x = fit["sols"][0].x
         peaks = [(x[4 * k + 1], x[4 * k]) for k in range(rr["n_waves"])]
-        roles = pda2.assign_roles(peaks, lm, has_reservoir_kernel=True, t=t)
+        roles = pda2.assign_roles(peaks, lm, t=t)
         k = roles["reflected"]
         if k is not None:
             sd_ref = pda2.component_sd("skew", x[4 * k + 2], x[4 * k + 3]) * 1000.0
@@ -464,8 +464,8 @@ def selftest(quick: bool = False) -> int:
     dia = lm["dia_t"]
     peaks_tie = [(0.12, 1.0), (dia - 0.005, 0.5), (dia + 0.005, 0.48)]
     peaks_clear = [(0.12, 1.0), (dia - 0.002, 0.5), (dia + 0.15, 0.2)]
-    r_tie = pda2.assign_roles(peaks_tie, lm, has_reservoir_kernel=True, t=t)
-    r_clear = pda2.assign_roles(peaks_clear, lm, has_reservoir_kernel=True, t=t)
+    r_tie = pda2.assign_roles(peaks_tie, lm, t=t)
+    r_clear = pda2.assign_roles(peaks_clear, lm, t=t)
     print(f"       僅差:   規則 {r_tie['rule']:>9}  gap {r_tie['ref_gap_ms']:5.1f} ms  "
           f"余裕 {r_tie['ref_margin_ms']:6.1f} ms")
     print(f"       明瞭:   規則 {r_clear['rule']:>9}  gap {r_clear['ref_gap_ms']:5.1f} ms  "
@@ -477,9 +477,9 @@ def selftest(quick: bool = False) -> int:
         r_clear["ref_margin_ms"] >= pda2.SE_DT_MAX_MS, f"{r_clear['ref_margin_ms']:.1f} ms")
     rep("成分が2つのときは規則が single になり、余裕は無限大",
         pda2.assign_roles([(0.12, 1.0), (0.40, 0.5)], lm,
-                          has_reservoir_kernel=True, t=t)["rule"] == "single")
+                          t=t)["rule"] == "single")
     # 前進波が第0スロットでない解は曖昧に倒れる
-    bad = pda2.assign_roles([(0.40, 0.5), (0.12, 1.0)], lm, has_reservoir_kernel=True, t=t)
+    bad = pda2.assign_roles([(0.40, 0.5), (0.12, 1.0)], lm, t=t)
     rep("ピーク時刻が最小の成分が前進波（スロット順ではなく時刻順）", bad["forward"] == 1)
 
     # ---- T11 一意性の検査（競合解の対応づけ）
@@ -567,7 +567,15 @@ def selftest(quick: bool = False) -> int:
         bad_fs &= (r.get("reason") == "bad_input")
     except Exception:                                    # noqa: BLE001
         bad_fs = False
-    rep("fs が inf・0・NaN・負、t が ms や逆順なら例外を出さず理由 bad_input", bad_fs)
+    try:
+        r = pda2.decompose(t, y[:-5], FS, route="skew")
+        bad_fs &= (r.get("reason") == "bad_input")
+        tj = t.copy(); tj[len(tj) // 2:] += 0.05          # 途中に隙間のある時刻
+        r = pda2.decompose(tj, y, FS, route="skew")
+        bad_fs &= (r.get("reason") == "bad_input")
+    except Exception:                                    # noqa: BLE001
+        bad_fs = False
+    rep("fs が inf・0・NaN・負、t が ms や逆順・長さ違い・不等間隔なら理由 bad_input", bad_fs)
     # 内部の標本化周波数を 500 Hz にそろえる: 100 Hz の拍でも型・採否・ΔT が 500 Hz と一致する
     t100 = np.arange(0, t[-1], 1 / 100.0)
     y100 = np.interp(t100, t, y)
@@ -581,8 +589,8 @@ def selftest(quick: bool = False) -> int:
     orig = pda2._peaks_and_se
 
     def _no_cov(*a, **k):
-        pk, cov, step, sds = orig(*a, **k)
-        return pk, None, step, sds
+        pk, cov, step, sds, pin = orig(*a, **k)
+        return pk, None, step, sds, pin
     pda2._peaks_and_se = _no_cov
     try:
         r = pda2.decompose(t, y, FS, route="skew")
@@ -619,7 +627,7 @@ def selftest(quick: bool = False) -> int:
         pda2.pinned_params(NS(x=xp8), lo8, hi8, "skew") == ["0:a:lo"])
     # 反射波が無い経路（D5）: 候補が無ければ役割は none、指標は NaN で例外を出さない
     lm1 = {"dia_t": np.nan, "klass": 4}
-    ro = pda2.assign_roles([(0.12, 1.0)], lm1, has_reservoir_kernel=True, t=t)
+    ro = pda2.assign_roles([(0.12, 1.0)], lm1, t=t)
     ix0 = pda2.indices([(0.12, 1.0)], None, 4, ro)
     rep("成分が 1 つなら反射波なし（rule none）で ΔT・RI は NaN、例外を出さない（D5）",
         ro["reflected"] is None and ro["rule"] == "none" and not np.isfinite(ix0["dt_ms"])
@@ -631,6 +639,41 @@ def selftest(quick: bool = False) -> int:
     r3 = pda2.decompose(t, y, FS, route="skew", n_waves=3, escalate=False)
     rep("n_waves で成分数を外から指定できる（実験用の引数が効く）",
         r3.get("n_waves") == 3 and not r3.get("escalated"))
+    # 11 巡目 F1: 貯留槽として外した成分も候補なので、迷いを無限大にしない
+    lm_r = {"dia_t": 0.40, "klass": 1}
+    ro_res = pda2.assign_roles([(0.12, 1.0), (0.40, 0.5), (0.75, 0.2)], lm_r, t=t)
+    rep("貯留槽を外しても、外した成分との僅差が ref_margin_ms に残る（F1）",
+        ro_res["reservoir"] == 2 and ro_res["rule"] == "single"
+        and np.isfinite(ro_res["ref_margin_ms"]) and ro_res["ref_margin_ms"] > 0,
+        f"margin {ro_res['ref_margin_ms']:.1f} ms")
+    # 11 巡目 F2: 貯留槽にするかどうかの境目に近ければ曖昧
+    lim = max(0.40 + 0.08, float(t[0]) + 0.60 * float(t[-1] - t[0]))
+    near = pda2.assign_roles([(0.12, 1.0), (0.30, 0.5), (lim + 0.001, 0.2)], lm_r, t=t)
+    far = pda2.assign_roles([(0.12, 1.0), (0.30, 0.5), (lim + 0.20, 0.2)], lm_r, t=t)
+    rep("貯留槽の境目までの距離が res_margin_ms に出る（F2）",
+        abs(near["res_margin_ms"] - 1.0) < 0.1 and far["res_margin_ms"] > 100,
+        f"境目近く {near['res_margin_ms']:.1f} ms / 遠く {far['res_margin_ms']:.0f} ms")
+    rep("境目に近い解は曖昧として落ちる（F2 の配線）",
+        pda2.ambiguity_flags([best], 4, near)
+        and not pda2.ambiguity_flags([best], 4, far))
+    # 11 巡目 F6: 罰則の行を自由度に数えない（数えると SE が小さく出る）
+    ys_f = pda2.preprocess(t, y, FS)[0]
+    lm_f = pda2.find_landmarks(t, ys_f)
+    fit_f = pda2.fit_waves(t, ys_f, lm_f, n_waves=3, w=pda2._weights(t, lm_f))
+    _pk, cov_a, _st, _sd, _pn = pda2._peaks_and_se(fit_f["sols"][0], 3, "skew", t,
+                                                   fit_f["lo"], fit_f["hi"], 4)
+    _pk, cov_b, _st, _sd, _pn = pda2._peaks_and_se(fit_f["sols"][0], 3, "skew", t,
+                                                   fit_f["lo"], fit_f["hi"], 0)
+    rep("順序罰則の行を自由度から外すと標準誤差が大きくなる（F6）",
+        cov_a is not None and cov_b is not None and np.trace(cov_a) > np.trace(cov_b),
+        f"痕跡 {np.trace(cov_a):.3e} 対 {np.trace(cov_b):.3e}")
+    # 11 巡目 F7: ピーク時刻が境界に張り付いたら ΔT の標準誤差を無限大にする
+    ix_pin = pda2.indices([(0.12, 1.0), (0.40, 0.5)], np.eye(8) * 1e-8, 4,
+                          {"forward": 0, "reflected": 1}, tp_pinned={1})
+    ix_free = pda2.indices([(0.12, 1.0), (0.40, 0.5)], np.eye(8) * 1e-8, 4,
+                           {"forward": 0, "reflected": 1}, tp_pinned=set())
+    rep("ピーク時刻が境界に張り付いたら ΔT の標準誤差は無限大（F7）",
+        not np.isfinite(ix_pin["dt_se_ms"]) and np.isfinite(ix_free["dt_se_ms"]))
     # 前処理を迂回する経路は無い（10 巡目に削除）。誤って渡したら例外になる
     try:
         pda2.decompose(t, y, FS, route="skew", preprocessed=True)

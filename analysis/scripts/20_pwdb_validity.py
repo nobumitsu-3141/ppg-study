@@ -220,7 +220,16 @@ def beat_of(ppg_row: np.ndarray, hr_bpm: float):
     CSVには標本化周波数が入らない（.mat のみ）。拍長 = 60/HR 秒であることから復元する。
     """
     y = np.asarray(ppg_row[1:], float)          # 先頭は Subject Number
-    y = y[np.isfinite(y)]
+    # 末尾の詰め物だけを落とす。**途中の欠測で詰めると波形をつなぎ合わせてしまい**、
+    # 標本数から復元する標本化周波数もずれる（`src/pda2.preprocess` の内部 NaN の守りは、
+    # ここで詰めてしまうと二度と効かない）
+    fin = np.isfinite(y)
+    n_keep = int(np.argmax(~fin)) if (~fin).any() else y.size
+    if n_keep == 0 or fin[n_keep:].any():
+        # 欠測より後ろにまだ実データがある＝末尾の詰め物ではなく**拍の内部の欠測**。
+        # 詰めると波形をつなぎ合わせ、標本数から復元する標本化周波数もずれるので落とす
+        return None, np.nan
+    y = y[:n_keep]
     if y.size < 40 or not np.isfinite(hr_bpm) or hr_bpm <= 0:
         return None, np.nan
     dur = 60.0 / float(hr_bpm)
@@ -343,10 +352,15 @@ PAIRS = [("dt2_ms", "PWV_a", -1, "Q1  ΔT 2k × 大動脈PWV"),
          ("ri3_13", "pvr", +1, "    RI 3k 1↔3 × 末梢血管抵抗")]
 
 
-def _by_age(d, x, y):
+def _by_age(d, x, y, min_n: int = 8):
+    """年齢層ごとの Spearman ρ。min_n は 1 層に要る人数（既定 8）。
+
+    26番は自分の定数 `MIN_PER_AGE` を渡し、自己検証で既定値と一致することを確かめる
+    （両方に 8 が別々に書かれていて、片方だけ変えても誰も気づかない状態だった。11 巡目 S11）。
+    """
     out = []
     for age, g in d.groupby("age"):
-        r, n = _spearman(g[x].to_numpy(float), g[y].to_numpy(float), min_n=8)
+        r, n = _spearman(g[x].to_numpy(float), g[y].to_numpy(float), min_n=min_n)
         out.append((age, r, n))
     return out
 
