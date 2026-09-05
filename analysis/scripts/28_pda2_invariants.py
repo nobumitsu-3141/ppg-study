@@ -201,11 +201,13 @@ def one(args):
             ra = pda2.decompose(t, y * 37.0 + 1000.0, 500.0, route=route)
             row["dt_amp_ms"] = ra.get("dt_ms", np.nan)
             # 前処理で正規化するので厳密には同じ結果のはずだが、浮動小数の丸めが最適化の経路を
-            # わずかに変える（10^-3 ms の桁）。0.05 ms を超える差は別の盆地に落ちた印なので違反とする
+            # わずかに変える（ΔT で 10^-3 ms、RI で 10^-4 の桁）。ΔT 0.05 ms・RI 1e-3 を超える差は
+            # 別の盆地に落ちた印なので違反とする
             if (bool(ra.get("ok")) != bool(r.get("ok"))
                     or not np.isclose(ra.get("dt_ms", np.nan), r.get("dt_ms", np.nan), atol=0.05, equal_nan=True)
-                    or not np.isclose(ra.get("ri", np.nan), r.get("ri", np.nan), atol=1e-4, equal_nan=True)):
-                viol.append(("I9", tag, f"振幅・直流で変わる: ΔT {r.get('dt_ms'):.2f} → {ra.get('dt_ms'):.2f}"))
+                    or not np.isclose(ra.get("ri", np.nan), r.get("ri", np.nan), atol=1e-3, equal_nan=True)):
+                viol.append(("I9", tag, f"振幅・直流で変わる: ΔT {r.get('dt_ms'):.3f} → {ra.get('dt_ms'):.3f}、"
+                                         f"RI {r.get('ri'):.5f} → {ra.get('ri'):.5f}、ok {r.get('ok')} → {ra.get('ok')}"))
     return viol, info, rows_out
 
 
