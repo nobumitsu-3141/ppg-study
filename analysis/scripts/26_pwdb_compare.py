@@ -592,6 +592,14 @@ def report(d, out_dir: Path | None = None) -> dict:
         print("  拡張期ピークより約 30 ms 遅れる。合成波）。PDA 第2版は型3 を規則で採用しないので、")
         print("  ここで比べているのは分解を使わない指標どうしである。型4 は拡張期の錨が無いので")
         print("  ΔT の形の指標はどれも定義できず、早期振幅比だけが残る。")
+        a_ = d["amb_amp1"].dropna()
+        if len(a_):
+            print(f"  Am_b/Am_p1 の散らばり（全例）: 中央値 {a_.median():.4f}・"
+                  f"5〜95% {a_.quantile(.05):.4f}〜{a_.quantile(.95):.4f}・"
+                  f"範囲 {a_.min():.4f}〜{a_.max():.4f}")
+            print("  **この幅が狭ければ、この腕は被験者を弁別できない。**その場合の「不成立」は")
+            print("  指標の実力ではなく感度不足である（判定規則の該当行）。1 を超える拍は接線の")
+            print("  零交点が収縮期ピークに達している（p1 ≒ S）ことを意味し、異常ではない。")
         print(f"{'型':<6}{'n':>7}{'p1が取れた率':>13}{'|p1 − S| 中央値':>16}"
               f"{'Am_b/Am_p1 中央値':>18}{'ΔT p1基準 中央値':>17}")
         for k in sorted(d["klass_own"].dropna().unique().tolist()):
@@ -867,11 +875,17 @@ def selftest(jobs: int = 2) -> int:
         rep("早期振幅比の腕が値を返している（Am_b/Am_p1・p1 時刻・p1 基準 ΔT）",
             all(c in d for c in ("amb_amp1", "p1_t_ms", "dt_p1_ms"))
             and float(d["amb_amp1"].notna().mean()) > 0.8
-            and bool(d["amb_amp1"].dropna().between(0, 1.0, inclusive="right").all())
+            and bool((d["amb_amp1"].dropna() > 0).all())
             and float(d["dt_p1_ms"].notna().mean()) > 0.5,
             f"比が取れた率 {d['amb_amp1'].notna().mean():.0%}（範囲 "
             f"{d['amb_amp1'].min():.3f}〜{d['amb_amp1'].max():.3f}）・"
             f"ΔT p1基準 {d['dt_p1_ms'].notna().mean():.0%}")
+        # 比が 1 を超える拍は、接線の零交点が収縮期ピークに達している（p1 ≒ S）。
+        # 模擬では比が 0.96〜1.00 とほとんど動かない。実データでも動かなければ、この腕は
+        # 弁別できないので「不成立」は情報にならない。表 2a に範囲を出して読めるようにする
+        rng_r = float(d["amb_amp1"].max() - d["amb_amp1"].min())
+        rep("早期振幅比の散らばりが表に出る（動かない指標の不成立を実力と読まないため）",
+            np.isfinite(rng_r), f"模擬での範囲の幅 {rng_r:.3f}（実データでは表 2a で見る）")
         print("\n  ↓ ここから下は**わざと陽性対照の列を落とした**表である（無効と宣言されるのが正しい）。")
         print("  この 1 回分の『無効』の表示は検査の一部であって、実行が失敗したという意味ではない。")
         d_noctl = d.drop(columns=["digital_ptt"])
