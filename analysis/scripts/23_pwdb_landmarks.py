@@ -139,8 +139,12 @@ def load(root: Path, pda_dir: Path | None = None):
     else:
         for c in ("dt_pda_ms", "ri_pda", "ok2"):
             d[c] = np.nan
-        print(f"  （{pda_p} がないので PDA 列は空。先に 20_pwdb_validity.py を実行すると"
-              " 直接比較になる）", flush=True)
+        if pda_dir is None:
+            print(f"  （{pda_p} がないので PDA 列は空。先に 20_pwdb_validity.py を実行すると"
+                  " 直接比較になる）", flush=True)
+        else:
+            # 26番は分解結果を自分で結合するので、ここで 20番の実行を勧めると誤った案内になる
+            print("  （PDA 列は空のまま。呼び出し元が分解結果を自分で結合する）", flush=True)
     return d
 
 

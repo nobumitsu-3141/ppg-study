@@ -91,12 +91,12 @@ POST_HOC = [
     ("errx",  "Errx 上限 [ms]",    [3.0, 6.0, 12.0, 25.0, INF]),
     ("erry",  "Erry 上限",         [0.005, 0.010, 0.020, INF]),
     ("se",    "ΔT の SE 上限 [ms]", [5.0, 10.0, 20.0, 50.0, INF]),
-    # 「なし」は曖昧判定を**すべて**外す（競合解の広がり・前進波のスロット・反射波の僅差の3つ）
-    ("amb",   "曖昧判定（3種まとめて）", [True, False]),
-    # pda2 は同じ 20 ms を SE の上限・競合解の広がりの上限・反射波の僅差の下限の 3 か所に使う
-    # （根拠が同じ）。その値そのものを 3 か所まとめて動かす。∞ は僅差の下限として無意味
+    # 「なし」は曖昧判定を**すべて**外す（競合解の広がり・前進波のスロット・反射波の僅差・貯留槽の境目の 4 つ）
+    ("amb",   "曖昧判定（4種まとめて）", [True, False]),
+    # pda2 は同じ 20 ms を SE の上限・競合解の広がりの上限・反射波の僅差の下限・貯留槽の境目の僅差の 4 か所に使う
+    # （根拠が同じ）。その値そのものを 4 か所まとめて動かす。∞ は僅差の下限として無意味
     # （すべて僅差になる）ので入れない。SE だけ ∞ は上の行にある
-    ("joint", "同じ値を 3 か所まとめて [ms]", [5.0, 10.0, 20.0, 50.0]),
+    ("joint", "同じ値を 4 か所まとめて [ms]", [5.0, 10.0, 20.0, 50.0]),
     # 型3（切痕なし・肩の代用点）は分解が同定できないので既定では採用しない。含めたときに
     # 結論が変わらないかを見る（合成波では含めると ΔT が +23 ms ずれた拍が通った）
     ("proxy", "型3（代用点）を採用に含める", [False, True]),
@@ -150,7 +150,11 @@ def _check_version(d) -> None:
                 "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
         print(f"  pda2 版 {v_now}（CSV と一致）")
     else:
-        print("  （CSV に pda2 版の記録がない。古い 26番の出力の可能性がある）")
+        # 版が分からない CSV に新しい閾値を当てるのは E8 そのもの。警告で通さず止める（22 巡目）
+        raise SystemExit(
+            "pwdb_compare.csv に pda2 版の記録がありません（古い 26番の出力）。\n"
+            "どの分解に閾値を当てているのか分からないので止めます。先に 26番を回し直してください:\n"
+            "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
 
 
 # ---------------------------------------------------------------- 後づけ層
@@ -291,7 +295,7 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
     print("  閾値によって割れる     → その閾値が結論を作っている。論文には割れる範囲を書く。")
     print("  「すべて外す」の行が凍結値と違う → 採否そのものが選択になっている。")
     print("    この行は共分散が計算できた拍のみ。26番の C ブロックとは分母が少し違う。")
-    print("  限界: 保存されている診断量は最終解（規準を満たさず成分を増やした拍ではその 3 波）のもの。")
+    print("  限界: 保存されている診断量は最終解（規準を満たさず成分を増やした拍では増やした後の解）のもの。")
     print("    閾値を変えたときに増やすかどうかまでは再現しない。それは B 層の「成分を増やさない」で見る。")
     if out_dir is not None:
         Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -427,6 +431,13 @@ def selftest() -> int:
         lim_ok = False
     rep("--limit の予備実行の CSV でも止まらず警告だけ出す", lim_ok)
     stale = pd.DataFrame({"pda2_version": ["000000000000"]})
+    missing = pd.DataFrame({"n_limit": [0]})
+    try:
+        _check_version(missing)
+        stopped_missing = False
+    except SystemExit:
+        stopped_missing = True
+    rep("pda2 版の記録が無い CSV では止まる（古い 26番の出力に閾値を当てない）", stopped_missing)
     try:
         _check_version(stale)
         stopped = False
@@ -435,7 +446,7 @@ def selftest() -> int:
     rep("pda2 の版が CSV と違えば止まる（E8）", stopped)
     rep("曖昧判定を材料から作り直せる（合成データで保存値と一致）",
         bool(np.all(recompute_amb(d, "v2", FROZEN["amb_tol"]) == (d["amb_v2"].to_numpy(int) == 1))))
-    rep("3 か所まとめての行が出た", ("v2", "joint", 5.0) in rows and ("v2", "joint", 50.0) in rows)
+    rep("4 か所まとめての行が出た", ("v2", "joint", 5.0) in rows and ("v2", "joint", 50.0) in rows)
     rep("型3 を含める行が出て、含めると採択が増える",
         ("v2", "proxy", True) in rows and rows[("v2", "proxy", True)][0] > rows[("v2", "frozen", None)][0],
         f"{rows[('v2', 'frozen', None)][0]} → {rows.get(('v2', 'proxy', True), (None,))[0]}")
@@ -511,6 +522,27 @@ def selftest() -> int:
         r4 = pda2.decompose(t, y, 500.0, route="skew", escalate=False, tol_cost=1.5)
         rep("一意性の残差許容 tol_cost が decompose に届いている（結果が返る）",
             np.isfinite(r4.get("dt_ms", np.nan)))
+        # B 層の全条件が、decompose に実在する引数だけを使い、両経路で 1 拍を例外なく処理する。
+        # 通し検算は 3 条件しか回さないので、残りの条件の引数名の誤りは Mac で 20 分回した末に
+        # 全員 EXC: になるまで見つからなかった（15 巡目）
+        import inspect
+        sig = set(inspect.signature(pda2.decompose).parameters)
+        bad_kw = [(lab, k) for lab, opts in REFIT for k in opts if k not in sig]
+        rep("B 層の全条件の引数が pda2.decompose に実在する",
+            not bad_kw, str(bad_kw) if bad_kw else f"{len(REFIT)} 条件")
+        ran, n_expect = [], 0
+        for lab, opts in REFIT:
+            for route in ("skew", "gamma"):
+                if route != "gamma" and any(k.startswith("gamma_") for k in opts):
+                    continue
+                n_expect += 1
+                try:
+                    r = pda2.decompose(t, y, 500.0, route=route, **opts)
+                    ran.append(isinstance(r, dict) and "ok" in r and "reason" in r)
+                except Exception:                      # noqa: BLE001
+                    ran.append(False)
+        rep("B 層の全条件が両経路で 1 拍を例外なく処理する（辞書に ok と reason が入る）",
+            all(ran) and len(ran) == n_expect, f"{sum(ran)}/{n_expect}")
 
     # --- B 層の通し検算: 26番と同じ模擬 PWDB を作り、部分集合で 2 条件だけ当てはめ直す。
     # 「凍結値」の条件は 26番の自己検証の出力（同じ模擬・同じ版）と ΔT・採否が一致しなければならない。

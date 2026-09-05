@@ -515,7 +515,7 @@ def selftest(quick: bool = False) -> int:
         pda2.ambiguity_flags([best], 4, {"forward": 0, "reflected": 1, "ref_margin_ms": 5.0}))
     rep("曖昧判定の合成: 前進波がスロット 0 でなければ曖昧（R2 の配線）",
         pda2.ambiguity_flags([best], 4, {"forward": 1, "reflected": 0, "ref_margin_ms": np.inf}))
-    rep("曖昧判定の合成: 僅差の下限は tol_dt_ms で動く（3 か所同じ値: K4）",
+    rep("曖昧判定の合成: 僅差の下限は tol_dt_ms で動く（4 か所同じ値: K4）",
         not pda2.ambiguity_flags([best], 4, {"forward": 0, "reflected": 1, "ref_margin_ms": 5.0},
                                  tol_dt_ms=3.0))
     # 鍵点の重みの近傍は時間で指定（B2）: 40 Hz でも近傍が数十 ms に収まる
@@ -683,6 +683,15 @@ def selftest(quick: bool = False) -> int:
     except TypeError:
         no_bypass = True
     rep("前処理を迂回する引数は存在しない（未検査の経路を残さない）", no_bypass)
+    # 2 次元の入力（n×1 の列）は 1 次元に潰して受け、潰せない形（2×n）は bad_input。どちらも例外を出さない（I1）
+    r1 = pda2.decompose(t, y, FS, route="skew")
+    r2 = pda2.decompose(t.reshape(-1, 1), y.reshape(-1, 1), FS, route="skew")
+    rbad = pda2.decompose(np.stack([t, t]), np.stack([y, y]), FS, route="skew")
+    rep("n×1 の列入力は 1 次元と同じ結果、2×n は理由 bad_input（どちらも例外なし）",
+        bool(r2.get("ok")) == bool(r1.get("ok"))
+        and np.isclose(r2.get("dt_ms", np.nan), r1.get("dt_ms", np.nan), atol=1e-6)
+        and rbad.get("reason") == "bad_input",
+        f"列 {r2.get('dt_ms', np.nan):.3f} / 1 次元 {r1.get('dt_ms', np.nan):.3f} ms・2×n → {rbad.get('reason')!r}")
 
     # ---- T13 Hellqvist の早期特徴（26番の第 4 の腕。正しさの検査が無かった）
     print("\nT13 早期特徴（Hellqvist の p1・b・Am_b/Am_p1）")

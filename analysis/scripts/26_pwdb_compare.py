@@ -100,7 +100,7 @@ PAIRS = [
     # 大動脈だけを硬くすると PPT はむしろ延びる（SI は下がる）ことを示した。
     # つまり ΔT を「大動脈 PWV の代替」として検定するのは的を外しうる。
     # 主要目標（PWV_a）は凍結したまま、頸大腿 PWV を副次として並べる。
-    ("dt_v2_ms",       "PWV_cf", -1, "ok_v2",  "副次 ΔT   第2版 二段 × 頸大腿PWV"),
+    ("dt_v2_ms",       "PWV_cf", -1, "ok_v2",  "副次 ΔT   第2版 歪みガウス × 頸大腿PWV"),
     ("dt_lm_ms",       "PWV_cf", -1, None,     "副次 ΔT   ランドマーク × 頸大腿PWV"),
     # --- 第4の手法: 分解を使わない早期振幅比（Hellqvist 2024）---
     # 33名・頸大腿PWV 参照で r = −0.81、大動脈PWV で −0.75。硬さ指数（中枢PWV と
@@ -108,7 +108,9 @@ PAIRS = [
     # 同論文は「硬さ指数のように S と D のピーク間の時間に頼る指標ではなく、
     # 波形の早期部分に注目すべき」と明記している。我々の ΔT はまさにその時間である。
     ("amb_amp1",       "PWV_a",  -1, None,     "探索 Am_b/Am_p1  早期振幅比（Hellqvist）"),
-    ("amb_amp1",       "PWV_cf", -1, None,     "副次 Am_b/Am_p1 × 頸大腿PWV"),
+    # 早期振幅比は主要目標を持たない第 4 の腕なので、頸大腿PWV の行も「探索」（副次は主要行の目標違い）。
+    # 判定規則の「早期振幅比が成立」は大動脈PWV の行（ランドマーク ΔT と同じ真値）で読む
+    ("amb_amp1",       "PWV_cf", -1, None,     "探索 Am_b/Am_p1 × 頸大腿PWV（Hellqvist の参照）"),
     # Hellqvist の p1（1次微分の下降への接線の零交点）を収縮期ピークに使った ΔT。
     # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
     # 収縮期ピークを定義できる。我々の未解決問題（型3で ΔT 誤差 約30 ms）に効くか
@@ -119,8 +121,8 @@ PAIRS = [
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
     # 真値との向きの予測までは立てられないので記述にとどめる。
-    ("dps_v2_ms",      "PWV_a",  0, "ok_v2",   "（記述）DPS 第2版 二段 × 大動脈PWV"),
-    ("dps_v2_ms",      "pvr",    0, "ok_v2",   "（記述）DPS 第2版 二段 × 末梢血管抵抗"),
+    ("dps_v2_ms",      "PWV_a",  0, "ok_v2",   "（記述）DPS 第2版 歪みガウス × 大動脈PWV"),
+    ("dps_v2_ms",      "pvr",    0, "ok_v2",   "（記述）DPS 第2版 歪みガウス × 末梢血管抵抗"),
 ]
 
 # (列, 表示名, 採否列)。因子主効果は各手法が合格とした例で計算する
@@ -423,7 +425,8 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"{lab:<26}{rate:>8}{_m(f'nrmse_{key}'):>9}{_m(f'errx_{key}_ms', '{:.2f}'):>10}"
               f"{_m(dtc, '{:.0f}'):>14}{_m(f'dtse_{key}_ms', '{:.1f}'):>12}")
     print(f"  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<{pda2.NRMSE_MAX:.0%}・"
-          f"Errx<{pda2.ERRX_MS:.0f}ms・Erry<{pda2.ERRY} かつ解が一意）。")
+          f"Errx<{pda2.ERRX_MS:.0f}ms・Erry<{pda2.ERRY} に加え、ΔT の SE ≤ {pda2.SE_DT_MAX_MS:.0f} ms・"
+          "曖昧でない・型3 でない）。")
     print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は鍵点に重みを置いた")
     print("  RMS で正規化。同じ列に並ぶが同じ量ではないので、腕をまたいで比べないこと。")
     for key, lab, _dtc, _ric, okc in METHODS:
@@ -702,11 +705,15 @@ def report(d, out_dir: Path | None = None) -> dict:
         print("  『心拍数』の列が最大なら、その指標が拾っているのは主に心拍である。")
 
     print(f"\n{'-' * 78}\n読み方\n{'-' * 78}")
-    print("  第2版が A・B・C すべてで成立 → 失敗は実装の問題だった。研究2へ進める。")
-    print("  第2版が A だけ成立         → 選択の効果。改善とは言えない。")
-    print("  第2版もランドマーク法に届かない → PDA という枠組みでは指尖 PPG から")
-    print("    硬さ・抵抗を取り出せない。ランドマーク指標に乗り換えるか、撤退する。")
-    print("  モデル出力 PTT が強い負を示さないなら、この比較自体を疑うこと（陽性対照）。")
+    print("  読み方は docs/research/gate0_rules_v2.md の表に従う（結果を見る前に固定してある）。要点:")
+    print("  「PDA 第2版が成立」と書けるのは、主たる経路（歪みガウス）が ΔT×大動脈PWV と RI×末梢血管抵抗の")
+    print("    **両方**で A・B・C すべて成立し、判定に * が付かないときだけ。片方だけなら「ΔT は成立・RI は不成立」と書く。")
+    print("  A だけ成立               → 選択の効果。改善とは言えない。")
+    print("  B が判定できない         → 「A・B・C すべて成立」とは書かない（該当行）。")
+    print("  ガンマ経路だけが成立      → 「PDA が成立」とは書かない（張り付き 96%・心拍交絡）。")
+    print("  第2版もランドマーク法に届かない → 分解由来の量はこの問いではランドマーク由来に劣る（Goswami）。")
+    print("    「PDA が壊れている」とは書かない。ランドマーク指標に乗り換える。")
+    print("  0. の陽性対照が通らなければ表全体が無効（冒頭と末尾に宣言される）。")
 
     if not summary_control["pass"]:
         print("\n  **再掲: 陽性対照が通っていない。上の判定はすべて無効である。**")
@@ -714,7 +721,9 @@ def report(d, out_dir: Path | None = None) -> dict:
 
     out_dir = OUT if out_dir is None else Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    p = out_dir / "pwdb_compare.csv"
+    # --limit の予備実行は別名で残す（全例の実行に上書きされない。27番の既定は全例の CSV を読む）
+    nl = int(d["n_limit"].iloc[0]) if "n_limit" in d and len(d) else 0
+    p = out_dir / (f"pwdb_compare_limit{nl}.csv" if nl > 0 else "pwdb_compare.csv")
     d.to_csv(p, index=False)
     print(f"\n被験者別の結果: {p}（pda2 版 {pda2.code_version()}）")
     return summary
@@ -806,6 +815,8 @@ def _selftest_root(td: Path, n: int = 96):
 
 
 def selftest(jobs: int = 2) -> int:
+    import contextlib
+    import io
     import tempfile
     print("== 26_pwdb_compare 自己検証（模擬PWDB・ネットワーク不要） ==\n")
     print("  注意: 模擬波の基本は 2 ガウスの和で、どの手法も通って当然である。")
@@ -836,6 +847,15 @@ def selftest(jobs: int = 2) -> int:
             len(d_lim) == 8 and d_lim["subj_no"].is_unique
             and bool(d_lim["dt_lm_ms"].notna().any()) and bool(d_lim["klass_own"].notna().all()),
             f"n={len(d_lim)}（真値の表は {n_sub} 名）")
+        # 予備実行の CSV は別名で残り、全例の名前を使わない（22 巡目）。表の全文の記録は _Tee が担う
+        with contextlib.redirect_stdout(io.StringIO()):
+            report(d_lim, out_dir=Path(td) / "outlim")
+        rep("--limit の出力は pwdb_compare_limitN.csv に残り、全例の名前を使わない",
+            (Path(td) / "outlim" / "pwdb_compare_limit8.csv").exists()
+            and not (Path(td) / "outlim" / "pwdb_compare.csv").exists())
+        _a, _b = io.StringIO(), io.StringIO()
+        _t = _Tee(_a, _b); _t.write("x"); _t.flush()
+        rep("表の全文の記録（_Tee）が画面と記録の両方に書く", _a.getvalue() == "x" and _b.getvalue() == "x")
         rep("第2版が標準誤差を返している（凍結版にはない量）",
             "dtse_v2_ms" in d and np.isfinite(d["dtse_v2_ms"]).any(),
             f"中央値 {float(np.nanmedian(d['dtse_v2_ms'])):.2f} ms"
@@ -898,7 +918,7 @@ def selftest(jobs: int = 2) -> int:
         rep("仕込んだ ランドマークRI × 抵抗（正）を復元",
             bool(s.get("A|digital_ri|pvr", {}).get("pass")))
         j2 = s.get("A|dt_v2_ms|PWV_a")
-        rep("第2版 二段 が模擬波の ΔT × PWV を復元（配管の確認）",
+        rep("第2版 歪みガウス が模擬波の ΔT × PWV を復元（配管の確認）",
             bool(j2 and j2["pass"]), f"{j2}")
         n_common = int(d["ok_all"].sum())
         ns = _n_strata(d[d["ok_all"] == 1], "dt_v2_ms")
@@ -1012,11 +1032,47 @@ def main() -> None:
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
+    if args.jobs < 1:
+        ap.error("--jobs は 1 以上")
+    if args.limit < 0:
+        ap.error("--limit は 0 以上（0 = 全員）")
     if args.selftest:
         sys.exit(selftest(jobs=max(1, min(args.jobs, 4)) if args.jobs > 1 else 2))
     if not args.pwdb:
         ap.error("--pwdb を指定してください（--selftest なら不要）")
-    report(build(Path(args.pwdb), limit=args.limit, jobs=args.jobs))
+    run(Path(args.pwdb), limit=args.limit, jobs=args.jobs)
+
+
+class _Tee:
+    """画面と記録ファイルの両方に書く（表の全文を lab_log に写せるように残す）。"""
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, s):
+        for f in self.streams:
+            f.write(s)
+
+    def flush(self):
+        for f in self.streams:
+            f.flush()
+
+
+def run(root: Path, limit: int = 0, jobs: int = 1, out_dir: Path | None = None) -> dict:
+    """build → report。表の全文を `pwdb_compare_report[_limitN].txt` に残す（予備実行の表が
+    全例の実行で消えない。判定規則の順序 1 は予備実行の表 0・1a・1b・表 1・2 を読む）。"""
+    out_dir = OUT if out_dir is None else Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    d = build(root, limit=limit, jobs=jobs)
+    log_p = out_dir / (f"pwdb_compare_report_limit{limit}.txt" if limit else "pwdb_compare_report.txt")
+    old = sys.stdout
+    with open(log_p, "w", encoding="utf-8") as fh:
+        sys.stdout = _Tee(old, fh)
+        try:
+            s = report(d, out_dir=out_dir)
+        finally:
+            sys.stdout = old
+    print(f"  表の全文: {log_p}", flush=True)
+    return s
 
 
 if __name__ == "__main__":

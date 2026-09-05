@@ -46,7 +46,7 @@
 次数の適応
 ----------
 既定は歪みガウス2成分・ガンマ3成分。採否の規準（NRMSE・Errx・Erry）を満たさないか、
-ΔT の異なる競合解が残差で拮抗する場合に、収縮後期波を1つ足して4成分にする。
+ΔT の異なる競合解が残差で拮抗する場合（曖昧）に、収縮後期波を1つ足す（歪みガウス 3・ガンマ 4 成分）。
 増やした拍では波形の当てはまりは良くなるが ΔT は真値から約 2 ms 遠ざかる（合成波）ので、
 **増やしたかどうかを必ず返し、下流で層別する**。
 """
@@ -84,10 +84,11 @@ FOOT_SEARCH_FRAC = 0.08   # 基線の足を探す範囲（拍の両端それぞ�
 # だけでは、成分の振幅が潰れて時刻が同定できていない解を通してしまう
 # （`scripts/25_pda2_validate.py` T4 で σ=11,725 ms の解が採用されるのを確認した）。
 SE_DT_MAX_MS = 20.0
-# この値は3か所で使う。(1) ΔT の標準誤差の上限、(2) 競合解の ΔT の広がりの許容、
-# (3) 反射波の候補が2つあるときの「僅差」の下限。いずれも「これを超える不確かさの拍は
+# この値は4か所で使う。(1) ΔT の標準誤差の上限、(2) 競合解の ΔT の広がりの許容、
+# (3) 反射波の候補が2つあるときの「僅差」の下限、(4) 貯留槽にするかどうかの境目までの距離の下限
+# （11 巡目 F2）。いずれも「これを超える不確かさの拍は
 # 研究1の症例内 ΔPWTT の標準偏差（18 ms）より大きく、問いに何も寄与しない」という同じ根拠。
-# `decompose(se_dt_max_ms=…)` は 3 か所すべてに同じ値を渡す（1 か所だけ動かすと根拠と食い違う）。
+# `decompose(se_dt_max_ms=…)` は 4 か所すべてに同じ値を渡す（1 か所だけ動かすと根拠と食い違う）。
 # 一意性の検査で「競合解」とみなす残差の許容（最良解の何倍まで）。**根拠なく決めた**閾値の
 # 一つで、27番 B 層で 1.05・1.5 を検定する。
 TOL_COST = 1.15
@@ -991,14 +992,14 @@ def _ambiguous(sols, step, roles, tol_cost: float = TOL_COST,
 
 def ambiguity_flags(sols, step, roles, tol_cost: float = TOL_COST,
                     tol_dt_ms: float = SE_DT_MAX_MS, lm=None, t=None) -> bool:
-    """`decompose` が使う曖昧判定の合成。3 つのどれかで曖昧とする。
+    """`decompose` が使う曖昧判定の合成。4 つのどれかで曖昧とする。
 
       (1) 競合解の ΔT が拮抗する（`_ambiguous`: 広がり > tol_dt_ms、対応づけが潰れた inf、反射波なし）
       (2) 前進波がスロット 0 でない（順序の罰則が守られておらず役割が信用できない）
       (3) 反射波の候補が 2 つ以上あって僅差（ref_margin_ms < tol_dt_ms。選択がくじ引き）
       (4) 貯留槽にするかどうかの判断が境目に近い（res_margin_ms < tol_dt_ms。11 巡目 F2）
 
-    27番 A 層は同じ論理を保存された材料（dtsp・marg・fwd0）から再計算する（`recompute_amb`）。
+    27番 A 層は同じ論理を保存された材料（dtsp・marg・fwd0・resm）から再計算する（`recompute_amb`）。
     ここを変えたらそちらも変えること。自己検証が 26番の実出力で 100% 一致を検算する。
     """
     return bool(_ambiguous(sols, step, roles, tol_cost=tol_cost, tol_dt_ms=tol_dt_ms, lm=lm, t=t)
@@ -1033,7 +1034,7 @@ def decompose(t, y, fs: float, route: str = "skew",
                        成分が重なって時刻が同定できないことの表れで、成分を増やしても
                        平坦な谷は平坦なままである（合成波の心拍 130 で確認）
     se_dt_max_ms       ΔT の不確かさの上限 [ms]。標準誤差・競合解の広がり・反射波の僅差の
-                       3 か所に同じ値を使う（根拠が同じなので 1 か所だけ動かさない）
+                       4 か所に同じ値を使う（根拠が同じなので 1 か所だけ動かさない）
     tol_cost           競合解とみなす残差の許容（最良解の何倍まで）
     accept_proxy       型3（鍵点が代用点）の拍を採用に含めるか。**既定は含めない**（下記）
 
@@ -1062,11 +1063,20 @@ def decompose(t, y, fs: float, route: str = "skew",
     下流では**必ず層別して読むこと**。
     """
     t = np.asarray(t, float)
+    y = np.asarray(y)
+    # n×1 の列（DataFrame の列や reshape の名残）は 1 次元に潰して受ける。潰せない形は bad_input
+    # （13 巡目: 2 次元のまま通すと下流で生の例外が出ていた。I1「例外を出さない」）
+    if t.ndim != 1:
+        t = np.squeeze(t)
+    if y.ndim != 1:
+        y = np.squeeze(y)
+    if t.ndim != 1 or y.ndim != 1:
+        return {"ok": False, "reason": "bad_input"}
     # 入力の検証（7 巡目の独立監査: fs=inf で例外、fs=0・nan で低域通過が黙って外れていた）。
     # 時刻は秒で単調増加、fs は有限の正で t の間隔と 10% 以内で一致すること
     if not (np.isfinite(fs) and fs > 0) or t.size < 2 or not np.isfinite(t).all():
         return {"ok": False, "reason": "bad_input"}
-    if np.asarray(y).shape != t.shape:          # 長さが違えば以降の対応づけが無意味
+    if y.shape != t.shape:                       # 長さが違えば以降の対応づけが無意味
         return {"ok": False, "reason": "bad_input"}
     dts = np.diff(t)
     if not (dts > 0).all() or abs(1.0 / float(np.median(dts)) - fs) > 0.10 * fs:

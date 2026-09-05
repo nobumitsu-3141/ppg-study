@@ -34,7 +34,7 @@ PWDB の心拍範囲（53〜97）と「反射波が見えないほど小さけ�
 **方法の特性**として率を報告する。7 巡目の 150 拍では、領域外の採用の 1 割で ΔT が
 20 ms 以上ずれ（安定した誤った解）、心拍 ≥ 109 では 250 Hz に落とすと ΔT が 20 ms 以上
 動く拍があった。7 巡目の領域内 150 拍では歪みガウス経路の採用 55 のうち 3（5%）、ガンマ経路の 75 のうち
-7（9%）が誤採用（11 巡目の版 df6a79ddcf14 では 48 のうち 3・68 のうち 3）で、いずれの版でもすべて
+7（9%）が誤採用（11 巡目以降の版 048d2b43bb05（13 巡目に入口の検証と注釈だけを変えた。数値は 11 巡目と同じ） では 48 のうち 3・68 のうち 3）で、いずれの版でもすべて
 幅広い反射波（σ 90 ms・歪みなし＝切痕なしの拍）だった。幅広い反射波は貯留槽と
 形で区別できず、3 成分にしても同じ解に落ちる（同じ 150 拍で 3 成分既定は誤り 6・誤差中央値
 4.9 ms と現行より悪い）。**これは方法の限界で、規準では落とせない。**
@@ -259,8 +259,13 @@ def main() -> None:
             extra.add("amp")
         work.append((k, cond, extra))
     print(f"== 28 不変条件の乱数検査: {args.n} 拍 × 2 経路（seed {args.seed}, jobs {args.jobs}） ==\n")
-    print(f"  条件の範囲: 心拍 45〜140、切痕あり 60%、ΔT 60 ms〜min(450, 0.45T)、RI 0.1〜0.9、")
-    print(f"  雑音 {{0, 0.005, 0.01, 0.02, 0.04}}、基底 skew/gamma、貯留槽 τ 0.25〜0.5 s。")
+    if args.domain:
+        print(f"  条件の範囲（--domain: 方法の有効な領域の中だけ）: 心拍 {DOMAIN['hr'][0]:.0f}〜{DOMAIN['hr'][1]:.0f}、"
+              f"切痕あり 60%、ΔT 60 ms〜min(450, 0.45T)、RI {DOMAIN['ri_min']:.1f}〜0.9、")
+        print(f"  雑音 {{0, 0.005, 0.01}}（≤ {DOMAIN['noise_max']}）、基底 skew/gamma、貯留槽 τ 0.25〜0.5 s。")
+    else:
+        print("  条件の範囲（全域）: 心拍 45〜140、切痕あり 60%、ΔT 60 ms〜min(450, 0.45T)、RI 0.1〜0.9、")
+        print("  雑音 {0, 0.005, 0.01, 0.02, 0.04}、基底 skew/gamma、貯留槽 τ 0.25〜0.5 s。")
     print(f"  決定性は 1/10、標本化周波数は 1/5、振幅・直流は 1/7 の拍で検査する。\n")
     if args.jobs > 1:
         from concurrent.futures import ProcessPoolExecutor
@@ -280,6 +285,12 @@ def main() -> None:
     import pandas as pd
     df_out = pd.DataFrame(rows_all)
     df_out["pda2_version"] = pda2.code_version()      # どの版の分解かを残す（26番と同じ）
+    # 環境も残す（26番と同じ）。率の門番は規準の際の 1〜2 拍で動きうるので、Mac と雲で
+    # 数字が違ったときに scipy の版の違いか pda2 の違いかを切り分ける
+    import platform, scipy
+    df_out["python_version"] = platform.python_version()
+    df_out["numpy_version"] = np.__version__
+    df_out["scipy_version"] = scipy.__version__
     df_out.to_csv(out, index=False)
     print(f"  拍ごとの結果: {out}\n")
     flips = [x for x in info if x[0] == "flip"]

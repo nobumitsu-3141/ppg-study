@@ -208,12 +208,16 @@ K(SI,RI)補正→症例単位5-fold CV→ブートストラップCI の一連を
 倫理委員会の該当性照会（P0-2, 2026-08-28「審査不要」との回答）。
 
 ```bash
-python3 scripts/00_download_lists.py       # 症例・トラック一覧の取得
-python3 scripts/01_track_inventory.py      # P1-1: 装置別CO×波形の保有集計
-python3 scripts/05_diagnose_waveform.py 1  # 波形の素性診断（極性・形・分解可能性）
-python3 scripts/02_fetch_case.py 1         # P0-3: 1症例で波形取得→PDA→PWTTの動作確認
-python3 scripts/03_run_analysis.py --limit 5 --jobs 6   # パイロット
+python3 scripts/00_download_lists.py
+python3 scripts/01_track_inventory.py
+python3 scripts/05_diagnose_waveform.py 1
+python3 scripts/02_fetch_case.py 1
+python3 scripts/03_run_analysis.py --limit 5 --jobs 6
 ```
+
+上から順に、症例・トラック一覧の取得、装置別 CO × 波形の保有集計（P1-1）、波形の素性診断（極性・形・
+分解可能性）、1 症例で波形取得→PDA→PWTT の動作確認（P0-3）、パイロット（5 例）。
+行末の `#` 注釈は付けない（zsh では `#` 以降が引数として渡り、`unrecognized arguments` で落ちる）。
 
 ### 処理時間
 
@@ -286,7 +290,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/20_pwdb_validity.py` | 研究0（PWDB）: 凍結版 PDA の妥当性（判定規準 `_judge` の本家） |
 | `scripts/23_pwdb_landmarks.py` | 研究0: ランドマーク指標（Charlton 同梱値）の妥当性、模擬 PWDB の生成 |
 | `scripts/25_pda2_validate.py` | PDA 第2版の合成波検証 T1〜T13（検査数は台本の出力を正とする） |
-| `scripts/26_pwdb_compare.py` | 研究0 決定試験: 第2版・凍結版・ランドマーク・早期振幅比を同じ真値・同じ規準で並べる |
+| `scripts/26_pwdb_compare.py` | 研究0 決定試験: 第2版・凍結版・ランドマーク・早期振幅比を同じ真値・同じ規準で並べる。出力は `data/pwdb/pwdb_compare[_limitN].csv` と表の全文 `pwdb_compare_report[_limitN].txt`（予備実行は全例の実行に上書きされない） |
 | `scripts/27_threshold_sensitivity.py` | 閾値の感度解析（A 層: 当てはめ直し不要、B 層: 部分集合で当てはめ直し） |
 | `scripts/28_pda2_invariants.py` | 乱数で作った拍での不変条件の検査（例に依存しない門番） |
 
