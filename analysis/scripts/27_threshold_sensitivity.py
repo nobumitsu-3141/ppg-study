@@ -304,6 +304,24 @@ def selftest() -> int:
         f"凍結 {j_fro['med_abs']:.3f} 対 すべて外す {j_none['med_abs']:.3f}"
         if j_fro and j_none else "判定できず")
     rep("判定規準を 20・26番と共有している", M.CRIT_RHO == 0.30 and C.MIN_PER_AGE == 8)
+
+    # 26番の自己検証が残した模擬 CSV があれば、採否の再計算が保存値と一致するかを通しで検算する。
+    # これが 100% でなければ、A 層の表は 26番と論理がずれており信用できない
+    e2e = OUT / "_selftest_pwdb_compare.csv"
+    if e2e.exists():
+        dd = pd.read_csv(e2e)
+        agree = []
+        for tag in ("v2", "v2g"):
+            if f"ok_{tag}" in dd and f"nrmse_{tag}" in dd:
+                agree.append(float(np.mean(recompute_ok(dd, tag, FROZEN) == dd[f"ok_{tag}"].to_numpy(int))))
+        rep("26番の実出力で採否の再計算が保存値と 100% 一致（通し検算）",
+            bool(agree) and min(agree) >= 0.999999,
+            f"一致率 {[f'{a:.4%}' for a in agree]}" if agree else "列が無い")
+        same = ("pda2_version" in dd and str(dd["pda2_version"].iloc[0]) == pda2.code_version())
+        rep("26番の出力に pda2 の版が記録され、現在の版と一致する", same,
+            f"CSV {dd['pda2_version'].iloc[0] if 'pda2_version' in dd else '—'} / 現在 {pda2.code_version()}")
+    else:
+        print("  （26番の自己検証の出力が無いので通し検算は省略。先に 26番 --selftest を回すと検算できる）")
     rep("凍結値が pda2 の定数と一致している",
         FROZEN["nrmse"] == pda2.NRMSE_MAX and FROZEN["errx"] == pda2.ERRX_MS
         and FROZEN["erry"] == pda2.ERRY and FROZEN["se"] == pda2.SE_DT_MAX_MS)
@@ -348,7 +366,19 @@ def main() -> None:
         raise FileNotFoundError(
             f"{p} がありません。先に 26番を実行してください:\n"
             "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
-    post_hoc(pd.read_csv(p), out_dir=OUT)
+    d = pd.read_csv(p)
+    if "pda2_version" in d:
+        v_csv = str(d["pda2_version"].iloc[0])
+        v_now = pda2.code_version()
+        if v_csv != v_now:
+            raise SystemExit(
+                f"pwdb_compare.csv は pda2 版 {v_csv} で作られたが、現在の pda2 は {v_now} です。\n"
+                "分解のコードが変わっています。先に 26番を回し直してください:\n"
+                "    python3 scripts/26_pwdb_compare.py --pwdb ~/pwdb --jobs 8")
+        print(f"  pda2 版 {v_now}（CSV と一致）")
+    else:
+        print("  （CSV に pda2 版の記録がない。古い 26番の出力の可能性がある）")
+    post_hoc(d, out_dir=OUT)
     if args.pwdb:
         refit(Path(args.pwdb), jobs=args.jobs, route=args.route, out_dir=OUT)
 

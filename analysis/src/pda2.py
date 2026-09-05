@@ -59,12 +59,26 @@ from scipy.special import erf
 
 SQRT2 = np.sqrt(2.0)
 
+
+def code_version() -> str:
+    """このファイル自身の内容のハッシュ（先頭 12 桁）。
+
+    26番が被験者別 CSV に書き、27番が読むときに照合する。pda2 を変えた後に 26番を回し直さず
+    27番だけ回すと、古い分解結果に新しい閾値を当てることになる。それを黙って通さないため。
+    """
+    import hashlib
+    try:
+        return hashlib.sha256(open(__file__, "rb").read()).hexdigest()[:12]
+    except Exception:
+        return "unknown"
+
 # --- 採否の規準（Wang 2013 の閾値。amplitude を1に正規化した波形に対して）
 ERRX_MS = 6.0      # 鍵点の時間位置の絶対誤差の総和 [ms]
 ERRY = 0.01        # 鍵点の振幅の絶対誤差の総和
 NRMSE_MAX = 0.02   # 重み付き正規化二乗平均平方根誤差
 W_KEY = 20.0       # 鍵点に置く重み（Wang は 1〜100 を探索。既定は中間）
 LOWPASS_HZ = 18.0  # Tigges 2017・Couceiro 2015 に合わせる
+FOOT_SEARCH_FRAC = 0.08   # 基線の足を探す範囲（拍の両端それぞれ 8%）
 # ΔT の標準誤差の上限 [ms]。研究1で観測した症例内 ΔPWTT の標準偏差が 18 ms なので、
 # それを超える誤差の拍は問いに何も寄与しない。当てはまりの規準（NRMSE・Errx・Erry）
 # だけでは、成分の振幅が潰れて時刻が同定できていない解を通してしまう
@@ -177,9 +191,19 @@ def preprocess(t: np.ndarray, y: np.ndarray, fs: float,
         if y.size > padlen:                       # filtfilt は padlen より長い列を要求する
             y = filtfilt(b, a, y)
     if detrend and len(y) > 3:
-        # 両端を結ぶ直線を引く（拍は極小点で切り出してある前提）
-        base = np.linspace(y[0], y[-1], len(y))
-        y = y - base
+        # 足（この拍の立ち上がり点）から次の足への直線を引く。
+        # 両端の標本をそのまま使うと、切り出し位置が数 ms ずれただけで基線が傾き、
+        # RI が 10% 動く（合成波で ±4 ms のずれに対し 0.517〜0.573）。ΔT は時刻の差なので
+        # 影響を受けないが、RI は振幅の比なので基線に敏感である。
+        # Basso 2024 と同様に、両端それぞれ拍の 8% の範囲で最小値を探して足とする。
+        n = len(y)
+        k = max(2, int(round(FOOT_SEARCH_FRAC * n)))
+        i0 = int(np.argmin(y[:k]))
+        i1 = n - k + int(np.argmin(y[n - k:]))
+        if i1 > i0:
+            slope = (y[i1] - y[i0]) / (i1 - i0)
+            base = y[i0] + slope * (np.arange(n) - i0)
+            y = y - base
     y = y - float(np.min(y))
     amp = float(np.max(y))
     if amp <= 0:
@@ -224,7 +248,8 @@ def _local_extrema(v: np.ndarray, lo: int, hi: int):
     return mins, maxs
 
 
-def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> dict:
+def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False,
+                   allow_proxy: bool = True) -> dict:
     """収縮期ピーク・重複切痕・拡張期ピークを探し、波形型を判定する。
 
     手順
@@ -243,7 +268,9 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> d
        dia_t < sys_t という無意味な鍵点を作っていた。
 
     force_proxy=True は、データ側が代用点（型3）だったときに**模型側も同じ方法で**
-    鍵点を取るための指定。定義の違う鍵点同士で Errx を取らないため。
+    鍵点を取るための指定。allow_proxy=False は逆に、データ側が極値（型1）だったときに
+    模型側にも極値を要求する指定（極値が無ければ鍵点なし＝不合格に倒す）。
+    どちらも、定義の違う鍵点同士で Errx を取らないためにある。
 
     返り値の klass:
         1 明瞭な重複切痕と拡張期ピークがある（極値）
@@ -257,7 +284,7 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> d
     i_sys = int(np.argmax(y))
     sys_t, sys_v = _refine(t, y, i_sys)
     out = {"sys_t": sys_t, "sys_v": sys_v, "i_sys": i_sys,
-           "notch_t": np.nan, "dia_t": np.nan, "dia_v": np.nan,
+           "notch_t": np.nan, "notch_v": np.nan, "dia_t": np.nan, "dia_v": np.nan,
            "klass": 5, "source": "none"}
     if i_sys >= n - 5:
         return out
@@ -278,12 +305,16 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> d
             # 微小な揺らぎを「明瞭な切痕」と誤認して、その位置で Errx を取らないため
             if maxs.size and float(y[int(maxs[0])] - y[j_min]) >= EXTREMA_MIN_PROM:
                 j_max = int(maxs[0])
-                nt, _ = _refine(t, y, j_min)
+                nt, nv = _refine(t, y, j_min)
                 dt_, dv = _refine(t, y, j_max)
-                out.update(notch_t=nt, dia_t=dt_, dia_v=dv, klass=1, source="extrema")
+                out.update(notch_t=nt, notch_v=nv, dia_t=dt_, dia_v=dv,
+                           klass=1, source="extrema")
                 return out
 
     # --- 2. 1次微分の局所極値で代用（切痕の無い波形）
+    if not allow_proxy:
+        out["klass"] = 4
+        return out
     d1 = np.gradient(y)
     mins1, maxs1 = _local_extrema(d1, i_sys + 1, i_dia_hi + 1)
     maxs1 = maxs1[(maxs1 >= i_lo) & (maxs1 <= i_dia_hi)]
@@ -301,8 +332,10 @@ def find_landmarks(t: np.ndarray, y: np.ndarray, force_proxy: bool = False) -> d
         _, k, j = best
         nt, _ = _refine(t, -d1, k)          # 最速下降点
         dt_, _ = _refine(t, d1, j)          # 肩
+        nv = float(np.interp(nt, t, y))
         dv = float(np.interp(dt_, t, y))
-        out.update(notch_t=float(nt), dia_t=float(dt_), dia_v=dv, klass=3, source="d1")
+        out.update(notch_t=float(nt), notch_v=nv, dia_t=float(dt_), dia_v=dv,
+                   klass=3, source="d1")
         return out
     out["klass"] = 4
     return out
@@ -609,12 +642,14 @@ def acceptance(t, y, yhat, lm, w=None, nrmse_max: float = NRMSE_MAX,
     denom = np.sum(w * y * y)
     nrmse = float(np.sqrt(np.sum(w * (y - yhat) ** 2) / max(denom, 1e-12)))
 
-    # データ側が代用点なら模型側も代用点で取る（定義の違う鍵点を比べない）
-    lm_hat = find_landmarks(t, yhat, force_proxy=(lm.get("source") == "d1"))
+    # データ側と同じ種類の鍵点を模型側に要求する（定義の違う鍵点を比べない）。
+    # データが極値なら模型も極値（無ければ鍵点なし→不合格）、データが代用点なら模型も代用点
+    src = lm.get("source")
+    lm_hat = find_landmarks(t, yhat, force_proxy=(src == "d1"), allow_proxy=(src != "extrema"))
     errx = 0.0
     erry = 0.0
     n_match = 0
-    for kt, kv in (("sys_t", "sys_v"), ("notch_t", None), ("dia_t", "dia_v")):
+    for kt, kv in (("sys_t", "sys_v"), ("notch_t", "notch_v"), ("dia_t", "dia_v")):
         a, b = lm[kt], lm_hat[kt]
         if np.isfinite(a) and np.isfinite(b):
             errx += abs(a - b) * 1000.0
@@ -760,21 +795,49 @@ def indices(peaks, cov, step, roles, sds=None) -> dict:
             "dps_ms": float(dps) if np.isfinite(dps) else np.nan}
 
 
-def _ambiguous(sols, step, roles, tol_cost: float = 1.15, tol_dt: float = 0.20) -> bool:
-    """ΔT の異なる競合解が残差で拮抗していないか。"""
+def competing_spread_ms(sols, step, roles, tol_cost: float = 1.15) -> float:
+    """残差が最良解の tol_cost 倍以内にある競合解の間で、ΔT が最良解からどれだけ離れるか [ms]。
+
+    多点起動の解は無料で手に入る「経験的な不確かさ」である。Wald の標準誤差は線形化に
+    依存し、平坦な尾根の上では桁違いに膨らむ（心拍 130 の合成波で Wald 709 ms に対し
+    ブートストラップ 15 ms）。一方で条件数は良否を分けない（採用例でも 1e5 に達する）。
+    競合解の広がりは、線形化にも条件数にも頼らない直接の量なので併記する。
+    """
     if len(sols) < 2:
-        return False
+        return 0.0
     best = sols[0]
     f, r = roles["forward"], roles["reflected"]
     if r is None:
-        return True
-    dt0 = best.x[step * r + 1] - best.x[step * f + 1]
+        return float("nan")
+    dt0 = (best.x[step * r + 1] - best.x[step * f + 1]) * 1000.0
+    spread = 0.0
     for s in sols[1:]:
         if s.cost <= best.cost * tol_cost:
-            dt1 = s.x[step * r + 1] - s.x[step * f + 1]
-            if dt0 > 0 and abs(dt1 - dt0) > tol_dt * dt0:
-                return True
-    return False
+            dt1 = (s.x[step * r + 1] - s.x[step * f + 1]) * 1000.0
+            spread = max(spread, abs(dt1 - dt0))
+    return float(spread)
+
+
+def _ambiguous(sols, step, roles, tol_cost: float = 1.15,
+               tol_dt_ms: float = None) -> bool:
+    """ΔT の異なる競合解が残差で拮抗していないか。
+
+    競合解（残差が最良解の tol_cost 倍以内）の ΔT が最良解と tol_dt_ms 以上違えば曖昧とする。
+    以前は相対 20% だったが、ΔT 200 ms なら 40 ms の差を見逃す。心拍 130 の合成波で、
+    ブートストラップの ΔT が 204 ms と 175 ms の二峰に割れているのに曖昧と判定されなかった。
+    差の許容は**絶対値**で、ΔT の標準誤差の上限（SE_DT_MAX_MS）と同じ 20 ms に結ぶ。
+    根拠も同じ（研究1の症例内 ΔPWTT の SD 18 ms）。これで閾値が一つ減る。
+
+    注意: 競合解のスロット r は「r 番目に早い成分」であって、最良解と同じ生理的な役割とは
+    限らない（3成分のとき、中間成分と最後の成分のどちらが反射波かは解ごとに変わりうる）。
+    そのぶん曖昧と判定しやすい方向に偏るが、保守的な側の偏りなので許容する。
+    """
+    if tol_dt_ms is None:
+        tol_dt_ms = SE_DT_MAX_MS
+    if roles["reflected"] is None:
+        return True
+    sp = competing_spread_ms(sols, step, roles, tol_cost)
+    return bool(np.isfinite(sp) and sp > tol_dt_ms)
 
 
 # ============================================================ 入口
@@ -890,9 +953,12 @@ def decompose(t, y, fs: float, route: str = "skew",
                 n_used, escalated = nw0 + 1, True
 
     ix = indices(peaks, cov, step, roles, sds)
+    ix["dt_spread_ms"] = competing_spread_ms(fit["sols"], step, roles)
     se_ok = np.isfinite(ix["dt_se_ms"]) and ix["dt_se_ms"] <= se_dt_max_ms
     reason = ""
-    if not acc["ok"]:
+    if acc["n_landmark_matched"] < 2 and lm["klass"] >= 4:
+        reason = "no_landmarks"                 # データ側に鍵点が無い（型4〜5）
+    elif not acc["ok"]:
         reason = "landmark_or_fit"
     elif roles["reflected"] is None:       # _ambiguous は反射波が無いとき True を返すので先に見る
         reason = "no_reflected"

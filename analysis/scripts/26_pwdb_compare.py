@@ -117,12 +117,13 @@ PAIRS = [
     ("dps_v2_ms",      "pvr",    0, "ok_v2",   "（記述）DPS 第2版 二段 × 末梢血管抵抗"),
 ]
 
-IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA"), ("dt_v2_ms", "ΔT 第2版歪み"),
-                   ("dt_v2g_ms", "ΔT 第2版ガンマ"), ("dt_lm_ms", "ΔT ランドマーク"),
-                   ("ri_v1", "RI 凍結PDA"), ("ri_v2", "RI 第2版歪み"),
-                   ("ri_v2g", "RI 第2版ガンマ"), ("digital_ri", "RI ランドマーク"),
-                   ("dps_v2_ms", "DPS 第2版歪み"), ("amb_amp1", "Am_b/Am_p1"),
-                   ("dt_p1_ms", "ΔT p1基準")]
+# (列, 表示名, 採否列)。因子主効果は各手法が合格とした例で計算する
+IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA", "ok_v1"), ("dt_v2_ms", "ΔT 第2版歪み", "ok_v2"),
+                   ("dt_v2g_ms", "ΔT 第2版ガンマ", "ok_v2g"), ("dt_lm_ms", "ΔT ランドマーク", None),
+                   ("ri_v1", "RI 凍結PDA", "ok_v1"), ("ri_v2", "RI 第2版歪み", "ok_v2"),
+                   ("ri_v2g", "RI 第2版ガンマ", "ok_v2g"), ("digital_ri", "RI ランドマーク", None),
+                   ("dps_v2_ms", "DPS 第2版歪み", "ok_v2"), ("amb_amp1", "Am_b/Am_p1", None),
+                   ("dt_p1_ms", "ΔT p1基準", None)]
 
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
 # 20番の `_by_age` は年齢層ごとに 8 名以上を要求する。全体の人数だけで門番を作ると、
@@ -193,6 +194,7 @@ def indices_for_subject(args_tuple):
                 out[f"ri_{tag}"] = r.get("ri", np.nan)
                 out[f"dtse_{tag}_ms"] = r.get("dt_se_ms", np.nan)
                 out[f"dps_{tag}_ms"] = r.get("dps_ms", np.nan)   # Goswami 2010
+                out[f"dtsp_{tag}_ms"] = r.get("dt_spread_ms", np.nan)   # 競合解の ΔT の広がり
                 out[f"rise_{tag}"] = r.get("ri_se", np.nan)
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)
@@ -220,8 +222,12 @@ def build(root: Path, limit: int = 0, jobs: int = 1):
     import pandas as pd
     root = Path(root).expanduser()
     hae, cfg, ppg, _extras = M.load_pwdb(root)
-    if limit:
-        ppg = ppg.iloc[:limit]
+    if limit and limit < len(ppg):
+        # 先頭 N 名ではなく等間隔に N 名。PWDB は被験者が年齢順に並んでいる可能性があり、
+        # 先頭だけ取ると 1 つの年齢層に偏る。年齢層内の順位相関が判定なので全層が要る
+        step = max(1, len(ppg) // limit)
+        ppg = ppg.iloc[::step].iloc[:limit]
+        print(f"  --limit: {step} 名おきに {len(ppg)} 名を取る（全年齢層を含めるため）", flush=True)
     hr_by = dict(zip(hae["subj_no"].astype(int), hae["HR"].astype(float)))
     work = [(int(ppg.iloc[i, 0]), ppg.iloc[i].to_numpy(float),
              hr_by.get(int(ppg.iloc[i, 0]), np.nan)) for i in range(len(ppg))]
@@ -246,6 +252,13 @@ def build(root: Path, limit: int = 0, jobs: int = 1):
     for c in ("ok_v1", "ok_v2", "ok_v2g"):
         d[c] = d[c].fillna(0).astype(int)
     d["ok_all"] = ((d["ok_v1"] == 1) & (d["ok_v2"] == 1) & (d["ok_v2g"] == 1)).astype(int)
+    d["pda2_version"] = pda2.code_version()      # 27番が照合する
+    # 環境も記録する。scipy の版が違うと最適化の最終桁が変わり、閾値際の採否が数例で入れ替わりうる。
+    # 論文の再現性の記述と、Mac と雲で結果が違ったときの切り分けに使う
+    import platform, scipy
+    d["python_version"] = platform.python_version()
+    d["numpy_version"] = np.__version__
+    d["scipy_version"] = scipy.__version__
     return d
 
 
@@ -415,10 +428,11 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"\n{'-' * 78}\n3. 振った因子ごとの主効果（年齢層内。+1 と −1 の平均差 ÷ 層平均 [%]）"
               f"\n{'-' * 78}")
         print(f"{'指標':<20}" + "".join(f"{M.FACTOR_LABEL[f]:>12}" for f in M.FACTORS))
-        for col, lab in IDX_FOR_FACTORS:
-            if col not in d or _n_strata(d, col) == 0:
+        for col, lab, okc in IDX_FOR_FACTORS:
+            src = _sub(d, okc, "own")
+            if col not in src or _n_strata(src, col) == 0:
                 continue
-            e, _r = M._factor_effects(d, col)
+            e, _r = M._factor_effects(src, col)
             print(f"{lab:<20}" + "".join(f"{v:>+12.1f}" if np.isfinite(v) else f"{'—':>12}"
                                          for v in e))
         print("  概念どおりなら、硬さの指標は『脈波伝播速度』の列が最大になるはずである。")
@@ -435,7 +449,7 @@ def report(d, out_dir: Path | None = None) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     p = out_dir / "pwdb_compare.csv"
     d.to_csv(p, index=False)
-    print(f"\n被験者別の結果: {p}")
+    print(f"\n被験者別の結果: {p}（pda2 版 {pda2.code_version()}）")
     return summary
 
 
@@ -469,6 +483,9 @@ def selftest() -> int:
             f"共通 n={int(d['ok_all'].sum())} / v1={int(d['ok_v1'].sum())}"
             f" / v2={int(d['ok_v2'].sum())} / v2g={int(d['ok_v2g'].sum())}")
         s = report(d, out_dir=Path(td) / "out")
+        # 27番の通し検算用に、模擬の被験者別 CSV を残す（実データの CSV とは別名）
+        OUT.mkdir(parents=True, exist_ok=True)
+        d.to_csv(OUT / "_selftest_pwdb_compare.csv", index=False)
         rep("仕込んだ ランドマークΔT × PWV（負）を復元",
             bool(s.get("A|dt_lm_ms|PWV_a", {}).get("pass")))
         rep("仕込んだ ランドマークRI × 抵抗（正）を復元",

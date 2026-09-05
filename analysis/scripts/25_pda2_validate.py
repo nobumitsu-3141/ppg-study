@@ -13,6 +13,7 @@
   T6 採否規準          壊れた当てはめを弾けるか（Errx）
   T7 ランドマーク      心拍 50〜100・切痕あり／なしで鍵点が破綻しないか（dia < sys を作らないか）
   T8 減衰の担い手      合成波の指数減衰を反射波が吸収していないか（幅が膨らんでいないか）
+  T9 不変性と高心拍    決定性・時間原点・切り出しずれへの不変性、高心拍での挙動
 
 合成脈波
 --------
@@ -343,6 +344,38 @@ def selftest(quick: bool = False) -> int:
     rep("減衰を含む合成波でも採用される", bool(r.get("ok")))
     rep("反射波の幅が真値の 2 倍未満（減衰を反射波が吸収していない）",
         np.isfinite(sd_ref) and sd_ref < 2.0 * sd_true, f"{sd_ref:.1f} 対 {sd_true:.1f} ms")
+
+    # ---- T9 不変性と高心拍
+    print("\nT9 不変性と高心拍")
+    t, y, tr = make_beat(hr=70, noise=0.01, seed=7)
+    r1 = _run(t, y, "skew"); r2 = _run(t, y, "skew"); r3 = pda2.decompose(t + 5.0, y, FS, route="skew")
+    rep("同じ入力で同じ出力（決定性）", r1["dt_ms"] == r2["dt_ms"] and r1["ri"] == r2["ri"])
+    # ランドマーク・初期値・境界は原点に対して厳密に不変。残るのは最適化の丸め（4e-6 ms 程度）なので
+    # 許容は 1e-3 ms / 1e-6 とする（生理的な尺度より 1000 倍厳しい）
+    rep("時間軸の原点に依存しない（最適化の丸めを除く）",
+        abs(r1["dt_ms"] - r3["dt_ms"]) < 1e-3 and abs(r1["ri"] - r3["ri"]) < 1e-6,
+        f"|ΔΔT| {abs(r1['dt_ms'] - r3['dt_ms']):.1e} ms, |ΔRI| {abs(r1['ri'] - r3['ri']):.1e}")
+    # 切り出し位置のずれ（±4 ms）。ΔT は時刻の差なので不変、RI は基線に依存するので上限を置く
+    dts, ris = [], []
+    for sh in (-2, 0, 2):
+        yy = np.r_[y[-50:], y, y[:50]]; i0 = 50 + sh; seg = yy[i0:i0 + len(y)]
+        r = pda2.decompose(np.arange(len(seg)) / FS, seg, FS, route="skew")
+        dts.append(r["dt_ms"]); ris.append(r["ri"])
+    rep("切り出しが ±4 ms ずれても ΔT は 1 ms 以内", np.ptp(dts) < 1.0, f"幅 {np.ptp(dts):.2f} ms")
+    rep("切り出しが ±4 ms ずれても RI は 0.05 以内（足→足の基線）", np.ptp(ris) < 0.05, f"幅 {np.ptp(ris):.3f}")
+    # 高心拍: 成分が重なって分解が同定できなくなる。黙って採用せず、理由つきで落とすこと
+    print(f"       {'HR':>5}{'ΔT':>8}{'真':>6}{'Wald SE':>9}{'競合広がり':>11}{'採用':>6}  理由")
+    hi_ok = True
+    for hr in (100, 120, 130, 150):
+        tt, yy, trr = make_beat(hr=hr, dt_true=min(0.28, 0.45 * 60 / hr), ri_true=0.45)
+        r = pda2.decompose(tt, yy, 1 / (tt[1] - tt[0]), route="skew")
+        print(f"       {hr:>5}{r['dt_ms']:>8.1f}{trr['dt_ms']:>6.0f}{r['dt_se_ms']:>9.1f}"
+              f"{r['dt_spread_ms']:>11.1f}{str(r['ok']):>6}  {r['reason']}")
+        if hr >= 130 and r["ok"]:
+            hi_ok = False
+    rep("心拍 130 以上（成分が重なる）では理由つきで不採用になる", hi_ok)
+    print("       注: 心拍 130 では Wald の標準誤差が桁違いに膨らむ（ブートストラップ 15 ms に対し 709 ms）。")
+    print("           条件数は採用例でも 1e5 に達し良否を分けない。競合解の広がりを併記して判定する。")
 
     print("\n" + ("ALL PASS" if ok_all else "FAIL あり"))
     return 0 if ok_all else 1
