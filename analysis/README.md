@@ -294,7 +294,8 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/27_threshold_sensitivity.py` | 閾値の感度解析（A 層: 当てはめ直し不要、B 層: 部分集合で当てはめ直し） |
 | `scripts/28_pda2_invariants.py` | 乱数で作った拍での不変条件の検査（例に依存しない門番） |
 
-研究0 の実行順と読み方は `docs/research/gate0_rules_v2.md`、閾値の由来は `docs/research/pda2_thresholds_v2.md`、
+研究0 の総括（固まった関数と条件・文献との一致と違い・理由・次のステップ）は `docs/research/pda2_final_summary.md`、
+実行順と読み方は `docs/research/gate0_rules_v2.md`、閾値の由来は `docs/research/pda2_thresholds_v2.md`、
 「何を主張し何がそれを保証しているか」は `docs/research/pda2_verification_matrix.md` に固定してある。
 
 ## 注意
