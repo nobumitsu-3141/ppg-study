@@ -627,6 +627,17 @@ def selftest(quick: bool = False) -> int:
     r = pda2.decompose(t, y, FS, route="skew")
     rep("decompose が張り付きの数と内訳を返す", "n_pinned" in r and "pinned" in r,
         f"n_pinned={r.get('n_pinned')} {r.get('pinned')!r}")
+    # 成分数を外から指定する引数（実験用。既定は経路ごとの 2／3）
+    r3 = pda2.decompose(t, y, FS, route="skew", n_waves=3, escalate=False)
+    rep("n_waves で成分数を外から指定できる（実験用の引数が効く）",
+        r3.get("n_waves") == 3 and not r3.get("escalated"))
+    # 前処理を迂回する経路は無い（10 巡目に削除）。誤って渡したら例外になる
+    try:
+        pda2.decompose(t, y, FS, route="skew", preprocessed=True)
+        no_bypass = False
+    except TypeError:
+        no_bypass = True
+    rep("前処理を迂回する引数は存在しない（未検査の経路を残さない）", no_bypass)
 
     # ---- T13 Hellqvist の早期特徴（26番の第 4 の腕。正しさの検査が無かった）
     print("\nT13 早期特徴（Hellqvist の p1・b・Am_b/Am_p1）")

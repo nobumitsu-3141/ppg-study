@@ -133,7 +133,13 @@ SUBSET_MOD = 7          # 当てはめ層で使う部分集合（subj_no % 7 == 
 
 
 def _check_version(d) -> None:
-    """26番の CSV に記録された pda2 の版が現在と違えば止める（E8）。"""
+    """26番の CSV に記録された pda2 の版が現在と違えば止める（E8）。
+
+    --limit の予備実行の CSV なら警告する（感度解析は全例の CSV に当てるものである）。
+    """
+    if "n_limit" in d and int(d["n_limit"].iloc[0]) > 0:
+        print(f"  **注意: この CSV は --limit {int(d['n_limit'].iloc[0])} の予備実行の出力です。**")
+        print("  感度解析は全例の CSV に当てること（判定規則の順序 2 → 3）。")
     if "pda2_version" in d:
         v_csv = str(d["pda2_version"].iloc[0])
         v_now = pda2.code_version()
@@ -409,6 +415,13 @@ def selftest() -> int:
         _fmt({"pass": True, "n_ages": 2, "med_abs": 0.9}, 6).endswith("成立*")
         and _fmt({"pass": True, "n_ages": 6, "med_abs": 0.9}, 6).endswith("成立")
         and not _fmt({"pass": True, "n_ages": 6, "med_abs": 0.9}, 6).endswith("*"))
+    lim = pd.DataFrame({"pda2_version": [pda2.code_version()], "n_limit": [600]})
+    try:
+        _check_version(lim)
+        lim_ok = True
+    except SystemExit:
+        lim_ok = False
+    rep("--limit の予備実行の CSV でも止まらず警告だけ出す", lim_ok)
     stale = pd.DataFrame({"pda2_version": ["000000000000"]})
     try:
         _check_version(stale)
@@ -462,7 +475,10 @@ def selftest() -> int:
         rep("26番の出力に pda2 の版が記録され、現在の版と一致する", same,
             f"CSV {dd['pda2_version'].iloc[0] if 'pda2_version' in dd else '—'} / 現在 {pda2.code_version()}")
     else:
-        print("  （26番の自己検証の出力が無いので通し検算は省略。先に 26番 --selftest を回すと検算できる）")
+        print("  **注意: 26番の自己検証の出力が無いので、通し検算（採否・曖昧判定の再計算が"
+              "26番と一致するか）を省略した。**")
+        print("  この実行の ALL PASS は 27番だけの検査であって、26番との整合は確かめていない。")
+        print("  先に `python3 scripts/26_pwdb_compare.py --selftest` を回してから回し直すこと。")
     rep("凍結値が pda2 の定数と一致している",
         FROZEN["nrmse"] == pda2.NRMSE_MAX and FROZEN["errx"] == pda2.ERRX_MS
         and FROZEN["erry"] == pda2.ERRY and FROZEN["se"] == pda2.SE_DT_MAX_MS
@@ -516,7 +532,7 @@ def selftest() -> int:
             else:
                 rep("B 層が条件ごとの CSV を残す", False)
     else:
-        print("  （26番の自己検証の出力が無い／版が違うので B 層の通し検算は省略）")
+        print("  **注意: 26番の自己検証の出力が無い／版が違うので、B 層の通し検算を省略した。**")
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 

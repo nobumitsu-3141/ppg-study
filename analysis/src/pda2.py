@@ -958,7 +958,7 @@ ROUTES = ("skew", "gamma")
 
 def decompose(t, y, fs: float, route: str = "skew",
               n_waves: int = None, escalate: bool = True,
-              w_key: float = W_KEY, preprocessed: bool = False,
+              w_key: float = W_KEY,
               lowpass_hz: float = LOWPASS_HZ, min_gap: float = 0.03,
               resample_hz: float = 0.0, fit_frac: float = 1.0,
               alpha_min: float = ALPHA_MIN,
@@ -1020,17 +1020,15 @@ def decompose(t, y, fs: float, route: str = "skew",
     # 1000 Hz 超は標本数に比例して当てはめが遅い（1 拍 200 s）ので、低域通過の後に 500 Hz へ落とす
     # （18 Hz より上は落ちているので情報は失われない）。感度解析の resample_hz が指定されていれば
     # そちらを優先する
-    if fs < 250.0 and not preprocessed:
+    if fs < 250.0:
         n_up = int(round((t[-1] - t[0]) * 500.0)) + 1
         t_up = np.linspace(float(t[0]), float(t[-1]), n_up)
         y = np.interp(t_up, t, np.asarray(y, float))
         t, fs = t_up, 500.0
-    if preprocessed:
-        ys, amp = np.asarray(y, float), 1.0
-        if ys.size < 8 or not np.isfinite(ys).all():
-            ys = None
-    else:
-        ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
+    # 前処理は必ずここで行う。以前は `preprocessed=True` で外から前処理済みの波形を渡せたが、
+    # どの呼び出し元も使っておらず、標本化周波数の正規化と振幅の門番を迂回する未検査の経路
+    # だったので削除した（10 巡目）
+    ys, amp = preprocess(t, y, fs, lowpass_hz=lowpass_hz)
     if ys is None:
         return {"ok": False, "reason": "amplitude"}
     if not (resample_hz and resample_hz > 0) and fs > 1000.0:
@@ -1081,8 +1079,6 @@ def decompose(t, y, fs: float, route: str = "skew",
     roles = assign_roles(peaks, lm, has_reservoir_kernel=True, t=t)
     acc = acceptance(t, ys, yhat, lm, w, nrmse_max=nrmse_max,
                      errx_ms=errx_ms, erry_max=erry_max)
-    # 前進波は母数の第0スロットのはず（順序の罰則が守られていれば）。守られていなければ
-    # 役割の割り当てそのものが信用できないので、曖昧として扱う
     def _amb_of(sols, step_, roles_):
         return ambiguity_flags(sols, step_, roles_, tol_cost=tol_cost, tol_dt_ms=se_dt_max_ms)
 

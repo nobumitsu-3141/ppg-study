@@ -128,6 +128,13 @@ IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA", "ok_v1"), ("dt_v2_ms", "ΔT 第
                    ("dps_v2_ms", "DPS 第2版歪み", "ok_v2"), ("amb_amp1", "Am_b/Am_p1", None),
                    ("dt_p1_ms", "ΔT p1基準", None), ("dt_own_ms", "ΔT 自前ランドマーク", None)]
 
+# 陽性対照（モデル出力 PTT × 大動脈PWV）に要求する強さ。判定規則 gate0_rules_v2.md の
+# 「陽性対照 PTT が不成立、または中央値 |ρ| < 0.5 なら表全体を無効とする」に対応する。
+# 23番の実測は 0.571。主要な判定の規準（CRIT_RHO=0.30）より厳しいのは、配管が生きていることの
+# 確認であって指標の良否ではないから
+CRIT_RHO_CONTROL = 0.50
+CONTROL = ("digital_ptt", "PWV_a", -1, "モデル出力 PTT × 大動脈PWV")
+
 MIN_N = 20          # これ未満の集団は表に出しても意味がないので数だけ示す
 # 20番の `_by_age` は年齢層ごとに 8 名以上を要求する。全体の人数だけで門番を作ると、
 # 「全体 24 名（1層 4 名）」のように、人数はあるのに判定が出ない状態を取りこぼす。
@@ -176,6 +183,8 @@ def indices_for_subject(args_tuple):
     try:
         y, fs = M.beat_of(row, hr)
         if y is None:
+            # 心拍が無い・標本が 40 未満で拍を復元できない。理由を残す（握りつぶさない）
+            out["why_lm"] = out["why_v2"] = out["why_v2g"] = "no_beat"
             return out
         t = np.arange(y.size) / fs
         out["fs"] = float(fs)
@@ -203,6 +212,8 @@ def indices_for_subject(args_tuple):
                 # 拍が足で切り出されているか（前処理の足→足基線の前提）を実データで確かめる
                 out["edge_lo"] = float(min(ys[0], ys[-1]))
                 out["edge_hi"] = float(max(ys[0], ys[-1]))
+            else:
+                out["why_lm"] = "preprocess_none"   # 前処理で弾かれた（NaN・定数・短すぎる拍）
         except Exception as e:                  # noqa: BLE001
             out["why_lm"] = ("EXC:" + str(e))[:40]
 
@@ -269,8 +280,12 @@ def indices_for_subject(args_tuple):
 def _stride(ppg, limit: int):
     """先頭 N 名ではなく等間隔に N 名。PWDB は被験者が年齢順に並んでいる可能性があり、
     先頭だけ取ると 1 つの年齢層に偏る。年齢層内の順位相関が判定なので全層が要る。"""
-    step = max(1, len(ppg) // limit)
-    return ppg.iloc[::step].iloc[:limit]
+    if limit >= len(ppg):
+        return ppg
+    # `iloc[::step][:limit]` だと step の丸めで末尾が落ちる（4,374 名から 600 名なら step=7 で
+    # 先頭 4,200 名しか見ず、最後の年齢層が 2 割少なくなる）。端から端までを覆う添字を作る
+    idx = np.unique(np.linspace(0, len(ppg) - 1, limit).round().astype(int))
+    return ppg.iloc[idx]
 
 
 def build(root: Path, limit: int = 0, jobs: int = 1):
@@ -301,11 +316,22 @@ def build(root: Path, limit: int = 0, jobs: int = 1):
     # ランドマーク側は 23 番の読み込みをそのまま使う（扱いを完全に共有する）
     d = L.load(root, pda_dir=root / "__no_pda__")
     d = d.drop(columns=[c for c in ("dt_pda_ms", "ri_pda", "ok2") if c in d.columns])
-    d = d.merge(pda, on="subj_no", how="left")
+    # **内部結合**（`how="inner"`）にする。23番の読み込みは真値の表にある被験者を全員返すので、
+    # 左結合にすると --limit で分解を当てなかった被験者まで残り、表 1 の採択率も表 1b の理由の
+    # 割合も分母が全体になって薄まる（600 名で回すと 63% が 9% に見える）。手法によって分母が
+    # 違う表になり、判定規則の第 1 段階（600 名で採択率と理由を読む）が成り立たない。
+    # 内部結合なら、どの腕も「分解を当てた被験者」という同じ分母になる（27番の refit と同じ扱い）
+    n_truth, n_pda = len(d), len(pda)
+    d = d.merge(pda, on="subj_no", how="inner")
+    if len(d) != n_truth or len(d) != n_pda:
+        print(f"  真値 {n_truth} 名・分解 {n_pda} 名 → 突き合わせ {len(d)} 名で表を作ります", flush=True)
     for c in ("ok_v1", "ok_v2", "ok_v2g"):
         d[c] = d[c].fillna(0).astype(int)
     d["ok_all"] = ((d["ok_v1"] == 1) & (d["ok_v2"] == 1) & (d["ok_v2g"] == 1)).astype(int)
     d["pda2_version"] = pda2.code_version()      # 27番が照合する
+    # 何名で回したか。--limit の予備実行の CSV に 27番を当てると、感度解析が 600 名の話に
+    # なってしまう。27番が読んで警告できるように残す（0 = 全例）
+    d["n_limit"] = int(limit)
     # 環境も記録する。scipy の版が違うと最適化の最終桁が変わり、閾値際の採否が数例で入れ替わりうる。
     # 論文の再現性の記述と、Mac と雲で結果が違ったときの切り分けに使う
     import platform, scipy
@@ -349,29 +375,44 @@ def report(d, out_dir: Path | None = None) -> dict:
     print(f"判定規準（20番・23番と同一）: 年齢層内 Spearman ρ が全層で予測の向き、"
           f"かつ中央値 |ρ| ≥ {M.CRIT_RHO}")
 
+    # ---- 0. 陽性対照（これが通らなければ以下は読まない）
+    col_c, tgt_c, sign_c, lab_c = CONTROL
+    print(f"\n{'-' * 78}\n0. 陽性対照（配管が生きているか。これが通らなければ以下の表は無効）\n{'-' * 78}")
+    jc = _judge_or_none(d, col_c, tgt_c, sign_c)
+    if jc is None:
+        print(f"  **{lab_c} を計算できない**（列 {col_c} が無い、または 8 名以上の年齢層が無い）。")
+        print("  陽性対照が無い表は読めない。PWDB の pwdb_pw_indices.csv に PTT の列があるか確かめること。")
+        ctl_ok = False
+    else:
+        ctl_ok = bool(jc["pass"] and jc["med_abs"] >= CRIT_RHO_CONTROL)
+        print(f"  {lab_c}: 年齢層 {jc['n_ok']}/{jc['n_ages']} が予測の向き（負）、"
+              f"中央値 |ρ| = {jc['med_abs']:.3f}（要求 ≥ {CRIT_RHO_CONTROL}。23番の実測 0.571）")
+        print(f"  → {'合格' if ctl_ok else '**不合格**'}")
+    if not ctl_ok:
+        print("  **この表全体を無効として扱うこと。**原因（読み込み・結合・年齢層）を探してから読み直す。")
+    summary_control = {"pass": ctl_ok, "j": jc}
+
     # ---- 採択率と当てはまり
     print(f"\n{'-' * 78}\n1. 採択率と当てはまり\n{'-' * 78}")
     print(f"{'手法':<26}{'採択':>8}{'NRMSE':>9}{'Errx[ms]':>10}"
           f"{'ΔT中央値[ms]':>14}{'ΔTのSE[ms]':>12}")
     for key, lab, dtc, _ric, okc in METHODS:
+        # **すべての列を同じ部分集合（その手法が採用した拍）で出す。** 以前は ΔT だけ採用分、
+        # NRMSE・Errx・SE は全例で、同じ行なのに列ごとに分母が違った。不採用の拍は当てはまりが
+        # 悪く SE も桁違いなので、採用分の質を過小に見せる。不採用側は表 1b に別に出す
         src = d if okc is None else d[d[okc] == 1]
         rate = "—" if okc is None else f"{100.0 * len(src) / max(n, 1):>7.1f}%"
-        nr = d.get(f"nrmse_{key}")
-        ex = d.get(f"errx_{key}_ms")
-        se = d.get(f"dtse_{key}_ms")
 
-        def _m(s):
-            if s is None or not np.isfinite(np.asarray(s, float)).any():
+        def _m(col, fmt="{:.3f}"):
+            if col not in src:
                 return "—"
-            return f"{float(np.nanmedian(np.asarray(s, float))):.3f}"
+            v = np.asarray(src[col], float)
+            if not np.isfinite(v).any():
+                return "—"
+            return fmt.format(float(np.nanmedian(v)))
 
-        dtm = ("—" if dtc not in src or not src[dtc].notna().any()
-               else f"{float(np.nanmedian(src[dtc])):.0f}")
-        sem = ("—" if se is None or not np.isfinite(np.asarray(se, float)).any()
-               else f"{float(np.nanmedian(np.asarray(se, float))):.1f}")
-        exm = ("—" if ex is None or not np.isfinite(np.asarray(ex, float)).any()
-               else f"{float(np.nanmedian(np.asarray(ex, float))):.2f}")
-        print(f"{lab:<26}{rate:>8}{_m(nr):>9}{exm:>10}{dtm:>14}{sem:>12}")
+        print(f"{lab:<26}{rate:>8}{_m(f'nrmse_{key}'):>9}{_m(f'errx_{key}_ms', '{:.2f}'):>10}"
+              f"{_m(dtc, '{:.0f}'):>14}{_m(f'dtse_{key}_ms', '{:.1f}'):>12}")
     print("  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<2%・Errx<6ms・"
           "Erry<0.01 かつ解が一意）。")
     print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は鍵点に重みを置いた")
@@ -424,6 +465,19 @@ def report(d, out_dir: Path | None = None) -> dict:
     print("  計算できない（母数が境界に潰れた・特異）。no_se が多ければ同定性の問題である。")
     print("  理由は 1 つだけ記録する（優先順: no_landmarks → proxy_landmarks → landmark_or_fit →")
     print("  no_reflected → ambiguous → dt_se／no_se）。")
+    print(f"{'手法':<26}{'不採用の NRMSE':>15}{'Errx[ms]':>10}{'ΔTのSE[ms]':>12}  （表 1 は採用分・ここは不採用分）")
+    for key, lab, _dtc, _ric, okc in METHODS:
+        if okc is None or f"nrmse_{key}" not in d:
+            continue
+        g = d[d[okc] != 1]
+
+        def _mg(col, fmt="{:.3f}"):
+            if col not in g or not len(g):
+                return "—"
+            v = np.asarray(g[col], float)
+            return fmt.format(float(np.nanmedian(v))) if np.isfinite(v).any() else "—"
+        print(f"{lab:<26}{_mg(f'nrmse_{key}'):>15}{_mg(f'errx_{key}_ms', '{:.2f}'):>10}"
+              f"{_mg(f'dtse_{key}_ms', '{:.1f}'):>12}")
     for key, lab, _dtc, _ric, okc in METHODS:
         wc = f"why_{key}"
         if wc not in d or okc is None:
@@ -491,7 +545,9 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(line)
     print("  A だけ成立して B・C が不成立なら、それは難しい拍を捨てた効果であって")
     print("  指標そのものの改善ではない。3 段を必ず一緒に読むこと。")
-    short = [(k, v) for k, v in summary.items() if v and v["n_ages"] < n_ages_full]
+    # summary には判定の辞書以外（陽性対照の記録など）も入りうるので、n_ages を持つものだけ見る
+    short = [(k, v) for k, v in summary.items()
+             if isinstance(v, dict) and "n_ages" in v and v["n_ages"] < n_ages_full]
     if short:
         print(f"\n  **層不足（* 印）**: 判定は「有限の ρ を持つ層すべて」で下している。層が減った手法は")
         print(f"  少ない層で全一致すればよいので**通りやすくなる**（全 {n_ages_full} 層）。")
@@ -503,7 +559,10 @@ def report(d, out_dir: Path | None = None) -> dict:
     if "klass_own" in d and d["klass_own"].notna().any():
         print(f"\n{'-' * 78}\n2a. 波形型ごとの p1 と収縮期ピークの一致\n{'-' * 78}")
         print("  Hellqvist の p1 は『6つの波形型すべてで機能した』とされる。切痕の無い型でも")
-        print("  収縮期ピークを定義できるなら、我々の未解決問題（型3で ΔT 誤差 約30 ms）に効く。")
+        print("  収縮期ピークを定義できるなら、**ランドマーク側の**未解決問題に効く（型3 の肩は真の")
+        print("  拡張期ピークより約 30 ms 遅れる。合成波）。PDA 第2版は型3 を規則で採用しないので、")
+        print("  ここで比べているのは分解を使わない指標どうしである。型4 は拡張期の錨が無いので")
+        print("  ΔT の形の指標はどれも定義できず、早期振幅比だけが残る。")
         print(f"{'型':<6}{'n':>7}{'p1が取れた率':>13}{'|p1 − S| 中央値':>16}"
               f"{'Am_b/Am_p1 中央値':>18}{'ΔT p1基準 中央値':>17}")
         for k in sorted(d["klass_own"].dropna().unique().tolist()):
@@ -561,8 +620,8 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"\n{'-' * 78}\n2b. 成分を増やしたかどうかで層別（{lab}）\n{'-' * 78}")
         print("  合成波では、成分を1つ増やすと波形の当てはまりは良くなるが反射波が2つに割れ、")
         print("  ΔT が真値から約 2 ms 遠ざかった。実データでも分けて読む。")
-        print(f"{'':<20}{'n':>8}{'採択率':>9}{'ΔT中央値[ms]':>14}"
-              f"{'ΔT×PWV 中央値|ρ|':>18}{'判定':>8}")
+        print(f"{'':<20}{'n(全例)':>10}{'採択率':>9}{'ΔT中央値[ms](採用分)':>22}"
+              f"{'ΔT×PWV 中央値|ρ|(採用分)':>26}{'判定':>8}")
         tc = f"esct_{key}"
         if tc in d and d[tc].notna().any():
             n_back = int(((d[tc] == 1) & (d[ec] == 0)).sum())
@@ -611,6 +670,10 @@ def report(d, out_dir: Path | None = None) -> dict:
     print("  第2版もランドマーク法に届かない → PDA という枠組みでは指尖 PPG から")
     print("    硬さ・抵抗を取り出せない。ランドマーク指標に乗り換えるか、撤退する。")
     print("  モデル出力 PTT が強い負を示さないなら、この比較自体を疑うこと（陽性対照）。")
+
+    if not summary_control["pass"]:
+        print("\n  **再掲: 陽性対照が通っていない。上の判定はすべて無効である。**")
+    summary["control"] = summary_control
 
     out_dir = OUT if out_dir is None else Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -729,6 +792,13 @@ def selftest(jobs: int = 2) -> int:
             all(c in d for c in ("dt_v1_ms", "dt_v2_ms", "dt_v2g_ms", "dt_lm_ms",
                                  "ri_v1", "ri_v2", "ri_v2g", "digital_ri")))
         rep("被験者が重複せず結合された", len(d) == n_sub and d["subj_no"].is_unique)
+        # --limit で分解を当てた被験者だけが表に残る（分母が薄まらない）。左結合だと真値の表の
+        # 全員が残り、採択率が 1/step に見える
+        d_lim = build(root, limit=8, jobs=1)
+        rep("--limit のとき表の分母が「分解を当てた被験者」になる（採択率が薄まらない）",
+            len(d_lim) == 8 and d_lim["subj_no"].is_unique
+            and bool(d_lim["dt_lm_ms"].notna().any()) and bool(d_lim["klass_own"].notna().all()),
+            f"n={len(d_lim)}（真値の表は {n_sub} 名）")
         rep("第2版が標準誤差を返している（凍結版にはない量）",
             "dtse_v2_ms" in d and np.isfinite(d["dtse_v2_ms"]).any(),
             f"中央値 {float(np.nanmedian(d['dtse_v2_ms'])):.2f} ms"
@@ -740,6 +810,16 @@ def selftest(jobs: int = 2) -> int:
         # 27番の通し検算用に、模擬の被験者別 CSV を残す（実データの CSV とは別名）
         OUT.mkdir(parents=True, exist_ok=True)
         d.to_csv(OUT / "_selftest_pwdb_compare.csv", index=False)
+        rep("陽性対照が表の先頭で明示的に判定され、要求 0.5 と比べられる",
+            "control" in s and isinstance(s["control"], dict) and "pass" in s["control"],
+            f"{s.get('control', {}).get('pass')}")
+        print("\n  ↓ ここから下は**わざと陽性対照の列を落とした**表である（無効と宣言されるのが正しい）。")
+        print("  この 1 回分の『無効』の表示は検査の一部であって、実行が失敗したという意味ではない。")
+        d_noctl = d.drop(columns=["digital_ptt"])
+        s_noctl = report(d_noctl, out_dir=Path(td) / "out2")
+        print("\n  ↑ ここまでが陰性対照の表。以降は通常の検査に戻る。")
+        rep("陽性対照の列が無ければ「計算できない・無効」と扱う（黙って通さない）",
+            s_noctl["control"]["pass"] is False and s_noctl["control"]["j"] is None)
         rep("仕込んだ ランドマークΔT × PWV（負）を復元",
             bool(s.get("A|dt_lm_ms|PWV_a", {}).get("pass")))
         rep("仕込んだ ランドマークRI × 抵抗（正）を復元",
@@ -802,9 +882,10 @@ def selftest(jobs: int = 2) -> int:
         hae_, cfg_, ppg_, _x = M.load_pwdb(root)
         sub = _stride(ppg_, 12)
         idx = np.flatnonzero(ppg_.iloc[:, 0].isin(sub.iloc[:, 0]).to_numpy())
-        rep("--limit は先頭ではなく全体から等間隔に取る（E7）",
-            len(sub) == 12 and idx.max() - idx.min() >= 0.8 * len(ppg_),
-            f"添字の範囲 {idx.min()}〜{idx.max()} / {len(ppg_)}")
+        rep("--limit は先頭ではなく全体を端から端まで等間隔に取る（E7）",
+            len(sub) == 12 and idx.min() == 0 and idx.max() == len(ppg_) - 1,
+            f"添字の範囲 {idx.min()}〜{idx.max()} / {len(ppg_) - 1}")
+        rep("--limit が人数以上なら全員を返す", len(_stride(ppg_, len(ppg_) + 5)) == len(ppg_))
         # 例外は握りつぶさず why_* に記録される（G3・H5）: 分解を故意に失敗させて確かめる
         _orig = pda2.decompose
 
