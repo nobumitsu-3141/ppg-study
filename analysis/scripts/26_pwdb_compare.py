@@ -843,17 +843,22 @@ def selftest(jobs: int = 2) -> int:
             "control" in s and isinstance(s["control"], dict) and "pass" in s["control"]
             and s["control"]["pass"] is True and s["control"]["j"]["med_abs"] >= CRIT_RHO_CONTROL,
             f"|ρ| {s['control']['j']['med_abs']:.3f}" if s.get("control", {}).get("j") else "—")
-        # 0.30 ≤ |ρ| < 0.50 の対照を作り、**主要判定は通るが対照としては不合格**になることを見る
-        d_weak = d.copy()
-        rng_w = np.random.default_rng(0)
-        d_weak["digital_ptt"] = (-d_weak["PWV_a"].to_numpy(float)
-                                 + rng_w.normal(0, 1.6, len(d_weak)))
-        s_weak = report(d_weak, out_dir=Path(td) / "out3")
-        jw = s_weak["control"]["j"]
+        # 0.30 ≤ |ρ| < 0.50 の対照を作り、**主要判定は通るが対照としては不合格**になることを見る。
+        # 雑音の大きさは決め打ちにせず、その窓に入るものを探す（検査の目的は 0.50 の枝を通すこと）
+        jw, s_weak = None, None
+        for sd_ in (1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.0, 10.0):
+            d_weak = d.copy()
+            d_weak["digital_ptt"] = (-d_weak["PWV_a"].to_numpy(float)
+                                     + np.random.default_rng(0).normal(0, sd_, len(d_weak)))
+            j_try = _judge_or_none(d_weak, "digital_ptt", "PWV_a", -1)
+            if j_try and j_try["pass"] and M.CRIT_RHO <= j_try["med_abs"] < CRIT_RHO_CONTROL:
+                s_weak = report(d_weak, out_dir=Path(td) / "out3")
+                jw = s_weak["control"]["j"]
+                break
         rep("弱い陽性対照（0.30 ≤ |ρ| < 0.50）は主要判定の規準は満たすが対照としては不合格",
             jw is not None and jw["pass"] and M.CRIT_RHO <= jw["med_abs"] < CRIT_RHO_CONTROL
             and s_weak["control"]["pass"] is False,
-            f"|ρ| {jw['med_abs']:.3f}" if jw else "—")
+            f"|ρ| {jw['med_abs']:.3f}" if jw else "その窓に入る対照を作れなかった")
         rep("共通例は 3 手法すべてが合格した拍だけ（ok_all の定義）",
             bool((d["ok_all"] == ((d["ok_v1"] == 1) & (d["ok_v2"] == 1) & (d["ok_v2g"] == 1)).astype(int)).all())
             and int(d["ok_all"].sum()) <= min(int(d[c].sum()) for c in ("ok_v1", "ok_v2", "ok_v2g")))
@@ -862,9 +867,11 @@ def selftest(jobs: int = 2) -> int:
         rep("早期振幅比の腕が値を返している（Am_b/Am_p1・p1 時刻・p1 基準 ΔT）",
             all(c in d for c in ("amb_amp1", "p1_t_ms", "dt_p1_ms"))
             and float(d["amb_amp1"].notna().mean()) > 0.8
-            and bool(((d["amb_amp1"] > 0) & (d["amb_amp1"] <= 1.0)).all())
+            and bool(d["amb_amp1"].dropna().between(0, 1.0, inclusive="right").all())
             and float(d["dt_p1_ms"].notna().mean()) > 0.5,
-            f"比が取れた率 {d['amb_amp1'].notna().mean():.0%}・ΔT p1基準 {d['dt_p1_ms'].notna().mean():.0%}")
+            f"比が取れた率 {d['amb_amp1'].notna().mean():.0%}（範囲 "
+            f"{d['amb_amp1'].min():.3f}〜{d['amb_amp1'].max():.3f}）・"
+            f"ΔT p1基準 {d['dt_p1_ms'].notna().mean():.0%}")
         print("\n  ↓ ここから下は**わざと陽性対照の列を落とした**表である（無効と宣言されるのが正しい）。")
         print("  この 1 回分の『無効』の表示は検査の一部であって、実行が失敗したという意味ではない。")
         d_noctl = d.drop(columns=["digital_ptt"])
