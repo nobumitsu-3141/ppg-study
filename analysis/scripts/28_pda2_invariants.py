@@ -13,6 +13,7 @@
 不変条件
 --------
   I1 例外を出さない。返り値に必要な鍵が揃う
+     （I5 は破れた規準の名前を、I6 は採用したのに ΔT・RI が数でない場合も見る）
   I2 理由コードは既知の集合に入り、ok ⇔ 理由が空
   I3 型は {1,3,4,5}。ok ⇒ 型1（型3 は規則で採用しない）
   I4 **ok ⇒ |ΔT − 真値| < SE_DT_MAX_MS（20 ms）**。誤った ΔT を黙って通さない
@@ -72,12 +73,19 @@ KEYS = ("ok", "reason", "dt_ms", "ri", "dt_se_ms", "klass", "escalated", "n_wave
         "nrmse", "errx_ms", "erry", "n_landmark_matched", "ambiguous", "peaks", "landmarks")
 
 
+_M25 = None
+
+
 def _m25():
-    spec = importlib.util.spec_from_file_location(
-        "m25", Path(__file__).resolve().parent / "25_pda2_validate.py")
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
-    return m
+    """25番（合成脈波の生成）を読み込む。プロセスごとに 1 回だけ。"""
+    global _M25
+    if _M25 is None:
+        spec = importlib.util.spec_from_file_location(
+            "m25", Path(__file__).resolve().parent / "25_pda2_validate.py")
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        _M25 = m
+    return _M25
 
 
 DOMAIN = dict(hr=(50.0, 100.0), noise_max=0.01, ri_min=0.30)   # 方法の有効な領域（PWDB の条件）
@@ -162,12 +170,23 @@ def one(args):
                 dom = "領域内" if in_domain(cond) else "領域外"
                 viol.append(("I4", tag, f"[{dom}] 採用なのに ΔT 誤差 {err:+.1f} ms（SE {r['dt_se_ms']:.1f}・広がり {r['dt_spread_ms']:.1f}）",
                              dict(route=route, domain=in_domain(cond), hard=(in_domain(cond) and route == "skew"))))
-            crit = (r["nrmse"] <= pda2.NRMSE_MAX and r["errx_ms"] <= pda2.ERRX_MS
-                    and r["erry"] <= pda2.ERRY and np.isfinite(r["dt_se_ms"])
-                    and r["dt_se_ms"] <= pda2.SE_DT_MAX_MS and not r["ambiguous"]
-                    and r["n_landmark_matched"] >= 2 and r["fwd0"])
-            if not crit:
-                viol.append(("I5", tag, "採用なのに規準のどれかを満たさない"))
+            # どの規準が破れたかを残す（発火したとき原因を探せるように）
+            bad = [nm for nm, okk in (
+                ("NRMSE", r["nrmse"] <= pda2.NRMSE_MAX),
+                ("Errx", r["errx_ms"] <= pda2.ERRX_MS),
+                ("Erry", r["erry"] <= pda2.ERRY),
+                ("SE可算", np.isfinite(r["dt_se_ms"])),
+                ("SE上限", np.isfinite(r["dt_se_ms"]) and r["dt_se_ms"] <= pda2.SE_DT_MAX_MS),
+                ("曖昧でない", not r["ambiguous"]),
+                ("鍵点2つ", r["n_landmark_matched"] >= 2),
+                ("前進波スロット0", bool(r["fwd0"])),
+                ("型1", kl == 1),
+            ) if not okk]
+            if bad:
+                viol.append(("I5", tag, f"採用なのに規準を満たさない: {'・'.join(bad)}"))
+            # 採用したのに指標が数でない、という状態を作らない（I4 の率の門番では拾えない）
+            if not (np.isfinite(r.get("dt_ms", np.nan)) and np.isfinite(r.get("ri", np.nan))):
+                viol.append(("I6", tag, f"採用なのに ΔT か RI が数でない: ΔT {r.get('dt_ms')} RI {r.get('ri')}"))
         if np.isfinite(r.get("dt_ms", np.nan)):
             pk = r.get("peaks") or []
             if r["dt_ms"] <= 0:
