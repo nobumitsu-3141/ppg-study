@@ -172,15 +172,17 @@ def _verdicts(d, tag: str, ok):
     return out, int(ok.sum())
 
 
-N_AGES_FULL = 6          # PWDB の年齢層（25〜75 の 10 歳刻み）
+N_AGES_FULL = 6          # PWDB の年齢層（25〜75 の 10 歳刻み）。post_hoc は CSV の実数で上書きする
 
 
-def _fmt(j, n_full: int = N_AGES_FULL):
+def _fmt(j, n_full: int = None):
     """中央値 |ρ| と判定。**層が揃っていなければ * を付ける**（26番と同じ規則）。
 
     判定は「有限の ρ を持つ層すべてで予測の向き」なので、採択率が低くて層が減った条件ほど
     通りやすい。閾値を厳しくすると層が減るので、この感度解析ではとくに効いてくる。
     """
+    if n_full is None:
+        n_full = N_AGES_FULL
     if not j:
         return f"{'—':>9}{'—':>8}"
     v = "成立" if j["pass"] else "不成立"
@@ -190,7 +192,10 @@ def _fmt(j, n_full: int = N_AGES_FULL):
 
 
 def post_hoc(d, out_dir: Path | None = None) -> dict:
+    global N_AGES_FULL
     n = len(d)
+    if "age" in d and d["age"].notna().any():
+        N_AGES_FULL = int(d["age"].nunique())     # --limit で層が欠けた CSV でも * の基準を実データに合わせる
     print(f"\n{'=' * 78}\n閾値感度解析 A: 当てはめ後に効く規準（当てはめ直し不要）\n{'=' * 78}")
     print(f"\n被験者 {n} 名。**26番を実行する前に振れ幅を固定してある。**")
     print(f"判定規準は 20・23・26番と同一（全層で予測の向き、中央値 |ρ| ≥ {M.CRIT_RHO}）")
@@ -286,6 +291,12 @@ def _one(args_tuple):
         return out
 
 
+def _refit_csv_name(route: str, lab: str) -> str:
+    """条件ごとの CSV 名。ラベルの英数字以外を _ にする（条件間で衝突しないことを自己検証で確かめる）。"""
+    safe = "".join(c if c.isalnum() else "_" for c in lab)[:32]
+    return f"refit_{route}_{safe}.csv"
+
+
 def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None,
           conditions=None) -> dict:
     """当てはめそのものを変える閾値を、固定した部分集合で回し直す。
@@ -319,8 +330,7 @@ def refit(root: Path, jobs: int = 1, route: str = "skew", out_dir=None,
         d = truth.merge(pd.DataFrame(res), on="subj_no", how="inner")
         if out_dir is not None:                 # 驚く結果が出たときに中身を見られるように残す
             od = Path(out_dir); od.mkdir(parents=True, exist_ok=True)
-            safe = "".join(c if c.isalnum() else "_" for c in lab)[:32]
-            d.to_csv(od / f"refit_{route}_{safe}.csv", index=False)
+            d.to_csv(od / _refit_csv_name(route, lab), index=False)
         go = d[d["ok"] == 1]
         jd = C._judge_or_none(go, "dt_ms", "PWV_a", -1)
         jr = C._judge_or_none(go, "ri", "pvr", +1)
@@ -425,6 +435,8 @@ def selftest() -> int:
         FROZEN["nrmse"] == pda2.NRMSE_MAX and FROZEN["errx"] == pda2.ERRX_MS
         and FROZEN["erry"] == pda2.ERRY and FROZEN["se"] == pda2.SE_DT_MAX_MS
         and FROZEN["amb_tol"] == pda2.SE_DT_MAX_MS)
+    names = [_refit_csv_name("skew", lab) for lab, _o in REFIT]
+    rep("B 層の条件ごとの CSV 名が衝突しない", len(set(names)) == len(names))
     rep("B 層の条件に、根拠なく決めた 3 つの閾値（重み・間隔・残差許容）がすべて入っている",
         any("w_key" in o for _l, o in REFIT) and any("min_gap" in o for _l, o in REFIT)
         and any("tol_cost" in o for _l, o in REFIT))
@@ -458,8 +470,7 @@ def selftest() -> int:
             rows_b = refit(root, jobs=1, route="skew", out_dir=Path(td) / "out", conditions=conds)
             rep("B 層が模擬 PWDB で通しで動く（部分集合・2 条件）", len(rows_b) == 2)
             import pandas as pd
-            safe0 = "".join(c if c.isalnum() else "_" for c in REFIT[0][0])[:32]   # refit と同じ命名
-            fz_p = Path(td) / "out" / f"refit_skew_{safe0}.csv"
+            fz_p = Path(td) / "out" / _refit_csv_name("skew", REFIT[0][0])
             fz = pd.read_csv(fz_p) if fz_p.exists() else None
             if fz is not None:
                 m_ = fz.merge(dd[["subj_no", "ok_v2", "dt_v2_ms"]], on="subj_no", how="inner")

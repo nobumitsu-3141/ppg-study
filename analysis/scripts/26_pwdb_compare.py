@@ -480,9 +480,10 @@ def report(d, out_dir: Path | None = None) -> dict:
             gap = (float(np.nanmedian(np.abs(g["p1_t_ms"] - g["sys_own_ms"])))
                    if "p1_t_ms" in g and g["p1_t_ms"].notna().any() else np.nan)
             r_ = (float(np.nanmedian(g["amb_amp1"])) if g["amb_amp1"].notna().any() else np.nan)
-            dp = (float(np.nanmedian(g["dt_p1_ms"])) if g["dt_p1_ms"].notna().any() else np.nan)
-            print(f"{int(k):<6}{len(g):>7}{got:>12.1%}{gap:>14.1f} ms"
-                  f"{r_:>18.4f}{dp:>14.0f} ms")
+            dp = (f"{float(np.nanmedian(g['dt_p1_ms'])):.0f} ms" if g["dt_p1_ms"].notna().any() else "—")
+            gap_s = f"{gap:.1f} ms" if np.isfinite(gap) else "—"
+            r_s = f"{r_:.4f}" if np.isfinite(r_) else "—"
+            print(f"{int(k):<6}{len(g):>7}{got:>12.1%}{gap_s:>17}{r_s:>18}{dp:>17}")
 
     if "prom_own" in d and d["prom_own"].notna().any():
         print(f"\n{'-' * 78}\n2c. 鍵点の顕著さ（型を分ける閾値の近傍にどれだけあるか）\n{'-' * 78}")
@@ -503,15 +504,18 @@ def report(d, out_dir: Path | None = None) -> dict:
     if "klass_v2" in d and d["klass_v2"].notna().any():
         print(f"\n{'-' * 78}\n2. 波形型（Dawber 分類）ごとの採択率と ΔT\n{'-' * 78}")
         print(f"{'型':<6}{'n':>7}{'第2版採択':>11}{'凍結採択':>10}"
-              f"{'ΔT 第2版':>11}{'ΔT ランドマーク':>16}")
+              f"{'ΔT 第2版(採用分)':>17}{'ΔT ランドマーク(全例)':>21}")
         for k in sorted(d["klass_v2"].dropna().unique().tolist()):
             g = d[d["klass_v2"] == k]
             a2 = 100.0 * g["ok_v2"].mean()
             a1 = 100.0 * g["ok_v1"].mean()
-            m2 = float(np.nanmedian(g["dt_v2_ms"])) if g["dt_v2_ms"].notna().any() else np.nan
-            ml = float(np.nanmedian(g["dt_lm_ms"])) if g["dt_lm_ms"].notna().any() else np.nan
-            print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%"
-                  f"{m2:>11.0f}{ml:>16.0f}")
+            # ΔT の中央値は**採用した拍**で出す。不採用の当てはめの ΔT を並べると、
+            # 型4 の「ΔT 86 ms」のような無意味な値が採択率の隣に出て読み違える
+            go = g[g["ok_v2"] == 1]
+            m2 = (f"{float(np.nanmedian(go['dt_v2_ms'])):.0f}"
+                  if len(go) and go["dt_v2_ms"].notna().any() else "—")
+            ml = (f"{float(np.nanmedian(g['dt_lm_ms'])):.0f}" if g["dt_lm_ms"].notna().any() else "—")
+            print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%{m2:>17}{ml:>21}")
         print("  型3（切痕なし・肩で代用）は第2版では規則で採用しない（分解が同定できず、合成波では規準を")
         print("  すべて通った当てはめでも ΔT が +23 ms、規準を外すと +50 ms ずれる）。第2版の判定は型1 の拍で")
         print("  下される。型3 の n を必ず読んで併記し、型3 はランドマーク・p1・早期振幅比で読む。")
