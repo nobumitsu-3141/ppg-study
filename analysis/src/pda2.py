@@ -802,6 +802,10 @@ def competing_spread_ms(sols, step, roles, tol_cost: float = 1.15) -> float:
     依存し、平坦な尾根の上では桁違いに膨らむ（心拍 130 の合成波で Wald 709 ms に対し
     ブートストラップ 15 ms）。一方で条件数は良否を分けない（採用例でも 1e5 に達する）。
     競合解の広がりは、線形化にも条件数にも頼らない直接の量なので併記する。
+
+    競合解の成分はスロット番号ではなく、**最良解の前進波・反射波にピーク時刻が最も近い成分**で
+    対応づける。3成分のとき、中間成分と最後の成分のどちらが反射波の役かは解ごとに変わりうるので、
+    スロット番号で比べると別の成分同士を比べてしまう。
     """
     if len(sols) < 2:
         return 0.0
@@ -809,12 +813,20 @@ def competing_spread_ms(sols, step, roles, tol_cost: float = 1.15) -> float:
     f, r = roles["forward"], roles["reflected"]
     if r is None:
         return float("nan")
-    dt0 = (best.x[step * r + 1] - best.x[step * f + 1]) * 1000.0
+    n = len(best.x) // step
+    tf0, tr0 = best.x[step * f + 1], best.x[step * r + 1]
+    dt0 = (tr0 - tf0) * 1000.0
     spread = 0.0
     for s in sols[1:]:
-        if s.cost <= best.cost * tol_cost:
-            dt1 = (s.x[step * r + 1] - s.x[step * f + 1]) * 1000.0
-            spread = max(spread, abs(dt1 - dt0))
+        if s.cost > best.cost * tol_cost:
+            continue
+        tps = np.array([s.x[step * k + 1] for k in range(n)])
+        kf = int(np.argmin(np.abs(tps - tf0)))
+        kr = int(np.argmin(np.abs(tps - tr0)))
+        if kf == kr:                     # 対応づけが潰れたら、その解は別の分解になっている
+            return float("inf")
+        dt1 = (tps[kr] - tps[kf]) * 1000.0
+        spread = max(spread, abs(dt1 - dt0))
     return float(spread)
 
 
@@ -828,9 +840,9 @@ def _ambiguous(sols, step, roles, tol_cost: float = 1.15,
     差の許容は**絶対値**で、ΔT の標準誤差の上限（SE_DT_MAX_MS）と同じ 20 ms に結ぶ。
     根拠も同じ（研究1の症例内 ΔPWTT の SD 18 ms）。これで閾値が一つ減る。
 
-    注意: 競合解のスロット r は「r 番目に早い成分」であって、最良解と同じ生理的な役割とは
-    限らない（3成分のとき、中間成分と最後の成分のどちらが反射波かは解ごとに変わりうる）。
-    そのぶん曖昧と判定しやすい方向に偏るが、保守的な側の偏りなので許容する。
+    競合解の成分は最良解の前進波・反射波にピーク時刻が最も近いもので対応づける
+    （`competing_spread_ms` 参照）。対応づけが潰れる解（両方が同じ成分に落ちる）は
+    別の分解に収束しているので、無条件に曖昧とする。
     """
     if tol_dt_ms is None:
         tol_dt_ms = SE_DT_MAX_MS

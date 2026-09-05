@@ -195,6 +195,17 @@ def indices_for_subject(args_tuple):
                 out[f"dtse_{tag}_ms"] = r.get("dt_se_ms", np.nan)
                 out[f"dps_{tag}_ms"] = r.get("dps_ms", np.nan)   # Goswami 2010
                 out[f"dtsp_{tag}_ms"] = r.get("dt_spread_ms", np.nan)   # 競合解の ΔT の広がり
+                # 成分ピークの絶対時刻・高さ（役割の割り当てを事後に検算できるように）
+                pk = r.get("peaks") or []
+                lmr = r.get("landmarks") or {}
+                out[f"tf_{tag}_ms"] = np.nan
+                out[f"tr_{tag}_ms"] = np.nan
+                if pk and r.get("dt_ms") is not None and np.isfinite(r.get("dt_ms", np.nan)):
+                    # 反射波 = 前進波 + ΔT。前進波はピーク時刻が最小の成分
+                    tf = min(p_[0] for p_ in pk)
+                    out[f"tf_{tag}_ms"] = tf * 1000.0
+                    out[f"tr_{tag}_ms"] = tf * 1000.0 + r["dt_ms"]
+                out[f"sys_lm_{tag}_ms"] = float(lmr.get("sys_t", np.nan)) * 1000.0
                 out[f"rise_{tag}"] = r.get("ri_se", np.nan)
                 out[f"nrmse_{tag}"] = r.get("nrmse", np.nan)
                 out[f"errx_{tag}_ms"] = r.get("errx_ms", np.nan)
@@ -313,6 +324,22 @@ def report(d, out_dir: Path | None = None) -> dict:
         print(f"{lab:<26}{rate:>8}{_m(nr):>9}{exm:>10}{dtm:>14}{sem:>12}")
     print("  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<2%・Errx<6ms・"
           "Erry<0.01 かつ解が一意）。")
+
+    # ---- 不採用の理由
+    print(f"\n{'-' * 78}\n1b. 不採用の理由（第2版）\n{'-' * 78}")
+    print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に鍵点が無い（型4〜5）拍で、")
+    print("  分解の失敗ではない。landmark_or_fit は Wang の規準（NRMSE・Errx・Erry）の不合格。")
+    for key, lab, _dtc, _ric, okc in METHODS:
+        wc = f"why_{key}"
+        if wc not in d or okc is None:
+            continue
+        g = d[d[okc] != 1]
+        if not len(g):
+            print(f"{lab:<26} 不採用なし")
+            continue
+        vc = g[wc].fillna("").replace("", "(記録なし)").value_counts()
+        line = "  ".join(f"{k} {v}（{100.0 * v / max(n, 1):.1f}%）" for k, v in vc.items())
+        print(f"{lab:<26} {line}")
 
     # ---- A. 各手法の合格例
     print(f"\n{'-' * 78}\nA. 各手法が合格とした例だけで判定（20番・23番と同じ扱い）\n{'-' * 78}")
