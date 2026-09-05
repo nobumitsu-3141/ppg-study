@@ -294,23 +294,33 @@ def selftest(quick: bool = False) -> int:
     # 採否規準はこれを正しく落としている。1巡目の「+3.3 ms で採用」は Errx 5.8 ms の際どい通過で、
     # 2巡目の基線の変更で解の盆地が変わり +65 ms になった（6巡目の二分探索で判明。文書を訂正した）。
     # 不変条件は「**採用するなら ΔT 誤差 15 ms 未満**」。不採用であることは要求しない
-    print("       切痕なし・心拍を振る（採用するなら誤差 15 ms 未満であること）")
-    print(f"       {'HR':>5} {'経路':<7}{'採用':<6}{'誤差':>8}  理由              | Errx・Erry を外すと: 成分  採用   誤差")
+    # 6巡目の検査で、ガンマ経路が心拍 70 の切痕なし波形を「規準をすべて通して」採用し、ΔT が
+    # +23 ms ずれていた（Wald SE 9 ms・競合解の広がり 15 ms で、どちらも誤差を過小に見積もる）。
+    # 型3 の分解は同定できないので、規則で採用しない（accept_proxy=False が既定、理由 proxy_landmarks）。
+    # 「含める」ときの挙動も並べて、規則が何を落としているかを見えるようにする
+    print("       切痕なし・心拍を振る（既定: 型3 は採用しない。含めた場合と、Errx・Erry も外した場合を併記）")
+    print(f"       {'HR':>5} {'経路':<7}{'採用':<6}{'理由':<17}| 型3を含める: 採用   誤差  | Errx・Erry も外す: 成分 採用   誤差")
     inv_ok = True
+    proxy_rejected = True
     for hr in ((70,) if quick else (55, 70, 85, 100)):
         t, y, tr = make_beat(hr=hr, notch=False, dt_true=0.08, ri_true=0.60)
         for route in ROUTES:
             r = _run(t, y, route)
-            rx = pda2.decompose(t, y, FS, route=route, errx_ms=np.inf, erry_max=np.inf)
-            e = r["dt_ms"] - tr["dt_ms"]
+            rp = pda2.decompose(t, y, FS, route=route, accept_proxy=True)
+            rx = pda2.decompose(t, y, FS, route=route, accept_proxy=True,
+                                errx_ms=np.inf, erry_max=np.inf)
+            ep = rp["dt_ms"] - tr["dt_ms"]
             ex = rx["dt_ms"] - tr["dt_ms"]
-            if r["ok"] and abs(e) >= 15.0:
+            if r["ok"] and abs(r["dt_ms"] - tr["dt_ms"]) >= 15.0:
                 inv_ok = False
-            print(f"       {hr:>5} {route:<7}{str(r['ok']):<6}{e:>+8.1f}  {r['reason']:<16}  | "
-                  f"{rx['n_waves']:>4}  {str(rx['ok']):<6}{ex:>+7.1f}")
-    rep("切痕なし波形で採用された ΔT は誤差 15 ms 未満（誤った ΔT を黙って通さない）", inv_ok)
-    print("       注: 切痕なし波形は現状どちらの経路も不採用になる。それは規準が正しく働いた結果であって、")
-    print("           型3 の拍で PDA の ΔT が得られないことは第2版の限界として先に書いておく。")
+            if r["ok"] or r["reason"] != "proxy_landmarks":
+                proxy_rejected = False
+            print(f"       {hr:>5} {route:<7}{str(r['ok']):<6}{r['reason']:<17}| "
+                  f"{str(rp['ok']):<6}{ep:>+7.1f}  | {rx['n_waves']:>4} {str(rx['ok']):<6}{ex:>+7.1f}")
+    rep("型3（切痕なし）は理由 proxy_landmarks で採用されない", proxy_rejected)
+    rep("採用された ΔT は誤差 15 ms 未満（誤った ΔT を黙って通さない）", inv_ok)
+    print("       注: 型3 を含めると、規準をすべて通った当てはめでも ΔT が +20 ms 以上ずれる拍がある。")
+    print("           型3 で PDA の ΔT が得られないことは第2版の限界として先に書いておく。")
 
     # ---- T6 採否規準
     print("\nT6 採否規準（Errx）が壊れた当てはめを弾くか")

@@ -912,7 +912,7 @@ def decompose(t, y, fs: float, route: str = "skew",
               alpha_min: float = ALPHA_MIN,
               nrmse_max: float = NRMSE_MAX, errx_ms: float = ERRX_MS,
               erry_max: float = ERRY, se_dt_max_ms: float = SE_DT_MAX_MS,
-              tol_cost: float = TOL_COST) -> dict:
+              tol_cost: float = TOL_COST, accept_proxy: bool = False) -> dict:
     """1拍を分解して ΔT・RI とその標準誤差、採否の判定を返す。
 
     route="skew"       歪みガウス2成分（不足なら3）。Basso 2024 と同じ混合模型
@@ -925,6 +925,17 @@ def decompose(t, y, fs: float, route: str = "skew",
     se_dt_max_ms       ΔT の不確かさの上限 [ms]。標準誤差・競合解の広がり・反射波の僅差の
                        3 か所に同じ値を使う（根拠が同じなので 1 か所だけ動かさない）
     tol_cost           競合解とみなす残差の許容（最良解の何倍まで）
+    accept_proxy       型3（鍵点が代用点）の拍を採用に含めるか。**既定は含めない**（下記）
+
+    型3（切痕なし・肩の代用点）を採用しない理由
+    ---------------------------------------------
+    合成の切痕なし波形で、Wang の規準・SE・曖昧判定をすべて通った当てはめの ΔT が真値から
+    +23 ms ずれた（ガンマ経路・心拍 70。Wald SE 9 ms・競合解の広がり 15 ms で、どちらも誤差を
+    過小に見積もる）。規準を外して 3 波を採用させると +50 ms ずれる。切痕の無い波形では
+    反射波の位置を決める鋭い特徴が無く、肩は真のピークより約 30 ms 構造的に遅れるので、
+    肩を再現する当てはめは反射波をその遅れの分だけ後ろに置く。**分解が同定できない**。
+    したがって型3 の拍は理由 proxy_landmarks で採用しない。当てはめと診断量は返すので、
+    27番 A 層の「型3 を含める」の行で結論が変わらないかは検定できる。
 
     返り値の診断量（26番が保存し、27番が採否を再計算するのに使う）
         ambiguous / dt_spread_ms / ref_margin_ms / fwd0   曖昧判定とその材料
@@ -1042,9 +1053,12 @@ def decompose(t, y, fs: float, route: str = "skew",
     # 採否には使わない（新しい規準を足さない）が、26番が率を報告する
     n_sat = int(sum(1 for s_ in fit["sols"] if getattr(s_, "status", 1) == 0))
     best_sat = bool(getattr(fit["sols"][0], "status", 1) == 0)
+    proxy_ok = bool(accept_proxy or lm["klass"] != 3)
     reason = ""
     if acc["n_landmark_matched"] < 2 and lm["klass"] >= 4:
         reason = "no_landmarks"                 # データ側に鍵点が無い（型4〜5）
+    elif not proxy_ok:
+        reason = "proxy_landmarks"              # 型3: 代用点しか無く分解が同定できない（上記）
     elif not acc["ok"]:
         reason = "landmark_or_fit"
     elif roles["reflected"] is None:       # _ambiguous は反射波が無いとき True を返すので先に見る
@@ -1056,7 +1070,7 @@ def decompose(t, y, fs: float, route: str = "skew",
         # ヤコビアンが特異）。後者は「同定できていない」の直接の印なので分けて数える
         reason = "dt_se" if np.isfinite(ix["dt_se_ms"]) else "no_se"
     return {
-        "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None and se_ok),
+        "ok": bool(acc["ok"] and not amb and roles["reflected"] is not None and se_ok and proxy_ok),
         "reason": reason,
         "route": route, "n_components": n_used, "n_waves": n_used, "escalated": escalated, "escalation_tried": escalation_tried,
         "ambiguous": amb, "fwd0": bool(roles["forward"] == 0),

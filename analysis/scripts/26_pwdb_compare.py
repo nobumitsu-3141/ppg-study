@@ -386,8 +386,12 @@ def report(d, out_dir: Path | None = None) -> dict:
     print(f"\n{'-' * 78}\n1b. 不採用の理由（第2版）\n{'-' * 78}")
     print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に鍵点が無い（型4〜5）拍で、")
     print("  分解の失敗ではない。landmark_or_fit は Wang の規準（NRMSE・Errx・Erry）の不合格。")
+    print("  proxy_landmarks は型3（切痕なし・肩の代用点）で、分解が同定できないため規則で採用しない")
+    print("  （合成波で規準をすべて通った当てはめの ΔT が +23 ms ずれた）。27番 A 層に「含める」の行がある。")
     print("  ambiguous は競合解・役割の曖昧さ、dt_se は ΔT の標準誤差が上限超、no_se は共分散が")
     print("  計算できない（母数が境界に潰れた・特異）。no_se が多ければ同定性の問題である。")
+    print("  理由は 1 つだけ記録する（優先順: no_landmarks → proxy_landmarks → landmark_or_fit →")
+    print("  no_reflected → ambiguous → dt_se／no_se）。")
     for key, lab, _dtc, _ric, okc in METHODS:
         wc = f"why_{key}"
         if wc not in d or okc is None:
@@ -508,10 +512,10 @@ def report(d, out_dir: Path | None = None) -> dict:
             ml = float(np.nanmedian(g["dt_lm_ms"])) if g["dt_lm_ms"].notna().any() else np.nan
             print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%"
                   f"{m2:>11.0f}{ml:>16.0f}")
-        print("  型3（切痕なし・肩で代用）は合成波では第2版のどちらの経路も不採用になる（分解が同定できず、")
-        print("  規準を外して採用させても ΔT が +50 ms ずれる。不採用が正しい）。型3 の n と採択率を必ず読み、")
-        print("  第2版の判定が型1 の拍だけで下されているなら、その旨を併記する。型3 はランドマーク・p1・")
-        print("  早期振幅比で読む。ランドマークの肩は真のピークより 30 ms ほど遅れる（合成波）。")
+        print("  型3（切痕なし・肩で代用）は第2版では規則で採用しない（分解が同定できず、合成波では規準を")
+        print("  すべて通った当てはめでも ΔT が +23 ms、規準を外すと +50 ms ずれる）。第2版の判定は型1 の拍で")
+        print("  下される。型3 の n を必ず読んで併記し、型3 はランドマーク・p1・早期振幅比で読む。")
+        print("  ランドマークの肩は真のピークより 30 ms ほど遅れる（合成波）。")
 
     # ---- 成分を増やしたかどうか
     for key, lab, dtc, ric, okc in METHODS:
@@ -717,8 +721,8 @@ def selftest(jobs: int = 2) -> int:
         # --- 難しい拍が意図した経路を通ったか
         kind_of = d["subj_no"].astype(int).map(kinds).fillna("plain")
         seen = set(d["why_v2"].dropna().astype(str)) | set(d["why_v2g"].dropna().astype(str))
-        need = {"landmark_or_fit", "no_landmarks", "dt_se"}
-        rep("不採用の主要な理由コード（landmark_or_fit・no_landmarks・dt_se）がすべて出る",
+        need = {"landmark_or_fit", "no_landmarks", "dt_se", "proxy_landmarks"}
+        rep("不採用の主要な理由コード（landmark_or_fit・no_landmarks・dt_se・proxy_landmarks）がすべて出る",
             need <= seen, f"出た: {sorted(seen - {''})} / 出ない: {sorted(need - seen)}"
             + ("" if {"ambiguous", "no_se"} & seen else "（ambiguous・no_se は今回出ていない）"))
         g_nr = d[kind_of == "noreflect"]
@@ -731,10 +735,12 @@ def selftest(jobs: int = 2) -> int:
             len(g_f) > 0 and int(g_f["ok_v2"].sum()) == 0,
             f"n={len(g_f)} 理由 {g_f['why_v2'].value_counts().to_dict()}")
         g_n = d[kind_of == "notchless"]
-        rep("切痕なしの拍が型3（肩の代用点）として存在する",
-            len(g_n) > 0 and bool((g_n["klass_own"] == 3).all()),
+        rep("切痕なしの拍が型3（肩の代用点）として存在し、proxy_landmarks で不採用になる",
+            len(g_n) > 0 and bool((g_n["klass_own"] == 3).all())
+            and int(g_n["ok_v2"].sum()) == 0 and int(g_n["ok_v2g"].sum()) == 0
+            and bool((g_n["why_v2"] == "proxy_landmarks").all()),
             f"n={len(g_n)} 型 {g_n['klass_own'].value_counts().to_dict()} "
-            f"採択 v2 {int(g_n['ok_v2'].sum())} / v2g {int(g_n['ok_v2g'].sum())}")
+            f"理由 {g_n['why_v2'].value_counts().to_dict()}")
         rep("曖昧判定の材料（fwd0・競合広がり・僅差）と収束の監視列が保存されている",
             all(c in d for c in ("fwd0_v2", "dtsp_v2_ms", "marg_v2_ms", "sat_v2", "nst_v2", "bsat_v2"))
             and bool(np.isfinite(d.loc[d["ok_v2"] == 1, "sat_v2"]).all()),

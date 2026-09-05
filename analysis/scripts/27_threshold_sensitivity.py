@@ -82,7 +82,8 @@ C = _load("26_pwdb_compare.py", "m26")
 # amb_tol は曖昧判定に使う ΔT の許容 [ms]（競合解の広がりの上限・反射波の僅差の下限）。
 # pda2 では SE の上限と同じ値（根拠が同じ）
 FROZEN = {"nrmse": pda2.NRMSE_MAX, "errx": pda2.ERRX_MS, "erry": pda2.ERRY,
-          "se": pda2.SE_DT_MAX_MS, "amb": True, "amb_tol": pda2.SE_DT_MAX_MS}
+          "se": pda2.SE_DT_MAX_MS, "amb": True, "amb_tol": pda2.SE_DT_MAX_MS,
+          "proxy": False}      # 型3（代用点）を採用に含めない（pda2.decompose の既定）
 
 # 後づけ層の振れ幅（**26番を実行する前に固定した**）
 POST_HOC = [
@@ -96,6 +97,9 @@ POST_HOC = [
     # （根拠が同じ）。その値そのものを 3 か所まとめて動かす。∞ は僅差の下限として無意味
     # （すべて僅差になる）ので入れない。SE だけ ∞ は上の行にある
     ("joint", "同じ値を 3 か所まとめて [ms]", [5.0, 10.0, 20.0, 50.0]),
+    # 型3（切痕なし・肩の代用点）は分解が同定できないので既定では採用しない。含めたときに
+    # 結論が変わらないかを見る（合成波では含めると ΔT が +23 ms ずれた拍が通った）
+    ("proxy", "型3（代用点）を採用に含める", [False, True]),
 ]
 
 # 当てはめ層（当てはめ直しが要る）
@@ -148,8 +152,11 @@ def recompute_ok(d, tag: str, th: dict):
     erry, nlm = g(f"erry_{tag}"), g(f"nlm_{tag}")
     se = g(f"dtse_{tag}_ms")
     noref = g(f"noref_{tag}")
+    klass = g(f"klass_{tag}")
     ok = ((nrmse <= th["nrmse"]) & (errx <= th["errx"]) & (erry <= th["erry"])
           & (nlm >= 2) & np.isfinite(se) & (se <= th["se"]) & (noref != 1))
+    if not th.get("proxy", False):
+        ok = ok & (klass != 3)
     if th["amb"]:
         ok = ok & ~recompute_amb(d, tag, th.get("amb_tol", pda2.SE_DT_MAX_MS))
     return ok.astype(int)
@@ -217,8 +224,9 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
                     continue
                 ok = recompute_ok(d, tag, th)
                 vv, nn = _verdicts(d, tag, ok)
-                sv = ("あり" if v else "なし") if key == "amb" else (
-                    "∞" if v == INF else f"{v:g}")
+                sv = (("あり" if v else "なし") if key == "amb" else
+                      ("含める" if v else "含めない") if key == "proxy" else
+                      ("∞" if v == INF else f"{v:g}"))
                 print(f"{lab:<22}{sv:>10}{nn / max(n, 1):>9.1%}"
                       f"{_fmt(vv['dt'])}{_fmt(vv['ri'])}")
                 rows[(tag, key, v)] = (nn, vv)
@@ -226,7 +234,7 @@ def post_hoc(d, out_dir: Path | None = None) -> dict:
         # **共分散が計算できなかった拍は落とす**。標準誤差が出せない＝母数が本当に
         # 同定できていない、という意味なので、規準を外しても残すべきではない。
         allth = {"nrmse": INF, "errx": INF, "erry": INF, "se": INF, "amb": False,
-                 "amb_tol": FROZEN["amb_tol"]}
+                 "amb_tol": FROZEN["amb_tol"], "proxy": True}
         ok = recompute_ok(d, tag, allth)
         vv, nn = _verdicts(d, tag, ok)
         print(f"{'すべて外す(SE可算のみ)':<22}{'—':>10}{nn / max(n, 1):>9.1%}"
@@ -357,6 +365,7 @@ def selftest() -> int:
         "amb_v2": (q > 0.9).astype(int), "noref_v2": 0,
         # 曖昧判定の材料。q > 0.9 の拍だけ競合解の広がりが 20 ms を超えるようにする
         "dtsp_v2_ms": np.where(q > 0.9, 30.0, 2.0), "marg_v2_ms": INF, "fwd0_v2": 1,
+        "klass_v2": np.where(q > 0.95, 3, 1),      # 一部を型3 にして「含める」の行が動くようにする
     })
     d["ok_v2"] = recompute_ok(d, "v2", FROZEN)
     rep("採否を診断量から作り直せる", d["ok_v2"].sum() > 20, f"採択 {int(d['ok_v2'].sum())}/{n}")
@@ -366,6 +375,9 @@ def selftest() -> int:
     rep("曖昧判定を材料から作り直せる（合成データで保存値と一致）",
         bool(np.all(recompute_amb(d, "v2", FROZEN["amb_tol"]) == (d["amb_v2"].to_numpy(int) == 1))))
     rep("3 か所まとめての行が出た", ("v2", "joint", 5.0) in rows and ("v2", "joint", 50.0) in rows)
+    rep("型3 を含める行が出て、含めると採択が増える",
+        ("v2", "proxy", True) in rows and rows[("v2", "proxy", True)][0] > rows[("v2", "frozen", None)][0],
+        f"{rows[('v2', 'frozen', None)][0]} → {rows.get(('v2', 'proxy', True), (None,))[0]}")
     n_fro = rows[("v2", "frozen", None)][0]
     n_none = rows[("v2", "none", None)][0]
     rep("規準をすべて外すと採択が増える", n_none > n_fro, f"{n_fro} → {n_none}")
@@ -444,10 +456,9 @@ def selftest() -> int:
             rows_b = refit(root, jobs=1, route="skew", out_dir=Path(td) / "out", conditions=conds)
             rep("B 層が模擬 PWDB で通しで動く（部分集合・2 条件）", len(rows_b) == 2)
             import pandas as pd
-            fz = pd.read_csv(Path(td) / "out" / "refit_skew____.csv") if (Path(td) / "out" / "refit_skew____.csv").exists() else None
-            if fz is None:
-                cands = sorted((Path(td) / "out").glob("refit_skew_*.csv"))
-                fz = pd.read_csv(cands[0]) if cands else None
+            safe0 = "".join(c if c.isalnum() else "_" for c in REFIT[0][0])[:32]   # refit と同じ命名
+            fz_p = Path(td) / "out" / f"refit_skew_{safe0}.csv"
+            fz = pd.read_csv(fz_p) if fz_p.exists() else None
             if fz is not None:
                 m_ = fz.merge(dd[["subj_no", "ok_v2", "dt_v2_ms"]], on="subj_no", how="inner")
                 same_ok = bool((m_["ok"].astype(int) == m_["ok_v2"].astype(int)).all())
