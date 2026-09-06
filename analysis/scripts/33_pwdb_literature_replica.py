@@ -65,7 +65,9 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import io
+import json
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -851,6 +853,50 @@ def _worker(args_tuple):
     return replica_for_subject((subj, row, hr, M, wang_step))
 
 
+# ================================================================ 進捗（画面と JSON。scripts/status.py が読む）
+class _Progress:
+    """25 名ごと（または 60 秒ごと）に経過・速度・残り時間を出し、同じ内容を JSON に書く。"""
+
+    def __init__(self, total: int, path: Path, jobs: int, wang_step: int, every: int = 25, every_s: float = 60.0):
+        self.total, self.path, self.jobs, self.wang_step = total, path, jobs, wang_step
+        self.every, self.every_s = every, every_s
+        self.t0 = time.time()
+        self.last = self.t0
+        self.done = 0
+
+    def _finite(self, rows):
+        return {k: int(sum(1 for r in rows if np.isfinite(r.get(f"dt_{k}_ms", np.nan)))) for k, _l, _o in METHODS}
+
+    def write(self, rows, state: str):
+        el = time.time() - self.t0
+        per = el / max(self.done, 1)
+        eta = per * (self.total - self.done)
+        rec = {"script": "33_pwdb_literature_replica", "state": state, "done": self.done, "total": self.total,
+               "jobs": self.jobs, "wang_step": self.wang_step, "started": self.t0, "updated": time.time(),
+               "elapsed_s": round(el), "per_subject_s": round(per, 2), "eta_s": round(eta),
+               "finite_dt": self._finite(rows), "errors": int(sum(1 for r in rows if r.get("err")))}
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            self.path.write_text(json.dumps(rec, ensure_ascii=False, indent=1), encoding="utf-8")
+        except Exception:      # noqa: BLE001
+            pass
+        return rec
+
+    def tick(self, rows):
+        self.done = len(rows)
+        now = time.time()
+        if self.done % self.every == 0 or self.done == self.total or now - self.last >= self.every_s:
+            self.last = now
+            rec = self.write(rows, "running")
+            print(f"  [{self.done}/{self.total}] 経過 {rec['elapsed_s'] / 60:.1f} 分・{rec['per_subject_s']:.1f} 秒/名"
+                  f"（{self.jobs} 並列込み）・残り約 {rec['eta_s'] / 60:.0f} 分・例外 {rec['errors']}", flush=True)
+
+    def finish(self, rows):
+        self.done = len(rows)
+        rec = self.write(rows, "done")
+        print(f"  完了: {self.total} 名・{rec['elapsed_s'] / 60:.1f} 分", flush=True)
+
+
 # ================================================================ 構築と報告
 def build(root: Path, subset: str = "mod7", jobs: int = 1, limit: int = 0, wang_step: int = 1):
     import pandas as pd
@@ -866,17 +912,21 @@ def build(root: Path, subset: str = "mod7", jobs: int = 1, limit: int = 0, wang_
         work.append((subj, ppg.iloc[i].to_numpy(float), hr_by.get(subj, np.nan), wang_step))
         if limit and len(work) >= limit:
             break
-    print(f"{len(work)} 名に文献 {len(METHODS)} 条件の分解を当てます（jobs={jobs}）", flush=True)
+    print(f"{len(work)} 名に文献 {len(METHODS)} 条件の分解を当てます（jobs={jobs}・Wang の重みの刻み {wang_step}）", flush=True)
+    prog = _Progress(len(work), OUT / "literature_replica_progress.json", jobs, wang_step)
+    rows = []
     if jobs > 1:
-        from concurrent.futures import ProcessPoolExecutor
+        from concurrent.futures import ProcessPoolExecutor, as_completed
         with ProcessPoolExecutor(max_workers=jobs) as ex:
-            rows = list(ex.map(_worker, work, chunksize=4))
+            futs = [ex.submit(_worker, wk) for wk in work]
+            for f in as_completed(futs):
+                rows.append(f.result())
+                prog.tick(rows)
     else:
-        rows = []
-        for k, wk in enumerate(work, 1):
+        for wk in work:
             rows.append(_worker(wk))
-            if k % 25 == 0:
-                print(f"  [{k}/{len(work)}]", flush=True)
+            prog.tick(rows)
+    prog.finish(rows)
     rep = pd.DataFrame(rows)
     rep["wang_step"] = int(wang_step)
     d = C.L.load(Path(root).expanduser(), pda_dir=Path(root).expanduser() / "__no_pda__")
