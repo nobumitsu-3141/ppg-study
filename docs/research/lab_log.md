@@ -2897,3 +2897,25 @@ Fleischhauer 2020（Gamma＋Gauss 2 核・3 核）、Basso 2024（歪みガウ�
   あれば、その手法の逸脱表を全文で埋めてから新しい事前登録の下で第3版として試す（この表では採らない）
 - 自己検証 14 検査 ALL PASS（模擬 PWDB で全手法が ΔT を返す・Wang の採否・Tigges の AICc・Couceiro の制約）。PWDB は雲に無く
   Zenodo も遮断されているので、Mac で `python3 scripts/33_pwdb_literature_replica.py --pwdb ~/pwdb --jobs 8`（624 名・数分〜十数分）
+
+## 2026-09-06（追記17）　文献 7 本の全文照合と 33番の差し替え（実行前）
+
+追記16 の「精読メモに記載が無い項目は既定で埋める」を、PDF（Goswami 2010・Tigges 2017・Wang 2013・Couceiro 2015・
+Fleischhauer 2020・Basso 2024・Hellqvist 2024）の全文で埋めた。訂正と補足は `pda_literature_review.md` §15（追補3）。
+33番の各手法を次のとおり文献の記載に差し替えた（逸脱表は report に出る）。
+
+| 手法 | 差し替えた点 |
+|---|---|
+| Goswami | Rayleigh の式（前進波は t=0 から、反射波は D から）、前進波は高さ ≥ 0.5h₁・tp₁ ≤ t₁・立ち上がり 0<t≤tp₁ の MSE 最小、反射波は 0.3t₁ ≤ D ≤ 0.9T で **0〜T 全体**の MSE 最小（精読メモの「0〜0.9T」は誤り）。振幅は閉じた式、σ・D は格子探索 |
+| Tigges | Rayleigh は t ≥ b で定義、AICc は K = 3M+1 と 2(K+1)(K+2)/(N−K−2)、10 次 Kaiser 18 Hz で 40 Hz、制約と初期値は Couceiro に倣う（M≠5 は同じ点を配り直す） |
+| Wang | 初期値は表 1（D1〜D4 を 2 次微分の谷・山・零交差から型別に）、鍵点そのものの標本に重み 1..100（1 刻み・100 回当てはめ）、Levenberg–Marquardt（解析的ヤコビアン）、MCDM は正規化 r・u=(0.35,0.35,0.30)・適合度 c の最大 |
+| Couceiro | 表 1 の初期値と境界（a〜f 波・切痕の両端・PPG_sys・PPG_dia）、不等式制約を満たさない解は失敗扱い |
+| Fleischhauer | 付録 C の母数化（β・α の式）、表 D3 の generic 初期値と境界、制約なし |
+| Basso | 付録 A の母数化（a, m, σ, α）、表 1 の初期値（α₀ = 1）、a∈[0,ymax]・m,σ∈[0,T]・α は ±50、28 標本、RSS |
+| Hellqvist | p1 の定義を確認: 1 次微分の w の後の下降の直線部分の接線の零交差。`pda2.early_features` は b 波で接線を引く実装で整合 |
+
+残る逸脱（逸脱表に明記）: 最適化器（fmincon 内点法・LMA → scipy SLSQP・LM）、データ（PWDB 1 拍・雑音なし・500 Hz）、
+Tigges の M≠5 への写像、Wang の 5 本目の初期値、Couceiro の c₅（原文判読不能）、Basso の α の数値上限。
+自己検証に「自分の模型で作った拍を復元する」検査（Basso・Fleischhauer・Goswami・Wang）を足した。
+計時（雲・1 コア・模擬の 1 拍）: Wang 6〜16 s・Tigges 5〜11 s・Goswami 1 s・他 < 1 s → 624 名は Mac 8 コアで 20〜30 分の見込み。
+Wang の刻みを `--wang-step 5` にすると Wang は約 1/5（文献は 1）。読み方は追記16 のまま。
