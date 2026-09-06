@@ -476,6 +476,35 @@ def selftest() -> int:
     return 0 if ok else 1
 
 
+def fingerprint(out_dir: Path | None = None) -> None:
+    """別の機械の実行と同じ窓・同じ拍を使ったかを比べるための指紋（版・症例ごとの窓と要約）。"""
+    import pandas as pd
+    import scipy
+    out_dir = OUT if out_dir is None else out_dir
+    try:
+        import vitaldb
+        vv = getattr(vitaldb, "__version__", None)
+        if vv is None:
+            from importlib.metadata import version
+            vv = version("vitaldb")
+    except Exception:      # noqa: BLE001
+        vv = "?"
+    print(f"python {sys.version.split()[0]}  numpy {np.__version__}  scipy {scipy.__version__}  pandas {pd.__version__}  vitaldb {vv}"
+          f"  pda2 {pda2.code_version()}")
+    fp = out_dir / "windows.csv"
+    if not fp.exists():
+        print(f"{fp} がありません")
+        return
+    w = pd.read_csv(fp)
+    print(f"窓 {len(w)}・症例 {w['caseid'].nunique()}")
+    print(f"{'caseid':>6} {'先頭の t0':<28}{'n_good':>7}{'型4':>6}{'ΔT_lm 中央値':>12}{'Am 中央値':>10}{'HR':>5}{'PWTT':>6}{'第2版ΔT':>9}")
+    for cid, d in w.groupby("caseid"):
+        t = sorted(d["t0"].tolist())
+        f = lambda v, k=0: (f"{np.nanmedian(v):.{k}f}" if np.isfinite(v).any() else "—")   # noqa: E731
+        print(f"{int(cid):>6} {str([int(x) for x in t[:4]]):<28}{int(d['n_good'].median()):>7}{np.mean(d['klass'] >= 4):>6.2f}"
+              f"{f(d['dt_lm_ms']):>12}{f(d['amb'], 3):>10}{f(d['hr']):>5}{f(d['pwtt_ms']):>6}{f(d['dt_v2_ms']):>9}")
+
+
 def main() -> None:
     warnings.filterwarnings("ignore", message="Values in x were outside bounds")
     warnings.filterwarnings("ignore", message="All-NaN slice")
@@ -486,11 +515,15 @@ def main() -> None:
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--wang-step", type=int, default=5, help="Wang の重み 1..100 の刻み（文献は 1）")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--fingerprint", action="store_true", help="別の機械の実行と比べるための指紋（版・症例ごとの窓と要約）を出す")
     args = ap.parse_args()
     if args.jobs < 1:
         ap.error("--jobs は 1 以上")
     if args.selftest:
         sys.exit(selftest())
+    if args.fingerprint:
+        fingerprint()
+        return
     if args.run:
         cases = [int(c) for c in args.cases.split(",")] if args.cases else M32.select_cases(M32.N_CASES, M32.SEED)
         run(cases, args.jobs, max(1, args.wang_step))
