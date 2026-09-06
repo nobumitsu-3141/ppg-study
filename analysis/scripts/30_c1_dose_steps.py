@@ -12,6 +12,8 @@ SAP-1c（docs/research/sap_1c_v0.md）の実装。**SAP を凍結（タグ sap-1
   副次1  ΔT1（R波→動脈圧立ち上がり＝前駆出期＋中枢）。事前予測は延長
   副次2  ΔPWTT（＝ΔT2）。記述
   副次3  ΔT・RI（凍結版 PDA。--pda で抽出したときだけ）。記述のみ。妥当性の証拠には使わない
+  記述   ランドマーク ΔT・早期振幅比 Am_b/Am_p1（研究0 第2版の帰結・SAP §9.6。分解を使わない。
+         品質を通った拍を足で揃えて平均した 1 拍に pda2 の前処理を当てて取る。主要判定には入れない）
 
 解析単位（SAP §3）
 ------------------
@@ -67,6 +69,7 @@ from src.beats import (segment_beats, sqi, ensemble_average,  # noqa: E402
                        estimate_noise, required_ensemble_size)
 from src.indices import (pwtt_series, detect_r_peaks, estimate_pleth_lag,  # noqa: E402
                          si_ri_from_fit)
+from src import pda2                                                     # noqa: E402
 
 FS = 500.0
 WIN_S = 60.0
@@ -99,10 +102,13 @@ PANEL = [
     ("pwtt_ms", "PWTT（T2）[ms]",          0, "副次2 記述"),
     ("dt_ms",   "ΔT 凍結版PDA [ms]",       0, "副次3 記述"),
     ("ri",      "RI 凍結版PDA",            0, "副次3 記述"),
+    # 研究0 第2版の帰結（2026-09-06・SAP §9.6）。分解を使わない窓指標。向きは事前に予測しない
+    ("dt_lm_ms", "ΔT ランドマーク（D−S）[ms]", 0, "記述（研究0 の帰結）"),
+    ("amb_amp1", "Am_b/Am_p1（Hellqvist）",  0, "記述（研究0 の帰結・研究2 の主指標候補）"),
 ]
 COVARS = ["map", "hr"]
 
-META_V = 1
+META_V = 2      # 2: 記述 2 列（dt_lm_ms・amb_amp1）を追加（2026-09-06）
 
 
 def _load(stem: str, name: str):
@@ -556,7 +562,7 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
     seg_e = np.nan_to_num(np.asarray(ecg[i0:i1], float))
     seg_a = np.asarray(art[i0:i1], float)
     out = {"t0": float(t0), "pwtt_ms": nan, "t1_ms": nan, "t2t1_ms": nan, "hr": nan, "map": nan,
-           "n_pwtt": 0, "n_t1": 0, "dt_ms": nan, "ri": nan}
+           "n_pwtt": 0, "n_t1": 0, "dt_ms": nan, "ri": nan, "n_beats": 0, "dt_lm_ms": nan, "amb_amp1": nan}
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
         return out
     pw = pwtt_series(seg_e, seg_p, FS, lag=lag)
@@ -578,10 +584,29 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
     a = seg_a[np.isfinite(seg_a) & (seg_a > 20) & (seg_a < 300)]
     if a.size >= int(0.5 * WIN_S * FS):
         out["map"] = float(np.mean(a))
-    if with_pda:
-        from src.pda import fit_beat
+    try:
         beats = segment_beats(seg_p, FS, ecg=seg_e)
         good = [(s, e) for s, e in beats if sqi(seg_p[s:e], FS)["ok"]]
+    except Exception:      # noqa: BLE001
+        good = []
+    out["n_beats"] = len(good)
+    if len(good) >= 8:
+        # 研究0 第2版の帰結（SAP §9.6・記述）: 品質を通った拍を足で揃えて平均した 1 拍に pda2 と同じ前処理
+        # （18 Hz・足→足基線・最大 1）を当て、ランドマーク ΔT（型1 の D、型3 の肩。型4〜5 は NaN）と
+        # Hellqvist の早期振幅比 Am_b/Am_p1 を取る。分解は使わない。主要判定には入れない
+        try:
+            y = ensemble_average([seg_p[s:e] for s, e in good])
+            tt = np.arange(len(y)) / FS
+            ys, _amp = pda2.preprocess(tt, y, FS)
+            if ys is not None:
+                lm = pda2.find_landmarks(tt, ys)
+                if lm["klass"] in (1, 3) and np.isfinite(lm["dia_t"]) and np.isfinite(lm["sys_t"]):
+                    out["dt_lm_ms"] = float((lm["dia_t"] - lm["sys_t"]) * 1000.0)
+                out["amb_amp1"] = float(pda2.early_features(tt, ys)["amb_amp1"])
+        except Exception:      # noqa: BLE001
+            pass
+    if with_pda:
+        from src.pda import fit_beat
         dts, ris = [], []
         if len(good) >= 8:
             sigma = float(np.nanmedian([estimate_noise(seg_p[s:e]) for s, e in good]))
@@ -770,7 +795,7 @@ def _synth_waveforms(dur_s: float, t2t1_before_s: float, t2t1_after_s: float, t_
         tp = (idx - (i_r + int(round((t1 + d + lag) * FS)))) / FS
         pleth = pleth + 40.0 * (0.5 * (1 + erf((tp - 0.05) / (0.02 * np.sqrt(2))))
                                 * np.exp(-np.clip(tp, 0, None) / 0.35)
-                                + 0.35 * np.exp(-0.5 * ((tp - 0.30) / 0.07) ** 2))
+                                + 0.25 * np.exp(-0.5 * ((tp - 0.30) / 0.07) ** 2))
         t_r += float(rng.uniform(0.85, 1.05))           # RR を揺らす（遅延の枝の同定に要る）
     pleth = pleth + rng.normal(0, 0.15, n)
     art = art + rng.normal(0, 0.3, n)
@@ -907,6 +932,12 @@ def selftest() -> int:
         rep("抽出が通り、窓ごとに T2−T1・T1・HR・MAP が出る", err is None and fin >= 6
             and np.isfinite(feat["t1_ms"]).sum() >= 6 and np.isfinite(feat["hr"]).all() and np.isfinite(feat["map"]).all(),
             f"窓 {n}・T2−T1 有限 {fin}")
+        fin_a, fin_d = np.isfinite(feat["amb_amp1"]).sum(), np.isfinite(feat["dt_lm_ms"]).sum()
+        rep("記述 2 列（Am_b/Am_p1・ランドマーク ΔT。SAP §9.6）が窓ごとに出て、値が生理的な範囲にある",
+            fin_a >= 6 and feat["amb_amp1"].dropna().between(0.2, 1.05).all()
+            and fin_d >= 6 and feat["dt_lm_ms"].dropna().between(80, 450).all(),
+            f"有限 {fin_a}/{fin_d} 窓・Am_b/Am_p1 中央値 {feat['amb_amp1'].median():.3f}・"
+            f"ΔT_lm 中央値 {feat['dt_lm_ms'].median():.0f} ms")
         pre_v = feat.loc[feat["t0"] < 4 * 60, "t2t1_ms"].median()
         post_v = feat.loc[feat["t0"] >= 5 * 60, "t2t1_ms"].median()
         rep("脈波の遅延を −6 ms にすると Δ(T2−T1) が −6 ms（±2）になる", abs((post_v - pre_v) + 6.0) < 2.0,

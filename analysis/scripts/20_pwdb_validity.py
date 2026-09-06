@@ -62,6 +62,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -394,7 +395,10 @@ def _factor_effects(d, idx):
         rho.append(r_row)
     if not eff:
         return np.full(len(FACTORS), np.nan), np.full(len(FACTORS), np.nan)
-    return np.nanmedian(np.array(eff), axis=0), np.nanmedian(np.array(rho), axis=0)
+    with warnings.catch_warnings():
+        # 採用が少ない経路では列が全層で NaN になり nanmedian が警告を出す（値は NaN のまま。表示だけの問題）
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return np.nanmedian(np.array(eff), axis=0), np.nanmedian(np.array(rho), axis=0)
 
 
 def _oat_table(d, idx):
