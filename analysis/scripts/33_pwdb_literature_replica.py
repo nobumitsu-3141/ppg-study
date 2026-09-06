@@ -816,6 +816,30 @@ def fit_basso(t, ys, lm, L: int) -> dict:
 
 
 # ================================================================ 1 被験者
+def replica_for_beat(t, y, fs, wang_step: int = 1) -> dict:
+    """1 拍（生の波形）に前処理 → 鍵点 → 文献 6 本の分解。34番（VitalDB）からも使う。"""
+    out = {}
+    ys, _amp = pda2.preprocess(t, y, fs)
+    if ys is None:
+        out["err"] = "preprocess_none"
+        return out
+    lm = pda2.find_landmarks(t, ys)
+    out["klass_own"] = int(lm["klass"])
+    out["dt_own_ms"] = float((lm["dia_t"] - lm["sys_t"]) * 1000.0) if lm["klass"] in (1, 3) else NAN
+    out["ri_own"] = float(lm["dia_v"] / lm["sys_v"]) if (lm["klass"] in (1, 3) and np.isfinite(lm["dia_v"])) else NAN
+    pts = couceiro_points(t, ys, lm)
+    for fn in (lambda: fit_goswami(t, ys, lm), lambda: fit_tigges(t, ys, lm, pts),
+               lambda: fit_wang(t, ys, lm, wang_step),
+               lambda: fit_couceiro(t, ys, lm, pts), lambda: fit_fleischhauer(t, ys, lm, 2),
+               lambda: fit_fleischhauer(t, ys, lm, 3), lambda: fit_basso(t, ys, lm, 2),
+               lambda: fit_basso(t, ys, lm, 3), lambda: fit_basso(t, ys, lm, 4)):
+        try:
+            out.update(fn())
+        except Exception as e:      # noqa: BLE001
+            out["err"] = (out.get("err", "") + "|" + str(e))[:80]
+    return out
+
+
 def replica_for_subject(args_tuple) -> dict:
     subj, row, hr, M, wang_step = args_tuple
     out = {"subj_no": int(subj)}
@@ -825,24 +849,7 @@ def replica_for_subject(args_tuple) -> dict:
             out["err"] = "no_beat"
             return out
         t = np.arange(y.size) / fs
-        ys, _amp = pda2.preprocess(t, y, fs)
-        if ys is None:
-            out["err"] = "preprocess_none"
-            return out
-        lm = pda2.find_landmarks(t, ys)
-        out["klass_own"] = int(lm["klass"])
-        out["dt_own_ms"] = float((lm["dia_t"] - lm["sys_t"]) * 1000.0) if lm["klass"] in (1, 3) else NAN
-        out["ri_own"] = float(lm["dia_v"] / lm["sys_v"]) if (lm["klass"] in (1, 3) and np.isfinite(lm["dia_v"])) else NAN
-        pts = couceiro_points(t, ys, lm)
-        for fn in (lambda: fit_goswami(t, ys, lm), lambda: fit_tigges(t, ys, lm, pts),
-                   lambda: fit_wang(t, ys, lm, wang_step),
-                   lambda: fit_couceiro(t, ys, lm, pts), lambda: fit_fleischhauer(t, ys, lm, 2),
-                   lambda: fit_fleischhauer(t, ys, lm, 3), lambda: fit_basso(t, ys, lm, 2),
-                   lambda: fit_basso(t, ys, lm, 3), lambda: fit_basso(t, ys, lm, 4)):
-            try:
-                out.update(fn())
-            except Exception as e:      # noqa: BLE001
-                out["err"] = (out.get("err", "") + "|" + str(e))[:80]
+        out.update(replica_for_beat(t, y, fs, wang_step))
     except Exception as e:      # noqa: BLE001
         out["err"] = str(e)[:80]
     return out

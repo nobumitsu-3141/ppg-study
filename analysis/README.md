@@ -297,6 +297,7 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/31_pwdb_basis_explore.py` | 【探索・事後】基底（ガウス・Basso 式の歪み・ガンマ・広い範囲）を PWDB の型1 の拍で同じ規準で並べる。決定試験の判定には使わない。第3版の設計の材料 |
 | `scripts/32_vitaldb_landmark_identifiability.py` | VitalDB のモニタ波形 20 例で、ランドマーク ΔT と Am_b/Am_p1 が同定でき窓間で再現するか（規準は実行前に固定。`--selftest`／`--run --jobs 4`） |
 | `scripts/33_pwdb_literature_replica.py` | 【探索・事後】文献の分解手法（Goswami・Tigges・Wang・Couceiro・Fleischhauer・Basso）をその条件のまま PWDB に当て、同じ被験者のランドマークと比べる。逸脱表つき。判定には使わない |
+| `scripts/34_vitaldb_methods_compare.py` | 【探索】VitalDB のモニタ波形 20 例で、我々の関数・条件（第2版・凍結版・ランドマーク・早期振幅比）と文献 6 本の条件（33番の再現）を同じ窓・同じ平均拍で並べ、同定率・窓間の再現性・ICC を比べる（読み方は実行前に固定） |
 | `scripts/30_c1_dose_steps.py` | 研究1c C-1: 昇圧薬の用量ステップに対する PWTT 構成要素（T2−T1・T1・PWTT）の応答。記述としてランドマーク ΔT と Am_b/Am_p1 も窓ごとに出す（研究0 第2版の帰結・SAP §9.6）。抽出（`--extract`。参照 CO 不要）→ 統計（`--stats`。SAP-1c の凍結タグが要る）。`--selftest` で合成データの検算 |
 
 研究0 の総括（固まった関数と条件・文献との一致と違い・理由・次のステップ）は `docs/research/pda2_final_summary.md`、
