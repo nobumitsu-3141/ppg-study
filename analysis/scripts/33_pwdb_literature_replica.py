@@ -68,6 +68,7 @@ import io
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -1164,6 +1165,10 @@ def selftest() -> int:
 
 
 def main() -> None:
+    # SLSQP が一歩だけ境界の外に出て切り詰めるときの警告（結果は境界内。無害）と、全て NaN の列の nanmedian の警告を抑える
+    warnings.filterwarnings("ignore", message="Values in x were outside bounds")
+    warnings.filterwarnings("ignore", message="All-NaN slice")
+    warnings.filterwarnings("ignore", message="Mean of empty slice")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pwdb", type=str, default=None)
     ap.add_argument("--jobs", type=int, default=1)
