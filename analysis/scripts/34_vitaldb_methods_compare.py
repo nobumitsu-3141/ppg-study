@@ -373,7 +373,9 @@ def run(cases: list, jobs: int, wang_step: int, out_dir: Path | None = None, loa
     loader = M32._vitaldb_loader if loader is None else loader
     print(f"症例（32番と同じ seed 0 の 20 例）: {cases}", flush=True)
     tasks, ctl = [], {}
-    for cid in cases:
+    prog = out_dir / "progress.json"
+    t_load = time.time()
+    for k, cid in enumerate(cases, 1):
         try:
             arrays = loader(cid)
         except Exception as e:      # noqa: BLE001
@@ -382,11 +384,13 @@ def run(cases: list, jobs: int, wang_step: int, out_dir: Path | None = None, loa
         tk = case_tasks(cid, arrays, wang_step, n_blocks, block_len)
         ctl.update({(cid, t0): v for t0, v in _pwtt_for(cid, [t[1] for t in tk], arrays).items()})
         tasks.extend(tk)
-        print(f"  case {cid}: 窓 {len(tk)}", flush=True)
+        print(f"  case {cid}: 窓 {len(tk)}（{k}/{len(cases)} 例・経過 {(time.time() - t_load) / 60:.1f} 分）", flush=True)
+        prog.write_text(json.dumps({"script": "34_vitaldb_methods_compare", "state": "loading", "cases_done": k,
+                                    "cases_total": len(cases), "done": 0, "total": 0,
+                                    "elapsed_s": round(time.time() - t_load), "updated": time.time()}), encoding="utf-8")
     print(f"窓 {len(tasks)} に全手法を当てます（jobs={jobs}・Wang の刻み {wang_step}）", flush=True)
     t_start = time.time()
     rows = []
-    prog = out_dir / "progress.json"
 
     def tick():
         el = time.time() - t_start

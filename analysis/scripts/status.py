@@ -30,6 +30,7 @@ JOBS = [
 # 進捗を JSON に書く解析（表示名, JSON, プロセス名の一部）。26番のような一括 map の解析は出力が出るまで進捗が無い
 PROGRESS = [
     ("文献再現（33番）", DATA / "pwdb" / "literature_replica_progress.json", "33_pwdb_literature_replica"),
+    ("VitalDB 手法比較（34番）", DATA / "vitaldb_methods" / "progress.json", "34_vitaldb_methods_compare"),
 ]
 
 
@@ -142,8 +143,12 @@ def main() -> None:
             print(f"   {bar(done, total)} {done:>5} / {total}  ({100 * done / max(total, 1):.1f}%)"
                   f"   {rec.get('jobs', '?')} 並列・Wang の刻み {rec.get('wang_step', '?')}")
         age = now - float(rec.get("updated", now))
+        per = float(rec.get("per_subject_s", rec.get("per_window_s", 0)))
+        unit = "名" if "per_subject_s" in rec else "窓"
+        if rec.get("state") == "loading":
+            print(f"   症例の読み込み {rec.get('cases_done', '?')} / {rec.get('cases_total', '?')}（窓の当てはめはこの後）")
         print(f"   最終更新: {fmt_dur(age)}前   経過 {fmt_dur(float(rec.get('elapsed_s', 0)))}"
-              f"   {float(rec.get('per_subject_s', 0)):.1f} 秒/名", end="")
+              f"   {per:.1f} 秒/{unit}", end="")
         if alive and rec.get("state") != "done":
             eta = float(rec.get("eta_s", 0))
             print(f"   残り約 {fmt_dur(eta)}（完了予定 {time.strftime('%m/%d %H:%M', time.localtime(now + eta))}）", end="")
