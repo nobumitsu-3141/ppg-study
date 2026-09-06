@@ -5,4 +5,4 @@ numpy>=2.0
 scipy>=1.13
 pandas>=2.2
 matplotlib>=3.8.4
-vitaldb>=1.4
+vitaldb==1.5.8   # 研究1（862 例）の抽出に使った版。1.7.2 は波形の再標本化が変わり（欠測の埋め方・±20 ms のずれ）、拍の型と PWTT が変わる（lab_log 追記22）

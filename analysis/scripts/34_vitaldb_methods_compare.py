@@ -66,6 +66,15 @@ MIN_PAIRS_T4 = 30
 NAN = float("nan")
 
 
+def vitaldb_version() -> str:
+    """vitaldb の版。波形の再標本化が版で変わる（1.5.8 と 1.7.2 で拍の型と PWTT が違う。lab_log 追記22）ので必ず記録する。"""
+    try:
+        from importlib.metadata import version
+        return version("vitaldb")
+    except Exception:      # noqa: BLE001
+        return "?"
+
+
 def _load(stem: str, name: str):
     spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / stem)
     m = importlib.util.module_from_spec(spec)
@@ -295,7 +304,8 @@ def report(win, summ, out_dir: Path | None = None) -> dict:
     print("=" * 112)
     t4 = float(np.mean(win["klass"] >= 4)) if len(win) else NAN
     print(f"症例 {n_case} 例・窓 {len(win)}（1 症例 {N_BLOCKS} ブロック × 連続 {BLOCK_LEN} 窓）・平均拍の型4 の割合 {t4:.0%}・"
-          f"Wang の重みの刻み {int(win['wang_step'].iloc[0]) if 'wang_step' in win and len(win) else '?'}")
+          f"Wang の重みの刻み {int(win['wang_step'].iloc[0]) if 'wang_step' in win and len(win) else '?'}・"
+          f"vitaldb {vitaldb_version()}（波形の再標本化が版で変わる。lab_log 追記22）")
     print(f"\n0. 陽性対照 PWTT: 窓間自己相関の症例中央値 {ac_ctl:.3f}（要求 ≥ {GATE_CTL}）→ "
           f"{'合格' if ctl_ok else '**不合格。表全体を無効とする**'}")
 
@@ -516,17 +526,21 @@ def main() -> None:
     ap.add_argument("--wang-step", type=int, default=5, help="Wang の重み 1..100 の刻み（文献は 1）")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--fingerprint", action="store_true", help="別の機械の実行と比べるための指紋（版・症例ごとの窓と要約）を出す")
+    ap.add_argument("--out", type=str, default=None, help="出力先（既定 data/vitaldb_methods）")
     args = ap.parse_args()
+    global OUT
+    if args.out:
+        OUT = Path(args.out)
     if args.jobs < 1:
         ap.error("--jobs は 1 以上")
     if args.selftest:
         sys.exit(selftest())
     if args.fingerprint:
-        fingerprint()
+        fingerprint(OUT)
         return
     if args.run:
         cases = [int(c) for c in args.cases.split(",")] if args.cases else M32.select_cases(M32.N_CASES, M32.SEED)
-        run(cases, args.jobs, max(1, args.wang_step))
+        run(cases, args.jobs, max(1, args.wang_step), out_dir=OUT)
     else:
         ap.print_help()
 

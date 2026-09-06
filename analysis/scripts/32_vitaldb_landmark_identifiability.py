@@ -67,6 +67,15 @@ INDICES = [("ens_dt_lm_ms", "ランドマーク ΔT（平均拍）"), ("ens_amb"
 CONTROL = ("pwtt_ms", "PWTT（陽性対照）")
 
 
+def vitaldb_version() -> str:
+    """vitaldb の版。波形の再標本化が版で変わる（1.5.8 と 1.7.2 で拍の型と PWTT が違う。lab_log 追記22）ので必ず記録する。"""
+    try:
+        from importlib.metadata import version
+        return version("vitaldb")
+    except Exception:      # noqa: BLE001
+        return "?"
+
+
 # ================================================================ 症例の選択（事前規準）
 def select_cases(n: int = N_CASES, seed: int = SEED, table=None) -> list:
     """target_cases.csv の caseid 昇順から seed 固定で n 例。結果を見て選び直さない。"""
@@ -203,7 +212,7 @@ def extract_case(caseid: int, loader=_vitaldb_loader, out_dir: Path | None = Non
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(fp, index=False)
     (out_dir / f"case_{caseid}_meta.json").write_text(json.dumps(
-        {"caseid": caseid, "duration_min": round(dur / 60, 1),
+        {"caseid": caseid, "vitaldb": vitaldb_version(), "duration_min": round(dur / 60, 1),
          "pleth_lag_ms": round(lag * 1000) if np.isfinite(lag) else None,
          "n_windows": len(df), "n_analyzable": int((df["n_good"] >= MIN_GOOD).sum())}, ensure_ascii=False),
         encoding="utf-8")
@@ -367,7 +376,7 @@ def report(dfs: dict, out_dir: Path | None = None, ages: dict | None = None, fea
     print("VitalDB モニタ波形でのランドマーク・早期振幅比の同定可能性（事前規準は本ファイル冒頭・lab_log 追記14）")
     print("=" * 96)
     print(f"症例 {len(summ)} 例・窓 {int(summ['n_windows'].sum()) if len(summ) else 0}"
-          f"（解析できる窓 {int(summ['n_analyzable'].sum()) if len(summ) else 0}）")
+          f"（解析できる窓 {int(summ['n_analyzable'].sum()) if len(summ) else 0}）・vitaldb {vitaldb_version()}・pda2 {pda2.code_version()}")
     print(f"\n0. 陽性対照 {CONTROL[1]}: 窓間自己相関の症例中央値 {v['control']['ac']:.3f}（要求 ≥ {GATE_CONTROL}）"
           f" → {'合格' if v['control']['pass'] else '**不合格。表全体を無効とする**'}")
     print(f"\n{'-' * 96}\n1. 判定（指標ごと。同定率の症例中央値 ≥ {GATE_ID_RATE} かつ 自己相関の症例中央値 ≥ {GATE_AUTOCORR}）\n{'-' * 96}")
@@ -584,6 +593,7 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=N_CASES)
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--out", type=str, default=None, help="出力先（既定 data/vitaldb_landmark。vitaldb の版ごとに分けるとき）")
     args = ap.parse_args()
     if args.jobs < 1:
         ap.error("--jobs は 1 以上")
@@ -591,7 +601,10 @@ def main() -> None:
         sys.exit(selftest())
     if args.run:
         cases = ([int(c) for c in args.cases.split(",")] if args.cases else select_cases(args.n, SEED))
-        run(cases, args.jobs)
+        global OUT
+        if args.out:
+            OUT = Path(args.out)
+        run(cases, args.jobs, out_dir=OUT)
     else:
         ap.print_help()
 
