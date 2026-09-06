@@ -2916,6 +2916,6 @@ Fleischhauer 2020・Basso 2024・Hellqvist 2024）の全文で埋めた。訂正
 
 残る逸脱（逸脱表に明記）: 最適化器（fmincon 内点法・LMA → scipy SLSQP・LM）、データ（PWDB 1 拍・雑音なし・500 Hz）、
 Tigges の M≠5 への写像、Wang の 5 本目の初期値、Couceiro の c₅（原文判読不能）、Basso の α の数値上限。
-自己検証に「自分の模型で作った拍を復元する」検査（Basso・Fleischhauer・Goswami・Wang）を足した。
+自己検証に「自分の模型で作った拍を復元する」検査（Basso・Fleischhauer・Goswami・Wang）を足した。**24 検査 ALL PASS**（雲。模擬 PWDB 24 名で全手法が例外なく走り、Wang の採否・Tigges の AICc・Couceiro の初期値の由来が記録される）。
 計時（雲・1 コア・模擬の 1 拍）: Wang 6〜16 s・Tigges 5〜11 s・Goswami 1 s・他 < 1 s → 624 名は Mac 8 コアで 20〜30 分の見込み。
 Wang の刻みを `--wang-step 5` にすると Wang は約 1/5（文献は 1）。読み方は追記16 のまま。
