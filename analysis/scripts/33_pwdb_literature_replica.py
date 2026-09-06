@@ -962,7 +962,7 @@ def report(d, C, out_dir: Path | None = None, tag: str = "") -> dict:
     lm_dt, _, _ = cell("dt_lm_ms", "PWV_a", -1, d)
     lm_ri, _, _ = cell("digital_ri", "pvr", +1, d)
     print(f"\n{'手法':<46}{'n':>5}{'採択':>7}{'ΔT×PWV |ρ|':>12}{'層':>6}{'判定':>8}{'届く':>5}"
-          f"{'RI×pvr |ρ|':>12}{'層':>6}{'判定':>8}{'届く':>5}{'ΔT 型1のみ':>11}")
+          f"{'RI×pvr |ρ|':>12}{'層':>6}{'判定':>8}{'届く':>5}  {'ΔT 型1のみ':>13}")
 
     def line(label, dtc, ric, src, extra=""):
         n = int(src[dtc].notna().sum()) if dtc in src else 0
@@ -975,7 +975,7 @@ def report(d, C, out_dir: Path | None = None, tag: str = "") -> dict:
         fa = f"{a:.3f}" if np.isfinite(a) else "—"
         fb = f"{b:.3f}" if np.isfinite(b) else "—"
         fc = f"{c:.3f} ({lc})" if np.isfinite(c) else "—"
-        print(f"{label:<46}{n:>5}{extra:>7}{fa:>12}{la:>6}{va:>8}{reach_a:>5}{fb:>12}{lb:>6}{vb:>8}{reach_b:>5}{fc:>11}")
+        print(f"{label:<46}{n:>5}{extra:>7}{fa:>12}{la:>6}{va:>8}{reach_a:>5}{fb:>12}{lb:>6}{vb:>8}{reach_b:>5}  {fc:>13}")
         return {"dt": a, "dt_v": va, "ri": b, "ri_v": vb, "dt1": c, "n": n}
 
     for key, label, okc in METHODS:
@@ -996,7 +996,8 @@ def report(d, C, out_dir: Path | None = None, tag: str = "") -> dict:
         top = "・".join(f"{k} {v:.0%}" for k, v in vc.head(6).items())
         print(f"\nTigges の AICc で最良になった基底×M（上位）: {top}（Tigges 2017 の実測: Gamma M=3 28%・Rayleigh M=2 14%・Normal M=2 1.2%）")
     if "cou_init" in d:
-        print(f"Couceiro の初期値: a〜e 波から {float((d['cou_init'] == 'abcde').mean()):.0%}・汎用 {float((d['cou_init'] == 'generic').mean()):.0%}")
+        print(f"Couceiro の初期値: 表 1（a〜f 波・切痕の両端）{float((d['cou_init'] == 'couceiro').mean()):.0%}・"
+              f"汎用（表 D1 generic）{float((d['cou_init'] == 'generic').mean()):.0%}")
     if "w_wang" in d:
         w = d["w_wang"].dropna()
         print(f"Wang の重みの刻み: {int(d['wang_step'].iloc[0]) if 'wang_step' in d else '?'}（文献は 1）")
@@ -1175,12 +1176,31 @@ def main() -> None:
     ap.add_argument("--all", action="store_true", help="subj%7==0 の部分集合ではなく全例")
     ap.add_argument("--limit", type=int, default=0, help="先頭 N 名だけ（形式の確認用）")
     ap.add_argument("--wang-step", type=int, default=1, help="Wang の重み 1..100 の刻み（文献は 1。時間が無ければ 5）")
+    ap.add_argument("--report-only", action="store_true", help="保存済みの CSV（literature_replica[_all].csv）から表だけ作り直す")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
     if args.selftest:
         sys.exit(selftest())
+    if args.report_only:
+        import pandas as pd
+        tag = "_all" if args.all else ""
+        fp = OUT / f"literature_replica{tag}.csv"
+        if not fp.exists():
+            raise SystemExit(f"{fp} がありません（先に --pwdb で回す）")
+        d = pd.read_csv(fp)
+        C = _load("26_pwdb_compare.py", "m26")
+        buf = io.StringIO()
+        old = sys.stdout
+        sys.stdout = _Tee(old, buf)
+        try:
+            report(d, C, tag=tag)
+        finally:
+            sys.stdout = old
+        (OUT / f"literature_replica_report{tag}.txt").write_text(buf.getvalue(), encoding="utf-8")
+        print(f"\n表の全文: {OUT / f'literature_replica_report{tag}.txt'}")
+        return
     if not args.pwdb:
-        ap.error("--pwdb を指定してください（--selftest なら不要）")
+        ap.error("--pwdb を指定してください（--selftest・--report-only なら不要）")
     run(Path(args.pwdb), "all" if args.all else "mod7", max(1, args.jobs), args.limit, max(1, args.wang_step))
 
 
