@@ -407,7 +407,17 @@ and diastolic peaks, the stiffness and reflection indices, the augmentation inde
 second-derivative ageing index and the model's own pulse transit time — which are computed
 by the database's authors from the identical waveforms. Subjects, waveforms, ground truth,
 age strata and criterion are therefore shared, and the only difference is how the index is
-extracted.
+extracted. (d) *Premise test repeated with a construct-valid, identifiable
+index.* After the confirmatory run, the premise regression was repeated using the only index
+that both correlated most strongly with truth in the virtual population and met a
+prespecified identifiability criterion on recorded anaesthetic monitor waveforms (median
+detection rate ≥ 0.70 and lag-1 autocorrelation ≥ 0.30 in a separate 20-case series): the
+upstroke amplitude ratio Am_b/Am_p1 [Hellqvist 2024]. It was computed on the same 862 cases,
+the same 60-second windows and the same quality criteria as the main analysis, directly from
+the first and second derivatives without any curve fitting. The design and the rules for
+reading the result were fixed in a dated document before the analysis was run. Because it is
+computed on the windows the main analysis accepted, windows that the main analysis rejected
+at the decomposition convergence audit are not recovered.
 
 ### 2.11 Software
 
@@ -619,6 +629,17 @@ sensitive to pulse wave velocity as the decomposition-derived one (−31% agains
 Descriptively, the landmark reflection index tracked pulse wave velocity (0.69) more
 closely than peripheral resistance (0.50).
 
+*Premise test with a construct-valid index.* The index was obtained in 862 cases and 161,638
+windows (0.1% loss against the 161,737 of the main analysis). Recomputed on those same
+windows the main-analysis values reproduced the confirmatory run (0.044 with an intercept,
+0.000 through the origin; mean arterial pressure alone 0.139). The upstroke amplitude ratio
+explained 0.0002 of within-case PWTT variation with an intercept (−0.105 through the origin),
+with a coefficient of −0.030 per 1%. The within-case sign agreed with prediction in 51% of
+cases, which is chance level, and the median within-case rank correlation was −0.003. Its
+lag-1 autocorrelation between consecutive windows was 0.394, comparable to the stiffness
+index (0.496) and the reflection index (0.431). Under the prespecified reading, changing the
+index does not make within-case PWTT variation explicable.
+
 ---
 
 ## 4. Discussion
@@ -687,7 +708,20 @@ predicted direction but not specific to it: heart rate and aortic diameter moved
 and its response to stiffness was discontinuous, which is the behaviour expected when the
 second component switches between waves [Epstein 2014]. The null of the primary analysis is
 therefore not an artefact of the monitor's photoplethysmographic channel; these indices do
-not track their targets even when the signal is perfect.
+not track their targets even when the signal is perfect. The alternative reading, that the null arises from
+the construct-invalidity of the index itself, can be tested directly, and was. Repeating the
+premise test with the index that correlated most strongly with truth in the virtual
+population (0.84) and was the only one to meet the identifiability criterion on recorded
+monitor waveforms lowered the explained fraction from 0.044 to 0.0002 and removed the
+within-case consistency of sign (80% to 51%). Attenuation by measurement error does not
+account for this: taking the lag-1 autocorrelation as an index of reliability, dilution
+predicts a factor of 0.394/0.496 = 0.79, whereas the observed ratio was 0.0045. Improving the
+construct validity of the index therefore does not make within-case PWTT variation
+explicable. The weak association that remains for the stiffness index survives adjustment for
+heart rate (coefficient −0.027 to −0.020) yet is not reproduced by an index of established
+construct validity; whether it is a faint genuine vascular component, or a shared dependence
+of decomposition-derived ΔT and PWTT on the timing of the pulse foot, cannot be decided from
+these data.
 
 The same experiment, however, locates that failure precisely, because the database also
 provides landmark-derived indices computed from the identical waveforms. Those met the
