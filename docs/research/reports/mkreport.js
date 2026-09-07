@@ -14,7 +14,7 @@ function runs(text, opts = {}) {
   text.split(/(\*\*[^*]+\*\*)/).forEach(seg => {
     if (!seg) return;
     const b = seg.startsWith('**') && seg.endsWith('**');
-    out.push(new TextRun({ text: b ? seg.slice(2, -2) : seg, bold: b, font: FONT, ...opts }));
+    out.push(new TextRun({ text: b ? seg.slice(2, -2) : seg, bold: b, font: FONT, color: '000000', ...opts }));
   });
   return out;
 }
@@ -25,17 +25,17 @@ const p = (text, o = {}) => new Paragraph({
   alignment: o.align,
 });
 const h1 = (text) => new Paragraph({
-  children: [new TextRun({ text, bold: true, size: 26, font: FONT })],
+  children: [new TextRun({ text, bold: true, size: 26, font: FONT, color: '000000' })],
   spacing: { before: 340, after: 150 },
   heading: HeadingLevel.HEADING_1,
 });
 const h2 = (text) => new Paragraph({
-  children: [new TextRun({ text, bold: true, size: 22, font: FONT })],
+  children: [new TextRun({ text, bold: true, size: 22, font: FONT, color: '000000' })],
   spacing: { before: 240, after: 100 },
   heading: HeadingLevel.HEADING_2,
 });
 const cap = (text) => new Paragraph({
-  children: [new TextRun({ text, bold: true, size: 19, font: FONT })],
+  children: [new TextRun({ text, bold: true, size: 19, font: FONT, color: '000000' })],
   spacing: { before: 170, after: 70 },
 });
 const gap = (n = 130) => new Paragraph({ children: [], spacing: { after: n } });
