@@ -298,6 +298,8 @@ SQI閾値・採否基準は v0 仮置き — Phase 2 でパイロット結果を
 | `scripts/32_vitaldb_landmark_identifiability.py` | VitalDB のモニタ波形 20 例で、ランドマーク ΔT と Am_b/Am_p1 が同定でき窓間で再現するか（規準は実行前に固定。`--selftest`／`--run --jobs 4`） |
 | `scripts/33_pwdb_literature_replica.py` | 【探索・事後】文献の分解手法（Goswami・Tigges・Wang・Couceiro・Fleischhauer・Basso）をその条件のまま PWDB に当て、同じ被験者のランドマークと比べる。逸脱表つき。判定には使わない |
 | `scripts/34_vitaldb_methods_compare.py` | 【探索】VitalDB のモニタ波形 20 例で、我々の関数・条件（第2版・凍結版・ランドマーク・早期振幅比）と文献 6 本の条件（33番の再現）を同じ窓・同じ平均拍で並べ、同定率・窓間の再現性・ICC を比べる（読み方は実行前に固定） |
+| `scripts/35_amb_premise_extract.py` | 【探索・SAP 凍結後】研究1 と同一のウィンドウ・同一の品質基準で早期振幅比 Am_b/Am_p1 だけを抽出する軽量版（**当てはめを行わない**）。設計は `docs/research/sap_1_amb_exploratory_v0.md`（`--selftest`／`--limit 874 --jobs 8`） |
+| `scripts/36_amb_premise_stats.py` | 【探索・SAP 凍結後】35番の結果を研究1 に結合し、ΔPWTT% を ①ΔAm% ②ΔAm%＋ΔMAP% ③ΔSI%＋ΔRI% ④ΔMAP% で説明した 4 行を**同じ窓で**比べる。読み方は実行前に固定（`--selftest`／`--out`／`--label`） |
 | `scripts/30_c1_dose_steps.py` | 研究1c C-1: 昇圧薬の用量ステップに対する PWTT 構成要素（T2−T1・T1・PWTT）の応答。記述としてランドマーク ΔT と Am_b/Am_p1 も窓ごとに出す（研究0 第2版の帰結・SAP §9.6）。抽出（`--extract`。参照 CO 不要）→ 統計（`--stats`。SAP-1c の凍結タグが要る）。`--selftest` で合成データの検算 |
 
 研究0 の総括（固まった関数と条件・文献との一致と違い・理由・次のステップ）は `docs/research/pda2_final_summary.md`、
