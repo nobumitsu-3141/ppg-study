@@ -1,0 +1,117 @@
+<title>光電容積脈波 和文原稿</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#FCFCFD; --sunk:#F2F4F7; --ink:#16181C; --ink-2:#565B63; --ink-3:#878D96;
+  --rule:#DCDFE4; --rule-2:#C3C8D0; --accent:#1F3A63; --accent-soft:#E8EDF5;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --measure:44rem;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0E1013; --sunk:#171B20; --ink:#E4E7EC; --ink-2:#A2A9B3; --ink-3:#767D87;
+  --rule:#252A31; --rule-2:#39404A; --accent:#7FA3D6; --accent-soft:#16202F;
+}}
+:root[data-theme="dark"]{
+  --paper:#0E1013; --sunk:#171B20; --ink:#E4E7EC; --ink-2:#A2A9B3; --ink-3:#767D87;
+  --rule:#252A31; --rule-2:#39404A; --accent:#7FA3D6; --accent-soft:#16202F;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);
+  font-size:16px;line-height:2.0;margin:0;-webkit-font-smoothing:antialiased}
+
+/* ---- 上部の索引 ---- */
+.bar{position:sticky;top:0;z-index:10;background:var(--paper);
+  border-bottom:1px solid var(--rule);padding:.75rem clamp(1rem,4vw,2.5rem)}
+.bar-in{max-width:var(--measure);margin:0 auto;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:.4rem 1.6rem}
+.bar .who{font-family:var(--sans);font-size:.72rem;letter-spacing:.16em;
+  color:var(--ink-3);margin-right:auto}
+.bar a{font-family:var(--sans);font-size:.9rem;font-weight:500;color:var(--ink);
+  text-decoration:none;display:flex;align-items:baseline;gap:.5rem;
+  padding:.15rem 0;border-bottom:2px solid transparent}
+.bar a span{font-size:.74rem;color:var(--ink-3);font-weight:400}
+.bar a:hover{border-bottom-color:var(--accent)}
+.bar a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+.page{max-width:var(--measure);margin:0 auto;
+  padding:clamp(2rem,5vw,3.5rem) clamp(1rem,4vw,2.5rem) 6rem}
+
+/* ---- 冒頭 ---- */
+.lede{font-family:var(--sans);font-size:.92rem;line-height:1.85;color:var(--ink-2);
+  border-left:2px solid var(--rule-2);padding-left:1.1rem;margin:0 0 3rem}
+.lede b{color:var(--ink);font-weight:500}
+
+/* ---- 原稿 ---- */
+.doc{margin:0 0 5rem}
+.doc + .doc{border-top:1px solid var(--rule);padding-top:3rem}
+.dhead{margin:0 0 2.4rem}
+.eyebrow{font-family:var(--sans);font-size:.72rem;letter-spacing:.18em;
+  color:var(--accent);margin:0 0 .8rem}
+.dhead h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.25rem,3.4vw,1.6rem);
+  line-height:1.7;margin:0 0 .7rem;text-wrap:balance}
+.src{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);margin:0}
+
+h3.bib{font-family:var(--sans);font-size:.86rem;font-weight:700;letter-spacing:.04em;
+  color:var(--accent);margin:2.6rem 0 .8rem;scroll-margin-top:5rem}
+h3.bib span{color:var(--ink-3);font-weight:400}
+h3.sec{font-family:var(--serif);font-size:1.08rem;font-weight:600;
+  margin:3rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule-2);
+  scroll-margin-top:5rem}
+h3.sec::before{content:"〈";color:var(--ink-3)}
+h3.sec::after{content:"〉";color:var(--ink-3)}
+
+p{margin:0 0 1.4rem;text-align:justify;word-break:normal;line-break:strict}
+.run{font-weight:600;margin-right:.9em}
+.cap{font-family:var(--sans);font-size:.86rem;line-height:1.9;color:var(--ink-2);
+  margin-bottom:.5rem}
+.todo{font-family:var(--sans);font-size:.86rem;color:var(--ink-3);
+  background:var(--sunk);border-radius:3px;padding:.5rem .9rem;display:inline-block}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--sunk);
+  padding:.1em .4em;border-radius:3px}
+hr{border:0;border-top:1px solid var(--rule);margin:2.6rem 0}
+
+.memo{font-family:var(--sans);font-size:.83rem;line-height:1.9;color:var(--ink-2);
+  background:var(--sunk);border-left:2px solid var(--rule-2);
+  padding:.9rem 1.1rem;margin:0 0 1.8rem}
+
+.scroll{overflow-x:auto;margin:0 0 1.8rem}
+table{border-collapse:collapse;width:100%;min-width:24rem;
+  font-family:var(--sans);font-size:.84rem;line-height:1.75;
+  font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .8rem;border-bottom:1px solid var(--rule);
+  vertical-align:top}
+thead th{font-weight:700;font-size:.76rem;letter-spacing:.05em;color:var(--ink-2);
+  border-bottom:1.5px solid var(--rule-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+
+footer{max-width:var(--measure);margin:0 auto;
+  padding:0 clamp(1rem,4vw,2.5rem) 4rem;
+  font-family:var(--sans);font-size:.8rem;line-height:1.9;color:var(--ink-3)}
+footer code{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<nav class="bar"><div class="bar-in">
+  <span class="who">和文原稿 ／ 2026-09-07</span>
+  <!--NAV-->
+</div></nav>
+
+<div class="page">
+  <p class="lede">投稿に向けて書いた和文原稿を二編そのまま並べた。
+    <b>本文はリポジトリの原稿ファイルから機械的に組んでおり、転記していない。</b>
+    文体は既発表の症例報告から起こした規約（常体、箇条書きを用いない、強調を用いない、引用は 1）形式）に従う。
+    〔　〕は投稿先が決まってから記入する箇所である。数値は英文原稿と同一で、
+    判定の正本は <code>docs/research/roadmap_v1.md</code> にある。</p>
+  <!--DOCS-->
+</div>
+
+<footer>
+  出どころ ― 論文1 <code>docs/manuscript/05_draft_ja.md</code>／
+  論文2 <code>docs/manuscript/paper2/05_draft_ja.md</code>。
+  表は論文1 が <code>03_tables_2to7.md</code>、論文2 が <code>paper2/02_tables.md</code>。
+  図は <code>paper2/figures/</code>。文体規約は <code>07_style_ja.md</code>。
+</footer>
