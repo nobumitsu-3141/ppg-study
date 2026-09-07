@@ -39,6 +39,7 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 FEAT = DATA / "features"
 AFEAT = DATA / "features_amb"
 MIN_WIN = 12          # 研究1 と同じ症例採用条件
+COVERAGE_MIN = 0.95   # 35番がこの割合まで終わっていないと集計しない（--partial で解除）
 
 # 設計書 §6 の 4 行。(表示名, 説明変数の並び)
 ROWS = [
@@ -105,8 +106,11 @@ def load_joined(limit: int | None = None) -> tuple[list[dict], dict]:
             "caseid": cid, "n_main": len(m), "n_joined": len(j),
             "w": {c: j[c].to_numpy(float) for c in ["pwtt", "si", "ri", "map", "amb"]},
         })
+    n_amb_files = len(list(AFEAT.glob("case_*.csv")))
     miss = {
         "n_case_main": len(files),
+        "n_case_amb_files": n_amb_files,
+        "coverage": n_amb_files / max(len(files), 1),
         "n_case_used": len(cases),
         "n_win_main": tot_main,
         "n_win_joined": tot_join,
@@ -205,6 +209,8 @@ def report(cases: list[dict], miss: dict, label: str = "") -> None:
     say("設計: docs/research/sap_1_amb_exploratory_v0.md（結果を見る前に凍結）")
     say("=" * 92)
     say("")
+    say(f"抽出の網羅率: 研究1 のキャッシュ {miss['n_case_main']} 症例に対し "
+        f"35番の出力 {miss['n_case_amb_files']} 症例（{miss['coverage']*100:.1f}%）")
     say(f"症例: 研究1 のキャッシュ {miss['n_case_main']} → 本解析で採用 {miss['n_case_used']}"
         f"（結合後 {MIN_WIN} ウィンドウ以上）")
     say(f"ウィンドウ: 研究1 {miss['n_win_main']:,} → 本解析 {miss['n_win_joined']:,}"
@@ -375,6 +381,8 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", type=str, default=None)
+    ap.add_argument("--partial", action="store_true",
+                    help="35番の抽出が未完でも集計する（判定には使えない）")
     ap.add_argument("--label", type=str, default="",
                     help="報告の先頭に出す注記（例: 雲・15例・処理系の確認であって判定ではない）")
     ap.add_argument("--selftest", action="store_true")
@@ -386,6 +394,28 @@ def main() -> int:
     if not cases:
         print("結合できる症例がありません。先に 35_amb_premise_extract.py を回してください。")
         return 1
+
+    # --- 番人: 35番が走り終わる前に集計してしまう事故を防ぐ ---
+    # 部分集計は症例の偏りで値が大きく動く（比較行 ③ が研究1 の確定値から外れることで気づける）。
+    if args.limit is None and miss["coverage"] < COVERAGE_MIN and not args.partial:
+        print("=" * 92)
+        print("★★ 中止: 35番の抽出が終わっていません ★★")
+        print("=" * 92)
+        print(f"  研究1 のキャッシュ {miss['n_case_main']} 症例に対し、"
+              f"35番の出力は {miss['n_case_amb_files']} 症例（{miss['coverage']*100:.1f}%）しかありません。")
+        print(f"  部分集計は症例の偏りで値が大きく動くので、判定には使えません"
+              f"（{COVERAGE_MIN*100:.0f}% 未満では出しません）。")
+        print()
+        print("  35番の進捗:  python3 scripts/status.py     の「早期振幅比抽出」")
+        print("               tail -f amb_run.log            の「完了:」行を待つ")
+        print()
+        print("  途中経過をどうしても見たいときだけ --partial を付けてください"
+              "（--label で「判定ではない」と明記すること）。")
+        print("=" * 92)
+        return 2
+    if miss["coverage"] < COVERAGE_MIN and not args.label:
+        args.label = (f"部分集計（35番の網羅率 {miss['coverage']*100:.1f}%）。"
+                      "判定ではない。抽出の完走後に必ず取り直すこと")
     report(cases, miss, args.label)
     if args.out:
         p = Path(args.out)
