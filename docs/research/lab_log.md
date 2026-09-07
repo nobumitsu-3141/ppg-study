@@ -3494,3 +3494,52 @@ r² = 0.2137（切片あり）**で、研究1 の確定値 0.044 から大きく
 ### やり直し
 
 35番の完走後に 36番を取り直す。`36_amb_premise_report.txt` は上書きされる。
+
+## 2026-09-07（追記33）　論文2（研究0 の方法論論文）の骨子と英文初稿を書いた
+
+案A の残る作業 3 に着手した。`docs/manuscript/paper2/` に `00_outline.md` と `01_draft_en.md`。
+
+### 骨子（`00_outline.md`）
+
+主張は一文で「**指尖 PPG を成分波の和として当てはめて得た血管指標は、真値が既知の仮想集団で
+大動脈脈波伝播速度とも末梢血管抵抗とも事前規準を満たす強さでは関連しない。同じ波形から特徴点を
+直接読んだ指標は関連する。**」。「脈波分解が誤っている」とは書かない。
+
+新規性は「**PWDB で分解由来の指標を検証した報告が無い**」ことに置いた（原著は特徴点法由来の
+指標のみを対比している）。骨格は 4 本 ― 事前登録／陽性対照 0.571／同じ波形での対比
+（0.167 → 0.710 → 0.836）／三重の確認（実装・基底 12 通り・文献 6 本）。
+投稿先は Physiological Measurement を第一候補（掲載料なし。PWDB 原著と Fleischhauer・
+Couceiro・Basso の掲載誌）。論文1 とは読者層が違うので束ねない。
+
+### 英文初稿（`01_draft_en.md`・約 500 行）
+
+Title / Abstract / Introduction / Methods（§2.1〜2.7）/ Results（§3.1〜3.6）/
+Discussion（§4.1〜4.6）/ Conclusion / Statements / References。
+
+Introduction の要点は「**文献が評価してきたのは当てはまりの良さ・雑音耐性・切痕が無くても
+値が返ること**であって、真値との関連を年齢層内で問うた報告は無い」という空白の提示。
+Discussion §4.2 で「文献と矛盾しない。当てはまり指標は同定不能な問題では原理的にこの失敗を
+検出できない」を、§4.4 で「年齢層内で判定した理由は用途に合わせたからであって、厳しくするためではない」を書いた。
+限界（§4.5）は骨子の 7 項目をすべて入れた。
+
+### 書誌の誤りを 6 件見つけて直した
+
+初稿で書いた文献の書誌に誤りがあった。論文1 の**照合済み**リスト（2026-08-30 に PubMed／
+出版社記録で確認済み）と突き合わせて全面的に差し替えた。
+
+| 文献 | 初稿の誤り | 照合済みの正 |
+|---|---|---|
+| Tigges 2017 | 著者・掲載誌・表題が違う | Tigges T, Pielmus A, Klum M, ほか。Annu Int Conf IEEE EMBC 2017;2017:4014-4017. PMID 29060777 |
+| Epstein 2014 | 著者・表題が違う | Epstein S, Vergnaud AC, Elliott P, ほか。Numerical assessment of the stiffness index. 同誌 2014;2014:1969-1972. PMID 25570367 |
+| Basso 2024 | 著者・巻号が空欄 | Basso G, Haakma R, Vullings R. Physiol Meas 2024;45(11):115006. PMID 39577084 |
+| Charlton 2019 | 表題の後半が違う | 「…for in silico evaluation of hemodynamics and pulse wave indexes」 |
+| Rubins 2008・Goswami 2010・Wang 2013・Couceiro 2015・Fleischhauer 2020 | 巻号・PMID が無い | 照合済みの巻号と PMID を付けた |
+
+**未照合のまま残したのは 2 件**（Hellqvist 2024 の著者・表題、Dawber 1973 の書誌）で、
+`[[ ]]` を付けて「投稿前に必ず確認する。原典が入手できなければ Tigges 2017／Wang 2013 経由の
+引用であると明記する」と書いた。
+
+### 残り
+
+`[[ ]]` は 19 か所（Zenodo DOI、Python の版、図表番号、利益相反、著者貢献、上の書誌 2 件）。
+図 3 点・表 4 点は骨子 §4 に割り当て済みで、数値はすべて lab_log と roadmap §9 にある。
