@@ -4,7 +4,7 @@
 
 並べるもの（同じ 60 秒窓の平均拍 1 拍に全部を当てる）
   我々    PDA 第2版 歪みガウス・ガンマ（`src/pda2.py`・決定試験と同じ条件）、凍結版 2 カーネル（研究1 と同じ `src/pda.py`）、
-          ランドマーク ΔT・RI（`pda2.find_landmarks`）、早期振幅比 Am_b/Am_p1（`pda2.early_features`）
+          特徴点 ΔT・RI（`pda2.find_landmarks`）、早期振幅比 Am_b/Am_p1（`pda2.early_features`）
   文献    33番の再現（Goswami 2010・Tigges 2017・Wang 2013・Couceiro 2015・Fleischhauer 2020・Basso 2024。文献の条件のまま）
   対照    同じ窓の PWTT
 
@@ -13,10 +13,10 @@
 
 問い（探索。結果を見る前に固定。lab_log 追記19）
 ------------------------------------------------
-  1. 実機のモニタ波形で、分解由来の ΔT・RI（我々・文献）は計測由来（ランドマーク ΔT・Am_b/Am_p1）を同定率・再現性で上回るか。
-     **上回る** = 同定率と自己相関の症例中央値の**両方**が、同じ窓のランドマーク ΔT（RI ならランドマーク RI）を 0.05 以上上回る。
+  1. 実機のモニタ波形で、分解由来の ΔT・RI（我々・文献）は計測由来（特徴点 ΔT・Am_b/Am_p1）を同定率・再現性で上回るか。
+     **上回る** = 同定率と自己相関の症例中央値の**両方**が、同じ窓の特徴点 ΔT（RI なら特徴点 RI）を 0.05 以上上回る。
   2. 分解の利点「切痕・拡張期ピークが無くても動く」は実機で出るか。
-     = 型4（拡張期の錨なし）の窓で分解が出した値の再現性（症例中央値を引いた値で、型4 窓と隣の窓の対を全症例で集めた
+     = 型4（拡張期の特徴点なし）の窓で分解が出した値の再現性（症例中央値を引いた値で、型4 窓と隣の窓の対を全症例で集めた
        Pearson r。対 30 組以上）が **≥ 0.30** なら「出た」と読む。
   陽性対照: PWTT の自己相関の症例中央値 ≥ 0.50（研究1 の実測 +0.746・32番 0.794）。通らなければ表全体を無効とする。
   この表は決定試験の判定（roadmap §9）を動かさない。上回る手法があっても採らず、新しい事前登録の材料にする。
@@ -102,7 +102,7 @@ DT_ROWS = [
     ("dt_bas2_ms", "Basso 2024 歪みガウス L=2",              None,     "分解・文献"),
     ("dt_bas3_ms", "Basso 2024 歪みガウス L=3",              None,     "分解・文献"),
     ("dt_bas4_ms", "Basso 2024 歪みガウス L=4",              None,     "分解・文献"),
-    ("dt_lm_ms",  "ランドマーク ΔT（計測・基準）",            None,     "計測"),
+    ("dt_lm_ms",  "特徴点 ΔT（計測・基準）",            None,     "計測"),
     ("amb",       "Am_b/Am_p1（計測）",                      None,     "計測"),
     ("pwtt_ms",   "PWTT（陽性対照）",                         None,     "対照"),
 ]
@@ -113,7 +113,7 @@ RI_ROWS = [
     ("ri_wang", "Wang 2013（全例）", "ok_wang", "分解・文献"), ("ri_cou", "Couceiro 2015 R1_d", None, "分解・文献"),
     ("ri_fl2", "Fleischhauer 2", None, "分解・文献"), ("ri_bas2", "Basso L=2", None, "分解・文献"),
     ("ri_bas3", "Basso L=3", None, "分解・文献"),
-    ("ri_lm",  "ランドマーク RI（計測・基準）", None, "計測"),
+    ("ri_lm",  "特徴点 RI（計測・基準）", None, "計測"),
 ]
 
 
@@ -312,7 +312,7 @@ def report(win, summ, out_dir: Path | None = None) -> dict:
     def block(rows, ref_col, title):
         ref_id = float(np.nanmedian(summ[f"id_{ref_col}"])) if n_case else NAN
         ref_ac = float(np.nanmedian(summ[f"ac_{ref_col}"])) if n_case else NAN
-        print(f"\n{'-' * 112}\n{title}（基準 = 同じ窓のランドマーク: 同定率 {ref_id:.2f}・自己相関 {ref_ac:.2f}。"
+        print(f"\n{'-' * 112}\n{title}（基準 = 同じ窓の特徴点: 同定率 {ref_id:.2f}・自己相関 {ref_ac:.2f}。"
               f"上回る = 両方が基準 + {MARGIN} 以上）\n{'-' * 112}")
         print(f"{'手法':<40}{'群':>8}{'採択率':>8}{'同定率':>8}{'自己相関':>9}{'ICC':>7}{'年齢ρ':>7}{'上回る':>7}"
               f"{'型4窓 同定率':>12}{'型4窓 再現性(対)':>16}")
@@ -473,7 +473,7 @@ def selftest() -> int:
         rep("合成症例で 2 ブロック × 3 窓 = 6 窓が選ばれ、全手法の列が揃う",
             len(win) == 6 and all(c in win for c, *_ in DT_ROWS) and all(c in win for c, *_ in RI_ROWS), f"窓 {len(win)}")
         fin = {c: float(np.isfinite(win[c]).mean()) for c, *_ in DT_ROWS}
-        rep("計測（ランドマーク ΔT・Am_b/Am_p1・PWTT）が全窓で出る", fin["dt_lm_ms"] == 1.0 and fin["amb"] == 1.0 and fin["pwtt_ms"] == 1.0,
+        rep("計測（特徴点 ΔT・Am_b/Am_p1・PWTT）が全窓で出る", fin["dt_lm_ms"] == 1.0 and fin["amb"] == 1.0 and fin["pwtt_ms"] == 1.0,
             "・".join(f"{k} {v:.0%}" for k, v in fin.items() if k in ("dt_lm_ms", "amb", "pwtt_ms")))
         rep("我々の分解（第2版 2 経路・凍結版）と文献の分解が走り、半分以上の窓で ΔT を返す手法がある",
             sum(1 for c, *_ in DT_ROWS if fin[c] >= 0.5) >= 8, "・".join(f"{k} {v:.0%}" for k, v in fin.items()))

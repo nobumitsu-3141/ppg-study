@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""【探索・事後】文献の分解手法を**その条件のまま** PWDB に当て、同じ被験者のランドマーク ΔT・RI と比べる。
+"""【探索・事後】文献の分解手法を**その条件のまま** PWDB に当て、同じ被験者の特徴点 ΔT・RI と比べる。
 
 **決定試験（26番・27番）の判定には使わない。閾値は動かさない。**
 31番は「我々の前処理・初期値・最適化・規準」の上で基底だけを変えた。ここでは逆に、文献ごとの条件
@@ -11,7 +11,7 @@
 問い
 ----
 文献の条件をそのまま当てた分解由来の ΔT（前進波と反射波の成分ピークの間隔）と RI（高さ比）は、
-同じ被験者の Charlton 同梱のランドマーク ΔT・RI（研究0 で成立）に届くか。
+同じ被験者の Charlton 同梱の特徴点法の ΔT・RI（研究0 で成立）と同等の |ρ| に達するか。
 
 2026-09-06 に 6 本の全文（PDF）で照合し、初期値・境界・制約・目的関数・最適化器・再標本化を文献の記載に
 差し替えた（逸脱表の「一致」）。残る逸脱は最適化器（fmincon の内点法 → scipy の SLSQP／LM）と
@@ -21,11 +21,11 @@
 --------------------------------------------
 集団  subj_no % 7 == 0（624 名。27番 B 層と同じ。結果を見て選び直さない）。全型を当てる（文献は型を選ばない）。
 規準  年齢層内 Spearman が全 6 層で予測の向き、中央値 |ρ| ≥ 0.30（20・23・26番と同じ。8 名未満の層は数えない）。
-届く  中央値 |ρ| が、同じ集団のランドマーク（Charlton 同梱）の値 − 0.05 以上（gate0_rules_v2 の「同等」の幅）。
+同等  中央値 |ρ| が、同じ集団の特徴点（Charlton 同梱）の値 − 0.05 以上（gate0_rules_v2 の「同等」の幅）。
 採否  文献に採否規準があるもの（Wang 2013）は採用分と全例の両方、無いものは全例。
 役割  文献に反射波の指定があるもの（Goswami: p_r、Couceiro: g4、2 成分の手法: 第 2 成分）はそれに従う。
       無いもの（Tigges・Wang・Basso L≥3・Fleischhauer 3 核）は 26番と同じ規則
-      （前進波 = 最も早いピークで高さが最大の半分以上の成分、反射波 = 拡張期の鍵点に最も近い後続の成分）。
+      （前進波 = 最も早いピークで高さが最大の半分以上の成分、反射波 = 拡張期の特徴点に最も近い後続の成分）。
 
 手法（全文で照合済み）
 ----------------------
@@ -39,7 +39,7 @@
                     2(K+1)(K+2)/(N−K−2)、K = 3M+1。推奨の Gamma M=3 も固定で併記
   Wang 2013         ガウス 4 本 → 規準（NRMSE<2%・Errx<6 ms・Erry<0.01）を満たさなければ 5 本。1 kHz。
                     初期値は 2 次微分の特徴点 D1〜D4 から型別（表 1: H = 0.8A／0.3A、μ = D、s = D1/3 など）。
-                    鍵点（頂点と谷）の重み w = 1..100（1 刻み）の WLS を Levenberg–Marquardt で解き、
+                    特徴点（頂点と谷）の重み w = 1..100（1 刻み）の WLS を Levenberg–Marquardt で解き、
                     Errx・Erry・NRMSE を正規化（r = (max−a)/(max−min)）、重み u = (0.35, 0.35, 0.30) の
                     理想解 E=(1,1,1)・最悪解 B=(0,0,0) に対する適合度 c = 1/(1 + Σ[u(e−r)]²/Σ[u(b−r)]²) が最大の重みを採る
   Couceiro 2015     ガウス 5 本。18 Hz 低域通過・線形トレンド除去・振幅 1。初期値と境界は 2 次微分の a〜f 波と
@@ -95,8 +95,8 @@ METHODS = [
     ("bas3",  "Basso 2024    歪みガウス L=3",                 None),
     ("bas4",  "Basso 2024    歪みガウス L=4",                 None),
 ]
-REFS = [("lm", "ランドマーク（Charlton 同梱）", "dt_lm_ms", "digital_ri"),
-        ("own", "ランドマーク（自前・pda2.find_landmarks）", "dt_own_ms", "ri_own")]
+REFS = [("lm", "特徴点（Charlton 同梱）", "dt_lm_ms", "digital_ri"),
+        ("own", "特徴点（自前・pda2.find_landmarks）", "dt_own_ms", "ri_own")]
 
 # 逸脱表（手法, 項目, 文献（精読メモ）, ここでの実装, 状態）
 DEVIATIONS = [
@@ -112,9 +112,9 @@ DEVIATIONS = [
      "反射波のピークが前進波より前、または拍の外（> T）なら失敗として NaN", "既定"),
     ("Goswami", "h₁・t₁", "2 次微分法で推定", "pda2.find_landmarks の収縮期ピーク", "代替"),
     ("Tigges", "初期値と制約", "『Couceiro に倣う』とのみ記載（M≠5・非ガウス基底への割り当ては不明）",
-     "M=5 は Couceiro 表 1、他の M は同じ鍵点を M 個に配り直す。制約は振幅の順序と位置の単調", "一部既定"),
+     "M=5 は Couceiro 表 1、他の M は同じ特徴点を M 個に配り直す。制約は振幅の順序と位置の単調", "一部既定"),
     ("Tigges", "40 Hz", "10 次 Kaiser 窓 18 Hz の抗折り返し → 40 Hz", "同じ（firwin 11 タップ Kaiser β=8.6・18 Hz → 40 Hz 補間）", "一致"),
-    ("Wang", "鍵点", "頂点と谷（crests and troughs）", "S・切痕・D（pda2.find_landmarks）", "一致（同じ点）"),
+    ("Wang", "特徴点", "頂点と谷（crests and troughs）", "S・切痕・D（pda2.find_landmarks）", "一致（同じ点）"),
     ("Wang", "D1〜D4", "2 次微分の谷・山・零交差から型別に決める", "同じ規則を実装（型は Wang の 5 型を pda2 の型 1/3/4 に写す）", "一致（型の写像は近似）"),
     ("Wang", "5 ガウスの初期値", "表 1 は 4 本分のみ（5 本目の記載なし）", "5 本目は D3 と D4 の中点・H=0.3A・s=(D4−D3)/3", "既定"),
     ("Couceiro", "切痕の両端 tdn1・tdn2", "2 次微分の [0.2, 0.4] s の極大と零交差（無ければ 4 次微分）", "同じ規則（零交差が無ければ極大 ±20 ms）", "一致（近似）"),
@@ -674,7 +674,7 @@ def _wang_mcdm(crit):
 
 
 def fit_wang(t, ys, lm, step: int = 1) -> dict:
-    """Wang 2013: 4 ガウス → 規準を満たさなければ 5 ガウス。鍵点重み 1..100 の WLS（LM）、MCDM で重みを選ぶ。"""
+    """Wang 2013: 4 ガウス → 規準を満たさなければ 5 ガウス。特徴点重み 1..100 の WLS（LM）、MCDM で重みを選ぶ。"""
     out = {"dt_wang_ms": NAN, "ri_wang": NAN, "ok_wang": 0, "w_wang": NAN, "M_wang": 0,
            "nrmse_wang": NAN, "errx_wang_ms": NAN, "wang_type": NAN}
     chosen = None
@@ -686,7 +686,7 @@ def fit_wang(t, ys, lm, step: int = 1) -> dict:
         kinds = ["normal"] * M
         cands = []
         for wk in range(1, 101, max(1, step)):
-            w = pda2._weights(t, lm, float(wk), halfwidth_s=0.0)      # 鍵点そのものに重み
+            w = pda2._weights(t, lm, float(wk), halfwidth_s=0.0)      # 特徴点そのものに重み
             sw = np.sqrt(w)
             f = _lsq(lambda x, kinds=kinds: sw * (model_sum(kinds, t, x) - ys), x0,
                      jac=lambda x, sw=sw: _gauss_jac(t, x, sw))
@@ -817,7 +817,7 @@ def fit_basso(t, ys, lm, L: int) -> dict:
 
 # ================================================================ 1 被験者
 def replica_for_beat(t, y, fs, wang_step: int = 1) -> dict:
-    """1 拍（生の波形）に前処理 → 鍵点 → 文献 6 本の分解。34番（VitalDB）からも使う。"""
+    """1 拍（生の波形）に前処理 → 特徴点 → 文献 6 本の分解。34番（VitalDB）からも使う。"""
     out = {}
     ys, _amp = pda2.preprocess(t, y, fs)
     if ys is None:
@@ -960,16 +960,16 @@ def report(d, C, out_dir: Path | None = None, tag: str = "") -> dict:
         return j["med_abs"], f"{j['n_ok']}/{j['n_ages']}", v
 
     print("=" * 110)
-    print("文献の条件をそのまま当てた分解 vs 同じ被験者のランドマーク（PWDB）。**探索であり判定には使わない**")
+    print("文献の条件をそのまま当てた分解 vs 同じ被験者の特徴点（PWDB）。**探索であり判定には使わない**")
     print("=" * 110)
     print(f"被験者 {len(d)} 名（{'subj_no % 7 == 0' if tag == '' else '全例'}）・年齢層 {[int(a) for a in ages]}・"
           f"型 1/3/4+: {int((d['klass_own'] == 1).sum())}/{int((d['klass_own'] == 3).sum())}/"
           f"{int((d['klass_own'] >= 4).sum())}")
-    print("規準: 年齢層内 Spearman が全層で予測の向き、中央値 |ρ| ≥ 0.30。届く = ランドマーク（Charlton）の値 − 0.05 以上")
+    print("規準: 年齢層内 Spearman が全層で予測の向き、中央値 |ρ| ≥ 0.30。同等 = 特徴点（Charlton）の値 − 0.05 以上")
     lm_dt, _, _ = cell("dt_lm_ms", "PWV_a", -1, d)
     lm_ri, _, _ = cell("digital_ri", "pvr", +1, d)
-    print(f"\n{'手法':<46}{'n':>5}{'採択':>7}{'ΔT×PWV |ρ|':>12}{'層':>6}{'判定':>8}{'届く':>5}"
-          f"{'RI×pvr |ρ|':>12}{'層':>6}{'判定':>8}{'届く':>5}  {'ΔT 型1のみ':>13}")
+    print(f"\n{'手法':<46}{'n':>5}{'採択':>7}{'ΔT×PWV |ρ|':>12}{'層':>6}{'判定':>8}{'同等':>5}"
+          f"{'RI×pvr |ρ|':>12}{'層':>6}{'判定':>8}{'同等':>5}  {'ΔT 型1のみ':>13}")
 
     def line(label, dtc, ric, src, extra=""):
         n = int(src[dtc].notna().sum()) if dtc in src else 0
@@ -1021,10 +1021,10 @@ def report(d, C, out_dir: Path | None = None, tag: str = "") -> dict:
     for m, item, lit, impl, st in DEVIATIONS:
         print(f"{m:<12}{item:<16}{lit[:50]:<52}{impl[:42]:<44}{st}")
     print(f"\n{'-' * 110}\n読み方\n{'-' * 110}")
-    print("  「届く ○」が 1 つも無ければ、文献の条件でも分解由来の ΔT・RI はこの土俵でランドマークに届かない。")
-    print("  「届く ○」があれば、その手法の逸脱表を全文で埋めてから、新しい事前登録の下で第3版として試す（この表では採らない）。")
+    print("  「同等 ○」が 1 つも無ければ、文献の条件でも分解由来の ΔT・RI はこの土俵で特徴点に届かない。")
+    print("  「同等 ○」があれば、その手法の逸脱表を全文で埋めてから、新しい事前登録の下で第3版として試す（この表では採らない）。")
     print("  型1 のみの列は 31番（型1 の 98 拍）との照合用。文献の手法は型を選ばないので主表は全型。")
-    print(f"  pda2 版 {pda2.code_version()}（前処理・鍵点・採否の実装を共有）")
+    print(f"  pda2 版 {pda2.code_version()}（前処理・特徴点・採否の実装を共有）")
     return res
 
 
@@ -1094,7 +1094,7 @@ def selftest() -> int:
         np.allclose(x0, [0.8, 0.2, 0.2 * T2C, 0.5, 0.4, 0.3 * T2C]))
     xb, lb, hb = basso_init(2, 0.7)
     rep("Basso 表 1（L=2）: α₀ = 1、σ₀ = 2/7·T2", xb[3] == 1.0 and abs(xb[2] - 0.2 * T2C) < 1e-9 and hb[1] == 0.7)
-    rep("役割規則: 前進波は最初の高い成分、反射波は拡張期鍵点に最も近い後続成分",
+    rep("役割規則: 前進波は最初の高い成分、反射波は拡張期特徴点に最も近い後続成分",
         pick_roles([(0.10, 1.0), (0.25, 0.3), (0.40, 0.4), (0.70, 0.2)], {"dia_t": 0.42}) == (0, 2))
     # 1b. 自分の模型で作った拍を復元する（再現コードの基本検査。真値 ΔT = 300 ms）
     tb = np.arange(0, 0.85, 1 / 500.0)

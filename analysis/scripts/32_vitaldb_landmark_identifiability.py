@@ -5,10 +5,10 @@
 問い（roadmap §9・checklist 段階2「次の主目標」）
 ------------------------------------------------
 研究0（PWDB・理想波形）で成立した **早期振幅比 Am_b/Am_p1**（b 波・p1。Hellqvist 2024）と
-**ランドマーク ΔT**（収縮期ピーク S・切痕・拡張期ピーク D）が、実機のモニタ波形
+**特徴点 ΔT**（収縮期ピーク S・切痕・拡張期ピーク D）が、実機のモニタ波形
 （SNUADC/PLETH。帯域制限・AGC・雑音）で同定でき、窓間で再現するか。
 同定できなければ信号鎖の問題が確定し、研究2（生波形）の根拠が立つ。同定できれば
-研究1 の前提検証を Am_b/Am_p1 とランドマーク ΔT でやり直す価値がある。
+研究1 の前提検証を Am_b/Am_p1 と特徴点 ΔT でやり直す価値がある。
 
 事前規準（結果を見る前に固定。lab_log 追記14）
 ------------------------------------------------
@@ -23,7 +23,7 @@
 再現性  = 隣り合う窓（60 秒差）の値の相関（lag-1 自己相関。症例ごと。対が 10 組以上）。
 判定（指標ごと・結果を見る前に固定）
       **同定できる** = 同定率の症例中央値 ≥ 0.70 **かつ** 自己相関の症例中央値 ≥ 0.30
-      陽性対照: PWTT の自己相関の症例中央値 ≥ 0.50。通らなければ表全体を無効とする（配管の異常）
+      陽性対照: PWTT の自己相関の症例中央値 ≥ 0.50。通らなければ表全体を無効とする（処理系の異常）
 記述  型の分布（1/3/4/5）、切痕の顕著さ、雑音 σ、拍ごとと平均拍の同定率、症例内の変動係数、
       症例間の分離（級内相関 ICC(1)）、年齢との順位相関（20 例なので記述のみ）、
       （`data/features/case_*.csv` があれば）同じ窓の凍結版 PDA の ΔT・RI の自己相関。
@@ -63,7 +63,7 @@ GATE_CONTROL = 0.50          # 陽性対照 PWTT の自己相関（研究1 の�
 DATA = ROOT / "data"
 OUT = DATA / "vitaldb_landmark"
 WAVE_TRACKS = ["SNUADC/PLETH", "SNUADC/ECG_II"]
-INDICES = [("ens_dt_lm_ms", "ランドマーク ΔT（平均拍）"), ("ens_amb", "Am_b/Am_p1（平均拍）")]
+INDICES = [("ens_dt_lm_ms", "特徴点 ΔT（平均拍）"), ("ens_amb", "Am_b/Am_p1（平均拍）")]
 CONTROL = ("pwtt_ms", "PWTT（陽性対照）")
 
 
@@ -93,7 +93,7 @@ def select_cases(n: int = N_CASES, seed: int = SEED, table=None) -> list:
 
 # ================================================================ 1 拍・1 窓
 def _beat_features(y: np.ndarray, fs: float) -> dict:
-    """1 拍（または平均拍）に pda2 の前処理 → 鍵点・早期特徴。失敗は NaN。"""
+    """1 拍（または平均拍）に pda2 の前処理 → 特徴点・早期特徴。失敗は NaN。"""
     nan = float("nan")
     out = {"klass": nan, "prom": nan, "S_ms": nan, "notch_ms": nan, "D_ms": nan,
            "dt_lm_ms": nan, "dt1_ms": nan, "p1_ms": nan, "b_ms": nan, "amb": nan}
@@ -373,7 +373,7 @@ def report(dfs: dict, out_dir: Path | None = None, ages: dict | None = None, fea
     okw = allw[allw["n_good"] >= MIN_GOOD] if len(allw) else allw
 
     print("=" * 96)
-    print("VitalDB モニタ波形でのランドマーク・早期振幅比の同定可能性（事前規準は本ファイル冒頭・lab_log 追記14）")
+    print("VitalDB モニタ波形での特徴点・早期振幅比の同定可能性（事前規準は本ファイル冒頭・lab_log 追記14）")
     print("=" * 96)
     print(f"症例 {len(summ)} 例・窓 {int(summ['n_windows'].sum()) if len(summ) else 0}"
           f"（解析できる窓 {int(summ['n_analyzable'].sum()) if len(summ) else 0}）・vitaldb {vitaldb_version()}・pda2 {pda2.code_version()}")

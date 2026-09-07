@@ -46,11 +46,11 @@ AGC・帯域制限の影響を受けない。
 
 使い方
 ------
-軽量モード（PDAなし・I/O律速。変種抽出と並行して走らせても邪魔にならない）:
+軽量モード（PDAなし・I/O律速。代替定義抽出と並行して走らせても邪魔にならない）:
     nohup caffeinate -i python scripts/15_art_indices.py --limit 874 --jobs 2 \
       > art_run.log 2>&1 &
 
-PDAあり（主解析と同程度のCPUを食う。変種抽出の完走後に走らせること）:
+PDAあり（主解析と同程度のCPUを食う。代替定義抽出の完走後に走らせること）:
     python scripts/15_art_indices.py --limit 874 --jobs 8 --pda
 
 合成データでの自己検証（ネットワーク不要・数秒）:

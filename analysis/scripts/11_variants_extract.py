@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""SAP §7.5 の残り感度解析のための変種抽出（再フィットが必要な系）。
+"""SAP §7.5 の残り感度解析のための代替定義抽出（再フィットが必要な系）。
 
-計算する変種（いずれもSAP §2.2・§7.5で事前指定）
+計算する代替定義（いずれもSAP §2.2・§7.5で事前指定）
 ------------------------------------------------
 同一の2カーネル当てはめから導く代替定義:
   dt_onset   立ち上がり間ΔT（各成分の自ピーク高20%到達点の間隔。規約はSAP §2.2で固定）
@@ -10,7 +10,7 @@
   area_ratio 成分波面積比
 別の当てはめ:
   dt3, ri3   3カーネルPDA（第1↔第2成分のピーク間隔・高さ比）
-アンサンブルの変種:
+アンサンブルの代替定義:
   dt_n2, ri_n2   ノイズ目標 0.002（主解析0.003より厳格）
   dt_n4, ri_n4   ノイズ目標 0.004（緩和）
   dt_sqi5, ri_sqi5   SQIの同一値連続閾値 10%→5%（厳格）
@@ -209,7 +209,7 @@ def _fit_groups(seg: np.ndarray, good: list, n_ens: int, collect: dict,
 
 
 def window_variants(pleth: np.ndarray, ecg: np.ndarray, t0: float) -> dict:
-    """主解析で採用済みのウィンドウ t0 に対して変種指標を計算する。"""
+    """主解析で採用済みのウィンドウ t0 に対して代替定義指標を計算する。"""
     i0, i1 = int(t0 * FS), int((t0 + WIN_S) * FS)
     seg_p = np.nan_to_num(np.asarray(pleth[i0:i1], float))
     seg_e = np.nan_to_num(np.asarray(ecg[i0:i1], float))
@@ -239,7 +239,7 @@ def window_variants(pleth: np.ndarray, ecg: np.ndarray, t0: float) -> dict:
             if reachable and len(good) >= 2 * n:
                 _fit_groups(seg_p, good, n, col, keys)
 
-    # --- SQI 変種（5% / 20%）: ノイズ目標は主解析の0.003 ---
+    # --- SQI 代替定義（5% / 20%）: ノイズ目標は主解析の0.003 ---
     # 閾値がどの拍にも効かない場合は基本セットと同一なので再計算せずコピーする
     for thr, keys in [(0.05, ("dt_sqi5", "ri_sqi5")), (0.20, ("dt_sqi20", "ri_sqi20"))]:
         g = [(a, b) for a, b in beats if flat_ok(a, b, thr)]
@@ -323,13 +323,13 @@ def main() -> None:
                 cid, nn, err = fu.result()
                 tally["ok" if err is None else "skip"] += 1
                 print(f"[{n}/{len(ids)}] caseid={cid}: "
-                      + (f"skip（{err}）" if err else f"変種 {nn} ウィンドウ"), flush=True)
+                      + (f"skip（{err}）" if err else f"代替定義 {nn} ウィンドウ"), flush=True)
     else:
         for n, c in enumerate(ids, 1):
             cid, nn, err = _one(c)
             tally["ok" if err is None else "skip"] += 1
             print(f"[{n}/{len(ids)}] caseid={cid}: "
-                  + (f"skip（{err}）" if err else f"変種 {nn} ウィンドウ"), flush=True)
+                  + (f"skip（{err}）" if err else f"代替定義 {nn} ウィンドウ"), flush=True)
     print(f"\n完了: ok {tally['ok']} / skip {tally['skip']}")
     print("次: python scripts/12_variants_stats.py")
 

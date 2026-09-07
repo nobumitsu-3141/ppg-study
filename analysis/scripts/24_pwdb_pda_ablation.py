@@ -4,14 +4,14 @@
 
 問題意識
 --------
-`23_pwdb_landmarks.py` で、同じ波形からランドマーク法は真値を再現し（ΔT×PWV 0.710）、
+`23_pwdb_landmarks.py` で、同じ波形から特徴点法は真値を再現し（ΔT×PWV 0.710）、
 我々の凍結2カーネル PDA は再現しなかった（0.223）。失敗は抽出法に固有である。
 では**我々の実装のどの選択**が効いているのか。`src/pda.py` を読むと候補は4つある。
 
   (1) **減衰項が無い**  モデルは skew-Gaussian 2本だけで、拡張期の下降を表す項が無い。
       拡張期は1拍の約半分を占めるので、第2カーネルが反射波ではなく**拡張期の下降全体**を
       吸収しうる。その位置は拍長（＝60/HR）に引きずられる。実際、PDA ΔT の心拍数主効果は
-      −10.9% でランドマーク ΔT の −2.6% の4倍である
+      −10.9% で特徴点 ΔT の −2.6% の4倍である
   (2) **歪度を正に限っている**（alpha_bounds=(0, 8)）。両成分とも「急峻に立ち上がり緩やかに減衰」
       に固定される。これは重複切痕が見えない VitalDB の処理済み波形で振幅の同定性を保つための
       選択であった。**見える波形に当てるとき妥当とは限らない**
@@ -24,10 +24,10 @@
 
 前提となる留保（先に書く）
 --------------------------
-PWDB の波形は雑音がなく重複切痕も拡張期ピークも明瞭である。**ランドマーク法が有利な条件**で
-あり、PDA が主張してきた利点（ランドマークが見えない波形でも動く・雑音に強い）は
-この土俵では現れない。したがって「PWDB で PDA が負けた」ことは
-「PDA がランドマーク法に劣る」ことを意味しない。本スクリプトが答えるのは
+PWDB の波形は雑音がなく重複切痕も拡張期ピークも明瞭である。**特徴点法が有利な条件**で
+あり、PDA が主張してきた利点（特徴点が見えない波形でも動く・雑音に強い）は
+この条件では現れない。したがって「PWDB で PDA が負けた」ことは
+「PDA が特徴点法に劣る」ことを意味しない。本スクリプトが答えるのは
 **「理想波形ですら我々の実装が真値を追えないのは、実装の選択のせいか」**である。
 
 出力は**探索的**であり、Gate 0 の判定を動かさない。
@@ -37,7 +37,7 @@ PWDB の波形は雑音がなく重複切痕も拡張期ピークも明瞭であ
     python scripts/24_pwdb_pda_ablation.py --pwdb ~/pwdb --sample 60
         各年齢層から60名を無作為抽出（計360名）。まずこれで傾向を見る
     python scripts/24_pwdb_pda_ablation.py --pwdb ~/pwdb --sample 0 --jobs 4
-        全4,374名。カーネル数が多い変種があるので数時間かかる
+        全4,374名。カーネル数が多い条件があるので数時間かかる
     python scripts/24_pwdb_pda_ablation.py --selftest
 """
 from __future__ import annotations
@@ -105,7 +105,7 @@ def peaks(t, p, n_kernels: int):
     return out
 
 
-# 変種の定義（表示名, カーネル数, 減衰項, αの下限, 重み）
+# 条件の定義（表示名, カーネル数, 減衰項, αの下限, 重み）
 VARIANTS = [
     ("A0 凍結と同型（対照）",      2, False,  0.0, "uniform"),
     ("A1 ＋拡張期の減衰項",        2, True,   0.0, "uniform"),
@@ -163,7 +163,7 @@ def fit_variant(t, y, n_kernels, decay, alpha_min, weight_mode, n_starts=None, s
 
     i_pk = int(np.argmax(ys))
     t_pk = float(t[i_pk])
-    # ランドマーク由来の初期オフセット（主ピーク後の −d²y/dt² 最小点）
+    # 特徴点由来の初期オフセット（主ピーク後の −d²y/dt² 最小点）
     d2 = np.gradient(np.gradient(ys))
     j0, j1 = i_pk + max(int(0.06 * len(t)), 3), int(0.85 * len(t))
     dmu0 = float(np.clip(t[j0 + int(np.argmin(d2[j0:j1]))] - t_pk + 0.02, 0.08, 0.45)) \
@@ -249,10 +249,10 @@ def report(d, out_dir: Path | None = None):
     print(f"\n{'='*86}\n研究0 追試2: PDA 実装の設計選択を切り分ける（探索的）\n{'='*86}")
     print(f"\n被験者 {len(d)} 名  年齢層 {ages}")
     print(f"判定規準は 20・23 番と同一（全層で予測の向き、中央値 |ρ| ≥ {M20.CRIT_RHO}）")
-    print("参考値: 凍結PDA ΔT×PWV 0.223 ／ ランドマーク ΔT×PWV 0.710")
+    print("参考値: 凍結PDA ΔT×PWV 0.223 ／ 特徴点 ΔT×PWV 0.710")
 
     print(f"\n{'-'*86}\nΔT × 大動脈PWV（予測: 負）\n{'-'*86}")
-    hdr = f"{'変種':<30}{'対':<10}{'当て':>6}" + "".join(f"{int(a):>7}" for a in ages) + f"{'中央値':>8}{'向き':>7}  判定"
+    hdr = f"{'条件':<30}{'対':<10}{'当て':>6}" + "".join(f"{int(a):>7}" for a in ages) + f"{'中央値':>8}{'向き':>7}  判定"
     print(hdr)
     summary = {}
     for vi, (lab, nk, dec, amin, wm) in enumerate(VARIANTS):
@@ -294,8 +294,8 @@ def report(d, out_dir: Path | None = None):
             print(line)
 
     if "var_pwv" in d:
-        print(f"\n{'-'*86}\n心拍数の交絡（ΔT 1↔2 の主効果 [%]。凍結PDA −10.9 ／ ランドマーク −2.6）\n{'-'*86}")
-        print(f"{'変種':<30}{'心拍数':>10}{'脈波伝播速度':>14}{'大動脈径':>10}{'比 PWV/HR':>12}")
+        print(f"\n{'-'*86}\n心拍数の交絡（ΔT 1↔2 の主効果 [%]。凍結PDA −10.9 ／ 特徴点 −2.6）\n{'-'*86}")
+        print(f"{'条件':<30}{'心拍数':>10}{'脈波伝播速度':>14}{'大動脈径':>10}{'比 PWV/HR':>12}")
         for vi, (lab, nk, dec, amin, wm) in enumerate(VARIANTS):
             col = f"vi{vi}"
             c = f"v{vi}_dt_12"
@@ -305,13 +305,13 @@ def report(d, out_dir: Path | None = None):
             f = dict(zip(M20.FACTORS, e))
             ratio = abs(f["pwv"]) / max(abs(f["hr"]), 1e-9)
             print(f"{lab:<30}{f['hr']:>+10.1f}{f['pwv']:>+14.1f}{f['dia']:>+10.1f}{ratio:>12.1f}")
-        print("  比が大きいほど「脈波伝播速度に特異的」。ランドマーク法は 31.2/2.6 = 12.0")
+        print("  比が大きいほど「脈波伝播速度に特異的」。特徴点法は 31.2/2.6 = 12.0")
 
     print(f"\n{'-'*86}\n読み方\n{'-'*86}")
-    print("  どれかの変種で ΔT×PWV が 0.3 以上に上がる → **我々の実装の選択が原因**。")
-    print("    どの変種かで原因が分かる（減衰項・歪度・重み・カーネル数）。")
+    print("  どれかの条件で ΔT×PWV が 0.3 以上に上がる → **我々の実装の選択が原因**。")
+    print("    どの条件かで原因が分かる（減衰項・歪度・重み・カーネル数）。")
     print("  どれも上がらない → 実装の選択では説明できない。PDA という枠組みの側を疑う。")
-    print("  留保: PWDB は雑音がなくランドマークが明瞭で、**PDA が有利になる条件ではない**。")
+    print("  留保: PWDB は雑音がなく特徴点が明瞭で、**PDA が有利になる条件ではない**。")
     print("        ここでの敗北は、実波形での PDA の有用性を否定しない。")
 
     out_dir = OUT if out_dir is None else Path(out_dir)
@@ -388,12 +388,12 @@ def selftest() -> int:
 
         cover = {vi: int(df.get(f"v{vi}_dt_12", pd.Series(dtype=float)).notna().sum())
                  for vi in range(len(VARIANTS))}
-        rep("2カーネル系の3変種（A0・A1・A2）がほぼ全員で値を返す",
+        rep("2カーネル系の3条件（A0・A1・A2）がほぼ全員で値を返す",
             all(cover[vi] >= 0.9 * len(df) for vi in (0, 1, 2)), f"{cover}")
         rep("多カーネル系も半数以上で値を返す",
             all(cover[vi] >= 0.5 * len(df) for vi in (4, 5, 6)), f"{cover}")
 
-        rep("減衰項ありの変種が当てはめ誤差を下げる（仕込んだ減衰を捉える）",
+        rep("減衰項ありの条件が当てはめ誤差を下げる（仕込んだ減衰を捉える）",
             float(df["v1_nrmse"].median()) < float(df["v0_nrmse"].median()),
             f"A0 {df['v0_nrmse'].median():.4f} → A1 {df['v1_nrmse'].median():.4f}")
 
@@ -406,8 +406,8 @@ def selftest() -> int:
         s = report(d, out_dir=Path(td) / "out")
         j0 = s.get("A0 凍結と同型（対照）|1↔2|dt")
         j1 = s.get("A1 ＋拡張期の減衰項|1↔2|dt")
-        rep("対照変種について判定が計算される（年齢層あたり10名）", bool(j0), f"{j0}")
-        rep("減衰項ありの変種について判定が計算される", bool(j1), f"{j1}")
+        rep("対照条件について判定が計算される（年齢層あたり10名）", bool(j0), f"{j0}")
+        rep("減衰項ありの条件について判定が計算される", bool(j1), f"{j1}")
         rep("**減衰項を足すと ΔT×PWV の関連が強まる**（仕込んだ交絡を検出できる）",
             bool(j0 and j1 and j1["med_abs"] > j0["med_abs"]),
             f"A0 {j0['med_abs']:.3f} → A1 {j1['med_abs']:.3f}" if (j0 and j1) else "")
@@ -453,7 +453,7 @@ def main() -> None:
     hr_by = dict(zip(hae["subj_no"].astype(int), hae["HR"].astype(float)))
     work = [(int(ppg.iloc[i, 0]), ppg.iloc[i].to_numpy(float), hr_by.get(int(ppg.iloc[i, 0]), np.nan))
             for i in range(len(ppg)) if int(ppg.iloc[i, 0]) in sel]
-    print(f"{len(work)} 名 × {len(VARIANTS)} 変種を当てはめます / jobs={args.jobs}", flush=True)
+    print(f"{len(work)} 名 × {len(VARIANTS)} 条件を当てはめます / jobs={args.jobs}", flush=True)
 
     if args.jobs > 1:
         from concurrent.futures import ProcessPoolExecutor

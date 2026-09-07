@@ -185,7 +185,7 @@ def one(args):
                 ("SE可算", np.isfinite(r["dt_se_ms"])),
                 ("SE上限", np.isfinite(r["dt_se_ms"]) and r["dt_se_ms"] <= pda2.SE_DT_MAX_MS),
                 ("曖昧でない", not r["ambiguous"]),
-                ("鍵点2つ", r["n_landmark_matched"] >= 2),
+                ("特徴点2つ", r["n_landmark_matched"] >= 2),
                 ("前進波スロット0", bool(r["fwd0"])),
                 ("型1", kl == 1),
             ) if not okk]

@@ -6,7 +6,7 @@
 「ガウス関数なら避けられたか」「文献の基底なら PWDB でどうなるか」を、同じ拍・同じ Wang の規準で
 並べて測る。閾値は動かさない。ここで良かった基底を採るなら、新しい事前登録の下で第3版として試す。
 
-並べる基底（いずれも第2版と同じ前処理・鍵点・重み・多点起動・順序の罰則）
+並べる基底（いずれも第2版と同じ前処理・特徴点・重み・多点起動・順序の罰則）
   歪みガウス α∈[0,8]      2・3 成分  … 第2版の凍結値（対照）
   ガウス（α=0 固定）        2〜5 成分  … Wang 2013 は 4→5 ガウス（対称）
   歪みガウス α∈[−8,8]     2・3 成分  … Basso 2024（歪みに境界を置かない）
@@ -81,7 +81,7 @@ def _alpha_bounds(lo_a: float, hi_a: float):
 
 
 def fit_variant(t, ys, lm, w, kind, nw, arange, gbounds) -> dict:
-    """1 拍 × 1 基底。Wang の規準・鍵点のずれ・役割から ΔT・張り付きを返す。"""
+    """1 拍 × 1 基底。Wang の規準・特徴点のずれ・役割から ΔT・張り付きを返す。"""
     nan = float("nan")
     out = {"ok": 0, "errx": nan, "nrmse": nan, "erry": nan, "nlm": 0, "dt_ms": nan, "npin": 0, "fail": 0}
     try:
@@ -202,7 +202,7 @@ def report(rows: list, out_csv: Path | None) -> None:
         rc = f"{r_c:.2f} ({neg_c}/{n_c})" if n_c else "—"
         print(f"{label:<30}{nw:>4}{len(g):>5}{g['ok'].mean():>9.1%}{q:>22}{np.nanmedian(g['nrmse']):>10.4f}"
               f"{(g['npin'] > 0).mean():>8.0%}{ra:>26}{rc:>16}{int(g['fail'].sum()):>5}")
-    print("  読み方: 「Wang通過」は NRMSE<0.02・Errx<6 ms・Erry<0.01・鍵点 2 点以上。文献の手法の多くは採否規準を"
+    print("  読み方: 「Wang通過」は NRMSE<0.02・Errx<6 ms・Erry<0.01・特徴点 2 点以上。文献の手法の多くは採否規準を"
           "持たないので、\n  「全例」の列がそれに相当する。|ρ| は年齢層内 Spearman の中央値（層は 8 拍以上。負の層の数/層数）。"
           "\n  ここで良い基底があっても、採るのは新しい事前登録の下で第3版として。閾値は動かさない。")
 

@@ -79,7 +79,7 @@ def fit_beat(
     def resid(p):
         return model2(t, p) - ys
 
-    # 反射波位置の初期値: 主ピーク後の -d²y/dt² 最小点（ランドマーク方式, スライド5.3-a）
+    # 反射波位置の初期値: 主ピーク後の -d²y/dt² 最小点（特徴点方式, スライド5.3-a）
     d2 = np.gradient(np.gradient(ys))
     j0 = i_pk + max(int(0.06 * len(t)), 3)
     j1 = int(0.85 * len(t))
@@ -92,7 +92,7 @@ def fit_beat(
     base0 = np.array([1.0, max(t_pk - 0.02, 0.05), 0.06, 2.0, 0.45, dmu0, 0.09, 1.0])
     base0 = np.clip(base0, lo + 1e-6, hi - 1e-6)
 
-    # 初期値: ランドマーク + dmu グリッド（異なる解の盆地を意図的に探索）+ ジッタ
+    # 初期値: 特徴点 + dmu グリッド（異なる解の盆地を意図的に探索）+ ジッタ
     starts = [base0]
     for dg in (0.12, 0.18, 0.26, 0.36, 0.48):
         b = base0.copy()
@@ -115,7 +115,7 @@ def fit_beat(
     if not sols:
         raise RuntimeError("fit failed for all starts")
 
-    # 解の選択: RSS最小を基本としつつ、ランドマーク近傍 (|dmu - dmu0| <= 0.06s) に
+    # 解の選択: RSS最小を基本としつつ、特徴点近傍 (|dmu - dmu0| <= 0.06s) に
     # RSSが 1.10倍以内の解があればそちらを優先する（スライド5.3-a の事前情報を prior として使う）。
     gmin = min(sols, key=lambda r: r.cost)
     near = [r for r in sols if abs(r.x[5] - dmu0) <= 0.06 and r.cost <= gmin.cost * 1.10]

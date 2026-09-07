@@ -11,7 +11,7 @@
   T4 雑音耐性          SNR を下げたときの ΔT の誤差と、採否規準の効き方
   T5 波形型            重複切痕のある型と無い型の両方で動くか
   T6 採否規準          壊れた当てはめを弾けるか（Errx）
-  T7 ランドマーク      心拍 50〜100・切痕あり／なしで鍵点が破綻しないか（dia < sys を作らないか）
+  T7 特徴点      心拍 50〜100・切痕あり／なしで特徴点が破綻しないか（dia < sys を作らないか）
   T8 減衰の担い手      合成波の指数減衰を反射波が吸収していないか（幅が膨らんでいないか）
   T9 不変性と高心拍    決定性・時間原点・切り出しずれへの不変性、高心拍での挙動
   T10 役割の割り当て   反射波の選択が僅差のとき曖昧として落ちるか（くじ引きを通さないか）
@@ -346,12 +346,12 @@ def selftest(quick: bool = False) -> int:
     rep("同じ波形なら合格", good["ok"], f"Errx {good['errx_ms']:.2f} ms")
     rep("30 ms ずれた波形は不合格", not bad["ok"], f"Errx {bad['errx_ms']:.1f} ms")
     # 7 巡目: データが型1（極値）なのに模型側に極値が無い場合、代用点で合わせてはいけない（E3）。
-    # 模型側の鍵点が消えたことを Errx の罰則で落とす
+    # 模型側の特徴点が消えたことを Errx の罰則で落とす
     t3, y3, _ = make_beat(notch=False, dt_true=0.08, ri_true=0.60)
     y3s = pda2.preprocess(t3, y3, FS)[0]
     yhat3 = np.interp(t, t3, y3s, right=0.0)                 # 切痕の無い波形を模型側に置く
     mis = pda2.acceptance(t, ys, yhat3, lm)
-    rep("データが型1で模型に極値が無ければ鍵点は一致せず不合格（代用点で合わせない: E3）",
+    rep("データが型1で模型に極値が無ければ特徴点は一致せず不合格（代用点で合わせない: E3）",
         (not mis["ok"]) and mis["n_landmark_matched"] < 3, f"一致 {mis['n_landmark_matched']}/3")
     # 切痕の振幅が Erry に入っている（E2）: 切痕の値だけ 0.02 上げた波形は Erry で落ちる
     yb = ys.copy()
@@ -361,8 +361,8 @@ def selftest(quick: bool = False) -> int:
     rep("切痕の振幅のずれ 0.02 は Erry で不合格（E2: Erry に切痕を含む）",
         (not e2["ok"]) and e2["erry"] > pda2.ERRY, f"Erry {e2['erry']:.3f}")
 
-    # ---- T7 ランドマーク
-    print("\nT7 ランドマーク（心拍 50〜100・切痕あり／なし）")
+    # ---- T7 特徴点
+    print("\nT7 特徴点（心拍 50〜100・切痕あり／なし）")
     print(f"       {'HR':>4}{'切痕':>6}{'型':>4}{'S[ms]':>8}{'notch':>8}{'dia':>8}{'真dia':>8}{'誤差':>8}")
     bad_order = 0
     err_notch, err_plain = [], []
@@ -381,7 +381,7 @@ def selftest(quick: bool = False) -> int:
             print(f"       {hr:>4}{'あり' if notch else 'なし':>6}{lm['klass']:>4}"
                   f"{lm['sys_t'] * 1000:>8.1f}{lm['notch_t'] * 1000:>8.1f}"
                   f"{lm['dia_t'] * 1000:>8.1f}{true_dia:>8.0f}{e:>+8.1f}")
-    rep("拡張期の鍵点が収縮期ピークより前に来ることがない（旧・型4の欠陥）", bad_order == 0)
+    rep("拡張期の特徴点が収縮期ピークより前に来ることがない（旧・型4の欠陥）", bad_order == 0)
     rep("切痕ありの波形で拡張期ピークの誤差が 15 ms 未満（心拍 50〜100）",
         all(np.isfinite(err_notch)) and max(err_notch) < 15.0, f"最大 {max(err_notch):.1f} ms")
     rep("切痕なしの波形でも代用点が定義でき、誤差が 40 ms 未満",
@@ -428,7 +428,7 @@ def selftest(quick: bool = False) -> int:
     t, y, tr = make_beat(hr=70, noise=0.01, seed=7)
     r1 = _run(t, y, "skew"); r2 = _run(t, y, "skew"); r3 = pda2.decompose(t + 5.0, y, FS, route="skew")
     rep("同じ入力で同じ出力（決定性）", r1["dt_ms"] == r2["dt_ms"] and r1["ri"] == r2["ri"])
-    # ランドマーク・初期値・境界は原点に対して厳密に不変。残るのは最適化の丸め（4e-6 ms 程度）なので
+    # 特徴点・初期値・境界は原点に対して厳密に不変。残るのは最適化の丸め（4e-6 ms 程度）なので
     # 許容は 1e-3 ms / 1e-6 とする（生理的な尺度より 1000 倍厳しい）
     rep("時間軸の原点に依存しない（最適化の丸めを除く）",
         abs(r1["dt_ms"] - r3["dt_ms"]) < 1e-3 and abs(r1["ri"] - r3["ri"]) < 1e-6,
@@ -462,7 +462,7 @@ def selftest(quick: bool = False) -> int:
     t, y, tr = make_beat(hr=70, dt_true=0.28, ri_true=0.45)
     ys, _ = pda2.preprocess(t, y, FS)
     lm = pda2.find_landmarks(t, ys)
-    # 拡張期の鍵点からほぼ等距離に2つの成分がある場合、選択は実質くじ引きで ΔT はその差だけ動く
+    # 拡張期の特徴点からほぼ等距離に2つの成分がある場合、選択は実質くじ引きで ΔT はその差だけ動く
     dia = lm["dia_t"]
     peaks_tie = [(0.12, 1.0), (dia - 0.005, 0.5), (dia + 0.005, 0.48)]
     peaks_clear = [(0.12, 1.0), (dia - 0.002, 0.5), (dia + 0.15, 0.2)]
@@ -518,7 +518,7 @@ def selftest(quick: bool = False) -> int:
     rep("曖昧判定の合成: 僅差の下限は tol_dt_ms で動く（4 か所同じ値: K4）",
         not pda2.ambiguity_flags([best], 4, {"forward": 0, "reflected": 1, "ref_margin_ms": 5.0},
                                  tol_dt_ms=3.0))
-    # 鍵点の重みの近傍は時間で指定（B2）: 40 Hz でも近傍が数十 ms に収まる
+    # 特徴点の重みの近傍は時間で指定（B2）: 40 Hz でも近傍が数十 ms に収まる
     t, y, tr = make_beat()
     ys, _ = pda2.preprocess(t, y, FS)
     lm = pda2.find_landmarks(t, ys)
@@ -533,7 +533,7 @@ def selftest(quick: bool = False) -> int:
     while b_ + 1 < len(w40) and w40[b_ + 1] > 1:
         b_ += 1
     width_s = (b_ - a_ + 1) / 40.0
-    rep("鍵点の重みの近傍は 40 Hz でも 0.1 s 未満（標本数ではなく時間で指定: B2）",
+    rep("特徴点の重みの近傍は 40 Hz でも 0.1 s 未満（標本数ではなく時間で指定: B2）",
         width_s < 0.10, f"{width_s * 1000:.0f} ms（標本数で ±3 なら 175 ms）")
     # 退化した入力は例外を出さず理由 amplitude（R1）
     bad_inputs = {"全 NaN": np.full_like(t, np.nan), "定数": np.ones_like(t),

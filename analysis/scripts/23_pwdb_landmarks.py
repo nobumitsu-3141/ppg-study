@@ -12,14 +12,14 @@
   (b) **PPG 形態指標に共通の限界**  指尖脈波の形から伝播速度・抵抗を読むこと自体が
       非特異的である。であれば分解の作り込みでは解決しない
 
-PWDB には Charlton らが同じ仮想被験者に対して算出した**ランドマーク法**の指標が
+PWDB には Charlton らが同じ仮想被験者に対して算出した**特徴点法**の指標が
 同梱されている（`pwdb_pw_indices.csv`）。同じ真値・同じ被験者・同じ判定規準で
 両者を並べれば (a)(b) を切り分けられる。**指標の作り方だけが違う対照実験**である。
 
 比較する指標（いずれも指尖 PPG 由来）
 -------------------------------------
   PDA          ΔT・RI（`data/pwdb/pwdb_indices.csv`。20 番の出力）
-  ランドマーク  ΔT = PPGdia_T − PPGsys_T（拡張期ピーク時刻 − 収縮期ピーク時刻）
+  特徴点  ΔT = PPGdia_T − PPGsys_T（拡張期ピーク時刻 − 収縮期ピーク時刻）
                SI・RI・AI・AGI_mod（Charlton らの算出値をそのまま使う）
   参照          PTT（モデルが出力する脈波到達時間。真値に近い量の陽性対照）
 
@@ -61,24 +61,24 @@ M = _load_m20()
 # (列, 対象, 予測符号, 表示名)。符号 0 は記述のみ
 PAIRS = [
     ("dt_pda_ms",  "PWV_a", -1, "PDA        ΔT（2カーネル）"),
-    ("dt_lm_ms",   "PWV_a", -1, "ランドマーク ΔT（拡張期−収縮期ピーク）"),
-    ("digital_si", "PWV_a", +1, "ランドマーク SI（＝身長/ΔT）"),
-    ("digital_agi_mod", "PWV_a", +1, "ランドマーク AGI_mod（2次微分の加齢指数）"),
+    ("dt_lm_ms",   "PWV_a", -1, "特徴点 ΔT（拡張期−収縮期ピーク）"),
+    ("digital_si", "PWV_a", +1, "特徴点 SI（＝身長/ΔT）"),
+    ("digital_agi_mod", "PWV_a", +1, "特徴点 AGI_mod（2次微分の加齢指数）"),
     ("digital_ptt", "PWV_a", -1, "モデル出力 PTT（陽性対照。強い負を期待）"),
     ("ri_pda",     "pvr", +1, "PDA        RI（2カーネル）"),
-    ("digital_ri", "pvr", +1, "ランドマーク RI（拡張期/収縮期ピーク高）"),
-    ("digital_ai", "pvr", +1, "ランドマーク AI（増大係数）"),
-    ("digital_ri", "PWV_a", 0, "（記述）ランドマーク RI × 大動脈PWV"),
-    ("digital_ai", "PWV_a", 0, "（記述）ランドマーク AI × 大動脈PWV"),
+    ("digital_ri", "pvr", +1, "特徴点 RI（拡張期/収縮期ピーク高）"),
+    ("digital_ai", "pvr", +1, "特徴点 AI（増大係数）"),
+    ("digital_ri", "PWV_a", 0, "（記述）特徴点 RI × 大動脈PWV"),
+    ("digital_ai", "PWV_a", 0, "（記述）特徴点 AI × 大動脈PWV"),
 ]
 
 IDX_FOR_FACTORS = [
     ("dt_pda_ms", "PDA ΔT"),
-    ("dt_lm_ms", "ランドマーク ΔT"),
-    ("digital_si", "ランドマーク SI"),
+    ("dt_lm_ms", "特徴点 ΔT"),
+    ("digital_si", "特徴点 SI"),
     ("ri_pda", "PDA RI"),
-    ("digital_ri", "ランドマーク RI"),
-    ("digital_ai", "ランドマーク AI"),
+    ("digital_ri", "特徴点 RI"),
+    ("digital_ai", "特徴点 AI"),
 ]
 
 
@@ -91,11 +91,11 @@ def _to_ms(d, cols: list[str]) -> None:
     if np.isfinite(med) and med < 10:
         for c in have:
             d[c] = d[c] * 1000.0
-        print("  ランドマークの時刻は秒と判断して ms に換算した", flush=True)
+        print("  特徴点の時刻は秒と判断して ms に換算した", flush=True)
 
 
 def load(root: Path, pda_dir: Path | None = None):
-    """真値・ランドマーク指標・（あれば）PDA の結果を被験者単位で結合する。"""
+    """真値・特徴点指標・（あれば）PDA の結果を被験者単位で結合する。"""
     import pandas as pd
     root = Path(root).expanduser()
     f_hae = M._find_one(root, "*haemod*param*.csv")
@@ -127,7 +127,7 @@ def load(root: Path, pda_dir: Path | None = None):
         d["dt_lm_ms"] = d["digital_ppgdia_t"] - d["digital_ppgsys_t"]
     else:
         d["dt_lm_ms"] = np.nan
-        print("  （拡張期／収縮期ピーク時刻の列がないため、ランドマーク ΔT は計算しない）")
+        print("  （拡張期／収縮期ピーク時刻の列がないため、特徴点 ΔT は計算しない）")
 
     pda_p = (OUT if pda_dir is None else Path(pda_dir)) / "pwdb_indices.csv"
     if pda_p.exists():
@@ -152,8 +152,8 @@ def report(d, out_dir: Path | None = None) -> dict:
     ages = sorted(d["age"].dropna().unique().tolist())
     n_lm = int(d["digital_si"].notna().sum())
     n_pda = int(d.get("ok2", 0).fillna(0).sum()) if "ok2" in d else 0
-    print(f"\n{'='*78}\n研究0 追試: PDA とランドマーク法を同じ真値・同じ規準で比べる\n{'='*78}")
-    print(f"\n被験者 {len(d)} 名 / ランドマーク指標あり {n_lm} / PDA 収束 {n_pda}")
+    print(f"\n{'='*78}\n研究0 追試: PDA と特徴点法を同じ真値・同じ規準で比べる\n{'='*78}")
+    print(f"\n被験者 {len(d)} 名 / 特徴点指標あり {n_lm} / PDA 収束 {n_pda}")
     print(f"  年齢層: {ages}")
     print(f"  判定規準は 20_pwdb_validity.py と同一（全層で予測の向き、中央値 |ρ| ≥ {M.CRIT_RHO}）")
 
@@ -193,10 +193,10 @@ def report(d, out_dir: Path | None = None) -> dict:
         print("  概念どおりなら、スティフネス指標は『脈波伝播速度』の列が最大になるはずである。")
 
     print(f"\n{'-'*78}\n読み方\n{'-'*78}")
-    print("  ランドマーク法も不成立 → 失敗は PDA 固有ではなく、指尖脈波の形から")
+    print("  特徴点法も不成立 → 失敗は PDA 固有ではなく、指尖脈波の形から")
     print("    伝播速度・抵抗を読むこと自体が非特異的。カーネル数や基底関数を変えても解決しない。")
-    print("  ランドマーク法だけ成立   → 失敗は PDA 固有。分解の作り方に改善の余地がある。")
-    print("  モデル出力 PTT が強い負を示さないなら、この比較自体を疑うこと（配管の陽性対照）。")
+    print("  特徴点法だけ成立   → 失敗は PDA 固有。分解の作り方に改善の余地がある。")
+    print("  モデル出力 PTT が強い負を示さないなら、この比較自体を疑うこと（処理系の陽性対照）。")
 
     out_dir = OUT if out_dir is None else Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -213,7 +213,7 @@ INDEX_HEADER = ("Subject Number, Age, Digital_SBP_V, Digital_PPGsys_V, Digital_P
 
 
 def _make_mock(root: Path, n: int = 48, seed: int = 0):
-    """実配布版と同じ見出しで、ランドマーク指標に既知の関係を仕込む。"""
+    """実配布版と同じ見出しで、特徴点指標に既知の関係を仕込む。"""
     import pandas as pd
     rng = np.random.default_rng(seed)
     M._make_mock(root, n=n, seed=seed)          # haemod・configs・variations・PPG を作る
@@ -249,7 +249,7 @@ def selftest() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = _make_mock(Path(td) / "exported_data", n=48)
         d = load(root, pda_dir=Path(td) / "nopda")
-        rep("ランドマーク指標が読めた（SI・RI・AI・AGI_mod・PTT）",
+        rep("特徴点指標が読めた（SI・RI・AI・AGI_mod・PTT）",
             all(c in d for c in ("digital_si", "digital_ri", "digital_ai",
                                  "digital_agi_mod", "digital_ptt")))
         rep("時刻を秒→ms に換算し ΔT を作れた",
@@ -261,9 +261,9 @@ def selftest() -> int:
         j_dt = s.get("dt_lm_ms|PWV_a")
         j_si = s.get("digital_si|PWV_a")
         j_ri = s.get("digital_ri|pvr")
-        rep("仕込んだ ランドマークΔT × PWV（負）を復元", bool(j_dt and j_dt["pass"]), f"{j_dt}")
-        rep("仕込んだ ランドマークSI × PWV（正）を復元", bool(j_si and j_si["pass"]), f"{j_si}")
-        rep("仕込んだ ランドマークRI × 抵抗（正）を復元", bool(j_ri and j_ri["pass"]), f"{j_ri}")
+        rep("仕込んだ 特徴点ΔT × PWV（負）を復元", bool(j_dt and j_dt["pass"]), f"{j_dt}")
+        rep("仕込んだ 特徴点SI × PWV（正）を復元", bool(j_si and j_si["pass"]), f"{j_si}")
+        rep("仕込んだ 特徴点RI × 抵抗（正）を復元", bool(j_ri and j_ri["pass"]), f"{j_ri}")
         rep("判定規準を 20 番と共有している", M.CRIT_RHO == 0.30)
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1

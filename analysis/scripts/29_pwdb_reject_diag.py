@@ -3,12 +3,12 @@
 """研究0 の予備実行で第2版の採択率が極端に低いときに、**原因を記述する**（閾値は動かさない）。
 
 判定規則の順序 1（600 名の予備実行）は「表の形・拍の切り出し・不採用の理由を確認する」段である。
-第2版 歪みガウスの採択が 0% なら、それが手法の挙動なのか配管の欠陥なのかを、全例（約 3 時間）を
+第2版 歪みガウスの採択が 0% なら、それが手法の挙動なのか処理系の欠陥なのかを、全例（約 3 時間）を
 回す前に分けておく必要がある。本台本は 2 つのことをする。
 
   A  26番の CSV（被験者別の診断量）だけから、型ごと・規準ごとに何が引っかかっているかを数える
-     （鍵点が模型側に無いのか、あるがずれているのか。Errx の内訳。張り付き。顕著さとの関係）
-  B  型1 の拍を数例だけ再分解し、データ側と模型側の鍵点（S・切痕・D）の位置を並べて印字し、
+     （特徴点が模型側に無いのか、あるがずれているのか。Errx の内訳。張り付き。顕著さとの関係）
+  B  型1 の拍を数例だけ再分解し、データ側と模型側の特徴点（S・切痕・D）の位置を並べて印字し、
      波形と当てはめの図を残す（--pwdb が要る。Mac で）
 
 出力はすべて記述であり、採否の規準には触れない（規準の感度は 27番 A 層で見る）。
@@ -66,7 +66,7 @@ def describe_csv(d) -> None:
     print(f"被験者 {n}。データ側の型: " + "・".join(f"型{int(k)} {int((kl == k).sum())}" for k in sorted(set(kl[np.isfinite(kl)]))))
     if "prom_own" in d:
         for k in (1, 3):
-            print(f"  型{k} の鍵点の顕著さ（10/50/90%）: {_q(d.loc[kl == k, 'prom_own'])}"
+            print(f"  型{k} の特徴点の顕著さ（10/50/90%）: {_q(d.loc[kl == k, 'prom_own'])}"
                   f"（閾値 型1 {pda2.EXTREMA_MIN_PROM}・型3 {pda2.PROXY_MIN_PROM}）")
     if "ok_v1" in d:
         for k in (1, 3, 4):
@@ -98,15 +98,15 @@ def describe_csv(d) -> None:
         print(f"    NRMSE {_q(nrmse)}（上限 {pda2.NRMSE_MAX}）  Errx[ms] {_q(errx)}（上限 {pda2.ERRX_MS:.0f}）"
               f"  Erry {_q(erry)}（上限 {pda2.ERRY}）  ΔT の SE[ms] {_q(se)}（上限 {pda2.SE_DT_MAX_MS:.0f}）")
         c_nlm = Counter(int(x) for x in nlm[np.isfinite(nlm)])
-        print("    模型側で一致した鍵点の数 nlm: " + "・".join(f"{k}点 {v}" for k, v in sorted(c_nlm.items()))
-              + "（3 点未満は模型に極値が無い。欠けた鍵点 1 つにつき Errx に 12 ms の罰則）")
+        print("    模型側で一致した特徴点の数 nlm: " + "・".join(f"{k}点 {v}" for k, v in sorted(c_nlm.items()))
+              + "（3 点未満は模型に極値が無い。欠けた特徴点 1 つにつき Errx に 12 ms の罰則）")
         pen = 2.0 * pda2.ERRX_MS * np.clip(3 - nlm, 0, 3)
-        print(f"    罰則を除いた Errx（一致した鍵点だけのずれ）[ms] {_q(errx - pen)}")
+        print(f"    罰則を除いた Errx（一致した特徴点だけのずれ）[ms] {_q(errx - pen)}")
         crit = {
             f"NRMSE ≤ {pda2.NRMSE_MAX}": nrmse <= pda2.NRMSE_MAX,
             f"Errx ≤ {pda2.ERRX_MS:.0f} ms": errx <= pda2.ERRX_MS,
             f"Erry ≤ {pda2.ERRY}": erry <= pda2.ERRY,
-            "鍵点 2 点以上": nlm >= 2,
+            "特徴点 2 点以上": nlm >= 2,
             f"SE ≤ {pda2.SE_DT_MAX_MS:.0f} ms（有限）": np.isfinite(se) & (se <= pda2.SE_DT_MAX_MS),
             "曖昧でない": amb != 1,
             "反射波あり": noref != 1,
@@ -132,7 +132,7 @@ def describe_csv(d) -> None:
             if gm.sum() >= 8 and np.ptp(p[gm]) > 0:
                 from scipy.stats import spearmanr
                 r = spearmanr(p[gm], errx[gm]).correlation
-                print(f"    顕著さと Errx の順位相関（型1）: {r:+.2f}（負なら切痕が浅い拍ほど鍵点がずれる）")
+                print(f"    顕著さと Errx の順位相関（型1）: {r:+.2f}（負なら切痕が浅い拍ほど特徴点がずれる）")
 
 
 # ================================================================ B. 数拍の再分解
@@ -174,9 +174,9 @@ def examples(root: Path, route: str, k: int, out_png: Path | None, klass_want: i
         if len(picks) >= k:
             break
     print("=" * 78)
-    print(f"B. 型{klass_want} の拍 {len(picks)} 例を再分解（経路 {route}）。データ側と模型側の鍵点 [ms]")
+    print(f"B. 型{klass_want} の拍 {len(picks)} 例を再分解（経路 {route}）。データ側と模型側の特徴点 [ms]")
     print("=" * 78)
-    print(f"{'被験者':>6} {'年齢':>4} {'HR':>5} {'顕著さ':>6}  {'成分':>4}  {'データ側の鍵点':<28}{'模型側の鍵点':<28}"
+    print(f"{'被験者':>6} {'年齢':>4} {'HR':>5} {'顕著さ':>6}  {'成分':>4}  {'データ側の特徴点':<28}{'模型側の特徴点':<28}"
           f"{'模型型':>4} {'NRMSE':>7} {'Errx':>6} {'Erry':>6} {'nlm':>4}  採否")
     rows = []
     for subj, t, ys, lm, fs in picks:
@@ -260,7 +260,7 @@ def selftest() -> int:
         with contextlib.redirect_stdout(buf):
             rows = examples(root, "skew", 2, Path(td) / "diag.png")
         out = buf.getvalue()
-        rep("B: 型1 の拍を再分解し、データ側・模型側の鍵点を並べて印字する", len(rows) == 2 and "模型側の鍵点" in out)
+        rep("B: 型1 の拍を再分解し、データ側・模型側の特徴点を並べて印字する", len(rows) == 2 and "模型側の特徴点" in out)
         rep("B: 図が書かれる", (Path(td) / "diag.png").exists())
         with contextlib.redirect_stdout(io.StringIO()):
             rows_g = examples(root, "gamma", 1, None)

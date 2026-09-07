@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""研究0 決定試験: PDA 第2版・凍結版・ランドマーク法を、同じ真値・同じ規準で並べる。
+"""研究0 決定試験: PDA 第2版・凍結版・特徴点法を、同じ真値・同じ規準で並べる。
 
 背景
 ----
 `20_pwdb_validity.py` で凍結版 PDA（2カーネル歪みガウス）は事前規準を満たさなかった。
-`23_pwdb_landmarks.py` で、**同じ波形**から作ったランドマーク指標は規準を満たした
+`23_pwdb_landmarks.py` で、**同じ波形**から作った特徴点指標は規準を満たした
 （ΔT×PWV 0.710 / AGI_mod×PWV 0.885 / RI×pvr 0.504）。したがって失敗は
 「指尖脈波から硬さ・抵抗を読むこと」ではなく「我々の分解の作り方」に固有である。
 
@@ -19,8 +19,8 @@
   凍結PDA 2カーネル            src/pda.py（研究1で凍結した実装そのもの）
   PDA 第2版 歪みガウス        src/pda2.py route="skew"
   PDA 第2版 ガンマ            src/pda2.py route="gamma"
-  ランドマーク法               Charlton らの同梱値（Digital_RI・SI・AI・AGI_mod）
-  モデル出力 PTT               配管の陽性対照
+  特徴点法               Charlton らの同梱値（Digital_RI・SI・AI・AGI_mod）
+  モデル出力 PTT               処理系の陽性対照
 
 選択の効果を隠さないために、判定は 3 通り出す。
   A 各手法が自分で合格とした例だけ（20番・23番と同じ扱い）
@@ -77,7 +77,7 @@ METHODS = [
     ("v1",  "凍結PDA 2カーネル",          "dt_v1_ms",  "ri_v1",      "ok_v1"),
     ("v2",  "第2版 歪みガウス",     "dt_v2_ms",  "ri_v2",      "ok_v2"),
     ("v2g", "第2版 ガンマ",              "dt_v2g_ms", "ri_v2g",     "ok_v2g"),
-    ("lm",  "ランドマーク法",             "dt_lm_ms",  "digital_ri", None),
+    ("lm",  "特徴点法",             "dt_lm_ms",  "digital_ri", None),
     ("hq",  "早期振幅比（Hellqvist）",     "dt_p1_ms",  "amb_amp1",   None),
 ]
 
@@ -86,22 +86,22 @@ PAIRS = [
     ("dt_v1_ms",       "PWV_a", -1, "ok_v1",  "ΔT       凍結PDA 2カーネル"),
     ("dt_v2_ms",       "PWV_a", -1, "ok_v2",  "ΔT       第2版 歪みガウス"),
     ("dt_v2g_ms",      "PWV_a", -1, "ok_v2g", "ΔT       第2版 ガンマ"),
-    ("dt_lm_ms",       "PWV_a", -1, None,     "ΔT       ランドマーク法"),
-    ("digital_si",     "PWV_a", +1, None,     "SI       ランドマーク法"),
-    ("digital_agi_mod", "PWV_a", +1, None,    "AGI_mod  ランドマーク法"),
+    ("dt_lm_ms",       "PWV_a", -1, None,     "ΔT       特徴点法"),
+    ("digital_si",     "PWV_a", +1, None,     "SI       特徴点法"),
+    ("digital_agi_mod", "PWV_a", +1, None,    "AGI_mod  特徴点法"),
     ("digital_ptt",    "PWV_a", -1, None,     "PTT      モデル出力（陽性対照）"),
     ("ri_v1",          "pvr",   +1, "ok_v1",  "RI       凍結PDA 2カーネル"),
     ("ri_v2",          "pvr",   +1, "ok_v2",  "RI       第2版 歪みガウス"),
     ("ri_v2g",         "pvr",   +1, "ok_v2g", "RI       第2版 ガンマ"),
-    ("digital_ri",     "pvr",   +1, None,     "RI       ランドマーク法"),
-    ("digital_ai",     "pvr",   +1, None,     "AI       ランドマーク法"),
+    ("digital_ri",     "pvr",   +1, None,     "RI       特徴点法"),
+    ("digital_ai",     "pvr",   +1, None,     "AI       特徴点法"),
     # --- 事前指定の副次（Epstein 2014 を読んで 26番の実行前に追加した）---
     # Epstein 2014 は 1次元 75動脈モデルで、SI は**導管動脈全体**の硬さに支配され、
     # 大動脈だけを硬くすると PPT はむしろ延びる（SI は下がる）ことを示した。
     # つまり ΔT を「大動脈 PWV の代替」として検定するのは的を外しうる。
     # 主要目標（PWV_a）は凍結したまま、頸大腿 PWV を副次として並べる。
     ("dt_v2_ms",       "PWV_cf", -1, "ok_v2",  "副次 ΔT   第2版 歪みガウス × 頸大腿PWV"),
-    ("dt_lm_ms",       "PWV_cf", -1, None,     "副次 ΔT   ランドマーク × 頸大腿PWV"),
+    ("dt_lm_ms",       "PWV_cf", -1, None,     "副次 ΔT   特徴点 × 頸大腿PWV"),
     # --- 第4の手法: 分解を使わない早期振幅比（Hellqvist 2024）---
     # 33名・頸大腿PWV 参照で r = −0.81、大動脈PWV で −0.75。硬さ指数（中枢PWV と
     # r = 0.58〜0.66）や加齢指数（0.65）、ばね定数（−0.72）のいずれより強い。
@@ -109,15 +109,15 @@ PAIRS = [
     # 波形の早期部分に注目すべき」と明記している。我々の ΔT はまさにその時間である。
     ("amb_amp1",       "PWV_a",  -1, None,     "探索 Am_b/Am_p1  早期振幅比（Hellqvist）"),
     # 早期振幅比は主要目標を持たない第 4 の腕なので、頸大腿PWV の行も「探索」（副次は主要行の目標違い）。
-    # 判定規則の「早期振幅比が成立」は大動脈PWV の行（ランドマーク ΔT と同じ真値）で読む
+    # 判定規則の「早期振幅比が成立」は大動脈PWV の行（特徴点 ΔT と同じ真値）で読む
     ("amb_amp1",       "PWV_cf", -1, None,     "探索 Am_b/Am_p1 × 頸大腿PWV（Hellqvist の参照）"),
     # Hellqvist の p1（1次微分の下降への接線の零交点）を収縮期ピークに使った ΔT。
     # p1 は「6つの波形型すべてで機能した」と報告されており、切痕の無い波形でも
     # 収縮期ピークを定義できる。我々の未解決問題（型3で ΔT 誤差 約30 ms）に効くか
     ("dt_p1_ms",       "PWV_a",  -1, None,     "探索 ΔT  p1基準（Hellqvist の収縮期ピーク）"),
-    # 同じ拡張期の錨で、収縮期の錨だけを我々の収縮期ピークにしたもの。
-    # dt_p1_ms との差は収縮期の錨だけなので、p1 の寄与を交絡なく読める
-    ("dt_own_ms",      "PWV_a",  -1, None,     "探索 ΔT  自前ランドマーク（p1 との対照）"),
+    # 同じ拡張期の特徴点で、収縮期の特徴点だけを我々の収縮期ピークにしたもの。
+    # dt_p1_ms との差は収縮期の特徴点だけなので、p1 の寄与を交絡なく読める
+    ("dt_own_ms",      "PWV_a",  -1, None,     "探索 ΔT  自前特徴点（p1 との対照）"),
     # --- 記述のみ（予測の向きを事前に決めない）---
     # Goswami 2010 の差分パルス幅。健常 30歳 10 ms、高血圧 55歳 90 ms と開いたが、
     # 真値との向きの予測までは立てられないので記述にとどめる。
@@ -127,15 +127,15 @@ PAIRS = [
 
 # (列, 表示名, 採否列)。因子主効果は各手法が合格とした例で計算する
 IDX_FOR_FACTORS = [("dt_v1_ms", "ΔT 凍結PDA", "ok_v1"), ("dt_v2_ms", "ΔT 第2版歪み", "ok_v2"),
-                   ("dt_v2g_ms", "ΔT 第2版ガンマ", "ok_v2g"), ("dt_lm_ms", "ΔT ランドマーク", None),
+                   ("dt_v2g_ms", "ΔT 第2版ガンマ", "ok_v2g"), ("dt_lm_ms", "ΔT 特徴点", None),
                    ("ri_v1", "RI 凍結PDA", "ok_v1"), ("ri_v2", "RI 第2版歪み", "ok_v2"),
-                   ("ri_v2g", "RI 第2版ガンマ", "ok_v2g"), ("digital_ri", "RI ランドマーク", None),
+                   ("ri_v2g", "RI 第2版ガンマ", "ok_v2g"), ("digital_ri", "RI 特徴点", None),
                    ("dps_v2_ms", "DPS 第2版歪み", "ok_v2"), ("amb_amp1", "Am_b/Am_p1", None),
-                   ("dt_p1_ms", "ΔT p1基準", None), ("dt_own_ms", "ΔT 自前ランドマーク", None)]
+                   ("dt_p1_ms", "ΔT p1基準", None), ("dt_own_ms", "ΔT 自前特徴点", None)]
 
 # 陽性対照（モデル出力 PTT × 大動脈PWV）に要求する強さ。判定規則 gate0_rules_v2.md の
 # 「陽性対照 PTT が不成立、または中央値 |ρ| < 0.5 なら表全体を無効とする」に対応する。
-# 23番の実測は 0.571。主要な判定の規準（CRIT_RHO=0.30）より厳しいのは、配管が生きていることの
+# 23番の実測は 0.571。主要な判定の規準（CRIT_RHO=0.30）より厳しいのは、処理系が生きていることの
 # 確認であって指標の良否ではないから
 CRIT_RHO_CONTROL = 0.50
 CONTROL = ("digital_ptt", "PWV_a", -1, "モデル出力 PTT × 大動脈PWV")
@@ -202,7 +202,7 @@ def indices_for_subject(args_tuple):
                 lmo = pda2.find_landmarks(t, ys)
                 ef = pda2.early_features(t, ys)
                 out["klass_own"] = lmo["klass"]
-                out["prom_own"] = lmo.get("prom", np.nan)   # 鍵点の顕著さ（閾値の近傍を監視する）
+                out["prom_own"] = lmo.get("prom", np.nan)   # 特徴点の顕著さ（閾値の近傍を監視する）
                 out["sys_own_ms"] = lmo["sys_t"] * 1000.0
                 out["dia_own_ms"] = lmo["dia_t"] * 1000.0
                 out["p1_t_ms"] = ef["p1_t"] * 1000.0
@@ -210,9 +210,9 @@ def indices_for_subject(args_tuple):
                 # Hellqvist の p1 を収縮期ピークに使った ΔT。切痕の無い波形でも
                 # 収縮期ピークが定義できるので、我々の未解決問題に効くかを見る
                 out["dt_p1_ms"] = (lmo["dia_t"] - ef["p1_t"]) * 1000.0
-                # 自前のランドマークだけで作った ΔT。dt_p1_ms との差は**収縮期の錨だけ**に
+                # 自前の特徴点だけで作った ΔT。dt_p1_ms との差は**収縮期の特徴点だけ**に
                 # なるので、「p1 が切痕なし波形を救うか」を交絡なく見られる。
-                # dt_lm_ms（Charlton 同梱値）とは拡張期の錨も違うので直接は比べられない
+                # dt_lm_ms（Charlton 同梱値）とは拡張期の特徴点も違うので直接は比べられない
                 out["dt_own_ms"] = (lmo["dia_t"] - lmo["sys_t"]) * 1000.0
                 # 拍が足で切り出されているか（前処理の足→足基線の前提）を実データで確かめる
                 out["edge_lo"] = float(min(ys[0], ys[-1]))
@@ -256,7 +256,7 @@ def indices_for_subject(args_tuple):
                     out[f"tf_{tag}_ms"] = tf * 1000.0
                     out[f"tr_{tag}_ms"] = tf * 1000.0 + r["dt_ms"]
                 out[f"sys_lm_{tag}_ms"] = float(lmr.get("sys_t", np.nan)) * 1000.0
-                out[f"gap_{tag}_ms"] = r.get("ref_gap_ms", np.nan)      # 反射波と拡張期鍵点の距離
+                out[f"gap_{tag}_ms"] = r.get("ref_gap_ms", np.nan)      # 反射波と拡張期特徴点の距離
                 out[f"marg_{tag}_ms"] = r.get("ref_margin_ms", np.nan)  # 2番目の候補との差
                 out[f"resm_{tag}_ms"] = r.get("res_margin_ms", np.nan)  # 貯留槽にする境目までの距離
                 out[f"tppin_{tag}"] = len(r.get("tp_pinned") or [])     # 境界に張り付いたピーク時刻の数
@@ -306,7 +306,7 @@ def _stride(ppg, limit: int):
 
 
 def build(root: Path, limit: int = 0, jobs: int = 1):
-    """PWDB を読み、3 通りの分解を回し、ランドマーク指標・真値と結合する。"""
+    """PWDB を読み、3 通りの分解を回し、特徴点指標・真値と結合する。"""
     import pandas as pd
     root = Path(root).expanduser()
     hae, cfg, ppg, _extras = M.load_pwdb(root)
@@ -330,7 +330,7 @@ def build(root: Path, limit: int = 0, jobs: int = 1):
                 print(f"  [{n}/{len(work)}]", flush=True)
     pda = pd.DataFrame(rows)
 
-    # ランドマーク側は 23 番の読み込みをそのまま使う（扱いを完全に共有する）
+    # 特徴点側は 23 番の読み込みをそのまま使う（扱いを完全に共有する）
     d = L.load(root, pda_dir=root / "__no_pda__")
     d = d.drop(columns=[c for c in ("dt_pda_ms", "ri_pda", "ok2") if c in d.columns])
     # **内部結合**（`how="inner"`）にする。23番の読み込みは真値の表にある被験者を全員返すので、
@@ -380,7 +380,7 @@ def report(d, out_dir: Path | None = None) -> dict:
     n_ages_full = len(ages)
     n = len(d)
     print(f"\n{'=' * 78}")
-    print("研究0 決定試験: PDA第2版・凍結版・ランドマーク法を同じ規準で比べる")
+    print("研究0 決定試験: PDA第2版・凍結版・特徴点法を同じ規準で比べる")
     print("=" * 78)
     print(f"\n被験者 {n} 名 / 年齢層 {[int(a) for a in ages]}")
     print(f"判定規準（20番・23番と同一）: 年齢層内 Spearman ρ が全層で予測の向き、"
@@ -388,7 +388,7 @@ def report(d, out_dir: Path | None = None) -> dict:
 
     # ---- 0. 陽性対照（これが通らなければ以下は読まない）
     col_c, tgt_c, sign_c, lab_c = CONTROL
-    print(f"\n{'-' * 78}\n0. 陽性対照（配管が生きているか。これが通らなければ以下の表は無効）\n{'-' * 78}")
+    print(f"\n{'-' * 78}\n0. 陽性対照（処理系が生きているか。これが通らなければ以下の表は無効）\n{'-' * 78}")
     jc = _judge_or_none(d, col_c, tgt_c, sign_c)
     if jc is None:
         print(f"  **{lab_c} を計算できない**（列 {col_c} が無い、または 8 名以上の年齢層が無い）。")
@@ -427,7 +427,7 @@ def report(d, out_dir: Path | None = None) -> dict:
     print(f"  採択は各手法自身の合否規準による（第2版は Wang 2013 の NRMSE<{pda2.NRMSE_MAX:.0%}・"
           f"Errx<{pda2.ERRX_MS:.0f}ms・Erry<{pda2.ERRY} に加え、ΔT の SE ≤ {pda2.SE_DT_MAX_MS:.0f} ms・"
           "曖昧でない・型3 でない）。")
-    print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は鍵点に重みを置いた")
+    print("  NRMSE の定義は腕で違う。凍結版は範囲（max−min）で正規化、第2版は特徴点に重みを置いた")
     print("  RMS で正規化。同じ列に並ぶが同じ量ではないので、腕をまたいで比べないこと。")
     for key, lab, _dtc, _ric, okc in METHODS:
         sc_, nc_, bc_ = f"sat_{key}", f"nst_{key}", f"bsat_{key}"
@@ -476,7 +476,7 @@ def report(d, out_dir: Path | None = None) -> dict:
 
     # ---- 不採用の理由
     print(f"\n{'-' * 78}\n1b. 不採用の理由（第2版）\n{'-' * 78}")
-    print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に鍵点が無い（型4〜5）拍で、")
+    print("  採択率が低いとき最初に見る表。no_landmarks はデータ側に特徴点が無い（型4〜5）拍で、")
     print("  分解の失敗ではない。landmark_or_fit は Wang の規準（NRMSE・Errx・Erry）の不合格。")
     print("  proxy_landmarks は型3（切痕なし・肩の代用点）で、分解が同定できないため規則で採用しない")
     print("  （合成波で規準をすべて通った当てはめの ΔT が +23 ms ずれた）。27番 A 層に「含める」の行がある。")
@@ -591,9 +591,9 @@ def report(d, out_dir: Path | None = None) -> dict:
     if "klass_own" in d and d["klass_own"].notna().any():
         print(f"\n{'-' * 78}\n2a. 波形型ごとの p1 と収縮期ピークの一致\n{'-' * 78}")
         print("  Hellqvist の p1 は『6つの波形型すべてで機能した』とされる。切痕の無い型でも")
-        print("  収縮期ピークを定義できるなら、**ランドマーク側の**未解決問題に効く（型3 の肩は真の")
+        print("  収縮期ピークを定義できるなら、**特徴点側の**未解決問題に効く（型3 の肩は真の")
         print("  拡張期ピークより約 30 ms 遅れる。合成波）。PDA 第2版は型3 を規則で採用しないので、")
-        print("  ここで比べているのは分解を使わない指標どうしである。型4 は拡張期の錨が無いので")
+        print("  ここで比べているのは分解を使わない指標どうしである。型4 は拡張期の特徴点が無いので")
         print("  ΔT の形の指標はどれも定義できず、早期振幅比だけが残る。")
         a_ = d["amb_amp1"].dropna()
         if len(a_):
@@ -617,7 +617,7 @@ def report(d, out_dir: Path | None = None) -> dict:
             print(f"{int(k):<6}{len(g):>7}{got:>12.1%}{gap_s:>17}{r_s:>18}{dp:>17}")
 
     if "prom_own" in d and d["prom_own"].notna().any():
-        print(f"\n{'-' * 78}\n2c. 鍵点の顕著さ（型を分ける閾値の近傍にどれだけあるか）\n{'-' * 78}")
+        print(f"\n{'-' * 78}\n2c. 特徴点の顕著さ（型を分ける閾値の近傍にどれだけあるか）\n{'-' * 78}")
         print(f"  型1 は拡張期ピーク−切痕の高低差（閾値 {pda2.EXTREMA_MIN_PROM}）、型3〜4 は肩の顕著さ")
         print(f"  （最大傾斜に対する比。閾値 {pda2.PROXY_MIN_PROM}。型4 は閾値未満で肩と認めなかった値）。")
         print("  閾値の 2 倍以内に多くの拍があれば、型の割り当てが閾値に敏感である。")
@@ -635,7 +635,7 @@ def report(d, out_dir: Path | None = None) -> dict:
     if "klass_v2" in d and d["klass_v2"].notna().any():
         print(f"\n{'-' * 78}\n2. 波形型（Dawber 分類）ごとの採択率と ΔT\n{'-' * 78}")
         print(f"{'型':<6}{'n':>7}{'第2版採択':>11}{'凍結採択':>10}"
-              f"{'ΔT 第2版(採用分)':>17}{'ΔT ランドマーク(全例)':>21}")
+              f"{'ΔT 第2版(採用分)':>17}{'ΔT 特徴点(全例)':>21}")
         for k in sorted(d["klass_v2"].dropna().unique().tolist()):
             g = d[d["klass_v2"] == k]
             a2 = 100.0 * g["ok_v2"].mean()
@@ -649,8 +649,8 @@ def report(d, out_dir: Path | None = None) -> dict:
             print(f"{int(k):<6}{len(g):>7}{a2:>10.1f}%{a1:>9.1f}%{m2:>17}{ml:>21}")
         print("  型3（切痕なし・肩で代用）は第2版では規則で採用しない（分解が同定できず、合成波では規準を")
         print("  すべて通った当てはめでも ΔT が +23 ms、規準を外すと +50 ms ずれる）。第2版の判定は型1 の拍で")
-        print("  下される。型3 の n を必ず読んで併記し、型3 はランドマーク・p1・早期振幅比で読む。")
-        print("  ランドマークの肩は真のピークより 30 ms ほど遅れる（合成波）。")
+        print("  下される。型3 の n を必ず読んで併記し、型3 は特徴点・p1・早期振幅比で読む。")
+        print("  特徴点の肩は真のピークより 30 ms ほど遅れる（合成波）。")
 
     # ---- 成分を増やしたかどうか
     for key, lab, dtc, ric, okc in METHODS:
@@ -711,8 +711,8 @@ def report(d, out_dir: Path | None = None) -> dict:
     print("  A だけ成立               → 選択の効果。改善とは言えない。")
     print("  B が判定できない         → 「A・B・C すべて成立」とは書かない（該当行）。")
     print("  ガンマ経路だけが成立      → 「PDA が成立」とは書かない（張り付き 96%・心拍交絡）。")
-    print("  第2版もランドマーク法に届かない → 分解由来の量はこの問いではランドマーク由来に劣る（Goswami）。")
-    print("    「PDA が壊れている」とは書かない。ランドマーク指標に乗り換える。")
+    print("  第2版も特徴点法の |ρ| に及ばない → 分解由来の量はこの問いでは特徴点由来に劣る（Goswami）。")
+    print("    「PDA が壊れている」とは書かない。特徴点指標に乗り換える。")
     print("  0. の陽性対照が通らなければ表全体が無効（冒頭と末尾に宣言される）。")
 
     if not summary_control["pass"]:
@@ -820,7 +820,7 @@ def selftest(jobs: int = 2) -> int:
     import tempfile
     print("== 26_pwdb_compare 自己検証（模擬PWDB・ネットワーク不要） ==\n")
     print("  注意: 模擬波の基本は 2 ガウスの和で、どの手法も通って当然である。")
-    print("        ここで検査するのは配管（読み込み・結合・判定の共有）であって、")
+    print("        ここで検査するのは処理系（読み込み・結合・判定の共有）であって、")
     print("        手法の優劣ではない。優劣は実 PWDB でしか決まらない。")
     print("        ただし 4 名に 1 名ずつ、切痕なし・雑音・高心拍・反射波なしの拍を混ぜ、")
     print("        不採用の理由コードが一度は通ることを確かめる（27番の通し検算の範囲を広げるため）。\n")
@@ -913,12 +913,12 @@ def selftest(jobs: int = 2) -> int:
         print("\n  ↑ ここまでが陰性対照の表。以降は通常の検査に戻る。")
         rep("陽性対照の列が無ければ「計算できない・無効」と扱う（黙って通さない）",
             s_noctl["control"]["pass"] is False and s_noctl["control"]["j"] is None)
-        rep("仕込んだ ランドマークΔT × PWV（負）を復元",
+        rep("仕込んだ 特徴点ΔT × PWV（負）を復元",
             bool(s.get("A|dt_lm_ms|PWV_a", {}).get("pass")))
-        rep("仕込んだ ランドマークRI × 抵抗（正）を復元",
+        rep("仕込んだ 特徴点RI × 抵抗（正）を復元",
             bool(s.get("A|digital_ri|pvr", {}).get("pass")))
         j2 = s.get("A|dt_v2_ms|PWV_a")
-        rep("第2版 歪みガウス が模擬波の ΔT × PWV を復元（配管の確認）",
+        rep("第2版 歪みガウス が模擬波の ΔT × PWV を復元（処理系の確認）",
             bool(j2 and j2["pass"]), f"{j2}")
         n_common = int(d["ok_all"].sum())
         ns = _n_strata(d[d["ok_all"] == 1], "dt_v2_ms")
@@ -981,7 +981,7 @@ def selftest(jobs: int = 2) -> int:
             and _verdict({"pass": False, "n_ages": 3, "n_ok": 1, "med_abs": 0.2}, -1, 6) == "不成立*"
             and _verdict({"pass": True, "n_ages": 6, "n_ok": 6, "med_abs": 0.9}, 0, 6) == "記述")
         own = d[["dt_own_ms", "dia_own_ms", "sys_own_ms"]].dropna()
-        rep("自前ランドマーク ΔT は拡張期−収縮期の鍵点そのもの（F2）",
+        rep("自前特徴点 ΔT は拡張期−収縮期の特徴点そのもの（F2）",
             len(own) > 0 and bool(np.allclose(own["dt_own_ms"], own["dia_own_ms"] - own["sys_own_ms"], atol=1e-6)))
         rep("足で切り出した模擬拍では両端の値が 0.05 未満（F7 の診断が動く）",
             bool(d["edge_hi"].notna().any()) and float(np.nanmedian(d["edge_hi"])) < 0.05,
@@ -1012,7 +1012,7 @@ def selftest(jobs: int = 2) -> int:
             str(row_.get("why_v2", "")).startswith("EXC:") and str(row_.get("why_v2g", "")).startswith("EXC:")
             and row_.get("ok_v2") == 0 and np.isfinite(row_.get("dt_v1_ms", np.nan)),
             f"{row_.get('why_v2')!r}")
-        rep("鍵点の顕著さが記録され、型3 は閾値以上・型4 は閾値未満で整合する",
+        rep("特徴点の顕著さが記録され、型3 は閾値以上・型4 は閾値未満で整合する",
             len(pr) > 0
             and bool((pr.loc[pr["klass_own"] == 3, "prom_own"] >= pda2.PROXY_MIN_PROM).all())
             and bool((pr.loc[pr["klass_own"] == 4, "prom_own"] < pda2.PROXY_MIN_PROM).all()),

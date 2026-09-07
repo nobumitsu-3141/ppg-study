@@ -12,7 +12,7 @@ SAP-1c（docs/research/sap_1c_v0.md）の実装。**SAP を凍結（タグ sap-1
   副次1  ΔT1（R波→動脈圧立ち上がり＝前駆出期＋中枢）。事前予測は延長
   副次2  ΔPWTT（＝ΔT2）。記述
   副次3  ΔT・RI（凍結版 PDA。--pda で抽出したときだけ）。記述のみ。妥当性の証拠には使わない
-  記述   ランドマーク ΔT・早期振幅比 Am_b/Am_p1（研究0 第2版の帰結・SAP §9.6。分解を使わない。
+  記述   特徴点 ΔT・早期振幅比 Am_b/Am_p1（研究0 第2版の帰結・SAP §9.6。分解を使わない。
          品質を通った拍を足で揃えて平均した 1 拍に pda2 の前処理を当てて取る。主要判定には入れない）
 
 解析単位（SAP §3）
@@ -103,7 +103,7 @@ PANEL = [
     ("dt_ms",   "ΔT 凍結版PDA [ms]",       0, "副次3 記述"),
     ("ri",      "RI 凍結版PDA",            0, "副次3 記述"),
     # 研究0 第2版の帰結（2026-09-06・SAP §9.6）。分解を使わない窓指標。向きは事前に予測しない
-    ("dt_lm_ms", "ΔT ランドマーク（D−S）[ms]", 0, "記述（研究0 の帰結）"),
+    ("dt_lm_ms", "ΔT 特徴点（D−S）[ms]", 0, "記述（研究0 の帰結）"),
     ("amb_amp1", "Am_b/Am_p1（Hellqvist）",  0, "記述（研究0 の帰結・研究2 の主指標候補）"),
 ]
 COVARS = ["map", "hr"]
@@ -394,7 +394,7 @@ def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int) ->
         notes.append("陰性対照: " + ("動かない" if not moved else "動いた（" + "・".join(moved) + "）")
                      + f"（評価した群: {'・'.join(evaluable)}）")
     if not eff:
-        return "動かない → (ii) 装置側の揺らぎ。血管補正の路線は終了", notes
+        return "動かない → (ii) 装置側の揺らぎ。血管補正の方針は取らない", notes
     if not rev:
         return "増量で動くが減量で反転しない → 時間依存の交絡を疑う。陽性と判定しない", notes
     if not adj:
@@ -592,7 +592,7 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
     out["n_beats"] = len(good)
     if len(good) >= 8:
         # 研究0 第2版の帰結（SAP §9.6・記述）: 品質を通った拍を足で揃えて平均した 1 拍に pda2 と同じ前処理
-        # （18 Hz・足→足基線・最大 1）を当て、ランドマーク ΔT（型1 の D、型3 の肩。型4〜5 は NaN）と
+        # （18 Hz・足→足基線・最大 1）を当て、特徴点 ΔT（型1 の D、型3 の肩。型4〜5 は NaN）と
         # Hellqvist の早期振幅比 Am_b/Am_p1 を取る。分解は使わない。主要判定には入れない
         try:
             y = ensemble_average([seg_p[s:e] for s, e in good])
@@ -933,7 +933,7 @@ def selftest() -> int:
             and np.isfinite(feat["t1_ms"]).sum() >= 6 and np.isfinite(feat["hr"]).all() and np.isfinite(feat["map"]).all(),
             f"窓 {n}・T2−T1 有限 {fin}")
         fin_a, fin_d = np.isfinite(feat["amb_amp1"]).sum(), np.isfinite(feat["dt_lm_ms"]).sum()
-        rep("記述 2 列（Am_b/Am_p1・ランドマーク ΔT。SAP §9.6）が窓ごとに出て、値が生理的な範囲にある",
+        rep("記述 2 列（Am_b/Am_p1・特徴点 ΔT。SAP §9.6）が窓ごとに出て、値が生理的な範囲にある",
             fin_a >= 6 and feat["amb_amp1"].dropna().between(0.2, 1.05).all()
             and fin_d >= 6 and feat["dt_lm_ms"].dropna().between(80, 450).all(),
             f"有限 {fin_a}/{fin_d} 窓・Am_b/Am_p1 中央値 {feat['amb_amp1'].median():.3f}・"

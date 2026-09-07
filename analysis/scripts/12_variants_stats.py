@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""変種抽出（11_variants_extract.py）の結果を集計し、主解析と比較する（SAP §7.5・Table 5）。
+"""代替定義抽出（11_variants_extract.py）の結果を集計し、主解析と比較する（SAP §7.5・Table 5）。
 
-各変種について前提検証（ΔPWTT% ~ Δ指標%）と精度評価（対照 vs 補正）を
+各代替定義について前提検証（ΔPWTT% ~ Δ指標%）と精度評価（対照 vs 補正）を
 主解析と同じ機構（src.models）で再計算する。PWTT・HR・MAP・CO は
 主解析キャッシュの値を (caseid, t0) で結合して使う。
 
@@ -12,13 +12,13 @@
     python scripts/12_variants_stats.py
         集計（862例で1分前後）
     python scripts/12_variants_stats.py --selftest
-        合成データで配管を検算
+        合成データで処理系を検算
 
 出力は画面に加えて data/variants_table.csv にも書く。
 `| tail` で受けると tail が全入力を読み終えるまで何も表示されないので、
 途中経過を見たいときはパイプせずそのまま実行する。
 
-列名の注意: 変種ファイルの dt・ri は主解析ファイルの ri と名前が衝突するため、
+列名の注意: 代替定義ファイルの dt・ri は主解析ファイルの ri と名前が衝突するため、
 結合時に dt_rep・ri_rep に改名する（改名しないと「再現」行が主解析の RI を
 読んでしまう）。
 """
@@ -43,7 +43,7 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 MIN_WINDOWS = 12
 MIN_CASES = 10
 
-# 変種ファイルの列名 → 結合後の列名（主解析の ri と衝突するものだけ改名）
+# 代替定義ファイルの列名 → 結合後の列名（主解析の ri と衝突するものだけ改名）
 RENAME = {"dt": "dt_rep", "ri": "ri_rep", "n_dt": "n_dt_rep", "n_ri": "n_ri_rep"}
 
 # (ΔT系の列, RI系の列, 表示名)。ΔT系の列が "si" のときは主解析の SI をそのまま使う
@@ -76,7 +76,7 @@ def say(msg: str = "") -> None:
 
 # ---------------------------------------------------------------- 読み込み
 def load_joined(data: Path) -> tuple[dict[int, pd.DataFrame], dict]:
-    """主解析と変種のウィンドウを t0 で結合し、症例ごとの DataFrame を返す。"""
+    """主解析と代替定義のウィンドウを t0 で結合し、症例ごとの DataFrame を返す。"""
     feat, vfeat = data / "features", data / "features_variants"
     inv = {"meta": 0, "meta_bad": 0, "csv_missing": 0, "read_error": 0,
            "short": 0, "no_height": 0, "joined": 0}
@@ -114,11 +114,11 @@ def load_joined(data: Path) -> tuple[dict[int, pd.DataFrame], dict]:
 
 
 def build_cases(joined: dict, dt_col: str, ri_col: str) -> list[dict]:
-    """変種の (ΔT, RI) で主解析と同じ形の症例辞書を作る。
+    """代替定義の (ΔT, RI) で主解析と同じ形の症例辞書を作る。
 
     si は 身長/ΔT に組み直す（premise_test の回帰子 ΔSI% の定義を保つ）。
     dt_col が "si" のときは主解析の SI 列をそのまま使う（参照行）。
-    変種が欠損のウィンドウは落とし、残り≥12の症例のみ採用する。
+    代替定義が欠損のウィンドウは落とし、残り≥12の症例のみ採用する。
     """
     cases = []
     for cid, j in joined.items():
@@ -147,7 +147,7 @@ def repro(joined: dict) -> dict | None:
 
     11_variants_extract.py は凍結コード（src.pda.fit_beat）を同じウィンドウに
     当てているので、拍の切り出し・SQI判定・ノイズ推定・アンサンブル群分けまで
-    一致していれば結果は一致するはずである。一致していれば「変種行の差は
+    一致していれば結果は一致するはずである。一致していれば「代替定義行の差は
     定義変更だけによる」と言える。一致しなければ、その差は再現性の限界を含む。
     """
     dd, dr, n_same_dt, n_same_ri, n = [], [], 0, 0, 0
@@ -156,7 +156,7 @@ def repro(joined: dict) -> dict | None:
             return None
         h = j.attrs["height_m"]
         a = j["si"].to_numpy(float)
-        b = h / j["dt_rep"].to_numpy(float)     # 変種ΔT から組み直した SI
+        b = h / j["dt_rep"].to_numpy(float)     # 代替定義ΔT から組み直した SI
         c = j["ri"].to_numpy(float)
         d = j["ri_rep"].to_numpy(float)
         m = np.isfinite(a) & np.isfinite(b) & np.isfinite(c) & np.isfinite(d)
@@ -186,14 +186,14 @@ def check(joined: dict, inv: dict) -> None:
     n_tot = sum(len(j) for j in joined.values())
     say(f"結合ウィンドウ総数 {n_tot:,}")
     say()
-    say(f"{_pad('変種', 34)}{'症例≥12窓':>10}{'窓数':>9}{'欠損率':>8}")
+    say(f"{_pad('代替定義', 34)}{'症例≥12窓':>10}{'窓数':>9}{'欠損率':>8}")
     say("-" * 61)
     for dt_col, ri_col, label in VARIANTS:
         cases = build_cases(joined, dt_col, ri_col)
         n_win = sum(len(c["windows"]["pwtt"]) for c in cases)
         say(f"{_pad(label, 34)}{len(cases):>10}{n_win:>9,}{1 - n_win / max(n_tot, 1):>8.0%}")
     say()
-    say("欠損率は「結合ウィンドウのうち、その変種が計算できなかった割合」。")
+    say("欠損率は「結合ウィンドウのうち、その代替定義が計算できなかった割合」。")
     say("3カーネルとノイズ目標0.002は計算条件が厳しいので高めになる。")
 
     r = repro(joined)
@@ -205,14 +205,14 @@ def check(joined: dict, inv: dict) -> None:
             f" 95%点 {r['p95_dt']:.2e}")
         say(f"  RI      : 完全一致 {r['same_ri']:.1%} / 相対差 中央値 {r['med_ri']:.2e}"
             f" 95%点 {r['p95_ri']:.2e}")
-        say("  完全一致がほぼ100%なら、変種行の差は定義変更だけによる。")
+        say("  完全一致がほぼ100%なら、代替定義行の差は定義変更だけによる。")
 
 
 # ---------------------------------------------------------------- 集計
 def run(joined: dict, out_csv: Path | None) -> pd.DataFrame:
     say()
-    say("== 変種ごとの前提検証と精度（主解析と同じ機構で再計算） ==")
-    hdr = (f"{_pad('変種', 34)}{'症例':>5}{'窓数':>9}{'r²':>8}{'βΔSI%':>9}{'βΔRI%':>9}"
+    say("== 代替定義ごとの前提検証と精度（主解析と同じ機構で再計算） ==")
+    hdr = (f"{_pad('代替定義', 34)}{'症例':>5}{'窓数':>9}{'r²':>8}{'βΔSI%':>9}{'βΔRI%':>9}"
            f"{'符号揃い':>9}{'PE対照':>8}{'PE補正':>8}{'ΔPE [95%CI]':>22}")
     say(hdr)
     say("-" * _w(hdr))
@@ -249,7 +249,7 @@ def run(joined: dict, out_csv: Path | None) -> pd.DataFrame:
         say(f"表を書き出した: {out_csv}")
     say()
     say("読み方: 1行目は主解析の値を同じウィンドウ集合で再計算した参照。")
-    say("        どの変種でも r² が 0 近傍のままなら、主結論（前提の弱さ）は")
+    say("        どの代替定義でも r² が 0 近傍のままなら、主結論（前提の弱さ）は")
     say("        指標定義・カーネル数・前処理閾値の選択に依存しない。")
     return df
 
@@ -314,16 +314,16 @@ def selftest() -> int:
         m = pd.read_csv(data / "features" / f"case_{cid}.csv")
         v = pd.read_csv(data / "features_variants" / f"case_{cid}.csv")
         rep("結合後の ri は主解析ファイルの ri", np.allclose(j["ri"], m["ri"]))
-        rep("結合後の ri_rep は変種ファイルの ri（列名衝突なし）",
+        rep("結合後の ri_rep は代替定義ファイルの ri（列名衝突なし）",
             np.allclose(j["ri_rep"], v["ri"]) and not np.allclose(j["ri_rep"], m["ri"]))
 
         c_main = build_cases(joined, "si", "ri")
         c_rep = build_cases(joined, "dt_rep", "ri_rep")
         rep("参照行の SI は主解析の si をそのまま使う",
             np.allclose(c_main[0]["windows"]["si"], m["si"]))
-        rep("再現行の RI は変種の ri を使う",
+        rep("再現行の RI は代替定義の ri を使う",
             np.allclose(c_rep[0]["windows"]["ri"], v["ri"]))
-        rep("再現行の SI は 身長/変種ΔT",
+        rep("再現行の SI は 身長/代替定義ΔT",
             np.allclose(c_rep[0]["windows"]["si"], j.attrs["height_m"] / v["dt"]))
 
         c_3k = build_cases(joined, "dt3", "ri3")
@@ -336,7 +336,7 @@ def selftest() -> int:
 
         out_csv = data / "variants_table.csv"
         df = run(joined, out_csv)
-        rep("表が全変種ぶん書き出される", out_csv.exists() and len(df) == len(VARIANTS))
+        rep("表が全代替定義ぶん書き出される", out_csv.exists() and len(df) == len(VARIANTS))
         pt = premise_test(c_main, with_map=False)
         rep("参照行の r² は src.models の直接計算と一致",
             abs(float(df.loc[0, "r2_vasc"]) - pt["r2_vasc"]) < 1e-12)
@@ -350,14 +350,14 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="データの点検だけ行い集計しない")
-    ap.add_argument("--selftest", action="store_true", help="合成データで配管を検算する")
+    ap.add_argument("--selftest", action="store_true", help="合成データで処理系を検算する")
     ap.add_argument("--out", type=Path, default=DATA / "variants_table.csv",
                     help="表の書き出し先（既定: data/variants_table.csv）")
     args = ap.parse_args()
     if args.selftest:
         sys.exit(selftest())
 
-    say("変種キャッシュを読み込み中 …")
+    say("代替定義キャッシュを読み込み中 …")
     joined, inv = load_joined(DATA)
     check(joined, inv)
     if args.check:
