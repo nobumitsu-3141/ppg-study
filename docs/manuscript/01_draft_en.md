@@ -1013,6 +1013,9 @@ narrow to account for it.
     analysis of photoplethysmography signals. Physiol Meas. 2024;45(11):115006.
     PMID 39577084. doi:10.1088/1361-6579/ad9662
     **← 本研究の当てはめモデルの原典。投稿先第一候補と同じ誌**
+26. Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Estimation of aortic stiffness by finger photoplethysmography using enhanced pulse wave analysis and machine learning. Front Cardiovasc Med. 2024;11:1350726. doi:10.3389/fcvm.2024.1350726.
+    **← 早期振幅比 Am_b/Am_p1 の原典。§2.10(d) と §3.6 で引く。2026-09-07 に出版社PDF
+    （1ページ目の CITATION 欄）で照合済み**
 
 ### PTT・PPGを用いた補正の先行研究（新規性の申告に必須）
 

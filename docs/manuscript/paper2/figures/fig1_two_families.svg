@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .wave{fill:none;stroke:#000;stroke-width:2.2;stroke-linecap:round}
+    .comp{fill:none;stroke:#000;stroke-width:1.1;stroke-dasharray:5 3}
+    .drop{stroke:#000;stroke-width:.7;stroke-dasharray:2 3}
+    .base{stroke:#000;stroke-width:.7}
+    .lab{font-size:12px}
+    .labb{font-size:12px;font-weight:bold}
+    .note{font-size:10.5px}
+    .brace{fill:none;stroke:#000;stroke-width:1}
+    .dot{fill:#fff;stroke:#000;stroke-width:1.8}
+  </style>
+
+  <text class="labb" x="20" y="20">a  Fiducial-point analysis</text>
+  <line class="base" x1="28" y1="232" x2="350" y2="232"/>
+  <path class="wave" d="M 38 232 C 62 230, 78 118, 102 84 C 116 62, 136 68, 152 96
+                        C 172 130, 188 154, 210 160 C 228 165, 240 142, 258 138
+                        C 276 134, 296 148, 316 176 C 328 196, 338 220, 346 230"/>
+  <line class="drop" x1="102" y1="84" x2="102" y2="258"/>
+  <line class="drop" x1="258" y1="138" x2="258" y2="258"/>
+  <circle class="dot" cx="102" cy="84" r="4.5"/>
+  <circle class="dot" cx="210" cy="160" r="4.5"/>
+  <circle class="dot" cx="258" cy="138" r="4.5"/>
+  <text class="lab" x="102" y="70" text-anchor="middle">S</text>
+  <text class="lab" x="210" y="182" text-anchor="middle">notch</text>
+  <text class="lab" x="272" y="126">D</text>
+  <path class="brace" d="M 102 264 L 102 271 L 258 271 L 258 264"/>
+  <text class="labb" x="180" y="286" text-anchor="middle">ΔT</text>
+  <text class="note" x="300" y="72">RI = h(D) / h(S)</text>
+  <text class="note" x="28" y="250">read directly on the waveform</text>
+
+  <line class="base" x1="380" y1="14" x2="380" y2="290" stroke="#000" stroke-width=".6"/>
+
+  <text class="labb" x="400" y="20">b  Pulse decomposition</text>
+  <line class="base" x1="408" y1="232" x2="730" y2="232"/>
+  <path class="wave" d="M 418 232 C 442 230, 458 118, 482 84 C 496 62, 516 68, 532 96
+                        C 552 130, 568 154, 590 160 C 608 165, 620 142, 638 138
+                        C 656 134, 676 148, 696 176 C 708 196, 718 220, 726 230"/>
+  <path class="comp" d="M 418 232 C 444 230, 460 116, 486 88 C 508 64, 528 108, 546 152
+                        C 562 190, 578 216, 594 230"/>
+  <path class="comp" d="M 540 232 C 572 230, 600 166, 634 160 C 668 154, 696 190, 722 231"/>
+  <line class="drop" x1="486" y1="88" x2="486" y2="258"/>
+  <line class="drop" x1="634" y1="160" x2="634" y2="258"/>
+  <circle class="dot" cx="486" cy="88" r="4.5"/>
+  <circle class="dot" cx="634" cy="160" r="4.5"/>
+  <text class="lab" x="486" y="74" text-anchor="middle">peak of g₁</text>
+  <text class="lab" x="648" y="150">peak of g₂</text>
+  <path class="brace" d="M 486 264 L 486 271 L 634 271 L 634 264"/>
+  <text class="labb" x="560" y="286" text-anchor="middle">ΔT</text>
+  <text class="note" x="408" y="250">solid: measured beat   dashed: fitted components</text>
+</svg>

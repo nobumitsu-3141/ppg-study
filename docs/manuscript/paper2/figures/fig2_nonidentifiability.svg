@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .wave{fill:none;stroke:#000;stroke-width:2.2;stroke-linecap:round}
+    .comp{fill:none;stroke:#000;stroke-width:1.1;stroke-dasharray:5 3}
+    .drop{stroke:#000;stroke-width:.7;stroke-dasharray:2 3}
+    .base{stroke:#000;stroke-width:.7}
+    .labb{font-size:12px;font-weight:bold}
+    .note{font-size:10.5px}
+    .brace{fill:none;stroke:#000;stroke-width:1}
+  </style>
+
+  <text class="labb" x="20" y="20">a  Fit A</text>
+  <line class="base" x1="28" y1="222" x2="350" y2="222"/>
+  <path class="wave" d="M 38 222 C 62 220, 78 118, 102 86 C 116 66, 136 72, 152 98
+                        C 172 130, 190 152, 214 160 C 238 168, 264 174, 290 186
+                        C 312 197, 332 214, 346 220"/>
+  <path class="comp" d="M 38 222 C 62 220, 78 116, 104 90 C 126 66, 146 108, 164 152
+                        C 180 190, 196 214, 212 221"/>
+  <path class="comp" d="M 142 222 C 170 220, 190 190, 214 186 C 244 181, 274 199, 302 213
+                        C 318 219, 334 222, 346 222"/>
+  <line class="drop" x1="104" y1="90" x2="104" y2="248"/>
+  <line class="drop" x1="214" y1="186" x2="214" y2="248"/>
+  <path class="brace" d="M 104 254 L 104 261 L 214 261 L 214 254"/>
+  <text class="labb" x="159" y="277" text-anchor="middle">ΔT short</text>
+  <text class="note" x="28" y="240">residual: identical to b</text>
+
+  <line class="base" x1="380" y1="14" x2="380" y2="290" stroke="#000" stroke-width=".6"/>
+
+  <text class="labb" x="400" y="20">b  Fit B — same beat, same residual</text>
+  <line class="base" x1="408" y1="222" x2="730" y2="222"/>
+  <path class="wave" d="M 418 222 C 442 220, 458 118, 482 86 C 496 66, 516 72, 532 98
+                        C 552 130, 570 152, 594 160 C 618 168, 644 174, 670 186
+                        C 692 197, 712 214, 726 220"/>
+  <path class="comp" d="M 418 222 C 440 220, 454 110, 478 84 C 500 58, 518 100, 534 142
+                        C 548 180, 562 210, 578 221"/>
+  <path class="comp" d="M 500 222 C 542 219, 580 180, 624 178 C 664 176, 698 202, 726 221"/>
+  <line class="drop" x1="478" y1="84" x2="478" y2="248"/>
+  <line class="drop" x1="624" y1="178" x2="624" y2="248"/>
+  <path class="brace" d="M 478 254 L 478 261 L 624 261 L 624 254"/>
+  <text class="labb" x="551" y="277" text-anchor="middle">ΔT long</text>
+  <text class="note" x="408" y="240">measured ΔT varied 264–640 ms across bases</text>
+</svg>

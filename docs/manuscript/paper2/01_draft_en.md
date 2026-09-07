@@ -7,6 +7,8 @@
 **Scope.** In-silico only (Pulse Wave Database, 4,374 virtual subjects; literature
 replication on 624). Real-monitor identifiability is a separate report (Paper 3).
 
+**Tables** are written out in `02_tables.md`; **figures** are in `figures/`.
+
 ---
 
 ## Title
@@ -199,7 +201,7 @@ negative result.
    resampling of six source papers (Goswami 2010, Tigges 2017, Wang 2013, Couceiro 2015,
    Fleischhauer 2020, Basso 2024) were transcribed from the full texts and applied unchanged
    to a systematic subset of 624 subjects. Every deviation forced by our environment is
-   listed in a deviations table (table [[N]]).
+   listed in a deviations table (table 4).
 
 ### 2.6 Descriptive analyses
 
@@ -211,9 +213,14 @@ present; type 3: inflection only; type 4: neither).
 
 ### 2.7 Software and reproducibility
 
-Python [[version]], NumPy, SciPy, pandas. Analysis code, the frozen decision document and
-the result tables are archived at [[Zenodo DOI]]. The version identifier of the decomposition
-module is recorded in every output row.
+Python, NumPy, SciPy and pandas. The version identifier of the decomposition module was
+`048d2b43bb05` for the confirmatory run, and the interpreter and library versions are
+recorded in every output row of the result table
+[[read the `python_version`, `numpy_version` and `scipy_version` columns of
+`data/pwdb/pwdb_compare.csv` on the machine that produced the confirmatory run and insert
+them here; the copy in the cloud environment is a self-test subset and its versions differ]].
+Analysis code, the frozen decision document and the result tables are archived at
+[[Zenodo DOI — deposit at submission]].
 
 ---
 
@@ -245,8 +252,10 @@ Neither decomposition route passed. The skew-Gaussian route accepted almost no b
 fiducial points by 15–25 ms, more than the 6 ms tolerance of the Wang criterion; tiers A and
 B could therefore not be evaluated, and tier C did not reach the threshold. The gamma route
 accepted 103 beats and passed some tiers but not all, and **87.4% of accepted beats had at
-least one parameter resting on a search bound**; widening the bounds moved the correlation
-to 0.119.
+least one parameter resting on a search bound**. Widening the bounds moved the correlation
+among *accepted* beats to 0.119, but left the all-subject value unchanged at 0.55 (§3.3);
+the right reading of the pinning is therefore that the parameters of this family are not
+identified in these beats, rather than that the search range fixes the answer.
 
 Two further fiducial-point indices passed (SI versus PWV 0.710; the second-derivative ageing
 index AGI_mod 0.885) and one failed (augmentation index versus resistance 0.143). Defining
@@ -263,18 +272,29 @@ waveforms not carried the information, the fiducial-point indices would have fai
 acceptance criterion of five source papers, gave 0.167 — the same result as the frozen
 version within the resolution of the decision rule.
 
-**Basis function (table [[N]]).** Across twelve combinations of basis and component count the
-best value reached was **0.56**, below the 0.710 obtained by fiducial-point analysis on the
-same subjects. Two observations recur:
+**Basis function (table 3).** This sweep was run after the confirmatory judgment and is
+reported as exploratory; it uses the 98 notch-bearing beats available from 120 subjects in
+four strata, so its values are wider than those of the confirmatory run. Across twelve
+combinations of basis and component count the best value reached was **0.56**, below the
+0.710 obtained by fiducial-point analysis on the same subjects. Four observations recur:
 
+- **The failure of the skew-Gaussian family is not a matter of the sign of the skew.**
+  Allowing left skew, as Basso 2024 does, reproduced the frozen row exactly at two components
+  and almost exactly at three: the optimiser does not select left skew.
+- **The plain two-Gaussian basis tracks truth best (0.54, 4/4 strata) while fitting worst**
+  (normalised RMSE 4.9%, Wang pass rate 0%, parameters on a bound in only 4% of beats).
+  Skewness improves the fit from 0.049 to 0.021 and simultaneously detaches the component
+  peaks from the fiducial points.
 - **Goodness of fit and validity move in opposite directions.** For the gamma basis,
   increasing from three to four components lowered the normalised RMSE from 0.0071 to 0.0051
   while lowering |ρ| from 0.56 to 0.35; for the Gaussian basis, going from two to four
-  components lowered |ρ| from 0.54 to 0.28.
-- **The quantity depends on the basis.** The median ΔT measured from the same waveforms
-  ranged from 264 to 640 ms across bases.
+  components lowered |ρ| from 0.54 to 0.28. Raising the acceptance rate of the fit and
+  tracking pulse wave velocity are opposing directions.
+- **No basis reaches fiducial-point analysis.** The structure of the table is that the closer
+  the fitted component peaks lie to the fiducial points themselves, the better the tracking —
+  which is an argument for measuring the fiducial points directly.
 
-**Published conditions (table [[N]]).** Applied unchanged to 624 subjects, none of the six
+**Published conditions (table 4).** Applied unchanged to 624 subjects, none of the six
 published protocols reached the fiducial-point value (0.705 in the same subset). The best was
 0.578 (the gamma, three-component model recommended by Tigges 2017). For RI, one protocol
 did exceed fiducial-point analysis: Couceiro's R1_d reached 0.585 against 0.501. Under the
@@ -283,7 +303,7 @@ nevertheless the one result consistent with the proposed mechanism.
 
 ### 3.4 Where the decomposition-derived index does respond
 
-Main effects within strata (table [[N]]) show that decomposition-derived ΔT is not inert. Its
+Main effects within strata (table 2) show that decomposition-derived ΔT is not inert. Its
 largest single main effect is that of pulse wave velocity (−17.0%). What distinguishes it
 from the fiducial-point index is the size of the competing effects.
 
@@ -304,7 +324,7 @@ property the index names.**
 
 ### 3.5 The response is not monotone
 
-Single-factor sweeps (figure [[N]]) show that the pulse-wave-velocity row alone is not
+Single-factor sweeps (table 2b and figure 3) show that the pulse-wave-velocity row alone is not
 monotone. Decomposition ΔT was 332.3, 352.8 and 251.2 ms at −1 SD, baseline and +1 SD: the
 −1 SD step moves in the direction opposite to prediction. RI was 0.325, 0.254 and 0.647,
 a U shape. The heart-rate and aortic-diameter rows are monotone. This reconciles the largest
@@ -379,10 +399,12 @@ Five mechanisms are consistent with our observations; they are not exclusive and
 separated their contributions.
 
 1. **Non-identifiability.** Parameters rest on search bounds in 87.4% of accepted gamma-route
-   beats; adding components lowers the residual and the correlation together; the same
-   waveform yields ΔT values from 264 to 640 ms depending on the basis. When the problem is
-   ill-posed, what the fit returns is decided by the design of the search rather than by the
-   data.
+   beats, and widening those bounds does not reduce the proportion (89–99%), so the pinning
+   indicates that the parameters of this family are not identified in these beats rather than
+   that the bounds themselves fix the answer. Adding components lowers the residual and the
+   correlation together, and the same waveform yields ΔT values from 264 to 640 ms depending
+   on the basis. When the problem is ill-posed, what the fit returns is decided as much by the
+   design of the search as by the data.
 2. **Non-monotone response** (§3.5), which alone is sufficient to defeat a rank criterion over
    a wide enough range.
 3. **No physiological event corresponding to the second component.** If the second peak at the
@@ -403,7 +425,7 @@ for that one operation and not for timing. Three cautions attach to it: in this 
 peripheral resistance governs diastolic decay, so part of the association is built in
 (a caution recorded in the frozen rules); RI-type indices require a diastolic peak, which is
 often unavailable in recorded waveforms; and our reproduction carries the deviations listed
-in table [[N]].
+in table 4.
 
 ### 4.4 Why the criterion was stratified by age
 
@@ -429,7 +451,7 @@ subsequent work reports that stiffness indices perform better in vivo than in si
 would counsel caution about generalising a negative — although in our hands the
 fiducial-point indices performed *well* in silico, so that argument does not account for the
 present negative. The literature replication retains deviations (optimiser and resampling
-details) listed in table [[N]], and a different implementation by the original authors could
+details) listed in table 4, and a different implementation by the original authors could
 give different values. The non-monotonicity of §3.5 is visible because six factors are varied
 independently at ±1 SD; whether a comparable range occurs in patients cannot be decided here.
 Finally, the conclusion concerns the six published protocols and twelve bases tested, not
@@ -462,7 +484,7 @@ only the latter tracked truth.
 
 **Data availability.** The Pulse Wave Database is openly available at
 doi:10.5281/zenodo.3275625. Analysis code, the prespecified decision document and all result
-tables are archived at [[Zenodo DOI]].
+tables are archived at [[Zenodo DOI — deposit at submission]].
 **Ethics.** Not required; no human participants or human data.
 **Funding.** [[none / to declare]]
 **Conflicts of interest.** [[author attestation]]
@@ -503,12 +525,13 @@ and must be checked before submission.
 9. Basso G, Haakma R, Vullings R. A skewed-Gaussian model for pulse decomposition analysis
    of photoplethysmography signals. *Physiol Meas* 2024;45(11):115006. PMID 39577084.
    doi:10.1088/1361-6579/ad9662
-10. Hellqvist H, [[remaining authors]]. [[title]]. *Front Cardiovasc Med* 2024;11:1350726.
-    **[[not yet verified — obtain author list, title, DOI from the publisher record]]**
-11. Dawber TR, [[co-authors]]. [[title]]. [[journal]] 1973;[[vol:pages]].
-    **[[not yet verified — the source of the waveform type classification; cited via
-    Tigges 2017 and Wang 2013 in our reading notes, not yet read in the original]]**
+10. Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Estimation of aortic stiffness by finger photoplethysmography using enhanced pulse wave analysis and machine learning. Front Cardiovasc Med. 2024;11:1350726. doi:10.3389/fcvm.2024.1350726.
+    *Verified 2026-09-07 against the publisher PDF held on file (citation block, page 1).*
+11. Dawber TR, Thomas HE, McNamara PM. Characteristics of the dicrotic notch of the arterial pulse wave in coronary heart disease. Angiology. 1973;24(4):244-255.
+    *Cited as reported by Tigges 2017 (reference [10] of that paper); the 1973 original has
+    not been read. Tigges renders the middle author as "J. H. Emerson Thomas"; the second
+    author's initials should be confirmed against the publisher record before submission,
+    or the citation given explicitly as secondary.*
 
-> Verification is mandatory before submission, as for Paper 1. Entries 10 and 11 are cited
-> in the text; if the originals cannot be obtained, cite them as reported by Tigges 2017 /
-> Wang 2013 and say so.
+> Entries 1–9 were verified for Paper 1 on 2026-08-30; entry 10 was verified on 2026-09-07
+> from the publisher PDF. Entry 11 is a secondary citation and is marked as such.
