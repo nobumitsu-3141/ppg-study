@@ -6,8 +6,8 @@ const {
   WidthType, AlignmentType, BorderStyle, VerticalAlign, Footer, PageNumber,
 } = require('docx');
 
-const SRC = 'docs/research/data_request_university_v1.md';
-const OUT = 'docs/research/大学データ取得依頼_第1.0版.docx';
+const [SRC, OUT] = process.argv.slice(2);
+if (!SRC || !OUT) { console.error('usage: node build_data_request.js <src.md> <out.docx>'); process.exit(1); }
 const FONT = '游明朝';
 const BK = '000000';
 const W = 9638;
