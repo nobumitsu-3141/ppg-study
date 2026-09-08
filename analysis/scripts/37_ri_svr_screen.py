@@ -128,17 +128,24 @@ def analyse_case(d: pd.DataFrame) -> dict | None:
     dri, dmap, dsvr = dri[ok], dmap[ok], dsvr[ok]
 
     b_svr, b_map, r2 = ols2(dri, dsvr, dmap, intercept=True)
-    # 解離ウィンドウ: SVR と MAP が逆向き、または MAP がほぼ平坦で SVR が動いている
-    disc = ((np.sign(dsvr) * np.sign(dmap) < 0)
-            | ((np.abs(dmap) < FLAT) & (np.abs(dsvr) >= FLAT)))
-    conc = (np.sign(dsvr) * np.sign(dmap) > 0)
+    # 解離ウィンドウ。旧版は「逆向き」と「MAP平坦」の和を取っていたが、後者は一致集合と
+    # 重なりうる（例: ΔMAP +1%・ΔSVR +5%）。重なりは解離側の相関を一致側へ引き寄せるため、
+    # **純粋に逆向きだけの集合**を別に出す。
+    opp = (np.sign(dsvr) * np.sign(dmap) < 0)                     # 逆向きのみ（厳格）
+    flat = (np.abs(dmap) < FLAT) & (np.abs(dsvr) >= FLAT)         # MAP 平坦で SVR が動く
+    disc = opp | flat                                             # 旧定義（参考）
+    conc = (np.sign(dsvr) * np.sign(dmap) > 0) & ~flat            # 一致（平坦は除く）
     return {
         "n": int(ok.sum()),
         "rho_ri_svr": spearman(dri, dsvr),
         "rho_ri_map": spearman(dri, dmap),
         "rho_svr_map": spearman(dsvr, dmap),
         "b_svr": b_svr, "b_map": b_map, "r2": r2,
+        "n_opp": int(opp.sum()), "n_flat": int(flat.sum()),
         "n_disc": int(disc.sum()), "n_conc": int(conc.sum()),
+        "rho_opp": spearman(dri[opp], dsvr[opp]) if opp.sum() >= MIN_DISC else float("nan"),
+        "rho_opp_map": spearman(dri[opp], dmap[opp]) if opp.sum() >= MIN_DISC else float("nan"),
+        "rho_flat": spearman(dri[flat], dsvr[flat]) if flat.sum() >= MIN_DISC else float("nan"),
         "rho_disc": spearman(dri[disc], dsvr[disc]) if disc.sum() >= MIN_DISC else float("nan"),
         "rho_conc": spearman(dri[conc], dsvr[conc]) if conc.sum() >= MIN_DISC else float("nan"),
         "rho_disc_map": spearman(dri[disc], dmap[disc]) if disc.sum() >= MIN_DISC else float("nan"),
@@ -167,13 +174,17 @@ def summarise(rows: list[dict], label: str, out: list) -> None:
     line("β_SVR  同時回帰（切片あり）", "b_svr")
     line("β_MAP  同時回帰（切片あり）", "b_map")
     out.append("")
-    line("ρ(ΔRI%, ΔSVR%)  解離ウィンドウのみ", "rho_disc")
-    line("ρ(ΔRI%, ΔMAP%)  解離ウィンドウのみ", "rho_disc_map")
+    line("ρ(ΔRI%, ΔSVR%)  ★逆向きのみ（厳格）", "rho_opp")
+    line("ρ(ΔRI%, ΔMAP%)  ★逆向きのみ（厳格）", "rho_opp_map")
+    line("ρ(ΔRI%, ΔSVR%)  MAP平坦でSVRが動く窓", "rho_flat")
     line("ρ(ΔRI%, ΔSVR%)  一致ウィンドウのみ", "rho_conc")
-    nd, nc = df["n_disc"].sum(), df["n_conc"].sum()
+    line("ρ(ΔRI%, ΔSVR%)  解離（逆向き＋平坦・旧定義）", "rho_disc")
     tot = int(df["n"].sum())
-    out.append(f"\n  解離ウィンドウ {int(nd):,}（{nd/tot:.1%}）・一致 {int(nc):,}（{nc/tot:.1%}）"
-               f"・解離が {MIN_DISC} 組以上の症例 {int((df['n_disc'] >= MIN_DISC).sum())}")
+    no, nf, nc = df["n_opp"].sum(), df["n_flat"].sum(), df["n_conc"].sum()
+    out.append(f"\n  逆向き {int(no):,}（{no/tot:.1%}）・MAP平坦 {int(nf):,}（{nf/tot:.1%}）"
+               f"・一致 {int(nc):,}（{nc/tot:.1%}）")
+    out.append(f"  {MIN_DISC} 組以上ある症例: 逆向き {int((df['n_opp'] >= MIN_DISC).sum())}"
+               f"・平坦 {int((df['n_flat'] >= MIN_DISC).sum())}")
 
 
 # ---------------------------------------------------------------- 本体
