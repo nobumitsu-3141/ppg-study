@@ -18,7 +18,7 @@ MAP ≒ CO × SVR なので SVR と MAP は解離しうる（SVR が上がって
 ---
 A群（EV1000・最大204例）
     SVR = EV1000/SVR。**構造的に MAP を含み、CO も動脈圧波形由来**。したがって
-    A群の解離ウィンドウは定義上「FloTrac の CO が動いた」窓であり、
+    A群の解離ウィンドウは定義上「FloTrac の CO が動いた」ウィンドウであり、
     「RI は FloTrac の CO 推定を逆に追うか」に化ける。**陽性でも証明にならない。**
     足切りとして使う。ここで SVR 方向にまったく動かなければ話は終わる。
 
@@ -176,7 +176,7 @@ def summarise(rows: list[dict], label: str, out: list) -> None:
     out.append("")
     line("ρ(ΔRI%, ΔSVR%)  ★逆向きのみ（厳格）", "rho_opp")
     line("ρ(ΔRI%, ΔMAP%)  ★逆向きのみ（厳格）", "rho_opp_map")
-    line("ρ(ΔRI%, ΔSVR%)  MAP平坦でSVRが動く窓", "rho_flat")
+    line("ρ(ΔRI%, ΔSVR%)  MAP平坦でSVRが動くウィンドウ", "rho_flat")
     line("ρ(ΔRI%, ΔSVR%)  一致ウィンドウのみ", "rho_conc")
     line("ρ(ΔRI%, ΔSVR%)  解離（逆向き＋平坦・旧定義）", "rho_disc")
     tot = int(df["n"].sum())
@@ -222,7 +222,7 @@ def run(out_path: str | None) -> int:
     out.append("""
   【A群の限界】EV1000 の SVR は (MAP−CVP)×80/CO で、**MAP が分子に入り、CO は動脈圧波形由来**。
   よって ρ(ΔRI%, ΔSVR%) には構造的な混入がある。さらに解離ウィンドウは定義上
-  「FloTrac の CO が動いた窓」であり、そこでの相関は「RI が FloTrac の CO 推定を
+  「FloTrac の CO が動いたウィンドウ」であり、そこでの相関は「RI が FloTrac の CO 推定を
   逆に追うか」に化ける。**陽性でも RI が SVR を測る証拠にはならない。**
   ここで SVR 方向にまったく動かない場合にのみ、足切りとして意味を持つ。""")
 
