@@ -44,10 +44,14 @@ const cell = (text, width, head) => new TableCell({
 });
 function tbl(rows) {
   const n = rows[0].length;
-  const len = Array.from({ length: n }, (_, j) =>
-    Math.max(...rows.map(r => (r[j] || '').replace(/\*\*/g, '').length), 4));
+  const len = Array.from({ length: n }, (_, j) => {
+    const data = rows.slice(1).map(r => (r[j] || '').replace(/\*\*/g, '').trim());
+    // 記入欄（データ側が全部空）は書ける幅を確保する
+    if (data.length && data.every(c => c === '')) return 22;
+    return Math.max(...rows.map(r => (r[j] || '').replace(/\*\*/g, '').length), 4);
+  });
   const tot = len.reduce((a, b) => a + b, 0);
-  const widths = len.map(l => Math.max(700, Math.round(W * l / tot)));
+  const widths = len.map(l => Math.max(620, Math.round(W * l / tot)));
   const scale = W / widths.reduce((a, b) => a + b, 0);
   const wf = widths.map(w => Math.round(w * scale));
   return new Table({
