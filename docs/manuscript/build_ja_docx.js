@@ -19,7 +19,8 @@ const TARGETS = [
 const block = (text, name) => {
   const m = text.match(new RegExp(`^【${name}】$([\\s\\S]*?)(?=^【)`, 'm'));
   if (!m) throw new Error(`【${name}】が見つからない`);
-  return m[1].split('\n').map(s => s.trim()).filter(Boolean);
+  // 行頭の全角空白は数式行の目印なので落とさない
+  return m[1].split('\n').map(s => s.replace(/\s+$/, '')).filter(Boolean);
 };
 
 const run = (text, o = {}) => new TextRun({ text, font: FONT, color: BLACK, ...o });
@@ -35,6 +36,11 @@ const head = t => new Paragraph({
 const sect = t => new Paragraph({
   children: [run(t, { bold: true })],
   spacing: { before: 260, after: 120, line: 300 },
+});
+// 数式行（行頭が全角空白）。字下げせず、太字化もしない。
+const eq = line => new Paragraph({
+  children: [new TextRun({ text: line, font: FONT, color: BLACK })],
+  spacing: { before: 90, after: 90, line: 300 },
 });
 // 段落。行頭の「見出し語　」および要旨の「目的：」等のラベルだけを太字にする。
 const para = (line, { label = false } = {}) => {
@@ -58,7 +64,8 @@ function build({ src, out }) {
   children.push(head('【和文要旨】'));
   block(md, '和文要旨').forEach(l => children.push(para(l, { label: true })));
   children.push(head('【本文】'));
-  block(md, '本文').forEach(l => children.push(/^〈.+〉$/.test(l) ? sect(l) : para(l)));
+  block(md, '本文').forEach(l => children.push(
+    /^　/.test(l) ? eq(l) : /^〈.+〉$/.test(l) ? sect(l) : para(l)));
 
   const doc = new Document({
     styles: { default: { document: { run: { font: FONT, size: 21, color: BLACK } } } },

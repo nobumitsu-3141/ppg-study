@@ -53,6 +53,8 @@ def convert(md, pid):
             n += 1
             out.append(f'<h3 class="sec" id="{pid}-s{n}">{inline(m.group(1))}</h3>')
             i += 1; continue
+        if s.startswith('　'):                    # 数式行・字下げ行
+            out.append(f'<p class="ind">{inline(t)}</p>'); i += 1; continue
         if t.startswith('〔') and t.endswith('〕'):   # 未記入の枠
             out.append(f'<p class="todo">{inline(t)}</p>'); i += 1; continue
         # 段落: 「見出し語　本文」の形（全角空白区切り）は見出し語を立てる

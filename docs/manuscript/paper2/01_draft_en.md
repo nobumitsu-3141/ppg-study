@@ -139,11 +139,26 @@ interval, the amplitude normalisation cancels.
 
 ### 2.3 Indices
 
-**Pulse decomposition (frozen version).** Two skew-Gaussian components fitted by nonlinear
-least squares with eight starting points, with a convergence audit rejecting solutions in
-which a parameter sat on a search bound, an amplitude collapsed, or a competing solution
-within 10% of the residual gave a ΔT differing by more than 20%. ΔT_PDA is the interval
-between the fitted component peaks and RI_PDA the ratio of their heights.
+**Pulse decomposition (frozen version).** The beat is represented as the sum of two
+skew-Gaussian components:
+
+  g(t; a, μ, σ, α) = a · exp(−z²/2) · [ 1 + erf( αz / √2 ) ],   z = (t − μ)/σ         (1)
+
+  ŷ(t) = g(t; a₁, μ₁, σ₁, α₁) + g(t; a₂, μ₁ + Δμ, σ₂, α₂)                             (2)
+
+The second component is positioned by an offset Δμ from the first, bounded to
+[0.08, 0.60] s. The eight parameters are fitted by trust-region-reflective nonlinear least
+squares from eight starting points, retaining the solution of lowest residual sum of
+squares. With a tolerance of 10⁻³, a convergence audit rejects a solution if any parameter
+lies within 10⁻³ of a search bound (the lower skewness bound of 0 excluded, a symmetric
+Gaussian being a legitimate solution), if the smaller of the two component peak heights
+falls below 0.02 on the normalised scale, or if among competing solutions whose residual
+sum of squares is within 1.15× that of the retained solution and whose Δμ differs by more
+than 0.03 s, any differs in reflection index by more than 0.08. Because a component's peak
+does not coincide with μ when skewness is non-zero, peak times and heights are located
+numerically on a 4,000-point grid. ΔT_PDA is the interval between the fitted component
+peaks and RI_PDA the ratio of their peak *heights* — not the ratio of the amplitude
+parameters a₂/a₁.
 
 **Pulse decomposition (rebuilt version).** Rebuilt after reading five source papers in full,
 adding (i) the preprocessing of Tigges 2017 and Basso 2024 described in §2.2, (ii) weighted
@@ -155,14 +170,15 @@ skew-Gaussian and gamma.
 
 **Fiducial-point analysis.** The systolic peak, the dicrotic notch and the diastolic peak
 were located on the waveform itself. ΔT_lm is the systolic-to-diastolic peak interval,
-RI_lm the ratio of their heights and SI = height / ΔT_lm. Where no notch was present but the
+RI_lm the ratio of their heights and SI = subject height / ΔT_lm. Where no notch was present but the
 descending limb showed a well-defined change of slope (Dawber type 3), the inflection point
 was used in place of the diastolic peak, and the substitution was recorded.
 
-**Upstroke amplitude ratio.** Am_b/Am_p1 as defined by Hellqvist 2024: b is the first trough
-of the second derivative, p1 is the zero-crossing of the tangent drawn to the descending
-linear part of the first derivative after its first peak, and the index is y(t_b)/y(t_p1).
-It uses the upstroke only and requires no diastolic peak.
+**Upstroke amplitude ratio.** Am_b/Am_p1 as defined by Hellqvist 2024: t_b is the first
+trough of the second derivative, t_p1 is the zero-crossing of the tangent drawn to the
+descending linear part of the first derivative after its first peak, so that
+t_p1 = t_b − y′(t_b)/y″(t_b), and the index is y(t_b)/y(t_p1). It uses the upstroke only and
+requires neither a dicrotic notch nor a diastolic peak, and involves no fitting.
 
 The second component of the pulse is referred to as such rather than as "the reflected
 wave"; the identification with peripheral reflection has been questioned for the digital

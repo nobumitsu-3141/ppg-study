@@ -130,6 +130,16 @@ measured pulse-decomposition indices. This primary question requires no referenc
 measurement, and is therefore unaffected by the limitations of the reference standards such
 databases provide.
 
+The measurement itself is also new. Using only the single photoplethysmogram already
+recorded under anaesthesia, and no additional device, we decompose each beat into component
+waves (pulse decomposition analysis) and extract a stiffness index and a reflection index
+beat by beat, tracking them within a case across the whole operation. These indices were
+established as single resting measurements [Millasseau 2002; Millasseau 2006]; to our
+knowledge they have not previously been measured through a fit as within-case
+intraoperative changes at this scale. Because what the indices are worth depends on how
+they are extracted, the model, the search bounds and the acceptance thresholds are given
+below in the detail required to reproduce them.
+
 ## 2. Methods
 
 ### 2.1 Study design, data source and ethics
@@ -208,19 +218,12 @@ case-specific interval of the order of 670 ms, reflecting the monitor's internal
 processing. Left uncorrected this delay causes two failures: beat segmentation windows
 anchored to the R wave miss the true pulse foot, and, when the delay exceeds the RR
 interval, the apparent transit time wraps modulo the cardiac cycle. We therefore estimated
-the delay at case level and used it to resolve this ambiguity. Sixty-second windows were
-sampled across the whole record; within each window, R waves were detected locally and
-candidate R-to-foot intervals were formed together with their aliases at one and two RR
-intervals. Candidates were pooled over the record and binned; the winning cluster was
-selected by coverage (the fraction of windows contributing a candidate near the cluster
-centre) rather than by tightness alone, since tightness alone selects artefact clusters.
-Per-beat values were then assigned to the branch nearest the case-level estimate, with
-values further than 150 ms from it discarded.
+the delay at case level, by unwrapping candidate R-to-foot intervals against their aliases
+at one and two RR intervals and selecting the branch with the widest coverage of the
+record, and assigned per-beat values to the branch nearest that estimate.
 
 **R-wave detection** used a Pan–Tompkins-style detector (differentiation, squaring, moving
-average integration, percentile-based adaptive threshold). A simpler global-amplitude
-threshold was found during validation to fail catastrophically in the presence of single
-large artefacts and was rejected.
+average integration, percentile-based adaptive threshold).
 
 **Beat segmentation** was driven by systolic peaks of the photoplethysmogram (minimum
 prominence 0.25 of the window signal range; minimum separation 0.55 of the median RR
@@ -229,50 +232,91 @@ maximum of the smoothed second derivative preceding the peak, within a 0.45-seco
 window. Beats failing a signal quality index (non-zero amplitude, absence of missing
 samples, fewer than 10% of samples identical to their neighbour) were discarded.
 
-**Ensemble averaging** was adaptive rather than fixed. The relative noise level of each
-window, σ_rel, was estimated from the robust standard deviation of the second difference of
-the signal. The number of beats to average was set to n = ⌈(σ_rel / 0.003)²⌉, bounded to
-between 4 and 16 beats; windows whose effective noise remained above the target of 0.003
-even with 16 beats were rejected. Beats were aligned at their feet, not time-normalised;
-time normalisation was found during validation to inflate the reflection index by 24–39%.
-This adaptive scheme was adopted because, at fixed averaging depth, elevated noise makes
-the two-kernel decomposition converge confidently to an incorrect solution that passes all
-convergence checks — a failure mode the checks cannot catch, so noise must be suppressed
-before fitting.
+**Effective noise and ensemble depth.** Controlling noise *before* fitting is central to
+this method. On synthetic pulses at a relative noise of 0.0116, averaging four beats sent
+17 of 40 beats to an incorrect solution, and 16 of those 17 passed all three convergence
+checks below. Fits that survive the checks while being wrong therefore exist, and the only
+defence against them is noise reduction before fitting. Ensemble depth was accordingly set
+per window rather than fixed. Using the fact that white noise contributes a variance of 6σ²
+to the second difference d² of the samples, we took σ̂ = 1.4826 · MAD(d²) / √6 and divided
+it by the beat amplitude range to give the relative noise σ̂_rel. Averaging n beats reduces
+noise by 1/√n, so to hold the post-averaging effective noise at or below a target of 0.003
+we averaged
+
+  n = clip( ⌈(σ̂_rel / 0.003)²⌉ , 4 , 16 )                                            (1)
+
+beats. Windows that could not reach the target with 16 beats, and windows with fewer than
+2n quality-passing beats, were rejected. Beats were aligned at their feet and were **not**
+time-normalised: normalisation smooths the narrow forward wave more than the reflected wave
+and was found on synthetic data to inflate the reflection index by 24–39%.
 
 ### 2.4 Pulse decomposition and index definitions
 
-Ensemble-averaged beats were decomposed into two skewed-Gaussian components (Azzalini
-form) [Basso 2024], taken to represent the forward and reflected waves, by non-linear least
-squares from eight starting points. Two kernels were chosen because a systematic comparison
-of decomposition algorithms found that two-kernel models are the most robust to noise and
-motion artefact while preserving morphology as well as models with more kernels
-[Fleischhauer 2020]. That comparison also states a limitation of two-kernel models that
-bears directly on the present indices and which we did not weigh sufficiently at the design
-stage: with two kernels all reflections are condensed into a single component, which the
-authors say rules out assessing the relationship between the systolic component and
-specific reflections. Our indices are exactly such a relationship. We report this in the
-Limitations and in the interpretation of the in-silico comparison (§4). A fit was accepted only if it
-passed three convergence checks: no parameter resting on a bound (excluding the skewness
-bounds), no component collapsed to zero amplitude, and no competing solution of comparable
-residual.
+**Model.** Each ensemble-averaged beat, floored at its minimum and normalised by its
+maximum, was represented as the sum of two skewed-Gaussian components (Azzalini form)
+[Basso 2024], taken to represent the forward and reflected waves:
+
+  g(t; a, μ, σ, α) = a · exp(−z²/2) · [ 1 + erf( αz / √2 ) ],   z = (t − μ)/σ         (2)
+
+  ŷ(t) = g(t; a₁, μ₁, σ₁, α₁) + g(t; a₂, μ₁ + Δμ, σ₂, α₂)                             (3)
+
+Skewness is admitted because both the forward and the reflected wave rise steeply and decay
+slowly, which a symmetric Gaussian cannot reproduce on both flanks [Basso 2024]. The second
+component is positioned by an offset Δμ from the first rather than by an absolute time, so
+that a bound can be placed directly on the arrival interval and component order is
+guaranteed. Two kernels were chosen because a systematic comparison of decomposition
+algorithms found two-kernel models the most robust to noise and motion artefact while
+preserving morphology as well as models with more kernels [Fleischhauer 2020]; the price of
+that choice is taken up in the Limitations.
+
+The eight parameters were fitted by trust-region-reflective non-linear least squares from
+eight starting points, retaining the solution of lowest residual sum of squares. Bounds
+were a₁ ∈ [0.05, 2.50]; μ₁ ∈ [0.02, max(0.60T, t_pk + 0.05)] s; σ₁ ∈ [0.015, 0.30] s;
+α₁ ∈ [0, 8]; a₂ ∈ [0.02, 2.00]; Δμ ∈ [0.08, min(0.60, 0.85T)] s; σ₂ ∈ [0.015, 0.35] s;
+α₂ ∈ [0, 8], where T is the beat length and t_pk the time of the maximum of the normalised
+beat. Skewness was restricted to be non-negative because allowing left skew degrades the
+identifiability of the amplitude ratio in waveforms without a dicrotic notch. The lower
+bound on Δμ prevents the two components from degenerating onto each other; the upper bound
+prevents the fit from capturing the following beat.
+
+**Acceptance of a fit.** With a tolerance of 10⁻³, a fit was accepted only if it passed all
+three of the following checks. (i) No parameter lies within 10⁻³ of a bound — the lower
+skewness bound of 0 is excluded, since a symmetric Gaussian is a legitimate solution rather
+than a stuck one. (ii) The smaller of the two component peak heights is at least 0.02 on
+the normalised scale. (iii) Among competing solutions whose residual sum of squares is
+within 1.15× that of the retained solution and whose Δμ differs by more than 0.03 s, none
+differs in reflection index by more than 0.08.
+
+The width of the residual valley obtained by fixing Δμ and refitting the remaining
+parameters was computed as a diagnostic but is **not** part of the acceptance rule: on
+synthetic data the ratio of valley width to ΔT had a median of 0.21 both for beats that
+converged correctly and for beats that fell into an alternative solution, so no threshold
+separates them.
+
+**Index definitions.** Because a component's peak does not coincide with μ when skewness is
+non-zero, the peak time t_peak,k and height h_k were located numerically on a 4,000-point
+grid over the fitting interval. The indices are
+
+  ΔT = t_peak,2 − t_peak,1                                                            (4)
+
+  RI = h₂ / h₁                                                                        (5)
+
+  SI = H / ΔT                                                                         (6)
+
+where H is subject height. RI is the ratio of peak *heights*, not of the amplitude
+parameters a₂/a₁; the two differ because peak height also depends on skewness and width.
+Within a case H is constant, so relative changes satisfy exactly 1 + ΔSI% = 1/(1 + ΔT%):
+SI and ΔT are related reciprocally, not linearly. Regressions run on the two therefore do
+not coincide (r² = 0.0412 vs 0.0449), while in rank correlation, being a monotone
+transformation, only the sign changes. The models below use ΔSI%, with ΔT reported
+alongside for comparability with the literature.
 
 The definitions of "stiffness index" and "reflection index" are not consistent across the
 literature. We therefore compared candidate definitions on synthetic pulses with known
-ground truth **before examining any real data** and froze the following:
-
-- **ΔT**: the interval between the peak times of the two components (most robust of five
-  candidates; error ≤ 1.8 ms under favourable conditions).
-- **RI**: the ratio of the **peak heights** of the two components (most robust of three
-  candidates; error ≤ 0.9%). Note that this is not the ratio of the amplitude parameters,
-  which differ from the peak heights because peak height depends on skewness and width.
-- **SI**: subject height divided by ΔT, reported for comparability with the literature.
-  Within-case relative change in SI is algebraically identical to that of ΔT, since height
-  cancels.
-
-Alternative definitions (onset-to-onset ΔT defined at 20% of component peak height,
-amplitude-parameter ratio, component area ratio) and a three-kernel decomposition were
-prespecified as sensitivity analyses.
+ground truth **before examining any real data** and froze those above (ΔT the most robust
+of five candidates, RI of three). Alternative definitions (onset-to-onset ΔT defined at 20%
+of component peak height, amplitude-parameter ratio, component area ratio) and a
+three-kernel decomposition were prespecified as sensitivity analyses.
 
 **PWTT** was defined as the interval from the R wave to the pulse foot, taken as the median
 over the window, after resolution of the device delay described above. Because the absolute
@@ -291,13 +335,20 @@ and of fits failing each convergence check, were recorded for every case and are
 
 ### 2.6 Primary analysis: the premise test (no reference CO)
 
-For each case, the change in PWTT from the case's first window was regressed on the
-concurrent relative changes in ΔT and RI, with an intercept:
+The first window of each case is the calibration point, and the relative change of a
+quantity x is Δx%(t) = (x(t) − x(1)) / max( |x(1)|, 0.05 · median|x| ). The floor of 5% of
+the series median absolute value in the denominator prevents the ratio from diverging in
+cases whose first value is near zero. The premise test is
 
-    ΔPWTT = b₀ + b₁·ΔΔT% + b₂·ΔRI% + ε
+  ΔPWTT%(t) = β_SI · ΔSI%(t) + β_RI · ΔRI%(t) + ε(t)                                  (7)
 
-We report the pooled coefficient of determination and the coefficients with 95% confidence
-intervals, together with the distribution of within-case r² values. This analysis uses no
+Relative changes are zero at the calibration point, so the prespecified estimate carries no
+constant column and passes through the origin. The denominator of the coefficient of
+determination is nevertheless the sum of squares about the mean, so this r² can fall near
+or below zero; it is the prespecified statistic, and the conventional r² obtained by
+refitting with an intercept is reported alongside it. We report the pooled coefficient of
+determination and the coefficients with 95% confidence intervals, together with the
+distribution of within-case r² values. This analysis uses no
 reference CO and is therefore unaffected by the limitation described in §2.2.
 
 **Distinguishing a weak premise from noise.** A near-zero r² can arise either because the
@@ -331,13 +382,20 @@ control alone, before the premise-test result was examined.
 ### 2.7 Secondary analysis: accuracy against reference CO
 
 A control estimator reproducing the published PWTT form, esSV = K₀ × (β − α·PWTT) with K₀
-regressed on age, sex, height and weight, was compared with a proposed estimator in which
-the calibration constant was corrected as K = K₀ × f(ΔT, RI), f being linear in the
-within-case relative changes of the two indices. Both were calibrated on the first window
+regressed on age, sex, height and weight, was reduced to a linear relation between the
+calibration-point CO and ΔPWTT. The proposed estimator applies a multiplicative correction
+to its output:
+
+  ĈO_prop(t) = ĈO_ctrl(t) · clip( 1 + c_SI · ΔSI%(t) + c_RI · ΔRI%(t) , 0.3 , 3.0 )    (8)
+
+The correction coefficients c were obtained within each derivation fold by origin-through
+least squares on the relative residual CO_ref/ĈO_ctrl − 1. Three sets of regressors were
+used: (ΔSI%, ΔRI%), (ΔMAP%), and both. Both estimators were calibrated on the first window
 of each case, mimicking the clinical calibration procedure, and evaluated by case-level
 5-fold cross-validation with coefficients re-estimated within each training fold.
 
-The outcome was the percentage error of Critchley and Critchley; the difference between
+The outcome was the percentage error of Critchley and Critchley,
+PE = 1.96 · SD(ĈO − CO_ref) / mean(CO_ref), computed per case; the difference between
 proposed and control was tested with a case-level bootstrap (2,000 resamples). Bland–Altman
 bias and limits of agreement, and four-quadrant concordance with a 0.5 L/min exclusion
 zone, are reported descriptively.
@@ -1013,10 +1071,6 @@ narrow to account for it.
     analysis of photoplethysmography signals. Physiol Meas. 2024;45(11):115006.
     PMID 39577084. doi:10.1088/1361-6579/ad9662
     **← 本研究の当てはめモデルの原典。投稿先第一候補と同じ誌**
-26. Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Estimation of aortic stiffness by finger photoplethysmography using enhanced pulse wave analysis and machine learning. Front Cardiovasc Med. 2024;11:1350726. doi:10.3389/fcvm.2024.1350726.
-    **← 早期振幅比 Am_b/Am_p1 の原典。§2.10(d) と §3.6 で引く。2026-09-07 に出版社PDF
-    （1ページ目の CITATION 欄）で照合済み**
-
 ### PTT・PPGを用いた補正の先行研究（新規性の申告に必須）
 
 26. Ding XR, Zhang YT, Liu J, Dai WX, Tsang HK. Continuous cuffless blood pressure estimation
@@ -1078,9 +1132,13 @@ narrow to account for it.
     2019;317(5):H1062-H1085. PMID 31442381. doi:10.1152/ajpheart.00218.2019
     **← 要照合（巻号・PMID を PubMed で確認してから投稿）。データ: doi:10.5281/zenodo.3275625**
 
-### 当てはめの規準（凍結後の考察で引く）
+### 凍結後に追加（探索的解析・考察で引く）
 
-29. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform
+40. Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Estimation of aortic stiffness by finger photoplethysmography using enhanced pulse wave analysis and machine learning. Front Cardiovasc Med. 2024;11:1350726. doi:10.3389/fcvm.2024.1350726.
+    **← 早期振幅比 Am_b/Am_p1 の原典。§2.10(d) と §3.6 で引く。2026-09-07 に出版社PDF
+    （1ページ目の CITATION 欄）で照合済み**
+
+41. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform
     using weighted least squares and multi-criteria decision making method. Comput Biol
     Med. 2013;43(11):1661-1672. PMID 24209920.
     **← 鍵点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。要照合**
