@@ -12,13 +12,47 @@ set -euo pipefail
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${1:-$SRC/../ppg-split}"
 mkdir -p "$OUT"
+SRC_SHA="$(git -C "$SRC" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
-# ── 2) 公開する解析リポジトリ（履歴は作り直す。過去の版に機微な資料が入っているため）
+# 作業木だけ入れ替え、.git は残す。**初回だけ git init する。**
+# 毎回 init し直すと走らせるたびに無関係な根コミットができ、リリースのタグが
+# 枝から切り離される（2026-09-09 に v1.0.0 で実際に起きた）。
+reset_worktree() {
+  local d="$1" stash
+  if [ -d "$d/.git" ]; then
+    stash="$(mktemp -d)"
+    mv "$d/.git" "$stash/.git"
+    rm -rf "$d"; mkdir -p "$d"
+    mv "$stash/.git" "$d/.git"; rmdir "$stash"
+  else
+    rm -rf "$d"; mkdir -p "$d"
+    git -C "$d" init -q -b main
+  fi
+}
+
+# 内容が変わっていれば commit する。変わっていなければ何もしない。
+commit_if_changed() {
+  local d="$1" msg
+  git -C "$d" add -A
+  if git -C "$d" diff --cached --quiet 2>/dev/null; then
+    echo "  変更なし: $(basename "$d")"
+    return 0
+  fi
+  if git -C "$d" rev-parse --verify -q HEAD >/dev/null; then
+    msg="$SRC_SHA から同期"
+  else
+    msg="初回: $(basename "$d")"
+  fi
+  git -C "$d" \
+      -c user.name="$(git -C "$SRC" config user.name 2>/dev/null || echo nobumitsu-3141)" \
+      -c user.email="$(git -C "$SRC" config user.email 2>/dev/null || echo noreply@example.com)" \
+      commit -q -m "$msg"
+}
+
+# ── 2) 公開する解析リポジトリ
 PUB="$OUT/ppg-pda-analysis"
-# 消す前に origin を控える。このスクリプトは毎回 .git ごと作り直すので、
-# 控えないと 2 回目以降に push 先を見失う。
-PUB_REMOTE="$(git -C "$PUB" remote get-url origin 2>/dev/null || true)"
-rm -rf "$PUB"; mkdir -p "$PUB/analysis" "$PUB/preregistration"
+reset_worktree "$PUB"
+mkdir -p "$PUB/analysis" "$PUB/preregistration"
 cp -R "$SRC/analysis/src"     "$PUB/analysis/"
 cp -R "$SRC/analysis/scripts" "$PUB/analysis/"
 cp    "$SRC/analysis/README.md" "$PUB/analysis/" 2>/dev/null || true
@@ -38,53 +72,36 @@ cp "$SRC/tools/public_zenodo.json" "$PUB/.zenodo.json"
 
 # ── 3) 非公開のリポジトリ
 PRI="$OUT/ppg-study-private"
-PRI_REMOTE="$(git -C "$PRI" remote get-url origin 2>/dev/null || true)"
-rm -rf "$PRI"; mkdir -p "$PRI"
+reset_worktree "$PRI"
 cp -R "$SRC/docs" "$PRI/"
 cp    "$SRC/CLAUDE.md" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/slides" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/local-reviews" "$PRI/" 2>/dev/null || true
 
-# ── 初回コミットまで作る。**push するだけの状態にして渡す。**
-# ここまでスクリプトにやらせるのは、`cd` を間違えて元のリポジトリの中で
-# `git init` や `git push` をしてしまう事故を防ぐためである。
-for d in "$PUB" "$PRI"; do
-  ( cd "$d"
-    git init -q -b main
-    git add -A
-    git -c user.name="$(git -C "$SRC" config user.name 2>/dev/null || echo nobumitsu-3141)" \
-        -c user.email="$(git -C "$SRC" config user.email 2>/dev/null || echo noreply@example.com)" \
-        commit -q -m "初回: $(basename "$d")" )
-done
-
-# 控えた origin を戻す
-if [ -n "$PUB_REMOTE" ]; then git -C "$PUB" remote add origin "$PUB_REMOTE"; fi
-if [ -n "$PRI_REMOTE" ]; then git -C "$PRI" remote add origin "$PRI_REMOTE"; fi
+commit_if_changed "$PUB"
+commit_if_changed "$PRI"
 
 echo "作成した:"
-echo "  公開   $PUB   （$(git -C "$PUB" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
-echo "  非公開 $PRI （$(git -C "$PRI" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
+echo "  公開   $PUB   （$(git -C "$PUB" ls-files | wc -l | tr -d ' ') ファイル）"
+echo "  非公開 $PRI （$(git -C "$PRI" ls-files | wc -l | tr -d ' ') ファイル）"
 echo ""
 echo "**公開する側に機微な語が残っていないかを検査する**"
-if grep -rl "一ノ宮\|大雅\|五島中央\|長崎大学" "$PUB" 2>/dev/null; then
+if grep -rl "一ノ宮\|大雅\|五島中央\|長崎大学" "$PUB" --exclude-dir=.git 2>/dev/null; then
   echo "  ★ 上のファイルに実名・施設名が残っている。公開前に必ず消すこと。"; exit 1
 else
   echo "  実名・施設名の検出なし"
 fi
 echo ""
-if [ -n "$PUB_REMOTE" ] || [ -n "$PRI_REMOTE" ]; then
-  echo "前の版で設定していた origin を戻した。**歴史は作り直しているので、遠隔にすでに"
-  echo "初回コミットがある場合は fast-forward できない。**遠隔にあるのはこのスクリプトが"
-  echo "作った 1 個のコミットだけなので、上書きしてよい。"
-  echo ""
+if git -C "$PUB" remote get-url origin >/dev/null 2>&1; then
+  echo "次にやること"
   echo "  cd $PUB"
-  echo "  git push --force -u origin main"
+  echo "  git push origin main"
   echo ""
   echo "  cd $PRI"
-  echo "  git push --force -u origin main"
+  echo "  git push origin main"
   echo ""
-  echo "**Zenodo のリリースを既に作ってある場合は --force を使わないこと。**"
-  echo "その版の DOI が指す中身と食い違う。作ってあるなら先に相談すること。"
+  echo "履歴は積み上がるので --force は要らない。拒否されたら、遠隔に手を入れた"
+  echo "覚えがないか確かめること。**黙って --force を足さない。**"
 else
   echo "次にやること（**この 2 つのディレクトリの中で**実行する。元のリポジトリでは実行しない）"
   echo "  1. GitHub で空のリポジトリを 2 つ作る。README・.gitignore・ライセンスは追加しない"
