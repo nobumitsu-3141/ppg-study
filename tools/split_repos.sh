@@ -40,9 +40,21 @@ cp    "$SRC/CLAUDE.md" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/slides" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/local-reviews" "$PRI/" 2>/dev/null || true
 
+# ── 初回コミットまで作る。**push するだけの状態にして渡す。**
+# ここまでスクリプトにやらせるのは、`cd` を間違えて元のリポジトリの中で
+# `git init` や `git push` をしてしまう事故を防ぐためである。
+for d in "$PUB" "$PRI"; do
+  ( cd "$d"
+    git init -q -b main
+    git add -A
+    git -c user.name="$(git -C "$SRC" config user.name 2>/dev/null || echo nobumitsu-3141)" \
+        -c user.email="$(git -C "$SRC" config user.email 2>/dev/null || echo noreply@example.com)" \
+        commit -q -m "初回: $(basename "$d")" )
+done
+
 echo "作成した:"
-echo "  公開   $PUB          （$(find "$PUB" -type f | wc -l | tr -d ' ') ファイル）"
-echo "  非公開 $PRI          （$(find "$PRI" -type f | wc -l | tr -d ' ') ファイル）"
+echo "  公開   $PUB   （$(git -C "$PUB" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
+echo "  非公開 $PRI （$(git -C "$PRI" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
 echo ""
 echo "**公開する側に機微な語が残っていないかを検査する**"
 if grep -rl "一ノ宮\|大雅\|五島中央\|長崎大学" "$PUB" 2>/dev/null; then
@@ -50,3 +62,16 @@ if grep -rl "一ノ宮\|大雅\|五島中央\|長崎大学" "$PUB" 2>/dev/null; 
 else
   echo "  実名・施設名の検出なし"
 fi
+echo ""
+echo "次にやること（**この 2 つのディレクトリの中で**実行する。元のリポジトリでは実行しない）"
+echo "  1. GitHub で空のリポジトリを 2 つ作る。README・.gitignore・ライセンスは追加しない"
+echo "       ppg-pda-analysis   … 公開"
+echo "       ppg-study-private  … 非公開"
+echo "  2. cd $PUB"
+echo "     git remote -v          # 何も出ないことを確かめる（出たら場所が違う）"
+echo "     git remote add origin git@github.com:nobumitsu-3141/ppg-pda-analysis.git"
+echo "     git push -u origin main"
+echo "  3. cd $PRI"
+echo "     git remote -v"
+echo "     git remote add origin git@github.com:nobumitsu-3141/ppg-study-private.git"
+echo "     git push -u origin main"

@@ -44,13 +44,21 @@ HTML・Markdown と `local-reviews/`・`refs/`）だけである。原稿・実�
 
 ## 手順
 
-**初回コミットまで済んだ tar 書庫を用意してある**（2026-09-09。公開側 62 ファイル・
-非公開側 89 ファイル。公開側は 37・38・39・40番の自己検査が通ることを確認済み）。
-自分で作り直す場合は次を実行する。機微な語の検査が通ることを確認すること。
+**手元で作る。**スクリプトが**初回コミットまで作り**、次にやることを表示する。
 
 ```sh
+cd ~/ppg-study
 bash tools/split_repos.sh ~/ppg-split
 ```
+
+`~/ppg-split/ppg-pda-analysis` と `~/ppg-split/ppg-study-private` ができる。
+**どちらも初回コミット済みで、あとは remote を足して push するだけである。**
+機微な語の検査に引っかかればスクリプトは終了コード 1 で止まるので、通ったことを確認すること。
+
+**`git init` や `git push` を、元のリポジトリの中で実行しないこと。**書庫の展開に失敗した状態で
+手順を続けると、`cd` が失敗して以降が `~/ppg-study` の中で走る。実際に一度そうなった
+（2026-09-09。`git remote add` が「already exists」で失敗し、`git push` は拒否されたので
+被害は無かった）。**push の前に必ず `git remote -v` が空であることを確かめる。**
 
 **GitHub 上でのリポジトリ作成は、連携アプリの権限では行えない**（`403 Resource not
 accessible by integration`）。**著者が手で作る。**
