@@ -1,0 +1,25 @@
+{
+  "title": "ppg-pda-analysis: pulse decomposition analysis of the photoplethysmogram and its validity as a vascular index",
+  "description": "<p>Analysis code and frozen pre-registrations for a research programme testing whether indices derived from pulse decomposition analysis (PDA) of the photoplethysmogram carry vascular information, and whether they can correct pulse-wave-transit-time-based cardiac output estimation (esCCO).</p><p>Contains the frozen two-component skewed-Gaussian decomposition, the derived indices (&Delta;T, RI, SI), the landmark and early-amplitude-ratio comparators, the VitalDB and Pulse Wave Database analysis scripts, and the statistical analysis plans as frozen before the confirmatory analyses. Every script carries a <code>--selftest</code> that runs without network access.</p><p>No patient data are included. The analyses run against the public VitalDB and Pulse Wave Database.</p>",
+  "upload_type": "software",
+  "license": "cc-by-4.0",
+  "creators": [
+    { "name": "Kawazoe, Nobumitsu", "affiliation": "Department of Anesthesiology, Goto Chuoh Hospital, Nagasaki, Japan" }
+  ],
+  "keywords": [
+    "photoplethysmography",
+    "pulse decomposition analysis",
+    "pulse wave transit time",
+    "esCCO",
+    "cardiac output",
+    "systemic vascular resistance",
+    "reflection index",
+    "stiffness index",
+    "VitalDB",
+    "Pulse Wave Database",
+    "anesthesiology",
+    "reproducible research"
+  ],
+  "access_right": "open",
+  "language": "eng"
+}

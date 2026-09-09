@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "ppg-pda-analysis: pulse decomposition analysis of the photoplethysmogram and its validity as a vascular index"
+abstract: >-
+  Analysis code and frozen pre-registrations for a research programme testing whether
+  indices derived from pulse decomposition analysis of the photoplethysmogram carry
+  vascular information, and whether they can correct pulse-wave-transit-time-based
+  cardiac output estimation. Contains the frozen decomposition, the derived indices,
+  the comparators, the VitalDB and Pulse Wave Database analysis scripts, and the
+  statistical analysis plans as frozen before the confirmatory analyses.
+  No patient data are included.
+type: software
+authors:
+  - family-names: "Kawazoe"
+    given-names: "Nobumitsu"
+    affiliation: "Department of Anesthesiology, Goto Chuoh Hospital, Nagasaki, Japan"
+keywords:
+  - photoplethysmography
+  - pulse decomposition analysis
+  - pulse wave transit time
+  - esCCO
+  - systemic vascular resistance
+  - VitalDB
+  - Pulse Wave Database
+  - anesthesiology
+license: CC-BY-4.0

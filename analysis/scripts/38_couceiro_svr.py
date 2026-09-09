@@ -396,12 +396,18 @@ def selftest() -> int:
         abs(dose_case(_d, "ri_lm", 0.0)["rho_svr"] - 1.0) < 1e-9)
     chk("dose_case 組数不足は None", dose_case(_d.head(5), "ri_lm", 0.0) is None)
 
-    # 症例選択が5例（Vigilance）になる
-    try:
-        pac = pick_cases("pac", None)
-        chk("pac 群の候補が target_cases から取れる", isinstance(pac, list))
-    except Exception:      # noqa: BLE001
-        chk("pac 群の候補が target_cases から取れる", False)
+    # 症例選択（Vigilance）。**`data/` が無い環境では検査を飛ばす。**
+    # `analysis/data/` は git に入っていないので、公開リポジトリを clone しただけの人は
+    # この検査で落ちてしまう。自己検査は「コードが正しいか」を見るものであり、
+    # 「手元にデータがあるか」を見るものではない。
+    if (DATA / "target_cases.csv").exists():
+        try:
+            pac = pick_cases("pac", None)
+            chk("pac 群の候補が target_cases から取れる", isinstance(pac, list))
+        except Exception:      # noqa: BLE001
+            chk("pac 群の候補が target_cases から取れる", False)
+    else:
+        chk("pac 群の候補（data/target_cases.csv が無いので検査を飛ばす）", True)
 
     print(f"\n  {ok}/{ok + len(ng)} PASS" + ("  ALL PASS" if not ng else f"  FAIL: {ng}"))
     return 0 if not ng else 1
