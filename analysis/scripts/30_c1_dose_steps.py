@@ -550,15 +550,54 @@ def run_stats(c1_dir: Path, seed: int = 0, frozen_note: str = "", out_dir: Path 
     return res
 
 
-def sap_frozen_tag() -> str | None:
-    """SAP-1c を凍結したタグ（sap-1c-v*）があれば返す。無ければ None。"""
+def sap_frozen_tag(which: str = "1c") -> str | None:
+    """SAP を凍結したタグ（`sap-1c-v*` / `sap-1d-v*`）があれば返す。無ければ None。"""
     import subprocess
     try:
-        out = subprocess.run(["git", "tag", "-l", "sap-1c-v*"], cwd=ROOT, capture_output=True,
-                             text=True, timeout=10).stdout.split()
+        out = subprocess.run(["git", "tag", "-l", f"sap-{which}-v*"], cwd=ROOT,
+                             capture_output=True, text=True, timeout=10).stdout.split()
     except Exception:      # noqa: BLE001
         return None
     return sorted(out)[-1] if out else None
+
+
+def _sap1d_ok() -> bool:
+    """SAP-1d の症例一覧が §2 の 4 条件を満たすか。`data/trks.csv` が無ければ検査を飛ばす。"""
+    import pandas as pd
+    if not (DATA / "trks.csv").exists() or not (DATA / "target_cases.csv").exists():
+        return True
+    ids = set(sap1d_case_list()["caseid"])
+    t = pd.read_csv(DATA / "trks.csv")
+    S = lambda n: set(t.loc[t["tname"] == n, "caseid"].astype(int))   # noqa: E731
+    wav3 = S(WAVE_TRACKS[0]) & S(WAVE_TRACKS[1]) & S(WAVE_TRACKS[2])
+    tgt = set(pd.read_csv(DATA / "target_cases.csv")["caseid"].astype(int))
+    svr_pop = sorted(wav3 & S("EV1000/SVR"))
+    used39 = set(np.random.default_rng(0).permutation(svr_pop)[:40].tolist())
+    return bool(ids) and ids <= (S(RATE_TRACK(PRESSOR)) & wav3) \
+        and not (ids & tgt) and not (ids & used39)
+
+
+def sap1d_case_list() -> "pd.DataFrame":
+    """SAP-1d §2 の対象症例を作る。**指標選択に使っていない症例だけを残す。**
+
+    (1) `Orchestra/PHEN_RATE` を持つ、(2) 波形 3 本を持つ、
+    (3) `target_cases.csv`（研究1 の母集団）に**含まれない**、
+    (4) 39番 `--dose` で見た 40 例に**含まれない**。
+
+    主指標を特徴点法の RI に定めた根拠は 39番の結果を見てから得たものなので、
+    その選択に使った症例を除く。39番の 40 例は「波形3本＋EV1000/SVR を持つ症例を
+    caseid 昇順に並べ、seed 0 の置換の先頭 40」で再現できる（39番の `--limit` と同じ）。
+    """
+    import pandas as pd
+    t = pd.read_csv(DATA / "trks.csv")
+    S = lambda n: set(t.loc[t["tname"] == n, "caseid"].astype(int))   # noqa: E731
+    wav3 = S(WAVE_TRACKS[0]) & S(WAVE_TRACKS[1]) & S(WAVE_TRACKS[2])
+    phen = S(RATE_TRACK(PRESSOR)) & wav3
+    tgt = set(pd.read_csv(DATA / "target_cases.csv")["caseid"].astype(int))
+    svr_pop = sorted(wav3 & S("EV1000/SVR"))
+    used39 = set(np.random.default_rng(0).permutation(svr_pop)[:40].tolist())
+    ids = sorted(phen - tgt - used39)
+    return pd.DataFrame({"caseid": ids})
 
 
 # ================================================================ 抽出（Mac・vitaldb）
@@ -705,22 +744,31 @@ def _extract_one(args_tuple):
         return caseid, None, f"失敗: {e}"
 
 
-def run_extract(limit: int, jobs: int, with_pda: bool) -> None:
+def run_extract(limit: int, jobs: int, with_pda: bool, cases: Path | None = None) -> None:
     import pandas as pd
     trks_p = DATA / "trks.csv"
     if not trks_p.exists():
         raise SystemExit("data/trks.csv がありません（先に scripts/01_track_inventory.py。Mac で）")
     t = pd.read_csv(trks_p)
     by_case = {int(c): set(g["tname"]) for c, g in t.groupby("caseid")}
+    keep = None
+    if cases is not None:
+        if not Path(cases).exists():
+            raise SystemExit(f"{cases} がありません（先に --sap1d-cases）")
+        keep = set(pd.read_csv(cases)["caseid"].astype(int))
     todo = []
     for cid, names in sorted(by_case.items()):
+        if keep is not None and cid not in keep:
+            continue
         if not all(w in names for w in WAVE_TRACKS) or RATE_TRACK(PRESSOR) not in names:
             continue
         rate_tracks = sorted(n for n in names if n.startswith("Orchestra/") and n.endswith("_RATE"))
         todo.append((cid, rate_tracks, with_pda))
         if len(todo) >= limit:
             break
-    print(f"PLETH・ECG・ART と {RATE_TRACK(PRESSOR)} を持つ症例 {len(todo)} 例を抽出します（jobs={jobs}）")
+    src = f"（{cases} の {len(keep)} 例に限定）" if keep is not None else ""
+    print(f"PLETH・ECG・ART と {RATE_TRACK(PRESSOR)} を持つ症例 {len(todo)} 例を抽出します"
+          f"{src}（jobs={jobs}）")
     done, fail = 0, Counter()
     if jobs > 1:
         from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -970,7 +1018,11 @@ def selftest() -> int:
         cid2, n2, err2 = extract_case_c1(9001, ["Orchestra/PHEN_RATE"], False, loader=loader, out_dir=od)
         rep("キャッシュがあれば再抽出しない", err2 is None and n2 == n)
     # --- 7. 凍結の門番
-    rep("SAP の凍結タグの照会が例外を出さない（現在: %s）" % (sap_frozen_tag() or "なし"), True)
+    rep("SAP-1d の症例一覧が §2 の 4 条件をすべて満たす", _sap1d_ok())
+    rep("凍結タグの照会は SAP を選べる（1c / 1d）",
+        sap_frozen_tag("1c") != "__" and sap_frozen_tag("1d") != "__")
+    rep("SAP の凍結タグの照会が例外を出さない（現在: 1c=%s・1d=%s）"
+        % (sap_frozen_tag("1c") or "なし", sap_frozen_tag("1d") or "なし"), True)
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 
@@ -985,6 +1037,12 @@ def main() -> None:
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--pda", action="store_true", help="凍結版 PDA の ΔT・RI も抽出（副次3・CPU を食う）")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--sap", choices=["1c", "1d"], default="1c",
+                    help="どの事前登録の凍結タグを要求するか（既定 1c）")
+    ap.add_argument("--cases", type=Path, default=None,
+                    help="抽出をこの caseid 一覧（csv）に限定する")
+    ap.add_argument("--sap1d-cases", action="store_true",
+                    help="SAP-1d §2 の対象症例を data/sap1d_cases.csv に書き出す")
     ap.add_argument("--unfrozen-ok", action="store_true",
                     help="SAP 未凍結でも統計を出す（報告に『未凍結』と刻まれる。事前指定の確認用）")
     args = ap.parse_args()
@@ -992,12 +1050,23 @@ def main() -> None:
         ap.error("--jobs は 1 以上")
     if args.selftest:
         sys.exit(selftest())
+    if args.sap1d_cases:
+        import pandas as pd      # noqa: F401
+        df = sap1d_case_list()
+        # **`data/` は git 管理外**なので、凍結タグに含めるには追跡される場所に置く。
+        dst = ROOT.parent / "docs" / "research" / "sap1d_cases.csv"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(dst, index=False)
+        print(f"SAP-1d の対象 {len(df)} 例 → {dst}")
+        if not (args.extract or args.stats):
+            sys.exit(0)
     if args.extract:
-        run_extract(args.limit, args.jobs, args.pda)
+        run_extract(args.limit, args.jobs, args.pda, args.cases)
     if args.stats:
-        tag = sap_frozen_tag()
+        tag = sap_frozen_tag(args.sap)
         if tag is None and not args.unfrozen_ok:
-            raise SystemExit("SAP-1c を凍結したタグ（sap-1c-v*）がありません。SAP §8: 凍結 → タグ → Zenodo の後で"
+            raise SystemExit(f"SAP-{args.sap} を凍結したタグ（sap-{args.sap}-v*）がありません。"
+                             "凍結 → タグ → Zenodo の後で"
                              "統計を出すこと。事前指定の確認のためだけに出すなら --unfrozen-ok。")
         note = (f"SAP-1c 凍結タグ: {tag}" if tag else
                 "**注意: SAP-1c は未凍結。この表は事前指定の確認用であり、判定に使ってはならない。**")
