@@ -42,4 +42,6 @@ PWDB 系の一部は実データを参照するため、データを取得して
 
 ## ライセンス
 
-CC BY 4.0（`LICENSE`）。
+コード（`analysis/src/`・`analysis/scripts/`・`setup_mac.sh`）は **MIT**（`LICENSE`）。
+`preregistration/` の文書は散文なので **CC BY 4.0**（`LICENSE-docs`）。
+Zenodo の記録には、上載の種別が software であることに合わせて MIT を載せている。

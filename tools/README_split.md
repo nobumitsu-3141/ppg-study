@@ -107,11 +107,20 @@ git push origin --delete claude/slide-references-formatting-ynthk7
 `.zenodo.json` の `creators[0].orcid` と `CITATION.cff` の `orcid:` に足すこと。
 査読誌によっては著者識別子を求められる。
 
-## ライセンスについて（確認が要る）
+## ライセンス（2026-09-09 に著者が決定）
 
-現行の `LICENSE` は **CC BY 4.0** で、文書には適切だが**コードの慣行ではない**。
-特許の扱いと派生物の条件が明確でないため、コードを再利用する側が判断に迷う。
-公開する解析リポジトリには **MIT** か **Apache-2.0** を当てるのが通例である
-（Apache-2.0 は特許条項を含む）。**文書とコードでライセンスを分けるのが最も素直**で、
-`ppg-pda-analysis` のコードを MIT、同梱する事前登録の文書を CC BY 4.0 とする形にできる。
-**この判断は著者が行う。**現状は CC BY 4.0 のまま複製してある。
+元の `LICENSE` は CC BY 4.0 で、文書には適切だがコードの慣行ではない。公開する
+`ppg-pda-analysis` は 62 ファイル中 55 が Python とシェルで、実体はコードである。
+そこで**文書とコードでライセンスを分けた**。
+
+| 対象 | ライセンス | ファイル |
+|---|---|---|
+| `analysis/src/`・`analysis/scripts/`・`setup_mac.sh` | MIT | `LICENSE` |
+| `preregistration/` の文書 | CC BY 4.0 | `LICENSE-docs` |
+
+`.zenodo.json` と `CITATION.cff` には **MIT** を書いている。Zenodo はライセンス欄を
+一つしか持たず、上載の種別が `software` だからである。範囲の内訳は `LICENSE` の
+末尾に書いてあり、`LICENSE-docs` が CC BY 4.0 の全文である。
+
+元の `LICENSE`（CC BY 4.0）は `ppg-study` と `ppg-study-private` ではそのままにする。
+どちらも中身は文書だからである。

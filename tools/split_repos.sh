@@ -26,7 +26,8 @@ for f in sap_v0.md sap_1_amb_exploratory_v0.md sap_1c_v0.md sap_1d_v0.md \
          gate0_rules_v2.md terminology.md; do
   cp "$SRC/docs/research/$f" "$PUB/preregistration/" 2>/dev/null || true
 done
-cp "$SRC/LICENSE" "$PUB/"
+cp "$SRC/tools/public_LICENSE" "$PUB/LICENSE"
+cp "$SRC/LICENSE"              "$PUB/LICENSE-docs"
 cp "$SRC/setup_mac.sh" "$PUB/" 2>/dev/null || true
 cp "$SRC/tools/public_README.md"   "$PUB/README.md"
 cp "$SRC/tools/public_CITATION.cff" "$PUB/CITATION.cff"
