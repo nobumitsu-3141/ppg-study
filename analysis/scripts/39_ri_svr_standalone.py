@@ -38,6 +38,7 @@ SVR 方向にまったく動かない場合にのみ足切りとして意味を�
     python3 scripts/39_ri_svr_standalone.py --run --limit 40 --jobs 4
     python3 scripts/39_ri_svr_standalone.py --run --jobs 4          # 全例
     python3 scripts/39_ri_svr_standalone.py --stats
+    python3 scripts/39_ri_svr_standalone.py --diag      # 症例ごとの脱落の内訳
 
 出力
 ----
@@ -296,14 +297,22 @@ def run(limit: int | None, jobs: int) -> None:
 
 # ════════════════════════════════════════════════ 集計
 def analyse_case(d: pd.DataFrame, col: str) -> dict | None:
+    """1 症例を要約する。**相対変化の基準は「指標・MAP・SVR が3つとも揃う最初のウィンドウ」。**
+
+    ここを取り違えると症例が丸ごと消える。EV1000 は記録開始と同時には繋がらない。
+    実測（対象40例・数値トラックのみで確認）では **40例すべてで最初のウィンドウに SVR が無く**、
+    初めて出るのは中央値で 21 番目のウィンドウ、最も遅い例で 337 番目（＝5時間半後）だった。
+    生の列にそのまま `rel` を掛けると先頭が NaN で系列全体が NaN になり、解析できる症例が
+    ほぼ消える。37番が svr の欠測行を先に落としているのと同じ処理を、3 列すべてに行う。
+    """
     d = d.sort_values("t0")
-    x = rel(d[col].to_numpy(float))
-    mp = rel(d["map"].to_numpy(float))
-    sv = rel(d["svr"].to_numpy(float))
-    ok = np.isfinite(x) & np.isfinite(mp) & np.isfinite(sv)
+    v0 = d[col].to_numpy(float)
+    m0 = d["map"].to_numpy(float)
+    s0 = d["svr"].to_numpy(float)
+    ok = np.isfinite(v0) & np.isfinite(m0) & np.isfinite(s0)
     if ok.sum() < MIN_WIN:
         return None
-    x, mp, sv = x[ok], mp[ok], sv[ok]
+    x, mp, sv = rel(v0[ok]), rel(m0[ok]), rel(s0[ok])
     # 3 つの集合は互いに素にする。MAP がほぼ動いていないウィンドウ（|ΔMAP%| < 2%）は、
     # 符号がどちらであっても「平坦」に入れる。0.5% の変化を「逆向き」と数えると
     # 雑音の符号を読むことになるため。**37番・38番はこの排除をしておらず、
@@ -318,6 +327,75 @@ def analyse_case(d: pd.DataFrame, col: str) -> dict | None:
             "rho_svr_map": spearman(sv, mp),
             "opp_svr": sub(opp, x, sv), "opp_map": sub(opp, x, mp),
             "flat_svr": sub(flat, x, sv), "conc_svr": sub(conc, x, sv)}
+
+
+def load_frames() -> list[tuple[int, pd.DataFrame]]:
+    """case_*.csv に svr_*.csv を結合して返す。集計と診断の両方が同じ経路を通る。"""
+    frames = []
+    for f in sorted(OUT.glob("case_*.csv")):
+        cid = int(f.stem.split("_")[1])
+        d = pd.read_csv(f)
+        q = OUT / f"svr_{cid}.csv"
+        if q.exists():                                   # 新しい取り方を優先
+            d = d.drop(columns=[c for c in ("svr",) if c in d.columns])
+            d = d.merge(pd.read_csv(q), on="t0", how="left")
+        elif "svr" not in d.columns:
+            continue
+        frames.append((cid, d.sort_values("t0")))
+    return frames
+
+
+def diagnose() -> int:
+    """**どこで症例が落ちたかを症例ごとに出す。**
+
+    39番の初版はここが見えなかったために、二つの取り違えを続けて見逃した。
+    (1) SVR ウィンドウ中央値に点数の下限を置いていた（EV1000 は 20 秒間隔なので大半が脱落）。
+    (2) 相対変化の基準を「最初の行」に取っていた（EV1000 は記録開始と同時には繋がらないので、
+        最初の行の SVR は原則 NaN。系列全体が NaN になり症例が丸ごと消える）。
+    どちらも「解析できた症例が少ない」としか見えず、指標の性質の話に見えてしまう。
+    この表があれば、脱落が指標側なのか SVR 側なのかが一目で分かる。
+    """
+    frames = load_frames()
+    if not frames:
+        print("先に --lists と --run を実行すること。")
+        return 1
+    print("=" * 96)
+    print("【診断】症例ごとの脱落の内訳（39番）")
+    print("=" * 96)
+    print(f"{'caseid':>7s}{'全':>6s}{'MAP有':>7s}{'SVR有':>7s}{'SVR初出':>8s}"
+          + "".join(f"{c:>9s}" for c in INDEX_COLS)
+          + "".join(f"{'3揃 '+c:>11s}" for c in INDEX_COLS))
+    rows = []
+    for cid, d in frames:
+        sv = d["svr"].to_numpy(float) if "svr" in d.columns else np.full(len(d), NAN)
+        mp = d["map"].to_numpy(float)
+        first = int(np.flatnonzero(np.isfinite(sv))[0]) if np.isfinite(sv).any() else -1
+        rec = {"caseid": cid, "n": len(d), "n_map": int(np.isfinite(mp).sum()),
+               "n_svr": int(np.isfinite(sv).sum()), "first_svr": first}
+        for c in INDEX_COLS:
+            v = d[c].to_numpy(float) if c in d.columns else np.full(len(d), NAN)
+            rec[f"n_{c}"] = int(np.isfinite(v).sum())
+            rec[f"ok_{c}"] = int((np.isfinite(v) & np.isfinite(mp) & np.isfinite(sv)).sum())
+        rows.append(rec)
+        print(f"{cid:>7d}{rec['n']:>6d}{rec['n_map']:>7d}{rec['n_svr']:>7d}{first:>8d}"
+              + "".join(f"{rec[f'n_{c}']:>9d}" for c in INDEX_COLS)
+              + "".join(f"{rec[f'ok_{c}']:>11d}" for c in INDEX_COLS))
+    t = pd.DataFrame(rows)
+    print("-" * 96)
+    print(f"症例 {len(t)}・ウィンドウ計 {int(t['n'].sum()):,}")
+    print(f"SVR が最初のウィンドウから出ている症例: {int((t['first_svr'] == 0).sum())} / {len(t)}"
+          f"　（初出の中央値 {int(t.loc[t.first_svr >= 0, 'first_svr'].median())} 番目・"
+          f"最遅 {int(t['first_svr'].max())} 番目）")
+    for c in INDEX_COLS:
+        n_ok = int((t[f"ok_{c}"] >= MIN_WIN).sum())
+        print(f"  {INDEX_NAME[c]:24s} 3列そろうウィンドウ計 {int(t[f'ok_{c}'].sum()):>7,}"
+              f"・{MIN_WIN} 以上ある症例 {n_ok:>3d} / {len(t)}")
+    print("""
+  【読み方】「SVR初出」が 0 でない症例は、生の列にそのまま相対変化を掛けると全 NaN になる。
+  EV1000 は記録開始と同時には繋がらないので、これが普通である。`analyse_case` は
+  3 列がそろう最初のウィンドウを基準に取り直しているので、この列が 0 でなくてよい。""")
+    print("=" * 96)
+    return 0
 
 
 def line(out: list, name: str, v: np.ndarray) -> None:
@@ -339,35 +417,30 @@ def stats() -> int:
         out.append("\n先に --lists と --run を実行すること。")
         print("\n".join(out))
         return 1
-    frames, n_svr_file, n_svr_col, n_none = [], 0, 0, 0
-    for f in files:
-        d = pd.read_csv(f)
-        cid = int(f.stem.split("_")[1])
-        q = OUT / f"svr_{cid}.csv"
-        if q.exists():                                   # 新しい取り方を優先
-            d = d.drop(columns=[c for c in ("svr",) if c in d.columns])
-            d = d.merge(pd.read_csv(q), on="t0", how="left")
-            n_svr_file += 1
-        elif "svr" in d.columns:
-            n_svr_col += 1
-        else:
-            n_none += 1
-            continue
-        frames.append(d)
+    pairs = load_frames()
+    frames = [d for _cid, d in pairs]
     got = int(sum(np.isfinite(d["svr"]).sum() for d in frames))
     tot = int(sum(len(d) for d in frames))
+    first0 = sum(1 for d in frames
+                 if np.isfinite(d["svr"].to_numpy(float)[:1]).all() and len(d))
     out.append(f"SVR が取れたウィンドウ: {got:,} / {tot:,}（{got/max(tot,1):.1%}）"
-               f"　［svr_*.csv から {n_svr_file} 例・旧列から {n_svr_col} 例・欠 {n_none} 例］")
+               f"　うち最初のウィンドウから SVR がある症例 {first0} / {len(frames)}")
     if tot and got / tot < 0.5:
         out.append("  ★ SVR の被覆が半分未満である。`--refresh-svr` で数値トラックを取り直すこと。")
     for col in INDEX_COLS:
-        rows = [r for d in frames if col in d.columns
-                for r in [analyse_case(d, col)] if r]
+        rows, n_skip = [], 0
+        for d in frames:
+            if col not in d.columns:
+                continue
+            r = analyse_case(d, col)
+            rows.append(r) if r else None
+            n_skip += 0 if r else 1
         if not rows:
             out.append(f"\n■ {INDEX_NAME[col]}: 解析できる症例なし")
             continue
         df = pd.DataFrame(rows)
-        out.append(f"\n■ {INDEX_NAME[col]}（{len(df)} 例・ウィンドウ計 {int(df['n'].sum()):,}）")
+        out.append(f"\n■ {INDEX_NAME[col]}（{len(df)} 例・ウィンドウ計 {int(df['n'].sum()):,}"
+                   + (f"・有効ウィンドウ {MIN_WIN} 未満で除外 {n_skip} 例）" if n_skip else "）"))
         out.append(f"{'量':36s}{'中央値':>9s}{'95%CI':>22s}{'符号一致':>10s}{'p':>10s}")
         line(out, "ρ(Δ指標%, ΔSVR%)  全ウィンドウ", df["rho_svr"].to_numpy(float))
         line(out, "ρ(Δ指標%, ΔMAP%)  全ウィンドウ", df["rho_map"].to_numpy(float))
@@ -466,6 +539,27 @@ def selftest() -> int:
     chk("逆向き・一致・平坦が重ならない",
         a is not None and a["n_opp"] + a["n_conc"] + a["n_flat"] <= a["n"])
 
+    # ★ SVR が途中から始まる症例（39番 第2版はここで症例をほぼ全部落としていた）
+    # EV1000 は記録開始と同時には繋がらない。実測では対象40例すべてで最初のウィンドウに
+    # SVR が無く、初出は中央値 21 番目・最遅 337 番目だった。したがって「最初の行を基準に
+    # 相対変化を取る」実装は、この母集団では原則として全症例を落とす。
+    LATE = 30
+    d_late = d_svr.copy()
+    d_late.loc[d_late.index[:LATE], "svr"] = NAN
+    c = analyse_case(d_late, "ri_v1")
+    chk("SVR が 31 番目から始まる症例でも解析できる", c is not None)
+    chk("その症例の有効ウィンドウ数は残りと一致", c is not None and c["n"] == n_w - LATE)
+    ref = analyse_case(d_svr.iloc[LATE:].reset_index(drop=True), "ri_v1")
+    chk("欠測の前置きは結果を変えない（基準は3列そろう最初のウィンドウ）",
+        c is not None and ref is not None
+        and abs(c["rho_svr"] - ref["rho_svr"]) < 1e-9
+        and abs(c["rho_svr_map"] - ref["rho_svr_map"]) < 1e-9)
+    d_lidx = d_svr.copy()
+    d_lidx.loc[d_lidx.index[:LATE], "ri_v1"] = NAN
+    chk("指標が途中から始まる症例でも解析できる", analyse_case(d_lidx, "ri_v1") is not None)
+    chk("先頭が欠測でも ρ(ΔSVR%,ΔMAP%) が NaN にならない",
+        c is not None and np.isfinite(c["rho_svr_map"]))
+
     print(f"\n  {ok}/{ok + len(ng)} PASS" + ("  ALL PASS" if not ng else f"  FAIL: {ng}"))
     return 0 if not ng else 1
 
@@ -477,12 +571,16 @@ def main() -> None:
     ap.add_argument("--stats", action="store_true", help="集計だけ行う")
     ap.add_argument("--refresh-svr", action="store_true",
                     help="波形は再取得せず、SVR の数値トラックだけ取り直す（安価）")
+    ap.add_argument("--diag", action="store_true",
+                    help="症例ごとの脱落の内訳を出す（どこで落ちたかを見る）")
     ap.add_argument("--selftest", action="store_true", help="ネットワーク不要の自己検査")
     ap.add_argument("--limit", type=int, default=None, help="症例数を絞る（seed 0 で無作為）")
     ap.add_argument("--jobs", type=int, default=4)
     a = ap.parse_args()
     if a.selftest:
         sys.exit(selftest())
+    if a.diag:
+        sys.exit(diagnose())
     if a.refresh_svr:
         ids = sorted(int(f.stem.split("_")[1]) for f in OUT.glob("case_*.csv"))
         print(f"SVR を取り直す {len(ids)} 例")

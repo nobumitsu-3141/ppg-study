@@ -116,16 +116,23 @@ def boot_ci(vals: np.ndarray, seed: int = 0) -> tuple[float, float]:
 
 # ---------------------------------------------------------------- 症例ごと
 def analyse_case(d: pd.DataFrame) -> dict | None:
-    """d は t0 昇順で ri・map・svr を持つ。相対変化は研究1 と同じ _rel。"""
+    """d は t0 昇順で ri・map・svr を持つ。相対変化は研究1 と同じ _rel。
+
+    **基準は「ri・map・svr が3つとも揃う最初のウィンドウ」に取る。**
+    `_rel` は先頭値を基準にするため、先頭が欠測だと系列全体が NaN になり症例が丸ごと消える。
+    EV1000 は記録開始と同時には繋がらないので、生の列の先頭 svr は原則 NaN である
+    （39番で実測：対象40例すべてで最初のウィンドウに SVR が無く、初出は中央値 21 番目・
+    最遅 337 番目）。欠測行を先に落としてから相対変化を取ること。
+    """
     if len(d) < MIN_WIN:
         return None
-    dri = _rel(d["ri"].to_numpy(float))
-    dmap = _rel(d["map"].to_numpy(float))
-    dsvr = _rel(d["svr"].to_numpy(float))
-    ok = np.isfinite(dri) & np.isfinite(dmap) & np.isfinite(dsvr)
+    ri0 = d["ri"].to_numpy(float)
+    map0 = d["map"].to_numpy(float)
+    svr0 = d["svr"].to_numpy(float)
+    ok = np.isfinite(ri0) & np.isfinite(map0) & np.isfinite(svr0)
     if ok.sum() < MIN_WIN:
         return None
-    dri, dmap, dsvr = dri[ok], dmap[ok], dsvr[ok]
+    dri, dmap, dsvr = _rel(ri0[ok]), _rel(map0[ok]), _rel(svr0[ok])
 
     b_svr, b_map, r2 = ols2(dri, dsvr, dmap, intercept=True)
     # 解離ウィンドウ。旧版は「逆向き」と「MAP平坦」の和を取っていたが、後者は一致集合と
@@ -344,6 +351,20 @@ def selftest() -> int:
     # 13. _rel が研究1 と同一（先頭0・分母に床）
     v = _rel(np.array([2.0, 3.0, 4.0]))
     chk("_rel 先頭は0", abs(v[0]) < 1e-12 and abs(v[1] - 0.5) < 1e-12)
+
+    # 14-16. ★ SVR が途中から始まる症例でも解析できる（EV1000 は記録開始と同時には繋がらない）
+    d2 = pd.DataFrame({"t0": np.arange(50.0), "ri": np.linspace(0.3, 0.5, 50),
+                       "map": np.linspace(70, 90, 50),
+                       "svr": np.r_[np.full(20, np.nan), np.linspace(800, 1200, 30)]})
+    r2 = analyse_case(d2)
+    chk("SVR が 21 番目から始まる症例でも解析できる", r2 is not None and r2["n"] == 30)
+    chk("欠測の前置きは ρ を変えない",
+        r2 is not None and abs(r2["rho_ri_svr"] - 1.0) < 1e-6)
+    d3 = d2.copy()
+    d3.loc[d3.index[:20], "ri"] = np.nan
+    d3["svr"] = np.linspace(800, 1200, 50)
+    chk("指標が途中から始まる症例でも解析できる",
+        (r3 := analyse_case(d3)) is not None and r3["n"] == 30)
 
     print(f"\n  {ok}/{ok + len(ng)} PASS" + ("  ALL PASS" if not ng else f"  FAIL: {ng}"))
     return 0 if not ng else 1
