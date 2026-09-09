@@ -87,6 +87,12 @@ N_BOOT = 2000           # 症例ブートストラップの回数
 MIN_CASES_MIXED = 30    # これ未満なら症例ごとの中央値の符号検定に切り替える（SAP §4）
 MIN_STEPS_CONTROL = 5   # 陰性対照の群を評価するのに要る最小ステップ数
 
+# SAP-1d（docs/research/sap_1d_v0.md）。SAP-1c とは主指標も最小効果量も違う
+SAP1D_PRIMARY = "ri_lm"     # 特徴点法の反射係数
+SAP1D_SIGN = +1             # 血管収縮で上昇する、が事前予測
+SAP1D_MDE_REL = 0.135       # 最小効果量は相対変化 13.5%（症例内変動係数 0.539 の 0.25 倍）
+SAP1D_MIN_POSCTRL = 40      # 陽性対照（増量で MAP 上昇）が成立した症例がこれ未満なら保留
+
 # --- トラック（短い名前 → Orchestra のトラック名）
 PRESSOR = "PHEN"
 OTHER_VASOACTIVE = ["NEPI", "EPI", "VASO", "DOPA", "DOBU", "MRN", "NTG", "NPS", "PGE1", "DTZ",
@@ -357,6 +363,9 @@ def summarize(rows: list, col: str, direction: int | None, seed: int = 0) -> dic
     out["mean"], out["lo"], out["hi"] = cluster_boot_mean(v, cid, seed=seed)
     out["rel_mean"] = float(np.nanmean(rel)) if np.isfinite(rel).any() else float("nan")
     out["case_med"], out["sign_p"], out["n_cases_med"] = by_case_sign_test(v, cid)
+    # SAP-1d は最小効果量を**相対変化**で定める（指標の単位が ms でないため）。
+    # 符号は絶対でも相対でも同じ（ri_lm > 0 なので）だが、大きさの比較には相対が要る。
+    out["case_med_rel"] = by_case_sign_test(rel, cid)[0]
     dmap = np.array([r.get("d_map", np.nan) for r in sel])
     dhr = np.array([r.get("d_hr", np.nan) for r in sel])
     out["adj_b0"], out["adj_lo"], out["adj_hi"], out["adj_n"] = adjusted_intercept(v, dmap, dhr, cid, seed=seed)
@@ -375,24 +384,42 @@ def _ci(s: dict, key="mean", lo="lo", hi="hi", d=1):
     return f"{s[key]:+.{d}f} [{s[lo]:+.{d}f}, {s[hi]:+.{d}f}]"
 
 
-def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int) -> tuple:
-    """主要判定（SAP §6）。返り値 (判定, 根拠の一覧)。事後に緩めない。"""
+def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int,
+                    sign: int = -1, mde: float = MDE_MS, use_rel: bool = False,
+                    unit: str = "ms") -> tuple:
+    """主要判定。返り値 (判定, 根拠の一覧)。**事後に緩めない。**
+
+    SAP-1c は「Δ(T2−T1) が 3 ms 以上**短縮**する」（sign=−1・ms・絶対）。
+    SAP-1d は「Δri_lm が相対変化で 13.5% 以上**上昇**する」（sign=+1・相対）。
+    向き・最小効果量・単位・相対か絶対かを母数にして、判定の論理は一つに保つ。
+    """
     notes = []
     if inc.get("n", 0) == 0:
         return "判定できない（増量ステップなし）", notes
+    ge = (lambda x: x >= mde) if sign > 0 else (lambda x: x <= -mde)   # 効果量が足りるか
+    ci_ok = (lambda s_: s_["lo"] > 0) if sign > 0 else (lambda s_: s_["hi"] < 0)
     small = inc["n_cases"] < MIN_CASES_MIXED
+    key = "case_med_rel" if use_rel else "case_med"
+    shown = (lambda x: f"{100 * x:+.1f}%") if use_rel else (lambda x: f"{x:+.1f} {unit}")
     if small:
-        eff = np.isfinite(inc["case_med"]) and inc["case_med"] <= -MDE_MS and inc["sign_p"] < 0.05
+        eff = np.isfinite(inc.get(key, np.nan)) and ge(inc[key]) and inc["sign_p"] < 0.05
         notes.append(f"症例 {inc['n_cases']} < {MIN_CASES_MIXED}: 症例ごとの中央値の符号検定で判定"
-                     f"（中央値 {inc['case_med']:+.1f} ms, p={inc['sign_p']:.3f}）")
+                     f"（中央値 {shown(inc.get(key, np.nan))}, p={inc['sign_p']:.3f}）")
+    elif use_rel:
+        # 相対で判定するときも、区間は絶対の症例ブートストラップで見る（0 を含まないこと）
+        eff = (np.isfinite(inc.get(key, np.nan)) and ge(inc[key])
+               and np.isfinite(inc.get("lo", np.nan)) and ci_ok(inc))
+        notes.append(f"症例内中央値 {shown(inc[key])}・平均 {_ci(inc, d=3)}（症例ブートストラップ）")
     else:
-        eff = np.isfinite(inc["hi"]) and inc["mean"] <= -MDE_MS and inc["hi"] < 0
-        notes.append(f"平均 {_ci(inc)} ms（症例ブートストラップ）")
-    rev = dec.get("n", 0) > 0 and np.isfinite(dec.get("mean", np.nan)) and dec["mean"] > 0
+        eff = np.isfinite(inc["hi"]) and ge(inc["mean"]) and ci_ok(inc)
+        notes.append(f"平均 {_ci(inc)} {unit}（症例ブートストラップ）")
+    rev = (dec.get("n", 0) > 0 and np.isfinite(dec.get("mean", np.nan))
+           and (dec["mean"] < 0 if sign > 0 else dec["mean"] > 0))
     notes.append("減量で向きが反転: " + ("あり" if rev else ("なし" if dec.get("n", 0) else "減量ステップなし")))
-    adj = np.isfinite(inc.get("adj_hi", np.nan)) and inc["adj_hi"] < 0
-    notes.append(f"MAP・HR 調整後の切片 {_ci(inc, 'adj_b0', 'adj_lo', 'adj_hi')} ms → "
-                 + ("残る" if adj else "消える／評価できない"))
+    adj = np.isfinite(inc.get("adj_hi", np.nan)) and (
+        inc["adj_lo"] > 0 if sign > 0 else inc["adj_hi"] < 0)
+    notes.append(f"MAP・HR 調整後の切片 {_ci(inc, 'adj_b0', 'adj_lo', 'adj_hi', d=3 if use_rel else 1)}"
+                 f" → " + ("残る" if adj else "消える／評価できない"))
     evaluable = {k: s for k, s in controls.items() if s.get("n", 0) >= MIN_STEPS_CONTROL}
     moved = [k for k, s in evaluable.items()
              if np.isfinite(s.get("lo", np.nan)) and (s["lo"] > 0 or s["hi"] < 0)]
@@ -414,8 +441,24 @@ def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int) ->
     return "成立 → (i) 形態依存の検出ずれ。立ち上がり時刻が血管トーヌス情報を担っている", notes
 
 
+def positive_control_cases(rows: list) -> set:
+    """**増量ステップで ΔMAP の症例内中央値が正である症例**（SAP-1d §6 の陽性対照）。
+
+    フェニレフリンを増やして血圧が上がらない症例は、自然実験が成立していない
+    （記録されていない手押しボーラス、体位変換、出血などが同時に起きている）。
+    SAP-1d はそういう症例の結果を読まない。SAP-1c にはこの絞り込みが無い。
+    """
+    per: dict = {}
+    for r in rows:
+        if r.get("direction") != +1 or not np.isfinite(r.get("d_map", np.nan)):
+            continue
+        per.setdefault(r["caseid"], []).append(float(r["d_map"]))
+    return {c for c, v in per.items() if np.median(v) > 0}
+
+
 # ================================================================ 報告
-def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "") -> dict:
+def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "",
+           sap: str = "1c") -> dict:
     print("=" * 78)
     print("研究1c C-1: 昇圧薬の用量ステップに対する PWTT 構成要素の応答（SAP-1c）")
     print("=" * 78)
@@ -456,28 +499,56 @@ def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "
             cm, ch = summarize(rows, "map", dval if dval else None, seed=seed), summarize(rows, "hr", dval if dval else None, seed=seed)
             if cm.get("n", 0) and (dval or not any(r["direction"] for r in rows)):
                 print(f"  共変量の変化（{dname}）: ΔMAP {_ci(cm)} mmHg・ΔHR {_ci(ch)} /分")
-    # --- 主要判定
-    inc = summary.get(("フェニレフリン", "t2t1_ms", +1), {"n": 0})
-    dec = summary.get(("フェニレフリン", "t2t1_ms", -1), {"n": 0})
+    # --- 主要判定。**SAP-1c と SAP-1d で主指標も最小効果量も違う**
+    if sap == "1d":
+        pcol, psign, pmde, prel, punit = SAP1D_PRIMARY, SAP1D_SIGN, SAP1D_MDE_REL, True, ""
+        pname = "Δri_lm（特徴点法の反射係数）"
+    else:
+        pcol, psign, pmde, prel, punit = "t2t1_ms", -1, MDE_MS, False, "ms"
+        pname = "Δ(T2−T1)"
+    inc = summary.get(("フェニレフリン", pcol, +1), {"n": 0})
+    dec = summary.get(("フェニレフリン", pcol, -1), {"n": 0})
     controls = {}
     for label in rows_by_set:
         if label == "フェニレフリン":
             continue
         for dval, dname in ((+1, "増量"), (-1, "減量"), (0, "")):
-            s = summary.get((label, "t2t1_ms", dval))
+            s = summary.get((label, pcol, dval))
             if s and s.get("n", 0):
                 controls[f"{label}{('・' + dname) if dname else ''}"] = s
-    verdict, notes = primary_verdict(inc, dec, controls, n_cases_total)
-    print("\n" + "-" * 78 + "\n主要判定 Δ(T2−T1)・フェニレフリン増量（SAP §6。事後に緩めない）\n" + "-" * 78)
+    verdict, notes = primary_verdict(inc, dec, controls, n_cases_total,
+                                     sign=psign, mde=pmde, use_rel=prel, unit=punit)
+    if sap == "1d":
+        n_pos = len(positive_control_cases(rows_by_set.get("フェニレフリン", [])))
+        notes.insert(0, f"陽性対照（増量で MAP 上昇）が成立した症例: {n_pos}"
+                        f"（要 {SAP1D_MIN_POSCTRL} 以上）")
+        if n_pos < SAP1D_MIN_POSCTRL:
+            verdict = (f"保留 → 陽性対照が成立した症例が {n_pos} < {SAP1D_MIN_POSCTRL}。"
+                       "自然実験が成立していない（SAP-1d §7）")
+    print("\n" + "-" * 78 + f"\n主要判定 {pname}・フェニレフリン増量"
+          f"（SAP-{sap}。事後に緩めない）\n" + "-" * 78)
     for n_ in notes:
         print("  " + n_)
     print(f"  → **{verdict}**")
-    t1 = summary.get(("フェニレフリン", "t1_ms", +1), {"n": 0})
-    if t1.get("n", 0):
-        print(f"  副次1 ΔT1（増量・事前予測は延長）: {_ci(t1)} ms → "
-              + ("予測の向き" if t1["mean"] > 0 else "予測と逆") + "（記述に留める）")
-    print("\n読み方（SAP §6）: 増量で ≥ 3 ms 短縮・区間が 0 を含まない・減量で反転・調整で残る・陰性対照が"
-          "動かない、のすべてで (i)。動かなければ (ii)。陰性対照でも動けば手順を疑い保留。")
+    if sap == "1d":
+        for col, nm, sg in (("ri", "副次1 Δri 凍結版PDA", +1),
+                            ("dt_lm_ms", "副次2 Δ特徴点 ΔT", -1),
+                            ("dt_ms", "副次3 Δ凍結版 ΔT", -1)):
+            t = summary.get(("フェニレフリン", col, +1), {"n": 0})
+            if t.get("n", 0) and np.isfinite(t.get("mean", np.nan)):
+                print(f"  {nm}（増量・事前予測は{'上昇' if sg > 0 else '短縮'}）: {_ci(t, d=3)} → "
+                      + ("予測の向き" if np.sign(t["mean"]) == sg else "予測と逆")
+                      + "（主指標が成立した場合の裏づけとしてのみ読む）")
+        print(f"\n読み方（SAP-1d §7）: 増量で相対変化 ≥ {SAP1D_MDE_REL:.1%} 上昇・区間が 0 を含まない・"
+              "減量で反転・調整で残る・陰性対照が動かない、のすべてで成立。効果量に達しなければ"
+              "「動かない」。陰性対照でも動く、または陽性対照の症例が足りなければ保留。")
+    else:
+        t1 = summary.get(("フェニレフリン", "t1_ms", +1), {"n": 0})
+        if t1.get("n", 0):
+            print(f"  副次1 ΔT1（増量・事前予測は延長）: {_ci(t1)} ms → "
+                  + ("予測の向き" if t1["mean"] > 0 else "予測と逆") + "（記述に留める）")
+        print("\n読み方（SAP §6）: 増量で ≥ 3 ms 短縮・区間が 0 を含まない・減量で反転・調整で残る・陰性対照が"
+              "動かない、のすべてで (i)。動かなければ (ii)。陰性対照でも動けば手順を疑い保留。")
     return {"verdict": verdict, "summary": summary}
 
 
@@ -513,7 +584,8 @@ def load_cases(c1_dir: Path) -> dict:
     return cases
 
 
-def run_stats(c1_dir: Path, seed: int = 0, frozen_note: str = "", out_dir: Path | None = None) -> dict:
+def run_stats(c1_dir: Path, seed: int = 0, frozen_note: str = "", out_dir: Path | None = None,
+              sap: str = "1c") -> dict:
     import pandas as pd
     cases = load_cases(c1_dir)
     if not cases:
@@ -543,7 +615,7 @@ def run_stats(c1_dir: Path, seed: int = 0, frozen_note: str = "", out_dir: Path 
             for label, why in why_all.items():
                 if why:
                     print(f"  {label}: 落としたステップ " + "、".join(f"{k} {v}" for k, v in why.items()))
-            res = report(rows_by_set, len(cases), seed=seed, frozen=frozen_note)
+            res = report(rows_by_set, len(cases), seed=seed, frozen=frozen_note, sap=sap)
         finally:
             sys.stdout = old
     print(f"\nステップ別の Δ: {out_dir / 'steps.csv'}\n表の全文: {out_dir / 'c1_report.txt'}")
@@ -1018,6 +1090,33 @@ def selftest() -> int:
         cid2, n2, err2 = extract_case_c1(9001, ["Orchestra/PHEN_RATE"], False, loader=loader, out_dir=od)
         rep("キャッシュがあれば再抽出しない", err2 is None and n2 == n)
     # --- 7. 凍結の門番
+    # --- SAP-1d の判定論理（向きが逆・最小効果量が相対・陽性対照の絞り込み）
+    inc1d = {"n": 60, "n_cases": 60, "case_med": 0.06, "case_med_rel": 0.20, "sign_p": 0.001,
+             "mean": 0.05, "lo": 0.02, "hi": 0.08,
+             "adj_b0": 0.04, "adj_lo": 0.01, "adj_hi": 0.07}
+    dec1d = {"n": 30, "mean": -0.04}
+    quiet1d = {"プロポフォール": {"n": 20, "lo": -0.02, "hi": 0.02}}
+    kw = dict(sign=SAP1D_SIGN, mde=SAP1D_MDE_REL, use_rel=True, unit="")
+    rep("SAP-1d 判定: 上昇・反転・調整・陰性対照が揃えば成立",
+        primary_verdict(inc1d, dec1d, quiet1d, 78, **kw)[0].startswith("成立"))
+    rep("SAP-1d 判定: 相対 13.5% に満たなければ動かない",
+        primary_verdict({**inc1d, "case_med_rel": 0.10}, dec1d, quiet1d, 78, **kw)[0]
+        .startswith("動かない"))
+    rep("SAP-1d 判定: 減量で反転しなければ陽性としない",
+        "反転しない" in primary_verdict(inc1d, {"n": 30, "mean": +0.04}, quiet1d, 78, **kw)[0])
+    rep("SAP-1d 判定: 区間が 0 を含めば動かない",
+        primary_verdict({**inc1d, "lo": -0.01}, dec1d, quiet1d, 78, **kw)[0].startswith("動かない"))
+    rep("SAP-1d 判定: 調整で切片が 0 を含めば陽性としない",
+        "調整で消える" in primary_verdict({**inc1d, "adj_lo": -0.01}, dec1d, quiet1d, 78, **kw)[0])
+    rep("SAP-1c の判定は従来どおり（向き −1・3 ms・絶対）",
+        primary_verdict({"n": 60, "n_cases": 60, "case_med": -5.0, "sign_p": 0.001,
+                         "mean": -5.0, "lo": -6.0, "hi": -4.0,
+                         "adj_b0": -4.0, "adj_lo": -5.0, "adj_hi": -3.0},
+                        {"n": 30, "mean": +5.0}, {"プロポフォール": {"n": 20, "lo": -1.0, "hi": 1.0}},
+                        78)[0].startswith("成立"))
+    _pc = [{"caseid": 1, "direction": +1, "d_map": 8.0}, {"caseid": 1, "direction": +1, "d_map": 6.0},
+           {"caseid": 2, "direction": +1, "d_map": -3.0}, {"caseid": 3, "direction": -1, "d_map": 9.0}]
+    rep("陽性対照は増量で MAP が上がった症例だけを残す", positive_control_cases(_pc) == {1})
     rep("SAP-1d の症例一覧が §2 の 4 条件をすべて満たす", _sap1d_ok())
     rep("凍結タグの照会は SAP を選べる（1c / 1d）",
         sap_frozen_tag("1c") != "__" and sap_frozen_tag("1d") != "__")
@@ -1070,7 +1169,7 @@ def main() -> None:
                              "統計を出すこと。事前指定の確認のためだけに出すなら --unfrozen-ok。")
         note = (f"SAP-1c 凍結タグ: {tag}" if tag else
                 "**注意: SAP-1c は未凍結。この表は事前指定の確認用であり、判定に使ってはならない。**")
-        run_stats(C1, seed=args.seed, frozen_note=note)
+        run_stats(C1, seed=args.seed, frozen_note=note, sap=args.sap)
     if not (args.extract or args.stats):
         ap.print_help()
 
