@@ -88,10 +88,13 @@ MIN_CASES_MIXED = 30    # これ未満なら症例ごとの中央値の符号検
 MIN_STEPS_CONTROL = 5   # 陰性対照の群を評価するのに要る最小ステップ数
 
 # SAP-1d（docs/research/sap_1d_v0.md）。SAP-1c とは主指標も最小効果量も違う
-SAP1D_PRIMARY = "ri_lm"     # 特徴点法の反射係数
+# v0.2（2026-09-09）: 主指標を探索の結果から選ぶのをやめ、**研究1・研究2 がその上に
+# 立っている指標**（凍結版 PDA の RI）にした。40 例と 203 例で指標の順位が入れ替わり、
+# 探索から選ぶ限りこれが繰り返されるため（追記63・64）。
+SAP1D_PRIMARY = "ri"        # 凍結版 PDA の反射係数 h₂/h₁
 SAP1D_SIGN = +1             # 血管収縮で上昇する、が事前予測
-SAP1D_MDE_REL = 0.135       # 最小効果量は相対変化 13.5%（症例内変動係数 0.539 の 0.25 倍）
-SAP1D_MIN_POSCTRL = 40      # 陽性対照（増量で MAP 上昇）が成立した症例がこれ未満なら保留
+SAP1D_MDE_REL = 0.170       # 最小効果量は相対変化 17.0%（症例内変動係数 0.680 の 0.25 倍）
+SAP1D_MIN_POSCTRL = 50      # 陽性対照（増量で MAP 上昇）が成立した症例がこれ未満なら保留
 
 # --- トラック（短い名前 → Orchestra のトラック名）
 PRESSOR = "PHEN"
@@ -112,7 +115,8 @@ PANEL = [
     # すぎず、順位統計では符号が反転するだけである**（16番の記述と同じ）。列を増やす意味がない。
     # 研究0 第2版の帰結（2026-09-06・SAP §9.6）。分解を使わない窓指標。向きは事前に予測しない
     ("dt_lm_ms", "ΔT 特徴点（D−S）[ms]", 0, "記述（研究0 の帰結）"),
-    ("ri_lm",    "RI 特徴点（D高さ/S高さ）", 0, "記述（研究0 で pvr 規準 0.504 を満たした唯一の指標）"),
+    ("ri_lm",    "RI 特徴点（D高さ/S高さ）", 0, "記述（SAP-1d v0.2 の副次1）"),
+    ("ri_cou",   "R1_d（Couceiro 5成分）",   0, "記述（SAP-1d v0.2 の副次2。数値的に不安定）"),
     ("amb_amp1", "Am_b/Am_p1（Hellqvist）",  0, "記述（研究0 の帰結・研究2 の主指標候補）"),
 ]
 COVARS = ["map", "hr"]
@@ -533,9 +537,10 @@ def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "
         print("  " + n_)
     print(f"  → **{verdict}**")
     if sap == "1d":
-        for col, nm, sg in (("ri", "副次1 Δri 凍結版PDA", +1),
-                            ("dt_lm_ms", "副次2 Δ特徴点 ΔT", -1),
-                            ("dt_ms", "副次3 Δ凍結版 ΔT", -1)):
+        for col, nm, sg in (("ri_lm", "副次1 Δri_lm 特徴点法の RI", +1),
+                            ("ri_cou", "副次2 Δri_cou Couceiro R1_d", +1),
+                            ("dt_ms", "副次3 Δ凍結版 ΔT", -1),
+                            ("dt_lm_ms", "副次4 Δ特徴点 ΔT", -1)):
             t = summary.get(("フェニレフリン", col, +1), {"n": 0})
             if t.get("n", 0) and np.isfinite(t.get("mean", np.nan)):
                 print(f"  {nm}（増量・事前予測は{'上昇' if sg > 0 else '短縮'}）: {_ci(t, d=3)} → "
@@ -636,42 +641,29 @@ def sap_frozen_tag(which: str = "1c") -> str | None:
 
 
 def _sap1d_ok() -> bool:
-    """SAP-1d の症例一覧が §2 の 4 条件を満たすか。`data/trks.csv` が無ければ検査を飛ばす。"""
+    """SAP-1d v0.2 の症例一覧が §2 の 2 条件を満たすか。`data/trks.csv` が無ければ飛ばす。"""
     import pandas as pd
-    if not (DATA / "trks.csv").exists() or not (DATA / "target_cases.csv").exists():
+    if not (DATA / "trks.csv").exists():
         return True
     ids = set(sap1d_case_list()["caseid"])
     t = pd.read_csv(DATA / "trks.csv")
     S = lambda n: set(t.loc[t["tname"] == n, "caseid"].astype(int))   # noqa: E731
     wav3 = S(WAVE_TRACKS[0]) & S(WAVE_TRACKS[1]) & S(WAVE_TRACKS[2])
-    tgt = set(pd.read_csv(DATA / "target_cases.csv")["caseid"].astype(int))
-    svr_pop = sorted(wav3 & S("EV1000/SVR"))
-    used39 = set(np.random.default_rng(0).permutation(svr_pop)[:40].tolist())
-    return bool(ids) and ids <= (S(RATE_TRACK(PRESSOR)) & wav3) \
-        and not (ids & tgt) and not (ids & used39)
+    return bool(ids) and ids == (S(RATE_TRACK(PRESSOR)) & wav3)
 
 
 def sap1d_case_list() -> "pd.DataFrame":
-    """SAP-1d §2 の対象症例を作る。**指標選択に使っていない症例だけを残す。**
+    """SAP-1d v0.2 §2 の対象症例。(1) `Orchestra/PHEN_RATE` を持ち、(2) 波形 3 本を持つ。
 
-    (1) `Orchestra/PHEN_RATE` を持つ、(2) 波形 3 本を持つ、
-    (3) `target_cases.csv`（研究1 の母集団）に**含まれない**、
-    (4) 39番 `--dose` で見た 40 例に**含まれない**。
-
-    主指標を特徴点法の RI に定めた根拠は 39番の結果を見てから得たものなので、
-    その選択に使った症例を除く。39番の 40 例は「波形3本＋EV1000/SVR を持つ症例を
-    caseid 昇順に並べ、seed 0 の置換の先頭 40」で再現できる（39番の `--limit` と同じ）。
+    **v0 は「39番の 40 例と研究1 の母集団を除く 78 例」だった。**主指標を探索の結果から
+    選んだので、その選択に使った症例を除く必要があった。**v0.2 は主指標を研究計画から
+    選ぶので、除く理由が無い**（追記64）。103 例で検出力は 70% のとき 0.99、65% で 0.87。
     """
     import pandas as pd
     t = pd.read_csv(DATA / "trks.csv")
     S = lambda n: set(t.loc[t["tname"] == n, "caseid"].astype(int))   # noqa: E731
     wav3 = S(WAVE_TRACKS[0]) & S(WAVE_TRACKS[1]) & S(WAVE_TRACKS[2])
-    phen = S(RATE_TRACK(PRESSOR)) & wav3
-    tgt = set(pd.read_csv(DATA / "target_cases.csv")["caseid"].astype(int))
-    svr_pop = sorted(wav3 & S("EV1000/SVR"))
-    used39 = set(np.random.default_rng(0).permutation(svr_pop)[:40].tolist())
-    ids = sorted(phen - tgt - used39)
-    return pd.DataFrame({"caseid": ids})
+    return pd.DataFrame({"caseid": sorted(S(RATE_TRACK(PRESSOR)) & wav3)})
 
 
 # ================================================================ 抽出（Mac・vitaldb）
@@ -684,7 +676,7 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
     seg_a = np.asarray(art[i0:i1], float)
     out = {"t0": float(t0), "pwtt_ms": nan, "t1_ms": nan, "t2t1_ms": nan, "hr": nan, "map": nan,
            "n_pwtt": 0, "n_t1": 0, "dt_ms": nan, "ri": nan, "n_beats": 0,
-           "dt_lm_ms": nan, "ri_lm": nan, "amb_amp1": nan}
+           "dt_lm_ms": nan, "ri_lm": nan, "ri_cou": nan, "amb_amp1": nan}
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
         return out
     pw = pwtt_series(seg_e, seg_p, FS, lag=lag)
@@ -729,6 +721,16 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
                         and lm.get("sys_v", 0) > 0:
                     out["ri_lm"] = float(lm["dia_v"] / lm["sys_v"])
                 out["amb_amp1"] = float(pda2.early_features(tt, ys)["amb_amp1"])
+                # Couceiro の R1_d（SAP-1d v0.2 副次2）。33番の文献条件をそのまま呼ぶ。
+                # **40番で数値的に不安定であることが分かっている**（分母の g₁+g₂ のピークに
+                # 対し a₄ がほぼ 0 になるウィンドウがある）。値域で切らず、そのまま残して
+                # 集計側で発散を数える。
+                try:
+                    m33 = _load("33_pwdb_literature_replica.py", "m33_30")
+                    r = m33.fit_couceiro(tt, ys, lm, m33.couceiro_points(tt, ys, lm))
+                    out["ri_cou"] = float(r.get("ri_cou", nan))
+                except Exception:      # noqa: BLE001
+                    pass
         except Exception:      # noqa: BLE001
             pass
     if with_pda:
@@ -1068,6 +1070,9 @@ def selftest() -> int:
             and np.isfinite(feat["t1_ms"]).sum() >= 6 and np.isfinite(feat["hr"]).all() and np.isfinite(feat["map"]).all(),
             f"窓 {n}・T2−T1 有限 {fin}")
         fin_r = np.isfinite(feat["ri_lm"]).sum()
+        fin_c = np.isfinite(feat["ri_cou"]).sum()
+        rep("Couceiro の R1_d（ri_cou）がウィンドウごとに出る",
+            fin_c >= 6, f"有限 {fin_c} ウィンドウ・中央値 {feat['ri_cou'].median():.3f}")
         rep("特徴点法の RI（ri_lm）がウィンドウごとに出て、値が 0〜1.5 に収まる",
             fin_r >= 6 and feat["ri_lm"].dropna().between(0.0, 1.5).all(),
             f"有限 {fin_r} ウィンドウ・中央値 {feat['ri_lm'].median():.3f}")
@@ -1101,7 +1106,7 @@ def selftest() -> int:
     kw = dict(sign=SAP1D_SIGN, mde=SAP1D_MDE_REL, use_rel=True, unit="")
     rep("SAP-1d 判定: 上昇・反転・調整・陰性対照が揃えば成立",
         primary_verdict(inc1d, dec1d, quiet1d, 78, **kw)[0].startswith("成立"))
-    rep("SAP-1d 判定: 相対 13.5% に満たなければ動かない",
+    rep(f"SAP-1d 判定: 相対 {SAP1D_MDE_REL:.1%} に満たなければ動かない",
         primary_verdict({**inc1d, "case_med_rel": 0.10}, dec1d, quiet1d, 78, **kw)[0]
         .startswith("動かない"))
     rep("SAP-1d 判定: 減量で反転しなければ陽性としない",
@@ -1121,7 +1126,11 @@ def selftest() -> int:
     _pc = [{"caseid": 1, "direction": +1, "d_map": 8.0}, {"caseid": 1, "direction": +1, "d_map": 6.0},
            {"caseid": 2, "direction": +1, "d_map": -3.0}, {"caseid": 3, "direction": -1, "d_map": 9.0}]
     rep("陽性対照は増量で MAP が上がった症例だけを残す", positive_control_cases(_pc) == {1})
-    rep("SAP-1d の症例一覧が §2 の 4 条件をすべて満たす", _sap1d_ok())
+    rep("SAP-1d の症例一覧が §2 の 2 条件を満たす（v0.2）", _sap1d_ok())
+    rep("SAP-1d の主指標は凍結版 PDA の RI（v0.2。探索から選ばない）",
+        SAP1D_PRIMARY == "ri" and abs(SAP1D_MDE_REL - 0.170) < 1e-9)
+    rep("SAP-1d の副次に特徴点法の RI と R1_d の両方がある（片方だけ残さない）",
+        {"ri_lm", "ri_cou"} <= {c for c, _n, _s, _r in PANEL})
     rep("凍結タグの照会は SAP を選べる（1c / 1d）",
         sap_frozen_tag("1c") != "__" and sap_frozen_tag("1d") != "__")
     rep("SAP の凍結タグの照会が例外を出さない（現在: 1c=%s・1d=%s）"
