@@ -165,15 +165,24 @@ def summarise(rows: list[dict], label: str, out: list) -> None:
         return
     df = pd.DataFrame(rows)
     out.append(f"\n{label}（{len(df)} 例・ウィンドウ計 {int(df['n'].sum()):,}）")
-    out.append(f"{'量':38s}{'中央値':>9s}{'95%CI':>22s}{'符号一致':>10s}{'p':>10s}")
+    out.append(f"{'量':38s}{'中央値':>9s}{'95%CI':>22s}{'符号一致':>10s}{'p':>10s}"
+               "\n  （符号一致は中央値の向きに揃えた症例数／全症例。p は両側符号検定）")
 
-    def line(name, col, positive=True):
+    def line(name, col, positive=None):
+        """**符号検定は観測された中央値の向きで数える。**
+
+        常に正の側で数えると、中央値が負のときに p=1 と出て「関連なし」に見えてしまう。
+        実際には負の向きに偏っていることがある（39番の早期振幅比 × ΔMAP% は 39 例中 28 例が
+        負で両側 p=0.0095 なのに、正の側で数えて p=1 と表示していた）。
+        """
         v = df[col].to_numpy(float)
         lo, hi = boot_ci(v)
-        k, n, p = sign_test(v, positive)
         med = float(np.nanmedian(v)) if np.isfinite(v).any() else float("nan")
+        pos = positive if positive is not None else not (np.isfinite(med) and med < 0)
+        k, n, p = sign_test(v, pos)
         ci = f"[{lo:+.3f}, {hi:+.3f}]" if np.isfinite(lo) else "—"
-        out.append(f"{name:38s}{med:>+9.3f}{ci:>22s}{f'{k}/{n}':>10s}{p:>10.2g}")
+        tag = f"{'+' if pos else '−'}{k}/{n}"
+        out.append(f"{name:38s}{med:>+9.3f}{ci:>22s}{tag:>10s}{p:>10.2g}")
 
     line("ρ(ΔRI%, ΔSVR%)  症例内", "rho_ri_svr")
     line("ρ(ΔRI%, ΔMAP%)  症例内（参考）", "rho_ri_map")

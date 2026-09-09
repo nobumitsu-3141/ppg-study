@@ -399,11 +399,20 @@ def diagnose() -> int:
 
 
 def line(out: list, name: str, v: np.ndarray) -> None:
+    """1 行を組み立てる。**符号検定は観測された中央値の向きで数える。**
+
+    常に「正の側」で数えると、中央値が負のときに p=1 と出て「関連なし」に見えてしまう。
+    実際には負の向きに偏っている（例: 早期振幅比 × ΔMAP% は 39 例中 28 例が負で
+    両側 p=0.0095 だが、正の側で数えると 11/39・p=1 と表示されていた）。
+    符号は「一致」欄に + / − を付けて示す。
+    """
     lo, hi = boot_ci(v)
-    k, n, p = sign_test(v)
     med = float(np.nanmedian(v)) if np.isfinite(v).any() else NAN
+    pos = not (np.isfinite(med) and med < 0)
+    k, n, p = sign_test(v, positive=pos)
     ci = f"[{lo:+.3f}, {hi:+.3f}]" if np.isfinite(lo) else "—"
-    out.append(f"{name:36s}{med:>+9.3f}{ci:>22s}{f'{k}/{n}':>10s}{p:>10.2g}")
+    tag = f"{'+' if pos else '−'}{k}/{n}"
+    out.append(f"{name:36s}{med:>+9.3f}{ci:>22s}{tag:>10s}{p:>10.2g}")
 
 
 def stats() -> int:
@@ -441,7 +450,8 @@ def stats() -> int:
         df = pd.DataFrame(rows)
         out.append(f"\n■ {INDEX_NAME[col]}（{len(df)} 例・ウィンドウ計 {int(df['n'].sum()):,}"
                    + (f"・有効ウィンドウ {MIN_WIN} 未満で除外 {n_skip} 例）" if n_skip else "）"))
-        out.append(f"{'量':36s}{'中央値':>9s}{'95%CI':>22s}{'符号一致':>10s}{'p':>10s}")
+        out.append(f"{'量':36s}{'中央値':>9s}{'95%CI':>22s}{'符号一致':>10s}{'p':>10s}"
+                   "\n  （符号一致は中央値の向きに揃えた症例数／全症例。p は両側符号検定）")
         line(out, "ρ(Δ指標%, ΔSVR%)  全ウィンドウ", df["rho_svr"].to_numpy(float))
         line(out, "ρ(Δ指標%, ΔMAP%)  全ウィンドウ", df["rho_map"].to_numpy(float))
         line(out, "ρ(ΔSVR%, ΔMAP%)   解離の程度", df["rho_svr_map"].to_numpy(float))
