@@ -1151,7 +1151,7 @@ narrow to account for it.
     arterial pulse waves in healthy aging: a database for in silico evaluation of
     hemodynamics and pulse wave indexes. Am J Physiol Heart Circ Physiol.
     2019;317(5):H1062-H1085. PMID 31442381. doi:10.1152/ajpheart.00218.2019
-    **← 要照合（巻号・PMID を PubMed で確認してから投稿）。データ: doi:10.5281/zenodo.3275625**
+    **← 2026-09-09 に PubMed（PMID 31442381）で著者・表題・巻号・頁を照合済み。データ: doi:10.5281/zenodo.3275625**
 
 ### 凍結後に追加（探索的解析・考察で引く）
 
@@ -1161,5 +1161,5 @@ narrow to account for it.
 
 41. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform
     using weighted least squares and multi-criteria decision making method. Comput Biol
-    Med. 2013;43(11):1661-1672. PMID 24209920.
-    **← 特徴点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。要照合**
+    Med. 2013;43(11):1661-1672. PMID 24209911. doi:10.1016/j.compbiomed.2013.08.004.
+    **← 特徴点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。2026-09-09 に PubMed で照合済み。誤った PMID 24209920（別論文）を 24209911 に訂正した**

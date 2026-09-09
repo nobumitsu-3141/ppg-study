@@ -164,14 +164,17 @@ E-mail：nobumitsukawazoework@gmail.com
 6）Fleischhauer V, Ruprecht N, Sorelli M, Bocchi L, Zaunseder S. Physiol Meas. 2020;41(9):095009.
 7）Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Comput Biol Med. 2013;43(11):1661-1672.
 8）Charlton PH, Mariscal Harana J, Vennin S, Li Y, Chowienczyk P, Alastruey J. Am J Physiol Heart Circ Physiol. 2019;317(5):H1062-H1085.
-9）Dawber TR, Thomas HE, McNamara PM. Angiology. 1973;24(4):244-255.
+9）Dawber TR, Thomas HE Jr, McNamara PM. Angiology. 1973;24(4):244-255.
 10）Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Front Cardiovasc Med. 2024;11:1350726.
 11）Epstein S, Vergnaud AC, Elliott P, Chowienczyk P, Alastruey J. Annu Int Conf IEEE Eng Med Biol Soc. 2014;2014:1969-1972.
 
 > 上の書誌は投稿先の書式に整形する。巻号・PMID・DOI を含む完全な記載は英文原稿の文献表にある。
-> 1）から7）および11）は論文1 のために 2026-08-30 に PubMed・出版社記録で照合済み、
-> 10）は 2026-09-07 に出版社PDFで照合済み、8）は要照合、9）は Tigges 2017（＝4））経由の
-> 二次引用である。
+> **11 件すべて照合済み。**1）から7）および11）は論文1 のために 2026-08-30 に PubMed・
+> 出版社記録で、10）は 2026-09-07 に出版社PDFで、8）（Charlton 2019）と 9）（Dawber 1973）は
+> 2026-09-09 に PubMed で照合した。9）は Tigges 2017（＝4））経由の二次引用として扱って
+> いたが、**原典の記録が確認できたので一次引用に改めた**（PMID 4699520。第2著者は
+> `Thomas HE Jr` が正しく、Tigges の `J. H. Emerson Thomas` は誤り）。
+> 7）（Wang 2013）は**論文1 の文献表で PMID が別論文のものだったため 24209911 に訂正した。**
 
 【英文要旨】
 

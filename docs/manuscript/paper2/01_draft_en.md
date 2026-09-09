@@ -537,7 +537,7 @@ and must be checked before submission.
    pulse signal analysis. *Cardiovasc Eng* 2010;10(3):109–117. PMID 20734136
 4. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform using
    weighted least squares and multi-criteria decision making method. *Comput Biol Med*
-   2013;43(11):1661–1672. PMID 24209920
+   2013;43(11):1661–1672. PMID 24209911. doi:10.1016/j.compbiomed.2013.08.004
 5. Epstein S, Vergnaud AC, Elliott P, Chowienczyk P, Alastruey J. Numerical assessment of
    the stiffness index. *Annu Int Conf IEEE Eng Med Biol Soc* 2014;2014:1969–1972.
    PMID 25570367
@@ -554,11 +554,12 @@ and must be checked before submission.
    doi:10.1088/1361-6579/ad9662
 10. Hellqvist H, Karlsson M, Hoffman J, Kahan T, Spaak J. Estimation of aortic stiffness by finger photoplethysmography using enhanced pulse wave analysis and machine learning. Front Cardiovasc Med. 2024;11:1350726. doi:10.3389/fcvm.2024.1350726.
     *Verified 2026-09-07 against the publisher PDF held on file (citation block, page 1).*
-11. Dawber TR, Thomas HE, McNamara PM. Characteristics of the dicrotic notch of the arterial pulse wave in coronary heart disease. Angiology. 1973;24(4):244-255.
-    *Cited as reported by Tigges 2017 (reference [10] of that paper); the 1973 original has
-    not been read. Tigges renders the middle author as "J. H. Emerson Thomas"; the second
-    author's initials should be confirmed against the publisher record before submission,
-    or the citation given explicitly as secondary.*
+11. Dawber TR, Thomas HE Jr, McNamara PM. Characteristics of the dicrotic notch of the arterial pulse wave in coronary heart disease. Angiology. 1973;24(4):244-255. PMID 4699520
+    *Verified against PubMed on 2026-09-09 (PMID 4699520): authors, title, journal, year,
+    volume, issue and pages all match. The second author is indexed as "Thomas HE Jr";
+    Tigges 2017 renders the same author as "J. H. Emerson Thomas", which is incorrect.
+    The citation is therefore primary, not secondary. The 1973 full text has not been read;
+    it is cited only for the waveform classification, which Tigges reproduces.*
 
 > Entries 1–9 were verified for Paper 1 on 2026-08-30; entry 10 was verified on 2026-09-07
 > from the publisher PDF. Entry 11 is a secondary citation and is marked as such.
