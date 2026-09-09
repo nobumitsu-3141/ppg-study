@@ -95,6 +95,7 @@ SAP1D_PRIMARY = "ri"        # 凍結版 PDA の反射係数 h₂/h₁
 SAP1D_SIGN = +1             # 血管収縮で上昇する、が事前予測
 SAP1D_MDE_REL = 0.170       # 最小効果量は相対変化 17.0%（症例内変動係数 0.680 の 0.25 倍）
 SAP1D_MIN_POSCTRL = 50      # 陽性対照（増量で MAP 上昇）が成立した症例がこれ未満なら保留
+SAP1D_MIN_CASES = 50        # 主指標が測れた症例がこれ未満なら「動かない」ではなく保留
 
 # --- トラック（短い名前 → Orchestra のトラック名）
 PRESSOR = "PHEN"
@@ -390,7 +391,7 @@ def _ci(s: dict, key="mean", lo="lo", hi="hi", d=1):
 
 def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int,
                     sign: int = -1, mde: float = MDE_MS, use_rel: bool = False,
-                    unit: str = "ms") -> tuple:
+                    unit: str = "ms", min_cases: int | None = None) -> tuple:
     """主要判定。返り値 (判定, 根拠の一覧)。**事後に緩めない。**
 
     SAP-1c は「Δ(T2−T1) が 3 ms 以上**短縮**する」（sign=−1・ms・絶対）。
@@ -400,6 +401,12 @@ def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int,
     notes = []
     if inc.get("n", 0) == 0:
         return "判定できない（増量ステップなし）", notes
+    # **測れなかったことを「動かない」と混同しない。**主指標が計算できた症例が足りなければ保留。
+    # 凍結版 PDA の RI は当てはめの採否があるため、ウィンドウによっては値が出ない。
+    if min_cases is not None and inc.get("n_cases", 0) < min_cases:
+        notes.append(f"主指標が測れた症例 {inc.get('n_cases', 0)} < {min_cases}")
+        return (f"保留 → 主指標を測れた症例が {inc.get('n_cases', 0)} 例しかない。"
+                "「動かない」ではなく測定できていない"), notes
     ge = (lambda x: x >= mde) if sign > 0 else (lambda x: x <= -mde)   # 効果量が足りるか
     ci_ok = (lambda s_: s_["lo"] > 0) if sign > 0 else (lambda s_: s_["hi"] < 0)
     small = inc["n_cases"] < MIN_CASES_MIXED
@@ -435,6 +442,16 @@ def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int,
         notes.append("陰性対照: " + ("動かない" if not moved else "動いた（" + "・".join(moved) + "）")
                      + f"（評価した群: {'・'.join(evaluable)}）")
     if not eff:
+        # **予測と逆向きに有意なら、それは「動かない」ではなく所見である。**
+        # 研究0 の1因子掃引では平均血圧を上げると RI が下がる（0.294 → 0.236。追記46）。
+        # フェニレフリンは血管抵抗と血圧の両方を上げるので、逆向きは十分に起こりうる。
+        key2 = "case_med_rel" if use_rel else "case_med"
+        opp_ge = (lambda x: x <= -mde) if sign > 0 else (lambda x: x >= mde)
+        if (np.isfinite(inc.get(key2, np.nan)) and opp_ge(inc[key2])
+                and inc.get("sign_p", 1.0) < 0.05):
+            return ("**予測と逆向きに有意**（事前予測は"
+                    + ("上昇" if sign > 0 else "短縮")
+                    + "。所見として報告し、陽性とはしない）"), notes
         return "動かない → (ii) 装置側の揺らぎ。血管補正の方針は取らない", notes
     if not rev:
         return "増量で動くが減量で反転しない → 時間依存の交絡を疑う。陽性と判定しない", notes
@@ -523,7 +540,8 @@ def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "
             if s and s.get("n", 0):
                 controls[f"{label}{('・' + dname) if dname else ''}"] = s
     verdict, notes = primary_verdict(inc, dec, controls, n_cases_total,
-                                     sign=psign, mde=pmde, use_rel=prel, unit=punit)
+                                     sign=psign, mde=pmde, use_rel=prel, unit=punit,
+                                     min_cases=SAP1D_MIN_CASES if sap == "1d" else None)
     if sap == "1d":
         n_pos = len(positive_control_cases(rows_by_set.get("フェニレフリン", [])))
         notes.insert(0, f"陽性対照（増量で MAP 上昇）が成立した症例: {n_pos}"
@@ -1126,6 +1144,23 @@ def selftest() -> int:
     _pc = [{"caseid": 1, "direction": +1, "d_map": 8.0}, {"caseid": 1, "direction": +1, "d_map": 6.0},
            {"caseid": 2, "direction": +1, "d_map": -3.0}, {"caseid": 3, "direction": -1, "d_map": 9.0}]
     rep("陽性対照は増量で MAP が上がった症例だけを残す", positive_control_cases(_pc) == {1})
+    rep("SAP-1d 判定: 予測と逆向きに有意なら「動かない」ではなく所見",
+        "予測と逆向きに有意" in primary_verdict(
+            {**inc1d, "case_med_rel": -0.25, "case_med": -0.06, "sign_p": 0.001},
+            dec1d, quiet1d, 103, **kw, min_cases=SAP1D_MIN_CASES)[0])
+    rep("SAP-1d 判定: 主指標を測れた症例が 50 未満なら保留（動かないではない）",
+        primary_verdict({**inc1d, "n_cases": 30}, dec1d, quiet1d, 103,
+                        **kw, min_cases=SAP1D_MIN_CASES)[0].startswith("保留"))
+    rep("SAP-1d 判定: 症例数が足りていれば従来どおり成立する",
+        primary_verdict(inc1d, dec1d, quiet1d, 103, **kw,
+                        min_cases=SAP1D_MIN_CASES)[0].startswith("成立"))
+    rep("SAP-1c には症例数の下限を課さない（従来の判定を変えない）",
+        primary_verdict({"n": 60, "n_cases": 20, "case_med": -5.0, "sign_p": 0.001,
+                         "mean": -5.0, "lo": -6.0, "hi": -4.0,
+                         "adj_b0": -4.0, "adj_lo": -5.0, "adj_hi": -3.0},
+                        {"n": 30, "mean": +5.0},
+                        {"プロポフォール": {"n": 20, "lo": -1.0, "hi": 1.0}}, 78)[0]
+        .startswith("成立"))
     rep("SAP-1d の症例一覧が §2 の 2 条件を満たす（v0.2）", _sap1d_ok())
     rep("SAP-1d の主指標は凍結版 PDA の RI（v0.2。探索から選ばない）",
         SAP1D_PRIMARY == "ri" and abs(SAP1D_MDE_REL - 0.170) < 1e-9)
