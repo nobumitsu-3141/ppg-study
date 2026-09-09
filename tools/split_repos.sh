@@ -15,6 +15,9 @@ mkdir -p "$OUT"
 
 # ── 2) 公開する解析リポジトリ（履歴は作り直す。過去の版に機微な資料が入っているため）
 PUB="$OUT/ppg-pda-analysis"
+# 消す前に origin を控える。このスクリプトは毎回 .git ごと作り直すので、
+# 控えないと 2 回目以降に push 先を見失う。
+PUB_REMOTE="$(git -C "$PUB" remote get-url origin 2>/dev/null || true)"
 rm -rf "$PUB"; mkdir -p "$PUB/analysis" "$PUB/preregistration"
 cp -R "$SRC/analysis/src"     "$PUB/analysis/"
 cp -R "$SRC/analysis/scripts" "$PUB/analysis/"
@@ -35,6 +38,7 @@ cp "$SRC/tools/public_zenodo.json" "$PUB/.zenodo.json"
 
 # ── 3) 非公開のリポジトリ
 PRI="$OUT/ppg-study-private"
+PRI_REMOTE="$(git -C "$PRI" remote get-url origin 2>/dev/null || true)"
 rm -rf "$PRI"; mkdir -p "$PRI"
 cp -R "$SRC/docs" "$PRI/"
 cp    "$SRC/CLAUDE.md" "$PRI/" 2>/dev/null || true
@@ -53,6 +57,10 @@ for d in "$PUB" "$PRI"; do
         commit -q -m "初回: $(basename "$d")" )
 done
 
+# 控えた origin を戻す
+if [ -n "$PUB_REMOTE" ]; then git -C "$PUB" remote add origin "$PUB_REMOTE"; fi
+if [ -n "$PRI_REMOTE" ]; then git -C "$PRI" remote add origin "$PRI_REMOTE"; fi
+
 echo "作成した:"
 echo "  公開   $PUB   （$(git -C "$PUB" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
 echo "  非公開 $PRI （$(git -C "$PRI" ls-files | wc -l | tr -d ' ') ファイル・初回コミット済み）"
@@ -64,19 +72,34 @@ else
   echo "  実名・施設名の検出なし"
 fi
 echo ""
-echo "次にやること（**この 2 つのディレクトリの中で**実行する。元のリポジトリでは実行しない）"
-echo "  1. GitHub で空のリポジトリを 2 つ作る。README・.gitignore・ライセンスは追加しない"
-echo "       ppg-pda-analysis   … 公開"
-echo "       ppg-study-private  … 非公開"
-echo "  2. 下を順に実行する。git remote -v が何も出さないことを先に確かめる"
-echo "     （何か出たら場所が違うので、そのまま続けない）"
-echo "     cd $PUB"
-echo "     git remote -v"
-echo "     git remote add origin https://github.com/nobumitsu-3141/ppg-pda-analysis.git"
-echo "     git push -u origin main"
-echo "  3. cd $PRI"
-echo "     git remote -v"
-echo "     git remote add origin https://github.com/nobumitsu-3141/ppg-study-private.git"
-echo "     git push -u origin main"
-echo ""
-echo "  SSH 鍵を使っている場合は https://github.com/ を git@github.com: に置き換える"
+if [ -n "$PUB_REMOTE" ] || [ -n "$PRI_REMOTE" ]; then
+  echo "前の版で設定していた origin を戻した。**歴史は作り直しているので、遠隔にすでに"
+  echo "初回コミットがある場合は fast-forward できない。**遠隔にあるのはこのスクリプトが"
+  echo "作った 1 個のコミットだけなので、上書きしてよい。"
+  echo ""
+  echo "  cd $PUB"
+  echo "  git push --force -u origin main"
+  echo ""
+  echo "  cd $PRI"
+  echo "  git push --force -u origin main"
+  echo ""
+  echo "**Zenodo のリリースを既に作ってある場合は --force を使わないこと。**"
+  echo "その版の DOI が指す中身と食い違う。作ってあるなら先に相談すること。"
+else
+  echo "次にやること（**この 2 つのディレクトリの中で**実行する。元のリポジトリでは実行しない）"
+  echo "  1. GitHub で空のリポジトリを 2 つ作る。README・.gitignore・ライセンスは追加しない"
+  echo "       ppg-pda-analysis   … 公開"
+  echo "       ppg-study-private  … 非公開"
+  echo "  2. 下を順に実行する。git remote -v が何も出さないことを先に確かめる"
+  echo "     （何か出たら場所が違うので、そのまま続けない）"
+  echo "     cd $PUB"
+  echo "     git remote -v"
+  echo "     git remote add origin https://github.com/nobumitsu-3141/ppg-pda-analysis.git"
+  echo "     git push -u origin main"
+  echo "  3. cd $PRI"
+  echo "     git remote -v"
+  echo "     git remote add origin https://github.com/nobumitsu-3141/ppg-study-private.git"
+  echo "     git push -u origin main"
+  echo ""
+  echo "  SSH 鍵を使っている場合は https://github.com/ を git@github.com: に置き換える"
+fi
