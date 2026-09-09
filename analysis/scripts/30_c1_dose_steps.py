@@ -406,10 +406,12 @@ def primary_verdict(inc: dict, dec: dict, controls: dict, n_cases_total: int,
         notes.append(f"症例 {inc['n_cases']} < {MIN_CASES_MIXED}: 症例ごとの中央値の符号検定で判定"
                      f"（中央値 {shown(inc.get(key, np.nan))}, p={inc['sign_p']:.3f}）")
     elif use_rel:
-        # 相対で判定するときも、区間は絶対の症例ブートストラップで見る（0 を含まないこと）
-        eff = (np.isfinite(inc.get(key, np.nan)) and ge(inc[key])
-               and np.isfinite(inc.get("lo", np.nan)) and ci_ok(inc))
-        notes.append(f"症例内中央値 {shown(inc[key])}・平均 {_ci(inc, d=3)}（症例ブートストラップ）")
+        # **SAP-1d §5・§7 の主解析は症例をまたいだ符号検定である。**症例数によらず
+        # 符号検定で判定する（SAP-1c は 30 例以上でブートストラップに切り替わるが、
+        # SAP-1d はそう書いていない）。区間は併記するが成立の条件には入れない（§7）。
+        eff = (np.isfinite(inc.get(key, np.nan)) and ge(inc[key]) and inc["sign_p"] < 0.05)
+        notes.append(f"症例内中央値 {shown(inc[key])}・符号検定 p={inc['sign_p']:.3f}"
+                     f"（{inc['n_cases']} 例）・平均 {_ci(inc, d=3)}（症例ブートストラップ・併記）")
     else:
         eff = np.isfinite(inc["hi"]) and ge(inc["mean"]) and ci_ok(inc)
         notes.append(f"平均 {_ci(inc)} {unit}（症例ブートストラップ）")
@@ -1104,8 +1106,10 @@ def selftest() -> int:
         .startswith("動かない"))
     rep("SAP-1d 判定: 減量で反転しなければ陽性としない",
         "反転しない" in primary_verdict(inc1d, {"n": 30, "mean": +0.04}, quiet1d, 78, **kw)[0])
-    rep("SAP-1d 判定: 区間が 0 を含めば動かない",
-        primary_verdict({**inc1d, "lo": -0.01}, dec1d, quiet1d, 78, **kw)[0].startswith("動かない"))
+    rep("SAP-1d 判定: 符号検定が有意でなければ動かない",
+        primary_verdict({**inc1d, "sign_p": 0.20}, dec1d, quiet1d, 78, **kw)[0].startswith("動かない"))
+    rep("SAP-1d 判定: 主解析は症例数によらず符号検定（§7。区間は成立条件に入れない）",
+        primary_verdict({**inc1d, "lo": -0.01}, dec1d, quiet1d, 78, **kw)[0].startswith("成立"))
     rep("SAP-1d 判定: 調整で切片が 0 を含めば陽性としない",
         "調整で消える" in primary_verdict({**inc1d, "adj_lo": -0.01}, dec1d, quiet1d, 78, **kw)[0])
     rep("SAP-1c の判定は従来どおり（向き −1・3 ms・絶対）",
