@@ -102,13 +102,21 @@ PANEL = [
     ("pwtt_ms", "PWTT（T2）[ms]",          0, "副次2 記述"),
     ("dt_ms",   "ΔT 凍結版PDA [ms]",       0, "副次3 記述"),
     ("ri",      "RI 凍結版PDA",            0, "副次3 記述"),
+    # SI は入れない。SI = 身長 ÷ ΔT で身長は症例内で一定なので、**症例内では ΔT の単調変換に
+    # すぎず、順位統計では符号が反転するだけである**（16番の記述と同じ）。列を増やす意味がない。
     # 研究0 第2版の帰結（2026-09-06・SAP §9.6）。分解を使わない窓指標。向きは事前に予測しない
     ("dt_lm_ms", "ΔT 特徴点（D−S）[ms]", 0, "記述（研究0 の帰結）"),
+    ("ri_lm",    "RI 特徴点（D高さ/S高さ）", 0, "記述（研究0 で pvr 規準 0.504 を満たした唯一の指標）"),
     ("amb_amp1", "Am_b/Am_p1（Hellqvist）",  0, "記述（研究0 の帰結・研究2 の主指標候補）"),
 ]
 COVARS = ["map", "hr"]
 
-META_V = 2      # 2: 記述 2 列（dt_lm_ms・amb_amp1）を追加（2026-09-06）
+# 3: 特徴点法の RI（ri_lm）を追加（2026-09-09）。
+#    39番 --dose で、|ΔSVR%| の下限を 5〜30% と上げたすべての段で ρ_SVR が ρ_MAP を上回った
+#    唯一の指標が特徴点法の RI だった（追記57）。研究0 の PWDB でも末梢抵抗との相関 0.504 で
+#    規準 0.30 を満たしている（分解法は 0.207 で不成立）。**符号は 0（記述）のままにしてある。**
+#    確認的な問いに格上げするには SAP の改訂が要る。ここで勝手に上げない。
+META_V = 3
 
 
 def _load(stem: str, name: str):
@@ -562,7 +570,8 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
     seg_e = np.nan_to_num(np.asarray(ecg[i0:i1], float))
     seg_a = np.asarray(art[i0:i1], float)
     out = {"t0": float(t0), "pwtt_ms": nan, "t1_ms": nan, "t2t1_ms": nan, "hr": nan, "map": nan,
-           "n_pwtt": 0, "n_t1": 0, "dt_ms": nan, "ri": nan, "n_beats": 0, "dt_lm_ms": nan, "amb_amp1": nan}
+           "n_pwtt": 0, "n_t1": 0, "dt_ms": nan, "ri": nan, "n_beats": 0,
+           "dt_lm_ms": nan, "ri_lm": nan, "amb_amp1": nan}
     if seg_p.size < int(WIN_S * FS) * 0.9 or not np.any(seg_p):
         return out
     pw = pwtt_series(seg_e, seg_p, FS, lag=lag)
@@ -602,6 +611,10 @@ def window_c1(pleth, ecg, art, t0: float, lag: float, art15, with_pda: bool, hei
                 lm = pda2.find_landmarks(tt, ys)
                 if lm["klass"] in (1, 3) and np.isfinite(lm["dia_t"]) and np.isfinite(lm["sys_t"]):
                     out["dt_lm_ms"] = float((lm["dia_t"] - lm["sys_t"]) * 1000.0)
+                # 特徴点法の RI = 拡張期ピーク高さ ÷ 収縮期ピーク高さ（39番 と同一の条件）
+                if lm["klass"] in (1, 3) and np.isfinite(lm.get("dia_v", nan)) \
+                        and lm.get("sys_v", 0) > 0:
+                    out["ri_lm"] = float(lm["dia_v"] / lm["sys_v"])
                 out["amb_amp1"] = float(pda2.early_features(tt, ys)["amb_amp1"])
         except Exception:      # noqa: BLE001
             pass
@@ -932,6 +945,16 @@ def selftest() -> int:
         rep("抽出が通り、窓ごとに T2−T1・T1・HR・MAP が出る", err is None and fin >= 6
             and np.isfinite(feat["t1_ms"]).sum() >= 6 and np.isfinite(feat["hr"]).all() and np.isfinite(feat["map"]).all(),
             f"窓 {n}・T2−T1 有限 {fin}")
+        fin_r = np.isfinite(feat["ri_lm"]).sum()
+        rep("特徴点法の RI（ri_lm）がウィンドウごとに出て、値が 0〜1.5 に収まる",
+            fin_r >= 6 and feat["ri_lm"].dropna().between(0.0, 1.5).all(),
+            f"有限 {fin_r} ウィンドウ・中央値 {feat['ri_lm'].median():.3f}")
+        rep("ri_lm と dt_lm_ms は同じ拍から出るので有限になるウィンドウが一致する",
+            bool((np.isfinite(feat["ri_lm"]) == np.isfinite(feat["dt_lm_ms"])).all()))
+        rep("指標一覧に ri_lm があり、符号は 0（記述）である",
+            any(c == "ri_lm" and sg == 0 for c, _n, sg, _r in PANEL))
+        rep("指標一覧に SI は無い（症例内では ΔT の単調変換なので入れない）",
+            not any(c == "si" for c, _n, _s, _r in PANEL))
         fin_a, fin_d = np.isfinite(feat["amb_amp1"]).sum(), np.isfinite(feat["dt_lm_ms"]).sum()
         rep("記述 2 列（Am_b/Am_p1・特徴点 ΔT。SAP §9.6）が窓ごとに出て、値が生理的な範囲にある",
             fin_a >= 6 and feat["amb_amp1"].dropna().between(0.2, 1.05).all()
