@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""早期振幅比 Am_b/Am_p1 の軽量抽出（探索的解析。設計は docs/research/sap_1_amb_exploratory_v0.md）。
+"""【探索・凍結後】早期振幅比 Am_b/Am_p1 の軽量抽出（設計は docs/research/sap_1_amb_exploratory_v0.md）。
 
 何をするか
 ----------

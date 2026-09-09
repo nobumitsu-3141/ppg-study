@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""早期振幅比による前提検証の集計（探索的解析。設計は docs/research/sap_1_amb_exploratory_v0.md）。
+"""【探索・凍結後】早期振幅比による前提検証の集計（設計は docs/research/sap_1_amb_exploratory_v0.md）。
 
 何をするか
 ----------
