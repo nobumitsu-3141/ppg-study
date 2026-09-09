@@ -1141,4 +1141,4 @@ narrow to account for it.
 41. Wang L, Xu L, Feng S, Meng MQ-H, Wang K. Multi-Gaussian fitting for pulse waveform
     using weighted least squares and multi-criteria decision making method. Comput Biol
     Med. 2013;43(11):1661-1672. PMID 24209920.
-    **← 鍵点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。要照合**
+    **← 特徴点の時間位置の誤差（Errx < 6 ms）を当てはめの採否規準に据えた原典。要照合**
