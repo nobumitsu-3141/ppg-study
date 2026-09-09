@@ -44,23 +44,31 @@ HTML・Markdown と `local-reviews/`・`refs/`）だけである。原稿・実�
 
 ## 手順
 
+**初回コミットまで済んだ tar 書庫を用意してある**（2026-09-09。公開側 62 ファイル・
+非公開側 89 ファイル。公開側は 37・38・39・40番の自己検査が通ることを確認済み）。
+自分で作り直す場合は次を実行する。機微な語の検査が通ることを確認すること。
+
 ```sh
 bash tools/split_repos.sh ~/ppg-split
 ```
 
-機微な語の検査が通ることを確認する。次に GitHub 上で 2 つのリポジトリを作り、
-それぞれで初回コミットを作る。
+**GitHub 上でのリポジトリ作成は、連携アプリの権限では行えない**（`403 Resource not
+accessible by integration`）。**著者が手で作る。**
+
+1. <https://github.com/new> で `ppg-pda-analysis` を作る。**公開。**
+   README・.gitignore・ライセンスは**追加しない**（こちらで用意してあるため）。
+2. 同様に `ppg-study-private` を作る。**非公開。**
+3. 書庫を展開して push する。
 
 ```sh
-cd ~/ppg-split/ppg-pda-analysis
-git init -b main && git add -A
-git commit -m "初回: 解析コードと凍結した事前登録"
+tar xzf ppg-pda-analysis.tar.gz
+cd ppg-pda-analysis
 git remote add origin git@github.com:nobumitsu-3141/ppg-pda-analysis.git
 git push -u origin main
 
-cd ~/ppg-split/ppg-study-private
-git init -b main && git add -A
-git commit -m "初回: 原稿・実験ノート・倫理文書"
+cd ..
+tar xzf ppg-study-private.tar.gz
+cd ppg-study-private
 git remote add origin git@github.com:nobumitsu-3141/ppg-study-private.git
 git push -u origin main
 ```
