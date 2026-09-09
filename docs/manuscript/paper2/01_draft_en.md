@@ -93,8 +93,10 @@ not track the vascular property it names.
 
 Separating these two things requires knowing the truth. In measured data the aortic pulse
 wave velocity and the peripheral vascular resistance of the subject whose finger is being
-transilluminated are not available. In a validated numerical model of the arterial tree they
-are, because they are inputs. The Pulse Wave Database [Charlton 2019] provides digital PPG
+transilluminated are not available. In a validated numerical model of the arterial tree both are known exactly:
+aortic pulse wave velocity is a model input, and peripheral vascular resistance is a
+derived quantity fixed by the inputs (mean arterial pressure, heart rate and stroke
+volume). The Pulse Wave Database [Charlton 2019] provides digital PPG
 waveforms together with those quantities for 4,374 virtual subjects. Its original report
 compares fiducial-point-derived indices with aortic PWV; **to our knowledge no study has
 tested decomposition-derived indices against it.**
@@ -114,11 +116,19 @@ the arterial tree, published by Charlton and colleagues and distributed openly
 (Zenodo doi:10.5281/zenodo.3275625) [Charlton 2019]. It contains 4,374 virtual subjects in
 six age strata (25, 35, 45, 55, 65 and 75 years). Within each stratum, six haemodynamic
 factors — aortic diameter, heart rate, left ventricular ejection time, mean arterial
-pressure, pulse wave velocity and stroke volume — are varied one at a time at three levels
-(baseline and ±1 SD of the age-specific distribution), together with a baseline subject.
-For each virtual subject the database supplies pressure, flow velocity and luminal area at
-several sites, a **digital photoplethysmogram**, and the model inputs, including aortic
-pulse wave velocity and peripheral vascular resistance.
+pressure, pulse wave velocity and stroke volume — are varied in a **full factorial design**
+at three levels (baseline and ±1 SD of the age-specific distribution): 3⁶ = 729 subjects per
+stratum × 6 strata = 4,374. For each virtual subject the database supplies pressure, flow
+velocity and luminal area at several sites, a **digital photoplethysmogram**, aortic pulse
+wave velocity (a model input) and peripheral vascular resistance (**a derived quantity**,
+since mean arterial pressure ≈ resistance × cardiac output). The association between RI and
+peripheral vascular resistance therefore carries the effects of mean arterial pressure,
+heart rate and stroke volume, **and the sign of that contamination differs by factor**.
+Raising mean arterial pressure raises resistance but lowers RI (0.294 → 0.254 → 0.236 in the
+single-factor sweep), pulling the association negative; raising heart rate raises cardiac
+output, lowers resistance and also lowers RI (main effect −40%), pulling it positive.
+**The observed association therefore cannot be attributed to resistance as such.** The
+factors are separated by the main-effect analysis.
 
 Two properties make this the appropriate substrate for the present question. The vascular
 quantities are known by construction rather than estimated, and the factors are varied

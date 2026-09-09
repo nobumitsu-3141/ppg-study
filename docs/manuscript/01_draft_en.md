@@ -365,7 +365,12 @@ slow artefact or a settling gain would also be autocorrelated while carrying no 
 information. We therefore added a positive control: a relationship that must appear if the
 indices carry vascular information at all. Across cases, arterial stiffening with age
 shortens the interval at which the reflected wave returns, so ΔT should decrease and SI
-increase with age [Millasseau 2002]. We tested this by Spearman rank correlation between
+increase with age [Millasseau 2002]. **This prediction covers only ΔT and SI, the
+timing-derived indices.** The cited study compared a stiffness index built from subject
+height and the time delay between direct and reflected waves against carotid–femoral pulse
+wave velocity; it makes no directional prediction for an amplitude ratio. **The positive
+control is therefore applied to ΔT and SI, and the age association of RI is reported
+descriptively.** We tested this by Spearman rank correlation between
 patient age and the case-median ΔT, SI and RI, and, as a negative control, between case
 identifier and case-median ΔT. A secondary comparison contrasted cases with and without a
 preoperative diagnosis of hypertension. This analysis was added after the analysis plan was
@@ -376,8 +381,14 @@ and no within-case change, it is independent of the primary endpoint. We therefo
 advance that an index failing it would still be reported in the prespecified primary
 regression, but that no conclusion would be drawn from its coefficient, on the grounds that
 a null cannot be interpreted for a quantity that has not been shown to be measurable. As
-reported below, ΔT passed this control and RI did not; this determination was made from the
-control alone, before the premise-test result was examined.
+reported below, ΔT passed this control. **For RI, since the control makes no directional
+prediction, failing it cannot serve as the basis.** We instead used the **within-case
+coefficient of variation** as the measure of stability: RI should sit between 0.2 and 0.5
+on physiological grounds, yet its within-case coefficient of variation was 0.680, three
+times the 0.228 of ΔT. **On that ground alone we judged that RI would be reported but that no
+conclusion would be drawn from its coefficient.** Both determinations rest on the controls
+and on measurement stability alone, and were made before the premise-test result was
+examined.
 
 ### 2.7 Secondary analysis: accuracy against reference CO
 
@@ -539,7 +550,10 @@ and +0.43 for RI, indicating series that track reproducible physiology rather th
 (Table 3). In the exploratory positive control (849 adults), ΔT shortened with age
 (ρ = −0.197, 95% CI −0.261 to −0.131, p < 0.0001) and was shorter in patients with
 preoperative hypertension (median 259 versus 267 ms). RI showed no association with age
-(ρ = +0.041, p = 0.23) and was accordingly judged uninterpretable in this signal source
+(ρ = +0.041, p = 0.23), but since the cited study makes no directional prediction for an
+amplitude ratio **this is descriptive**. The judgement on RI rests on its **within-case
+coefficient of variation of 0.680** (ΔT: 0.228), far too large for a ratio that should sit
+between 0.2 and 0.5, and it was accordingly judged uninterpretable in this signal source
 (§2.6). The negative-control association between case identifier and ΔT was ρ = +0.078
 (95% CI +0.011 to +0.145), essentially unchanged after adjustment for age, heart rate,
 mean arterial pressure and reference device (ρ = +0.072). It is therefore not attributable
@@ -728,11 +742,13 @@ patient data were examined, and per-beat identifiability, convergence and exclus
 are reported in full (Table 3). For ΔT the relationship with PWTT is absent, not obscured.
 
 **For the reflection index, validity could not be established, and its result is therefore
-uninformative.** The same positive control that ΔT passed, RI failed: across 849 adults
-the reflection index showed no association with age (ρ = +0.041, p = 0.23).
-Within cases it behaved as noise rather than as physiology, varying with a coefficient of
-variation of 0.70 — threefold that of ΔT (0.23) — despite being a bounded ratio, while
-correlating less strongly with mean arterial pressure than ΔT did.
+uninformative.** The basis is **measurement stability**. A ratio that should sit between
+0.2 and 0.5 on physiological grounds instead varied within cases with a coefficient of
+variation of 0.680 — threefold that of ΔT (0.228) — while correlating less strongly with
+mean arterial pressure than ΔT did: it behaved as noise rather than as physiology. Across
+849 adults it also showed no association with age (ρ = +0.041, p = 0.23), but **the cited
+study predicts a direction for timing-derived indices, not for an amplitude ratio, so this
+is supporting description only.**
 
 To identify what class of signal processing could produce this specific pattern, we applied
 candidate operations to synthetic pulses of known composition. Uniform gain normalisation,
