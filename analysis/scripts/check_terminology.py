@@ -36,6 +36,11 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 # （制定前の追記は当時の記録であり、書き換えない）。
 RULE_DATE = date(2026, 9, 7)
 
+# 行末にこれを置いた行は検査しない。禁止語を**引用している**行のための印である
+# （「『錨』は使わない」のような文。使用ではなく言及なので機械には区別できない）。
+# markdown では表示されず、python では通常のコメントになる。
+PRAGMA = "用語の引用"
+
 # 検査しない文書（規則制定より前に書かれた読み物。歴史的記録として残す）
 SKIP = {
     "PPG_reflection_wave_localisation.md",
@@ -112,7 +117,9 @@ def scan(path: Path, check_all: bool) -> tuple[list, list]:
     start = 1 if check_all else lab_log_cutoff(path, text)
     bad, warn = [], []
     for no, ln in enumerate(text.splitlines(), 1):
-        if no < start:
+        if no < start or PRAGMA in ln:
+            # 禁止語そのものを引用する行（規則の説明・訂正の記録）は除く。
+            # 使用ではなく言及なので、機械には区別できない。行末に印を置く。
             continue
         for table, sink in ((BANNED, bad), (WARN, warn)):
             for term, alt, allow in table:
