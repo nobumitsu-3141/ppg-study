@@ -219,8 +219,6 @@ def extract_case(caseid: int, jobs: int) -> int:
     pleth = np.nan_to_num(np.asarray(wav[:, 0], float))
     ecg = np.nan_to_num(np.asarray(wav[:, 1], float))
     art = np.asarray(wav[:, 2], float)
-    svr = vitaldb.load_case(caseid, [SVR_TRACK], 1).ravel().astype(float)
-    svr_t = np.arange(svr.size, dtype=float)
     dur = len(pleth) / FS
     tasks = []
     for t0 in np.arange(0, dur - WIN_S, WIN_S):
@@ -234,15 +232,43 @@ def extract_case(caseid: int, jobs: int) -> int:
         rows = [r for r in pool.map(_task, tasks) if r]
     if not rows:
         return 0
-    d = pd.DataFrame(rows)
-    # 同じウィンドウの SVR（中央値）。1点でも欠ければそのウィンドウは捨てる
-    vals = []
-    for t0 in d["t0"].to_numpy(float):
-        m = (svr_t >= t0) & (svr_t < t0 + WIN_S) & np.isfinite(svr) & (svr > 50) & (svr < 6000)
-        vals.append(float(np.median(svr[m])) if m.sum() >= 5 else NAN)
-    d["svr"] = vals
-    d.to_csv(p, index=False)
-    return len(d)
+    pd.DataFrame(rows).to_csv(p, index=False)
+    return len(rows)
+
+
+def window_median(vals_1hz: np.ndarray, t0s: np.ndarray) -> np.ndarray:
+    """1秒間隔の数値トラックを 60 秒ウィンドウの中央値に畳む（16番 `_window_median` と同一）。
+
+    **点数の下限を置かない。**EV1000/SVR は 20 秒間隔程度でしか更新されないため、
+    「60 秒に n 点以上」を課すとほぼ全ウィンドウが落ちる。有限値が 1 点でもあれば採る。
+    """
+    out = []
+    for t0 in np.asarray(t0s, float):
+        seg = vals_1hz[int(t0):int(t0 + WIN_S)]
+        seg = seg[np.isfinite(seg)]
+        out.append(float(np.median(seg)) if seg.size else NAN)
+    return np.array(out, float)
+
+
+def fetch_svr(caseid: int, force: bool = False) -> int:
+    """数値トラック（1秒間隔）だけを取り直す。波形の再取得は要らないので安価。
+
+    **16番の `_window_median` と完全に同じ**にしてある。ウィンドウ内の有限値の中央値を取り、
+    点数の下限も値域の絞り込みも置かない。EV1000/SVR は 20 秒間隔程度でしか更新されないため、
+    「60 秒に 5 点以上」のような条件を課すとほぼ全ウィンドウが落ちる。
+    """
+    import vitaldb
+    q = OUT / f"svr_{caseid}.csv"
+    if q.exists() and not force:
+        return -1
+    cp = OUT / f"case_{caseid}.csv"
+    if not cp.exists():
+        return 0
+    t0s = pd.read_csv(cp)["t0"].to_numpy(float)
+    svr = vitaldb.load_case(caseid, [SVR_TRACK], 1).ravel().astype(float)
+    vals = window_median(svr, t0s)
+    pd.DataFrame({"t0": t0s, "svr": vals}).to_csv(q, index=False)
+    return int(np.isfinite(vals).sum())
 
 
 def run(limit: int | None, jobs: int) -> None:
@@ -258,10 +284,14 @@ def run(limit: int | None, jobs: int) -> None:
         except Exception as e:      # noqa: BLE001
             print(f"  [{k}/{len(ids)}] {cid}: 失敗 {str(e)[:60]}")
             continue
-        if n < 0:
-            print(f"  [{k}/{len(ids)}] {cid}: 既にある")
-        else:
-            print(f"  [{k}/{len(ids)}] {cid}: {n} ウィンドウ（{(time.time()-t)/60:.1f} 分）")
+        try:
+            ns = fetch_svr(cid)
+        except Exception as e:      # noqa: BLE001
+            ns = 0
+            print(f"      SVR 取得に失敗 {str(e)[:50]}")
+        tag = "既にある" if n < 0 else f"{n} ウィンドウ"
+        stag = "SVR 既にある" if ns < 0 else f"SVR 有 {ns}"
+        print(f"  [{k}/{len(ids)}] {cid}: {tag}・{stag}（{(time.time()-t)/60:.1f} 分）")
 
 
 # ════════════════════════════════════════════════ 集計
@@ -309,11 +339,27 @@ def stats() -> int:
         out.append("\n先に --lists と --run を実行すること。")
         print("\n".join(out))
         return 1
-    frames = []
+    frames, n_svr_file, n_svr_col, n_none = [], 0, 0, 0
     for f in files:
         d = pd.read_csv(f)
-        if {"t0", "map", "svr"} <= set(d.columns):
-            frames.append(d)
+        cid = int(f.stem.split("_")[1])
+        q = OUT / f"svr_{cid}.csv"
+        if q.exists():                                   # 新しい取り方を優先
+            d = d.drop(columns=[c for c in ("svr",) if c in d.columns])
+            d = d.merge(pd.read_csv(q), on="t0", how="left")
+            n_svr_file += 1
+        elif "svr" in d.columns:
+            n_svr_col += 1
+        else:
+            n_none += 1
+            continue
+        frames.append(d)
+    got = int(sum(np.isfinite(d["svr"]).sum() for d in frames))
+    tot = int(sum(len(d) for d in frames))
+    out.append(f"SVR が取れたウィンドウ: {got:,} / {tot:,}（{got/max(tot,1):.1%}）"
+               f"　［svr_*.csv から {n_svr_file} 例・旧列から {n_svr_col} 例・欠 {n_none} 例］")
+    if tot and got / tot < 0.5:
+        out.append("  ★ SVR の被覆が半分未満である。`--refresh-svr` で数値トラックを取り直すこと。")
     for col in INDEX_COLS:
         rows = [r for d in frames if col in d.columns
                 for r in [analyse_case(d, col)] if r]
@@ -405,6 +451,18 @@ def selftest() -> int:
     chk("陰性統制: MAP に従う指標は逆向きで MAP 側",
         b is not None and b["n_opp"] >= MIN_PAIR and b["opp_map"] > 0.5 and b["opp_svr"] < 0)
     chk("ウィンドウ不足は None", analyse_case(d_svr.head(5), "ri_v1") is None)
+
+    # ★ 疎な数値トラックでも値が取れること（39番 初版はここで全ウィンドウを落としていた）
+    sparse = np.full(600, NAN)
+    sparse[::20] = 1200.0                       # 20 秒間隔＝60秒ウィンドウに 3 点
+    wm = window_median(sparse, np.arange(0, 540, WIN_S))
+    chk("20秒間隔のSVRでも全ウィンドウで値が取れる",
+        np.all(np.isfinite(wm)) and abs(wm[0] - 1200.0) < 1e-9)
+    chk("有限値ゼロのウィンドウは NaN",
+        not np.isfinite(window_median(np.full(600, NAN), np.array([0.0]))[0]))
+    chk("窓中央値は該当区間だけを見る",
+        abs(window_median(np.r_[np.full(60, 900.0), np.full(60, 1500.0)],
+                          np.array([0.0, 60.0]))[1] - 1500.0) < 1e-9)
     chk("逆向き・一致・平坦が重ならない",
         a is not None and a["n_opp"] + a["n_conc"] + a["n_flat"] <= a["n"])
 
@@ -417,12 +475,24 @@ def main() -> None:
     ap.add_argument("--lists", action="store_true", help="症例の一覧を作る（初回のみ）")
     ap.add_argument("--run", action="store_true", help="波形を取得して指標を抽出する")
     ap.add_argument("--stats", action="store_true", help="集計だけ行う")
+    ap.add_argument("--refresh-svr", action="store_true",
+                    help="波形は再取得せず、SVR の数値トラックだけ取り直す（安価）")
     ap.add_argument("--selftest", action="store_true", help="ネットワーク不要の自己検査")
     ap.add_argument("--limit", type=int, default=None, help="症例数を絞る（seed 0 で無作為）")
     ap.add_argument("--jobs", type=int, default=4)
     a = ap.parse_args()
     if a.selftest:
         sys.exit(selftest())
+    if a.refresh_svr:
+        ids = sorted(int(f.stem.split("_")[1]) for f in OUT.glob("case_*.csv"))
+        print(f"SVR を取り直す {len(ids)} 例")
+        for k, cid in enumerate(ids, 1):
+            try:
+                n = fetch_svr(cid, force=True)
+                print(f"  [{k}/{len(ids)}] {cid}: SVR 有 {n}")
+            except Exception as e:      # noqa: BLE001
+                print(f"  [{k}/{len(ids)}] {cid}: 失敗 {str(e)[:50]}")
+        sys.exit(stats())
     if a.lists:
         build_case_list()
         if not a.run:
