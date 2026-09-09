@@ -142,7 +142,8 @@ No ethical approval was required; no human data were used.
 
 Digital PPG waveforms were used at their native sampling rate (500 Hz), one beat per virtual
 subject. Preprocessing was identical for every index family: a fourth-order zero-phase
-Butterworth low-pass filter, removal of a linear baseline drawn between the beat feet
+Butterworth low-pass filter with an 18 Hz cutoff (following Tigges 2017 and Couceiro 2015),
+removal of a linear baseline drawn between the beat feet
 (each foot taken as the minimum within the outer 8% of the beat, following Basso 2024), and
 amplitude normalisation to unit range. Because every index compared here is a ratio or an
 interval, the amplitude normalisation cancels.
@@ -175,8 +176,11 @@ adding (i) the preprocessing of Tigges 2017 and Basso 2024 described in §2.2, (
 least squares with weights concentrated at the fiducial points, and (iii) the acceptance
 criterion of Wang 2013 — **the fit is judged by whether it reproduces the positions of the
 measured fiducial points, not by how small the residual is** (absolute time error summed
-over fiducial points ≤ 6 ms; amplitude error ≤ 0.01). Two bases were carried in parallel,
-skew-Gaussian and gamma.
+over fiducial points ≤ 6 ms; amplitude error ≤ 0.01). A fit was also rejected if the
+uncertainty of ΔT exceeded 20 ms. The same 20 ms is applied to the standard error of ΔT, to
+the spread of ΔT across competing solutions, and to near-ties between candidate reflected
+waves, because all three express the same quantity and were frozen together. Two bases were
+carried in parallel, skew-Gaussian and gamma.
 
 **Fiducial-point analysis.** The systolic peak, the dicrotic notch and the diastolic peak
 were located on the waveform itself. ΔT_lm is the systolic-to-diastolic peak interval,
