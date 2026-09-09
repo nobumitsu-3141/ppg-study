@@ -55,9 +55,13 @@ reset_worktree "$PUB"
 mkdir -p "$PUB/analysis" "$PUB/preregistration"
 cp -R "$SRC/analysis/src"     "$PUB/analysis/"
 cp -R "$SRC/analysis/scripts" "$PUB/analysis/"
-cp    "$SRC/analysis/README.md" "$PUB/analysis/" 2>/dev/null || true
+cp -R "$SRC/analysis/tests"   "$PUB/analysis/"
+cp    "$SRC/analysis/requirements.txt" "$PUB/analysis/" 2>/dev/null || true
 cp    "$SRC/analysis/.gitignore" "$PUB/analysis/" 2>/dev/null || true
-rm -rf "$PUB/analysis/scripts/__pycache__" "$PUB/analysis/src/__pycache__"
+# analysis/README.md は著者の手元用で、clone 先も作業ブランチ名も書いてある。
+# 公開側にはそれを持ち込まず、公開用に書いた版を置く。
+cp    "$SRC/tools/public_analysis_README.md" "$PUB/analysis/README.md"
+find "$PUB/analysis" -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true
 # 論文が引く事前登録と判定規準だけを入れる（実験ノート・原稿は入れない）
 for f in sap_v0.md sap_1_amb_exploratory_v0.md sap_1c_v0.md sap_1d_v0.md \
          gate0_rules_v2.md terminology.md; do
@@ -65,10 +69,11 @@ for f in sap_v0.md sap_1_amb_exploratory_v0.md sap_1c_v0.md sap_1d_v0.md \
 done
 cp "$SRC/tools/public_LICENSE" "$PUB/LICENSE"
 cp "$SRC/LICENSE"              "$PUB/LICENSE-docs"
-cp "$SRC/setup_mac.sh" "$PUB/" 2>/dev/null || true
 cp "$SRC/tools/public_README.md"   "$PUB/README.md"
 cp "$SRC/tools/public_CITATION.cff" "$PUB/CITATION.cff"
 cp "$SRC/tools/public_zenodo.json" "$PUB/.zenodo.json"
+# 根にも置く。スクリプトが analysis/ の外に書き出しても取り込まれないようにする
+cp "$SRC/tools/public_gitignore" "$PUB/.gitignore"
 
 # ── 3) 非公開のリポジトリ
 PRI="$OUT/ppg-study-private"
@@ -77,6 +82,15 @@ cp -R "$SRC/docs" "$PRI/"
 cp    "$SRC/CLAUDE.md" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/slides" "$PRI/" 2>/dev/null || true
 cp -R "$SRC/local-reviews" "$PRI/" 2>/dev/null || true
+# 分離の道具そのもの。作業ブランチを消すとこれらは main にも公開側にも無く、
+# どこにも残らない。**分離をやり直せなくなり、公開側の README・CITATION・
+# .zenodo.json の元も失われる。**（2026-09-09 の巡9 で気づいた）
+cp -R "$SRC/tools" "$PRI/"
+cp    "$SRC/setup_mac.sh" "$PRI/" 2>/dev/null || true
+# 著者の手元用の analysis/README.md（公開側には公開用の版を置いている）
+mkdir -p "$PRI/analysis"
+cp    "$SRC/analysis/README.md" "$PRI/analysis/README.md" 2>/dev/null || true
+cp    "$SRC/analysis/requirements.txt" "$PRI/analysis/" 2>/dev/null || true
 
 commit_if_changed "$PUB"
 commit_if_changed "$PRI"
@@ -90,6 +104,12 @@ if grep -rl "一ノ宮\|大雅\|五島中央\|長崎大学" "$PUB" --exclude-dir
   echo "  ★ 上のファイルに実名・施設名が残っている。公開前に必ず消すこと。"; exit 1
 else
   echo "  実名・施設名の検出なし"
+fi
+# 作業ブランチ名が入っていると、消す予定の（機微を含む）ブランチを公開側が宣伝することになる
+if grep -rl "slide-references-formatting" "$PUB" --exclude-dir=.git 2>/dev/null; then
+  echo "  ★ 上のファイルが作業ブランチ名を含んでいる。公開前に必ず消すこと。"; exit 1
+else
+  echo "  作業ブランチ名の検出なし"
 fi
 echo ""
 if git -C "$PUB" remote get-url origin >/dev/null 2>&1; then

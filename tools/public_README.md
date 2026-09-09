@@ -11,13 +11,14 @@
 | 場所 | 内容 |
 |---|---|
 | `analysis/src/` | 凍結した脈波分解（歪みガウス2成分）、指標の定義、拍の切り出しと品質判定、統計 |
-| `analysis/scripts/` | 各解析。**すべてに `--selftest` がある**（ネットワーク不要で検算できる） |
+| `analysis/scripts/` | 各解析。確認的解析と探索的解析を担う 37 本中 23 本に `--selftest` があり、ネットワーク不要で検算できる。取得・図・表のスクリプトには無い（`analysis/README.md` に一覧） |
+| `analysis/tests/` | 真値既知の合成データによる測定系の検証。`python3 -m tests.test_pda_synthetic` のように走らせる |
 | `preregistration/` | 統計解析計画（凍結時点のもの）と判定規準、用語の決まり |
 
 ## 再現の手順
 
 ```sh
-pip install numpy pandas scipy vitaldb
+pip install -r analysis/requirements.txt
 python3 analysis/scripts/39_ri_svr_standalone.py --selftest
 python3 analysis/scripts/39_ri_svr_standalone.py --lists
 python3 analysis/scripts/39_ri_svr_standalone.py --run --jobs 4
@@ -34,7 +35,12 @@ PWDB 系の一部は実データを参照するため、データを取得して
 
 `preregistration/` の各計画は、**確認的解析を走らせる前に凍結し、タグを付けてある。**
 閾値・判定規準・中止規準は結果を見たあとで変えていない。変えた場合はその旨と理由を
-記録している（記録そのものは非公開の実験ノートにある）。
+記録している。
+
+各計画の文中に `lab_log.md 追記N` という参照がある。これは日々の実験ノートで、
+**未発表の結果と患者データに触れる記述を含むため公開していない。**参照は出所を
+示すためのもので、解析を再現するのに要る閾値・規準・手順はいずれも
+`preregistration/` の各文書の中に書いてある。
 
 ## 引用
 

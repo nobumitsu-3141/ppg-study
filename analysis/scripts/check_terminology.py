@@ -81,7 +81,7 @@ WARN = [
              r"病的肥満|病的骨折|病的反射"),
 ]
 
-DEFAULT_TARGETS = ["docs", "analysis/scripts", "analysis/src", "analysis/README.md", "README.md"]
+DEFAULT_TARGETS = ["docs", "analysis/scripts", "analysis/src", "analysis/README.md", "README.md", "tools"]
 SUFFIX = {".md", ".py", ".html", ".txt"}
 
 # 既知の残件を記録しておき、**増えたときだけ落とす。**

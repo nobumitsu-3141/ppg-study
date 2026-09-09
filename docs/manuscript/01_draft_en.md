@@ -495,8 +495,9 @@ Analyses were performed in Python 3.9.6 with NumPy 2.0.2, SciPy 1.13.1 and panda
 All analysis code, the frozen analysis plan and the synthetic-data verification suite are
 available at https://github.com/nobumitsu-3141/ppg-pda-analysis and archived at
 doi:10.5281/zenodo.22676039 (release v1.0.0); the freeze of the plan carries an earlier
-timestamp at doi:10.5281/zenodo.22167118. Every script runs its verification suite offline
-under --selftest.
+timestamp at doi:10.5281/zenodo.22167118. The scripts that carry the confirmatory and
+exploratory analyses (23 of 37) run their verification suite offline under --selftest; the
+data-acquisition, figure and table scripts operate on downloaded or already-extracted data.
 
 ---
 
