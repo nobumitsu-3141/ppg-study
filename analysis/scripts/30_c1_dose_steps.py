@@ -482,6 +482,19 @@ def positive_control_cases(rows: list) -> set:
 # ================================================================ 報告
 def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "",
            sap: str = "1c") -> dict:
+    # **SAP-1d §6: 増量で平均血圧が上がらなかった症例は結果を読まない。**
+    # フェニレフリンを増やして血圧が上がらない症例は自然実験が成立していない
+    # （記録されない手押しボーラス、体位変換、出血などが同時に起きている）。
+    # 数えるだけでなく、実際にその症例を落とす。SAP-1c にはこの絞り込みが無い。
+    n_pos_excl = 0
+    if sap == "1d" and "フェニレフリン" in rows_by_set:
+        keep = positive_control_cases(rows_by_set["フェニレフリン"])
+        before = {r["caseid"] for r in rows_by_set["フェニレフリン"]}
+        n_pos_excl = len(before - keep)
+        rows_by_set = {k: [r for r in v if r["caseid"] in keep]
+                       for k, v in rows_by_set.items()}
+        if n_pos_excl:
+            print(f"  陽性対照が成立しなかった {n_pos_excl} 例を除外した（SAP-1d §6）")
     print("=" * 78)
     print("研究1c C-1: 昇圧薬の用量ステップに対する PWTT 構成要素の応答（SAP-1c）")
     print("=" * 78)
@@ -531,21 +544,35 @@ def report(rows_by_set: dict, n_cases_total: int, seed: int = 0, frozen: str = "
         pname = "Δ(T2−T1)"
     inc = summary.get(("フェニレフリン", pcol, +1), {"n": 0})
     dec = summary.get(("フェニレフリン", pcol, -1), {"n": 0})
-    controls = {}
+    # **SAP-1d の陰性対照は擬似ステップだけである。**プロポフォールは血管拡張薬、
+    # レミフェンタニルも交感神経緊張を下げるので、血管の指標がそこで動くのは
+    # 「手順が時間ドリフトを拾っている」証拠にならない。陰性対照にすると、
+    # 指標が正しく動いた場合に「保留」と誤判定する（SAP-1d §6）。
+    # SAP-1c は主指標が時間の量なので従来どおり 3 群すべてを陰性対照にする。
+    neg_only = {"擬似"} if sap == "1d" else None
+    controls, refs = {}, {}
     for label in rows_by_set:
         if label == "フェニレフリン":
             continue
         for dval, dname in ((+1, "増量"), (-1, "減量"), (0, "")):
-            s = summary.get((label, pcol, dval))
-            if s and s.get("n", 0):
-                controls[f"{label}{('・' + dname) if dname else ''}"] = s
+            st = summary.get((label, pcol, dval))
+            if not (st and st.get("n", 0)):
+                continue
+            key = f"{label}{('・' + dname) if dname else ''}"
+            if neg_only is not None and not any(k in label for k in neg_only):
+                refs[key] = st
+            else:
+                controls[key] = st
     verdict, notes = primary_verdict(inc, dec, controls, n_cases_total,
                                      sign=psign, mde=pmde, use_rel=prel, unit=punit,
                                      min_cases=SAP1D_MIN_CASES if sap == "1d" else None)
     if sap == "1d":
-        n_pos = len(positive_control_cases(rows_by_set.get("フェニレフリン", [])))
+        for key, st in refs.items():
+            print(f"  参考（判定に使わない）{key}: {_ci(st, d=3)}"
+                  "　※血管作動性があるので陰性対照にしない（SAP-1d §6）")
+        n_pos = len({r["caseid"] for r in rows_by_set.get("フェニレフリン", [])})
         notes.insert(0, f"陽性対照（増量で MAP 上昇）が成立した症例: {n_pos}"
-                        f"（要 {SAP1D_MIN_POSCTRL} 以上）")
+                        f"（要 {SAP1D_MIN_POSCTRL} 以上。成立しなかった {n_pos_excl} 例は除外済み）")
         if n_pos < SAP1D_MIN_POSCTRL:
             verdict = (f"保留 → 陽性対照が成立した症例が {n_pos} < {SAP1D_MIN_POSCTRL}。"
                        "自然実験が成立していない（SAP-1d §7）")
@@ -645,6 +672,106 @@ def run_stats(c1_dir: Path, seed: int = 0, frozen_note: str = "", out_dir: Path 
             sys.stdout = old
     print(f"\nステップ別の Δ: {out_dir / 'steps.csv'}\n表の全文: {out_dir / 'c1_report.txt'}")
     return res
+
+
+def count_steps_only(cases: Path | None = None, limit: int | None = None) -> int:
+    """**波形を落とさずに、用量ステップが何個あるかだけ数える。**
+
+    抽出は 103 例・`--pda` 付きで数時間かかる。**その前に「そもそもステップがあるのか」を
+    確かめる。**Orchestra のレートは 1 Hz の数値トラックなので、取得は 1 例あたり数秒で済む。
+    ステップの定義は本番と同一（`dose_steps` をそのまま呼ぶ）。交絡による除外も同じ規則で数える。
+
+    症例あたりのステップ数が少なすぎれば、抽出しても判定できない。**先に分かる。**
+    """
+    import pandas as pd
+    import vitaldb
+    t = pd.read_csv(DATA / "trks.csv")
+    by_case = {int(c): set(g["tname"]) for c, g in t.groupby("caseid")}
+    ids = sorted(pd.read_csv(cases)["caseid"].astype(int)) if cases else \
+        sorted(sap1d_case_list()["caseid"])
+    if limit:
+        ids = ids[:limit]
+    print(f"レートだけを取得して用量ステップを数える（{len(ids)} 例）")
+    rows = []
+    for k, cid in enumerate(ids, 1):
+        names = by_case.get(cid, set())
+        rate_tracks = sorted(n for n in names
+                             if n.startswith("Orchestra/") and n.endswith("_RATE"))
+        if RATE_TRACK(PRESSOR) not in rate_tracks:
+            continue
+        # **陽性対照（増量で平均血圧が上がるか）も同時に見る。**動脈圧波形は要らない。
+        # 数値トラック Solar8000/ART_MBP（1 Hz）で足りる。SAP-1d §6 は上がらない症例を
+        # 落とすので、これを測らないと最終的な症例数が分からない。
+        want = rate_tracks + (["Solar8000/ART_MBP"] if "Solar8000/ART_MBP" in names else [])
+        try:
+            num = vitaldb.load_case(cid, want, 1.0)
+        except Exception as e:      # noqa: BLE001
+            print(f"  [{k}/{len(ids)}] {cid}: 取得失敗 {str(e)[:40]}")
+            continue
+        if num is None or not num.size:
+            continue
+        r = {tr.split("/")[1].replace("_RATE", ""): np.nan_to_num(np.asarray(num[:, j], float))
+             for j, tr in enumerate(rate_tracks)}
+        mbp = (np.asarray(num[:, len(rate_tracks)], float)
+               if len(want) > len(rate_tracks) else None)
+
+        def _dmap(t_s: float) -> float:
+            """ステップ前後の平均血圧の差（SAP-1d §4 と同じ区間の取り方）。"""
+            if mbp is None:
+                return float("nan")
+            a = mbp[max(0, int(t_s - PRE_S)):int(t_s)]
+            b = mbp[int(t_s + WASHIN_S):int(t_s + WASHIN_S + POST_S)]
+            a, b = a[np.isfinite(a)], b[np.isfinite(b)]
+            if a.size < 30 or b.size < 30:
+                return float("nan")
+            return float(np.median(b) - np.median(a))
+        st = dose_steps(r[PRESSOR])
+        others = [v for kk, v in r.items() if kk != PRESSOR]
+        n_inc = n_dec = n_conf = 0
+        dmaps = []
+        for sp in st:
+            t_s, d = sp["t"], sp["direction"]
+            # 交絡: 前後の区間に他の薬のレート変化が入るステップは落とす（本番と同じ規則）
+            if any(changes_within(o, t_s - PRE_S, t_s + WASHIN_S + POST_S) for o in others):
+                n_conf += 1
+                continue
+            n_inc += int(d > 0)
+            n_dec += int(d < 0)
+            if d > 0:
+                dmaps.append(_dmap(t_s))
+        dm = [x for x in dmaps if np.isfinite(x)]
+        pos = bool(dm) and float(np.median(dm)) > 0        # 陽性対照が成立した症例か
+        rows.append({"caseid": cid, "inc": n_inc, "dec": n_dec, "conf": n_conf,
+                     "dmap": float(np.median(dm)) if dm else float("nan"),
+                     "posctrl": pos, "dur_min": len(r[PRESSOR]) / 60.0})
+        print(f"  [{k}/{len(ids)}] {cid}: 増量 {n_inc}・減量 {n_dec}・交絡で除外 {n_conf}"
+              f"・ΔMAP {('%+.1f' % np.median(dm)) if dm else '—'}"
+              f"（記録 {len(r[PRESSOR])/60:.0f} 分）", flush=True)
+    d = pd.DataFrame(rows)
+    if not len(d):
+        print("\n該当なし。")
+        return 1
+    print("\n" + "=" * 72)
+    print(f"症例 {len(d)}　増量ステップ計 {int(d['inc'].sum())}・減量 {int(d['dec'].sum())}"
+          f"・交絡で除外 {int(d['conf'].sum())}")
+    print(f"増量ステップが 1 つ以上ある症例: {int((d['inc'] >= 1).sum())} / {len(d)}")
+    print(f"減量ステップが 1 つ以上ある症例: {int((d['dec'] >= 1).sum())} / {len(d)}")
+    print(f"症例あたり増量ステップ 中央値 {d['inc'].median():.1f}・最大 {int(d['inc'].max())}")
+    n_inc_case = int((d["inc"] >= 1).sum())
+    n_pos = int((d["inc"] >= 1).mul(d["posctrl"]).sum()) if "posctrl" in d else 0
+    print(f"\n**陽性対照（増量で平均血圧が上昇）も成立する症例: {n_pos} / {n_inc_case}**"
+          f"（SAP-1d §6 でこれ以外は落とす）")
+    print(f"→ 指標が測れる割合を r とすると、最終的な症例数は およそ {n_pos} × r。"
+          f"保留の閾値は {SAP1D_MIN_POSCTRL} である。")
+    print(f"\n【読み方】SAP-1d §7 は「主指標を測れた症例が 50 未満なら保留」である。")
+    print(f"増量ステップがある症例が 50 を大きく上回っていなければ、波形の抽出をしても")
+    print(f"判定に届かない（ステップがあっても指標が測れない症例がさらに落ちるため）。")
+    print("=" * 72)
+    dst = ROOT.parent / "docs" / "research" / "results" / "30_step_feasibility.txt"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    d.to_csv(DATA / "c1_step_counts.csv", index=False)
+    dst.write_text(d.to_string(index=False) + "\n", encoding="utf-8")
+    return 0
 
 
 def sap_frozen_tag(which: str = "1c") -> str | None:
@@ -1144,6 +1271,19 @@ def selftest() -> int:
     _pc = [{"caseid": 1, "direction": +1, "d_map": 8.0}, {"caseid": 1, "direction": +1, "d_map": 6.0},
            {"caseid": 2, "direction": +1, "d_map": -3.0}, {"caseid": 3, "direction": -1, "d_map": 9.0}]
     rep("陽性対照は増量で MAP が上がった症例だけを残す", positive_control_cases(_pc) == {1})
+    # 陽性対照の除外は report() の冒頭で全群に適用される。ここでは絞り込みの規則だけを見る
+    # （report() 全体を呼ぶには rel_* 列を含む完全な行が要り、検査が読みにくくなる）。
+    _rbs = {"フェニレフリン": _pc,
+            "擬似ステップ（非投与区間）": [{"caseid": 1, "direction": 0},
+                                          {"caseid": 2, "direction": 0}]}
+    _keep = positive_control_cases(_rbs["フェニレフリン"])
+    _after = {k: [r for r in v if r["caseid"] in _keep] for k, v in _rbs.items()}
+    rep("SAP-1d は陽性対照が成立しない症例を全群から落とす（数えるだけにしない）",
+        {r["caseid"] for r in _after["フェニレフリン"]} == {1}
+        and {r["caseid"] for r in _after["擬似ステップ（非投与区間）"]} == {1})
+    rep("SAP-1d 判定: 増量ステップが無ければ判定できない",
+        primary_verdict({"n": 0}, dec1d, quiet1d, 103, **kw,
+                        min_cases=SAP1D_MIN_CASES)[0].startswith("判定できない"))
     rep("SAP-1d 判定: 予測と逆向きに有意なら「動かない」ではなく所見",
         "予測と逆向きに有意" in primary_verdict(
             {**inc1d, "case_med_rel": -0.25, "case_med": -0.06, "sign_p": 0.001},
@@ -1188,6 +1328,8 @@ def main() -> None:
                     help="どの事前登録の凍結タグを要求するか（既定 1c）")
     ap.add_argument("--cases", type=Path, default=None,
                     help="抽出をこの caseid 一覧（csv）に限定する")
+    ap.add_argument("--steps-only", action="store_true",
+                    help="波形を落とさず、用量ステップが何個あるかだけ数える（抽出の前に）")
     ap.add_argument("--sap1d-cases", action="store_true",
                     help="SAP-1d §2 の対象症例を data/sap1d_cases.csv に書き出す")
     ap.add_argument("--unfrozen-ok", action="store_true",
@@ -1207,6 +1349,8 @@ def main() -> None:
         print(f"SAP-1d の対象 {len(df)} 例 → {dst}")
         if not (args.extract or args.stats):
             sys.exit(0)
+    if args.steps_only:
+        sys.exit(count_steps_only(args.cases, args.limit if args.limit < 10000 else None))
     if args.extract:
         run_extract(args.limit, args.jobs, args.pda, args.cases)
     if args.stats:
