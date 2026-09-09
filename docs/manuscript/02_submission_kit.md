@@ -128,8 +128,9 @@ by that board. [[出典: VitalDB の原著論文の記載に合わせて確認�
 The data analysed in this study are publicly available from VitalDB
 (https://vitaldb.net). The complete analysis code, the prespecified statistical analysis
 plan and the synthetic-data verification suite are available at
-https://github.com/nobumitsu-3141/ppg-study; the frozen analysis plan is archived at
-Zenodo (doi:10.5281/zenodo.22167118).
+https://github.com/nobumitsu-3141/ppg-pda-analysis and archived at Zenodo
+(doi:10.5281/zenodo.22676039, release v1.0.0); the freeze of the analysis plan carries an
+earlier timestamp at Zenodo (doi:10.5281/zenodo.22167118).
 ```
 
 > **注意**: リポジトリは現在公開設定。投稿時にURLを示す前提なら公開のままでよいが、
@@ -163,28 +164,21 @@ manuscript.
 
 ---
 
-## 5. Zenodo で事前登録に第三者DOIを付ける手順（無料・約10分）
+## 5. Zenodo の DOI（**2 件とも取得済み**）
 
-GitHubのコミット履歴だけでは「事後に書き換えていない」ことの第三者証明として弱い。
-Zenodo（CERN運営・無料）でリポジトリのスナップショットにDOIを発行する。
+| 何を指すか | DOI | 取得日 | 中身 |
+|---|---|---|---|
+| 統計解析計画の凍結 | `10.5281/zenodo.22167118` | 2026-08-28 | `ppg-study` のタグ `sap-v0.3`（コミット 407f226） |
+| 解析コード一式 | `10.5281/zenodo.22676039` | 2026-09-09 | `ppg-pda-analysis` の `v1.0.0`（63 ファイル・コミット 3fa7765） |
 
-1. https://zenodo.org を開き **「Sign in with GitHub」** でログイン
-2. 右上メニュー → **GitHub** ページで `nobumitsu-3141/ppg-study` のスイッチを **ON**
-3. **先にMacのターミナルでタグを作る**（クラウドからはタグをプッシュできないため）:
-   ```
-   cd ~/ppg-study
-   git tag -a sap-v0.3 407f226 -m "SAP v0.3 freeze (2026-08-28)"
-   git push origin sap-v0.3
-   ```
-4. GitHubのリポジトリページ → **Releases → Draft a new release**
-   - Tag: `sap-v0.3`（↑で作成したもの。SAP凍結コミット 407f226 を指す）
-   - Title: `SAP v0.3 (frozen measurement pipeline)`
-   - 説明: Statistical analysis plan frozen on 2026-08-28 (commit 407f226),
-     before the confirmatory analysis. Archived for timestamping.
-   - **Publish release**
-5. 数分後にZenodoが自動アーカイブし **DOI (10.5281/zenodo.XXXXXXX)** を発行
-6. 原稿 §2.1 の `[[Zenodo DOI; commit hash; 28 August 2026]]` に記入
+前者は「確認的解析の前に計画を固定した」ことの第三者証明である。DOI の発行日は
+凍結日より後になるが、タグの指すコミット日付と GitHub の履歴が凍結日を裏づける。
+原稿には「frozen on 28 August 2026 (commit 407f226; archived at doi:...)」と書いてある。
 
-注意: DOI発行日は今日になるが、タグの指すコミット日付とGitHub履歴が凍結日を
-裏づける。原稿には「frozen on 28 August 2026 (commit 407f226; archived at doi:...)」
-と正確に書く。
+後者は解析コードの保存先である。**リポジトリを分けたので、原稿が示す URL は
+`ppg-study` ではなく `ppg-pda-analysis` である。**前者に含まれていた原稿・実験ノート・
+依頼書は非公開の `ppg-study-private` に移してある。
+
+`ppg-pda-analysis` は MIT（コード）と CC BY 4.0（`preregistration/` の文書）の二本立てで、
+`.zenodo.json` が題名・著者・所属・ライセンス・キーワードを供給している。
+版を上げるときは GitHub でリリースを作れば Zenodo が自動で新しい版の DOI を発行する。

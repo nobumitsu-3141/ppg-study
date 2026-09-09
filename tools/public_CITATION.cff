@@ -24,3 +24,10 @@ keywords:
   - Pulse Wave Database
   - anesthesiology
 license: MIT
+version: "1.0.0"
+doi: "10.5281/zenodo.22676039"
+repository-code: "https://github.com/nobumitsu-3141/ppg-pda-analysis"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22676039"
+    description: "Zenodo archive of release v1.0.0"

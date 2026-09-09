@@ -38,7 +38,15 @@ PWDB 系の一部は実データを参照するため、データを取得して
 
 ## 引用
 
-`CITATION.cff` を参照。版ごとの DOI は Zenodo にある。
+`CITATION.cff` を参照。v1.0.0 は Zenodo に保存してある。
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22676039.svg)](https://doi.org/10.5281/zenodo.22676039)
+
+    doi:10.5281/zenodo.22676039
+
+版を上げるたびに Zenodo が新しい DOI を発行する。**論文が引いているのは v1.0.0 の
+DOI である。**その版のコードで結果が出ているためで、以後の版を指してしまうと
+再現の対象が変わる。
 
 ## ライセンス
 

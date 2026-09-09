@@ -5706,3 +5706,51 @@ CC BY 版が公開されていたのは十数分である。GitHub は強制 pus
    （**このセッションはそこに push しているので、消すのは作業の最後にする**）
 3. 履歴の書き換え（新谷先生の文書。追記71）
 4. ORCID を入れるか
+
+## 2026-09-09（追記76）　解析コードの DOI を取得し、原稿に書き込んだ
+
+`ppg-pda-analysis` の `v1.0.0` に Zenodo が **`10.5281/zenodo.22676039`** を発行した。
+記録の種別は Software、言語は English、出版者は Zenodo。`.zenodo.json` が読まれている。
+
+**DOI が 2 つあることを混同しないこと。**
+
+| 何を指すか | DOI | 日付 | 中身 |
+|---|---|---|---|
+| 統計解析計画の凍結 | `10.5281/zenodo.22167118` | 2026-08-28 | `ppg-study` のタグ `sap-v0.3`（コミット 407f226） |
+| 解析コード一式 | `10.5281/zenodo.22676039` | 2026-09-09 | `ppg-pda-analysis` の `v1.0.0`（63 ファイル・コミット 3fa7765） |
+
+前者は「確認的解析の前に計画を固定した」ことの証明であって、コードの保存先ではない。
+**両方を残す。**片方で置き換えると、凍結の証明か再現の手段かのどちらかが失われる。
+
+### 書き込んだ場所
+
+| 文書 | 箇所 |
+|---|---|
+| `01_draft_en.md` | §2.1 相当（167行）・ソフトウェア節（496行）・Statements の Data availability（987行） |
+| `05_draft_ja.md` | 事前登録と再現性の段（82行） |
+| `paper2/01_draft_en.md` | 方法の再現性（249行）・Statements の Data availability（513行） |
+| `paper2/05_draft_ja.md` | ソフトウェアと再現性（108行） |
+| `02_submission_kit.md` | Data availability の雛形（131行）・第5節を「取得済み」の記録に書き換え |
+
+`[[Zenodo DOI — deposit at submission]]` と `〔Zenodo DOI〕` は**全て埋まった**。
+原稿が示すリポジトリは `ppg-study` ではなく **`ppg-pda-analysis`** に変えた。分離したためである。
+和文 docx を作り直した（論文1 は78段落、論文2 は51段落）。
+
+### 版ごとの DOI を選んだ理由
+
+Zenodo は版ごとの DOI と全版をまとめる concept DOI の 2 つを持つ。**原稿には版ごとの
+DOI（`22676039` = v1.0.0）を書いた。**concept DOI は常に最新版を指すので、後で v2 を
+出すと、論文が指す先が結果を生んだコードでなくなる。**再現の対象を固定するほうを採る。**
+concept DOI はリポジトリの `README.md` から辿れる。
+
+公開側の `CITATION.cff` に `version`・`doi`・`repository-code`・`identifiers` を、
+`README.md` に DOI バッジと「論文が引いているのは v1.0.0 の DOI である」旨を足した。
+**これらはまだ push していない。**次のリリースで Zenodo に反映される。
+
+### 残っていること
+
+1. 公開・非公開の 2 つに push（`CITATION.cff` と `README.md` の DOI 追記分）
+2. 作業ブランチ `claude/slide-references-formatting-ynthk7` の削除（**作業の最後に**）
+3. 履歴の書き換え（新谷先生の文書。追記71）
+4. ORCID を入れるか
+5. 論文2 の文献 1）2）が〔要確定〕のまま
