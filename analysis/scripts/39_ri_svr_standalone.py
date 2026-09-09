@@ -39,6 +39,7 @@ SVR 方向にまったく動かない場合にのみ足切りとして意味を�
     python3 scripts/39_ri_svr_standalone.py --run --jobs 4          # 全例
     python3 scripts/39_ri_svr_standalone.py --stats
     python3 scripts/39_ri_svr_standalone.py --diag      # 症例ごとの脱落の内訳
+    python3 scripts/39_ri_svr_standalone.py --dose      # SVR の振れ幅で絞ると相関は上がるか
 
 出力
 ----
@@ -329,6 +330,81 @@ def analyse_case(d: pd.DataFrame, col: str) -> dict | None:
             "flat_svr": sub(flat, x, sv), "conc_svr": sub(conc, x, sv)}
 
 
+PE_BASE = 26.9        # 研究1 の esCCO の誤差率（%）。ρ を「何ポイント縮むか」に翻訳する
+DOSE_THR = (0.00, 0.05, 0.10, 0.20, 0.30, 0.50)
+
+
+def pe_after(rho: float) -> float:
+    """相関 ρ の補正変数を1本足したときの誤差率。PE = 1.96·SD/mean は √(1−ρ²) で縮む。"""
+    return PE_BASE * float(np.sqrt(max(0.0, 1.0 - rho ** 2))) if np.isfinite(rho) else NAN
+
+
+def dose_case(d: pd.DataFrame, col: str, thr: float) -> dict | None:
+    """**SVR の振れ幅が大きいウィンドウだけに絞ったときの相関。**
+
+    ρ が 0.1 前後にとどまるとき、原因は二つありうる。
+    (a) 関連は本当にあるが、雑音に埋もれて薄まっている（＝減衰）。
+    (b) 関連がそもそも弱い。
+    区別する方法がある。**(a) なら、SVR が大きく動いたウィンドウに絞るほど ρ は上がる**
+    （信号対雑音比が上がるため）。(b) なら閾値を上げても平らなままである。
+    これは投与量反応の考え方で、閾値は結果を見る前に決めた等間隔の列を使う。
+    """
+    v0 = d[col].to_numpy(float)
+    m0 = d["map"].to_numpy(float)
+    s0 = d["svr"].to_numpy(float)
+    ok = np.isfinite(v0) & np.isfinite(m0) & np.isfinite(s0)
+    if ok.sum() < MIN_WIN:
+        return None
+    x, mp, sv = rel(v0[ok]), rel(m0[ok]), rel(s0[ok])
+    m = np.abs(sv) >= thr
+    if m.sum() < MIN_PAIR:
+        return None
+    return {"n": int(m.sum()), "rho_svr": spearman(x[m], sv[m]),
+            "rho_map": spearman(x[m], mp[m]), "rho_svr_map": spearman(sv[m], mp[m])}
+
+
+def dose() -> int:
+    frames = [d for _c, d in load_frames()]
+    if not frames:
+        print("先に --lists と --run を実行すること。")
+        return 1
+    out = ["=" * 92,
+           "【診断】SVR の振れ幅で絞ると相関は上がるか（39番 --dose）",
+           "ρ が薄いのは雑音のせいか、関連がそもそも弱いのか。絞るほど上がるなら前者である。",
+           "=" * 92]
+    for col in INDEX_COLS:
+        out.append(f"\n■ {INDEX_NAME[col]}")
+        out.append(f"{'|ΔSVR%| の下限':>14s}{'例':>5s}{'ウィンドウ':>10s}"
+                   f"{'ρ_SVR':>9s}{'ρ_MAP':>9s}{'ρ(SVR,MAP)':>12s}{'PE 26.9%→':>12s}")
+        for thr in DOSE_THR:
+            rows = [r for d in frames if col in d.columns
+                    for r in [dose_case(d, col, thr)] if r]
+            if not rows:
+                out.append(f"{thr:>13.0%} {'—':>5s}")
+                continue
+            t = pd.DataFrame(rows)
+            rs = float(np.nanmedian(t["rho_svr"]))
+            out.append(f"{thr:>13.0%}{len(t):>5d}{int(t['n'].sum()):>10,}"
+                       f"{rs:>+9.3f}{float(np.nanmedian(t['rho_map'])):>+9.3f}"
+                       f"{float(np.nanmedian(t['rho_svr_map'])):>+12.3f}"
+                       f"{pe_after(rs):>11.1f}%")
+    out.append(f"""
+  【読み方】上から下へ ρ_SVR が**単調に上がれば**、関連は実在して雑音で薄まっている
+  （＝より良い測り方をすれば伸びる余地がある）。**平らなら**、関連そのものが弱い。
+  最右列は「その ρ の補正変数を1本足したとき esCCO の誤差率がどこまで縮むか」である。
+  PE = 1.96·SD/mean は √(1−ρ²) で縮むので、{PE_BASE}% → 20% には ρ = 0.67 が要る。
+  なお ρ(SVR,MAP) は同じ部分集合での参照値である。**MAP は SVR の分子に入っている**ので、
+  この列が実質的な天井にあたる。指標の ρ はこれと比べて読むこと。""")
+    out.append("=" * 92)
+    text = "\n".join(out)
+    print(text)
+    dst = ROOT.parent / "docs" / "research" / "results" / "39_dose.txt"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(text + "\n", encoding="utf-8")
+    print(f"\n書き出し: {dst}", file=sys.stderr)
+    return 0
+
+
 def load_frames() -> list[tuple[int, pd.DataFrame]]:
     """case_*.csv に svr_*.csv を結合して返す。集計と診断の両方が同じ経路を通る。"""
     frames = []
@@ -570,6 +646,18 @@ def selftest() -> int:
     chk("先頭が欠測でも ρ(ΔSVR%,ΔMAP%) が NaN にならない",
         c is not None and np.isfinite(c["rho_svr_map"]))
 
+    # --dose の検算。PE の縮み方と、絞り込みの向き。
+    chk("ρ=0 なら PE は縮まない", abs(pe_after(0.0) - PE_BASE) < 1e-9)
+    chk("ρ=0.67 で PE 26.9%→約20%", abs(pe_after(0.67) - 20.0) < 0.1)
+    chk("ρ=1 で PE は0", abs(pe_after(1.0)) < 1e-9)
+    z = dose_case(d_svr, "ri_v1", 0.0)
+    z5 = dose_case(d_svr, "ri_v1", 0.50)
+    chk("dose_case は閾値0で全ウィンドウを使う", z is not None and z["n"] == n_w)
+    chk("dose_case は閾値を上げるとウィンドウが減る",
+        z5 is None or z5["n"] < z["n"])
+    chk("SVR に完全に従う指標なら絞っても ρ は高いまま",
+        z is not None and z["rho_svr"] > 0.9 and (z5 is None or z5["rho_svr"] > 0.9))
+
     print(f"\n  {ok}/{ok + len(ng)} PASS" + ("  ALL PASS" if not ng else f"  FAIL: {ng}"))
     return 0 if not ng else 1
 
@@ -583,6 +671,8 @@ def main() -> None:
                     help="波形は再取得せず、SVR の数値トラックだけ取り直す（安価）")
     ap.add_argument("--diag", action="store_true",
                     help="症例ごとの脱落の内訳を出す（どこで落ちたかを見る）")
+    ap.add_argument("--dose", action="store_true",
+                    help="SVR の振れ幅で絞ると相関が上がるかを見る（雑音か、弱いのか）")
     ap.add_argument("--selftest", action="store_true", help="ネットワーク不要の自己検査")
     ap.add_argument("--limit", type=int, default=None, help="症例数を絞る（seed 0 で無作為）")
     ap.add_argument("--jobs", type=int, default=4)
@@ -591,6 +681,8 @@ def main() -> None:
         sys.exit(selftest())
     if a.diag:
         sys.exit(diagnose())
+    if a.dose:
+        sys.exit(dose())
     if a.refresh_svr:
         ids = sorted(int(f.stem.split("_")[1]) for f in OUT.glob("case_*.csv"))
         print(f"SVR を取り直す {len(ids)} 例")
