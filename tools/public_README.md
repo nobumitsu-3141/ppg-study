@@ -52,15 +52,19 @@ Database も VitalDB も取得しない。`tests/` の 8 本も同じ状態で�
 
 ## 引用
 
-`CITATION.cff` を参照。v1.0.0 は Zenodo に保存してある。
+`CITATION.cff` を参照。Zenodo に保存してある。
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22676039.svg)](https://doi.org/10.5281/zenodo.22676039)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22676038.svg)](https://doi.org/10.5281/zenodo.22676038)
 
-    doi:10.5281/zenodo.22676039
+    doi:10.5281/zenodo.22676038
 
-版を上げるたびに Zenodo が新しい DOI を発行する。**論文が引いているのは v1.0.0 の
-DOI である。**その版のコードで結果が出ているためで、以後の版を指してしまうと
-再現の対象が変わる。
+**これは全版を指す DOI で、常に最新版に解決する。**論文もこれを引いている。
+版ごとの DOI は各版の記録にある（v1.0.0 は `10.5281/zenodo.22676039`）。
+
+版を分けずに全版を指す DOI を引くのは、**解析コードが版をまたいで挙動が変わらない**
+ためである。v1.0.0 と後続の版とで、説明文を除いた構文木が違うのは文書の用語検査
+（`analysis/scripts/check_terminology.py`）だけで、`src/` と解析スクリプトは同一である。
+版が増えて変わるのは説明と検証コードの同梱であって、結果を生む処理ではない。
 
 ## ライセンス
 

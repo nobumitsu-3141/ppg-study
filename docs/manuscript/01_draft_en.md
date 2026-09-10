@@ -165,7 +165,8 @@ window-length sensitivity analysis) were added on 29 August (version 0.3.1) and 
 after the confirmatory run (§2.10); all are labelled as such. The frozen plan and the
 complete analysis code
 are publicly available at https://github.com/nobumitsu-3141/ppg-pda-analysis, archived at Zenodo
-(doi:10.5281/zenodo.22676039, release v1.0.0). The freeze itself carries an earlier third-party
+(doi:10.5281/zenodo.22676038, the concept DOI, which always resolves to the latest
+version; the analyses reported here used v1.0.0). The freeze itself carries an earlier third-party
 timestamp (Zenodo, doi:10.5281/zenodo.22167118, archiving tag sap-v0.3 at
 commit 407f226; frozen 28 August 2026). The study is reported in accordance with the
 STROBE statement for observational research [von Elm 2007], and the secondary
@@ -498,7 +499,8 @@ at the decomposition convergence audit are not recovered.
 Analyses were performed in Python 3.9.6 with NumPy 2.0.2, SciPy 1.13.1 and pandas 2.3.3.
 All analysis code, the frozen analysis plan and the synthetic-data verification suite are
 available at https://github.com/nobumitsu-3141/ppg-pda-analysis and archived at
-doi:10.5281/zenodo.22676039 (release v1.0.0); the freeze of the plan carries an earlier
+doi:10.5281/zenodo.22676038 (concept DOI, resolving to the latest version; the analyses
+used v1.0.0); the freeze of the plan carries an earlier
 timestamp at doi:10.5281/zenodo.22167118. The scripts that carry the confirmatory and
 exploratory analyses (23 of 37) run their verification suite offline under --selftest; the
 data-acquisition, figure and table scripts operate on downloaded or already-extracted data.
@@ -1013,8 +1015,9 @@ Figures are produced by `analysis/scripts/07_figures.py` in the archived code.
 - **Data availability**: VitalDB is publicly available at https://vitaldb.net .
   All analysis code, the prespecified analysis plan and the synthetic-data verification
   suite are at https://github.com/nobumitsu-3141/ppg-pda-analysis, archived at
-  doi:10.5281/zenodo.22676039 (release v1.0.0); the freeze of the plan carries an
-  earlier timestamp at doi:10.5281/zenodo.22167118.
+  doi:10.5281/zenodo.22676038 (concept DOI, resolving to the latest version; the
+  analyses used v1.0.0); the freeze of the plan carries an earlier timestamp at
+  doi:10.5281/zenodo.22167118.
 - **Funding**: None.
 - **Conflicts of interest**: None declared. [[投稿前に先生ご自身の最終確認を]]
 - **Author contributions**: NK designed the study, wrote the analysis code, performed

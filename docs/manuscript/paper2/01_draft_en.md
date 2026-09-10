@@ -250,7 +250,8 @@ recorded in every output row of the result table
 `data/pwdb/pwdb_compare.csv` on the machine that produced the confirmatory run and insert
 them here; the copy in the cloud environment is a self-test subset and its versions differ]].
 Analysis code, the frozen decision document and the result tables are archived at
-https://github.com/nobumitsu-3141/ppg-pda-analysis (doi:10.5281/zenodo.22676039, release v1.0.0).
+https://github.com/nobumitsu-3141/ppg-pda-analysis (doi:10.5281/zenodo.22676038, the concept DOI, resolving to the latest version; the
+analyses used v1.0.0).
 
 ---
 
@@ -531,7 +532,8 @@ Figures are produced by the archived code; the underlying values are in tables 1
 **Data availability.** The Pulse Wave Database is openly available at
 doi:10.5281/zenodo.3275625. Analysis code, the prespecified decision document and all result
 tables are archived at https://github.com/nobumitsu-3141/ppg-pda-analysis
-(doi:10.5281/zenodo.22676039, release v1.0.0).
+(doi:10.5281/zenodo.22676038, the concept DOI, resolving to the latest version; the
+analyses used v1.0.0).
 **Ethics.** Not required; no human participants or human data.
 **Funding.** [[none / to declare]]
 **Conflicts of interest.** [[author attestation]]

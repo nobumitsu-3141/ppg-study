@@ -129,7 +129,8 @@ The data analysed in this study are publicly available from VitalDB
 (https://vitaldb.net). The complete analysis code, the prespecified statistical analysis
 plan and the synthetic-data verification suite are available at
 https://github.com/nobumitsu-3141/ppg-pda-analysis and archived at Zenodo
-(doi:10.5281/zenodo.22676039, release v1.0.0); the freeze of the analysis plan carries an
+(doi:10.5281/zenodo.22676038, concept DOI; the analyses used v1.0.0); the freeze of the
+analysis plan carries an
 earlier timestamp at Zenodo (doi:10.5281/zenodo.22167118).
 ```
 
@@ -169,7 +170,8 @@ manuscript.
 | 何を指すか | DOI | 取得日 | 中身 |
 |---|---|---|---|
 | 統計解析計画の凍結 | `10.5281/zenodo.22167118` | 2026-08-28 | `ppg-study` のタグ `sap-v0.3`（コミット 407f226） |
-| 解析コード一式 | `10.5281/zenodo.22676039` | 2026-09-09 | `ppg-pda-analysis` の `v1.0.0`（63 ファイル・コミット 3fa7765） |
+| 解析コード一式（**全版**。原稿はこれを引く） | `10.5281/zenodo.22676038` | — | 常に最新版に解決する concept DOI |
+| 解析コード一式（v1.0.0） | `10.5281/zenodo.22676039` | 2026-09-09 | `ppg-pda-analysis` の `v1.0.0`（63 ファイル・コミット 3fa7765）。**`analysis/tests/` を含まず、README と `.zenodo.json` に事実でない記述がある** |
 
 前者は「確認的解析の前に計画を固定した」ことの第三者証明である。DOI の発行日は
 凍結日より後になるが、タグの指すコミット日付と GitHub の履歴が凍結日を裏づける。
