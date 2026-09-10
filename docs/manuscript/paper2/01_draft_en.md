@@ -64,7 +64,7 @@ it. **Fiducial-point analysis** locates the systolic peak, the dicrotic notch an
 diastolic peak directly on the waveform, and forms the interval ΔT between the systolic and
 diastolic peaks and the reflection index RI as the ratio of their heights. **Pulse
 decomposition analysis** instead fits the beat as a sum of component waves and forms the
-same two quantities from the positions and amplitudes of the fitted components.
+same two quantities from the positions and amplitudes of the fitted components (Figure 1).
 
 Decomposition was introduced to solve a specific problem. As arteries stiffen the dicrotic
 notch flattens and finally disappears, so fiducial-point analysis fails in exactly the
@@ -86,7 +86,7 @@ reference, the comparison has been pooled across a wide age range in small sampl
 
 None of these designs can detect a specific failure mode. Fitting a beat as a sum of
 component waves is an ill-posed problem: many parameter combinations give almost the same
-residual. Every goodness-of-fit criterion is, by construction, nearly invariant to which of
+residual (Figure 2). Every goodness-of-fit criterion is, by construction, nearly invariant to which of
 those solutions the optimiser lands on, while the extracted parameters are not. A method can
 therefore be excellent by every published criterion and still return a quantity that does
 not track the vascular property it names.
@@ -509,6 +509,22 @@ Decomposition-derived and fiducial-derived indices are different quantities; in 
 only the latter tracked truth.
 
 ---
+
+## Figure legends
+
+**Figure 1. What each family measures.** Schematic of a single beat, contrasting the
+quantities formed by pulse decomposition analysis with those read directly at the fiducial
+points.
+
+**Figure 2. The fit is ill-posed.** Two decompositions of the same beat with almost the
+same residual but the second component placed differently, and the resulting difference in
+ΔT and RI.
+
+**Figure 3. Single-factor sweeps.** Median index value within age stratum against each of
+the six factors varied one at a time at three levels, showing that the pulse-wave-velocity
+row alone is not monotone.
+
+Figures are produced by the archived code; the underlying values are in tables 1 to 4.
 
 ## Statements
 

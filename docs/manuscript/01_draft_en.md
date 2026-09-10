@@ -555,7 +555,8 @@ Values are median (IQR) or n (%).
 
 Consecutive-window lag-1 autocorrelation was +0.75 for PWTT, +0.50 for the ΔT-based index
 and +0.43 for RI, indicating series that track reproducible physiology rather than noise
-(Table 3). In the exploratory positive control (849 adults), ΔT shortened with age
+(Table 3, Figure 3b). In the exploratory positive control (849 adults, Figure 3a), ΔT
+shortened with age
 (ρ = −0.197, 95% CI −0.261 to −0.131, p < 0.0001) and was shorter in patients with
 preoperative hypertension (median 259 versus 267 ms). RI showed no association with age
 (ρ = +0.041, p = 0.23), but since the cited study makes no directional prediction for an
@@ -979,6 +980,28 @@ features survive in a processed monitor photoplethysmogram well enough to repeat
 test, and the measurement of transit time itself, since most of the intraoperative variation
 lay in the distal photoplethysmographic segment, whose true physiological range is far too
 narrow to account for it.
+
+## Figure legends
+
+**Figure 1. Flow of cases.** Cases in the source database, the four track requirements
+applied in turn, the eligible cohort, and the cases excluded at analysis with the reason
+and count for each step.
+
+**Figure 2. Premise test.** (a) One representative case: relative change from the
+calibration point in PWTT and in each vascular index, against time. (b) Distribution of
+the within-case coefficient of determination across cases, with the median marked. Windows
+falling outside the plotted range are counted in the corner of each panel.
+
+**Figure 3. Measurement quality and positive control.** (a) Positive control: component
+interval ΔT against age across cases, with the rank correlation and the number of cases.
+(b) Reproducibility: distribution of the lag-1 autocorrelation between consecutive windows
+for PWTT and for each index.
+
+**Figure 4. Agreement with the reference cardiac output.** Bland-Altman plots for the
+control estimator and for the estimator with the calibration constant corrected, on the
+same axes, with bias, limits of agreement and percentage error annotated.
+
+Figures are produced by `analysis/scripts/07_figures.py` in the archived code.
 
 ## Statements
 
