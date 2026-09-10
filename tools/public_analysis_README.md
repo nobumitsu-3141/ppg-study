@@ -35,7 +35,7 @@ python3 scripts/39_ri_svr_standalone.py --selftest
 | 自己完結 | 39番 | ネットワーク（VitalDB）だけ。最初から走る |
 | 合成データのみ | `tests/` 全部・25番・28番 | 何も要らない |
 | VitalDB の取得が要る | 00〜03番・05番・32番・34番・40番 | vitaldb.net への接続 |
-| 中間生成物が要る | 37番・38番 | 16番と主解析の出力（`data/features/`・`data/vasotone/`） |
+| 中間生成物が要る | 37番・38番・41番 | 16番と主解析の出力（`data/features/`・`data/vasotone/`） |
 | Pulse Wave Database が要る | 20・23・24・26・27・29・31・33番 | 22番で取得（doi:10.5281/zenodo.3275625） |
 
 **`--selftest` は 23 本すべてが、データを 1 つも置いていない状態で通る**（2026-09-10 に
@@ -91,6 +91,7 @@ clone 直後と同じ木で確認）。走行中に `data/` へ書き出され�
 | `scripts/38_couceiro_svr.py` | 【探索】Couceiro の指標について同じ検討を行う |
 | `scripts/39_ri_svr_standalone.py` | 【探索】37番と同じ問いを、中間生成物なしで最初から走らせる自己完結版 |
 | `scripts/40_downsample_125hz.py` | 【探索】500 Hz を 125 Hz に間引いたときに各指標が保たれるか。3 通りの間引き方で比べる |
+| `scripts/41_fill_tables.py` | 論文1 の表2・表4・表5 に残った未記入の値を出す。主解析と同じ関数・規準・乱数種を使い、確定済みの値が再現することを併せて表示する。再現しなければ止まる。`data/features/` が要る |
 | `scripts/check_terminology.py` | 文書の用語検査（`preregistration/terminology.md` の規則。記録との差分だけを見る） |
 
 ## 事前登録
