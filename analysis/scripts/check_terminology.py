@@ -72,8 +72,12 @@ BANNED = [
     ("判定が閉じ",   "事前規準に照らして無益性と判定した", None),
     ("路線が終了",   "〜は中止する／〜を主指標には用いない", None),
     # terminology.md の表にありながら実装が漏れていた 2 件（2026-09-09 の 4 巡目で気づいた）
-    ("ランドマーク", "特徴点（fiducial point）／特徴点法",
-                     r"landmark|dt_lm|_lm_|lm_ms"),
+    # カタカナ語に ASCII の除外規則は効かない（識別子は ASCII なので衝突しない）
+    ("ランドマーク", "特徴点（fiducial point）／特徴点法", None),
+    # 英文側。散文の landmark だけを見る。コード内の識別子（find_landmarks・
+    # no_landmarks・dt_lm_ms）と逆引用符で囲んだ部分は除く
+    ("landmark",   "fiducial point / fiducial-point analysis",
+                   r"`[^`]*`|[A-Za-z_.]landmark|landmark[A-Za-z_]|\"landmark\"|'landmark'"),
     ("指標が届",     "相関の大きさが〜に及ばない／〜を説明できない", None),
     ("指標はいずれも届", "相関の大きさが〜に及ばない／〜を説明できない", None),
 ]

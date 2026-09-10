@@ -48,7 +48,7 @@ Signals were reproducible (lag-1 autocorrelation: PWTT +0.75, ΔT +0.50), and Δ
 the expected age association, whereas the reflection index did not and was judged uninterpretable in this signal source.
 In the virtual population, the decomposition-derived ΔT correlated with aortic pulse
 wave velocity in the predicted direction in every age group but weakly (median |ρ| 0.22),
-and RI with peripheral resistance at 0.21; landmark-derived indices computed from the same
+and RI with peripheral resistance at 0.21; fiducial-point-derived indices computed from the same
 waveforms met the same criterion (ΔT 0.71, reflection index 0.50, second-derivative ageing
 index 0.89). Splitting
 PWTT at the radial line, the term containing the pre-ejection period accounted for 7% of
@@ -61,7 +61,7 @@ accuracy (percentage error 27.2% versus 26.9%; difference +0.2 percentage points
 fails quantitatively: the vascular component of intraoperative PWTT variation, though
 directionally detectable, is two orders of magnitude too small to support calibration
 correction from single-site photoplethysmography. Against ground truth the limitation is
-specific to the decomposition: landmark features of the same waveforms recovered pulse wave
+specific to the decomposition: fiducial-point features of the same waveforms recovered pulse wave
 velocity, so how the index is extracted matters more than the fact that it comes from
 photoplethysmography. Most intraoperative PWTT variation lay in the distal
 photoplethysmographic segment, whose true physiological range is far narrower, so the
@@ -203,7 +203,7 @@ prespecified to be reference-free.
 the bedside monitor at 500 Hz, not a research-grade optical recording. It has therefore
 already passed through the manufacturer's display processing chain, whose filtering is not
 publicly specified and whose gain behaviour we cannot independently verify. Two consequences
-are relevant. Filtering of this kind shifts and reshapes the timing landmarks on which
+are relevant. Filtering of this kind shifts and reshapes the timing fiducial points on which
 decomposition-derived intervals depend, in an age-dependent manner [Liao 2023], and any
 automatic gain control would attenuate the amplitude information on which the reflection
 index depends. We could not exclude automatic gain control from the available documentation.
@@ -344,7 +344,11 @@ cases whose first value is near zero. The premise test is
   ΔPWTT%(t) = β_SI · ΔSI%(t) + β_RI · ΔRI%(t) + ε(t)                                  (7)
 
 Relative changes are zero at the calibration point, so the prespecified estimate carries no
-constant column and passes through the origin. The denominator of the coefficient of
+constant column and passes through the origin. This specification is fixed in the frozen
+analysis code rather than in the prose of the analysis plan: at tag sap-v0.3 (commit
+407f226, 28 August 2026) the design matrix of the premise test is built from ΔSI% and ΔRI%
+alone, with no column of ones, and the denominator of r² is the sum of squares about the
+mean. Both are verifiable in the archived code. The denominator of the coefficient of
 determination is nevertheless the sum of squares about the mean, so this r² can fall near
 or below zero; it is the prespecified statistic, and the conventional r² obtained by
 refitting with an intercept is reported alongside it. We report the pooled coefficient of
@@ -472,7 +476,7 @@ before the data were examined: an association was accepted if the correlation ca
 predicted sign in every age group and its median absolute value was at least 0.3. Main effects of each varied factor and the true transit times from the onset-time table
 were reported descriptively. To separate a limitation of the decomposition from a limitation
 of photoplethysmographic morphology in general, the same criterion was applied to the
-landmark-derived indices distributed with the database — the interval between the systolic
+fiducial-point-derived indices distributed with the database — the interval between the systolic
 and diastolic peaks, the stiffness and reflection indices, the augmentation index, the
 second-derivative ageing index and the model's own pulse transit time — which are computed
 by the database's authors from the identical waveforms. Subjects, waveforms, ground truth,
@@ -692,17 +696,17 @@ was 96 ms (5th–95th percentile 66–120) and correlated with aortic pulse wave
 ρ −0.99 within age groups, whereas ΔT correlated with that same true transit time at only
 +0.19. The true radial-to-finger transit was 8 ms (4–16 ms) across the whole population.
 
-Applying the same criterion to the landmark-derived indices distributed with the database
-separated the two readings. The landmark interval between the systolic and diastolic peaks
+Applying the same criterion to the fiducial-point-derived indices distributed with the database
+separated the two readings. The fiducial-point interval between the systolic and diastolic peaks
 correlated with aortic pulse wave velocity at a median |ρ| of 0.71 (negative in all six age
-groups), the landmark stiffness index at 0.71, the second-derivative ageing index at 0.89
-and the landmark reflection index with peripheral resistance at 0.50 — all meeting the
+groups), the fiducial-point stiffness index at 0.71, the second-derivative ageing index at 0.89
+and the fiducial-point reflection index with peripheral resistance at 0.50 — all meeting the
 criterion that the decomposition-derived indices failed. The model's own pulse transit time,
-included as a control on the comparison itself, gave 0.57. The landmark augmentation index
-did not meet it (0.14). In the factorial design the landmark interval was about twice as
+included as a control on the comparison itself, gave 0.57. The fiducial-point augmentation index
+did not meet it (0.14). In the factorial design the fiducial-point interval was about twice as
 sensitive to pulse wave velocity as the decomposition-derived one (−31% against −17% from
 −1 SD to +1 SD) and about a quarter as sensitive to heart rate (−2.6% against −10.9%).
-Descriptively, the landmark reflection index tracked pulse wave velocity (0.69) more
+Descriptively, the fiducial-point reflection index tracked pulse wave velocity (0.69) more
 closely than peripheral resistance (0.50).
 
 *Premise test with a construct-valid index.* The index was obtained in 862 cases and 161,638
@@ -802,19 +806,19 @@ of decomposition-derived ΔT and PWTT on the timing of the pulse foot, cannot be
 these data.
 
 The same experiment, however, locates that failure precisely, because the database also
-provides landmark-derived indices computed from the identical waveforms. Those met the
+provides fiducial-point-derived indices computed from the identical waveforms. Those met the
 criterion the decomposition failed: the systolic-to-diastolic peak interval reached 0.71
-against pulse wave velocity, the second-derivative ageing index 0.89, and the landmark
+against pulse wave velocity, the second-derivative ageing index 0.89, and the fiducial-point
 reflection index 0.50 against peripheral resistance. With subjects, waveforms, ground truth
 and criterion held fixed, the only difference is the extraction, so the limitation is specific to the two-kernel decomposition as implemented here and not to
 photoplethysmographic morphology in general. The factorial main effects show where the
-difference lies: the landmark interval was twice as sensitive to pulse wave velocity and a
+difference lies: the fiducial-point interval was twice as sensitive to pulse wave velocity and a
 quarter as sensitive to heart rate, consistent with a fitted component whose position is
 constrained by the length of the beat rather than by the arrival of a wave. Two qualifications keep this from being read as a general ranking of the two approaches.
 First, the virtual waveforms are noise-free and carry a clear dicrotic notch and diastolic
-peak, which is the condition in which landmark detection is easiest; decomposition is
+peak, which is the condition in which fiducial-point detection is easiest; decomposition is
 advocated precisely for waveforms in which those features are absent, so its claimed
-advantage cannot appear in this comparison, and whether landmark features are identifiable
+advantage cannot appear in this comparison, and whether fiducial-point features are identifiable
 in a processed monitor photoplethysmogram is an open question and the natural next
 experiment. Second, our decomposition is one implementation among many: it uses two kernels
 with no diastolic decay term and constrains both components to positive skew, choices made
@@ -826,7 +830,7 @@ forward and reflected waves, as used elsewhere [Couceiro 2015], was not tested h
 the comparison establishes is therefore that the information is present in the waveform and
 that this decomposition does not recover it, not that decomposition as a class cannot. Finally, the weak but significant association of RI with systemic vascular
 resistance in the clinical data (§3.6) should not be read as validation of RI as a
-resistance index: in silico even the landmark reflection index tracked pulse wave velocity
+resistance index: in silico even the fiducial-point reflection index tracked pulse wave velocity
 (0.69) more closely than resistance (0.50).
 
 **Physiological interpretation.** Our result is what the mechanistic literature predicts
@@ -940,19 +944,19 @@ the model carries no term for the diastolic decay, so a component must absorb it
 data-driven comparison of basis functions on 7805 real pulses selected a three-component
 Gamma model — whose exponential tail can represent that decay — far more often than any
 two-component model [Tigges 2017]. Nor did our convergence checks test whether the fitted
-components landed on the intended waveform landmarks, a criterion argued to be essential
-because vascular indices depend on landmark positions rather than on overall fit quality
+components landed on the intended waveform fiducial points, a criterion argued to be essential
+because vascular indices depend on fiducial-point positions rather than on overall fit quality
 [Wang 2013]. Sixth, stiffness and reflection indices were
 developed largely as resting measures, and their extrapolation to acute intraoperative
 change is itself an assumption. Seventh, the three analyses in §3.6 were added after the plan
 was frozen and are exploratory; the virtual population models healthy ageing without
 anaesthesia or vasoactive drugs, so it tests how the indices are constructed, not how they
 behave intraoperatively. Relatedly, this study tested decomposition-derived indices, which
-were prespecified; the in-silico comparison indicates that a landmark-derived index might
+were prespecified; the in-silico comparison indicates that a fiducial-point-derived index might
 have behaved differently, and our findings should not be read as a statement about
 photoplethysmographic vascular indices in general. Nor should the in-silico comparison be
-read as a general ranking of decomposition against landmark analysis: the virtual waveforms
-are noise-free with clearly visible landmarks, the condition least favourable to
+read as a general ranking of decomposition against fiducial-point analysis: the virtual waveforms
+are noise-free with clearly visible fiducial points, the condition least favourable to
 decomposition, and our two-kernel implementation was configured for the opposite case. Finally, the photoplethysmographic channel is a processed monitor
 output. Timing information demonstrably survives that processing, as the positive
 control shows, but amplitude information appears not to: the reflection index failed the
@@ -965,12 +969,12 @@ arterial stiffness, despite evidence that this index was measured well enough to
 known vascular signal; the corresponding amplitude-derived index could not be validated in
 this signal source. Tested against ground truth in a virtual population, neither
 decomposition-derived index tracked its intended target closely enough to serve as a
-correction variable, whereas landmark-derived indices of the same waveforms did; the limitation therefore lies in
+correction variable, whereas fiducial-point-derived indices of the same waveforms did; the limitation therefore lies in
 what this decomposition extracts rather than in the monitor's signal or in
 photoplethysmographic morphology as such. Whether a different decomposition would recover
 the same information was not tested. Dynamic correction of the calibration
 constant of transit-time cardiac output estimation using these indices has little room to
-work. Two directions follow, and both are testable in existing data: whether landmark
+work. Two directions follow, and both are testable in existing data: whether fiducial-point
 features survive in a processed monitor photoplethysmogram well enough to repeat the premise
 test, and the measurement of transit time itself, since most of the intraoperative variation
 lay in the distal photoplethysmographic segment, whose true physiological range is far too
