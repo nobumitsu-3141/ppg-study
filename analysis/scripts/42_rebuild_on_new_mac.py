@@ -24,6 +24,15 @@
 
 途中で止めてよい。03番は症例ごとに `data/features/` へ書くので、
 **もう一度 `--run` すれば続きから進む。**
+
+抽出済みの症例の出所
+--------------------
+03番の症例ごとのキャッシュには版が記録されていない。**別の環境で作った症例が
+残っていると、03番はそれを飛ばすので、1 つの解析に 2 つの環境の症例が混ざる。**
+そこでこの台本は `data/features/_environment.json` に版を書き、次に `--run` した
+ときに照合する。記録が無い抽出結果があれば既定で止まり、`rm -rf data/features`
+で作り直すよう促す（承知のうえで使うなら `--keep-existing`）。
+このファイルは 03番も 41番も読まない。**解析の中身には影響しない。**
 """
 from __future__ import annotations
 
@@ -68,9 +77,36 @@ def check_versions(got: dict) -> tuple[list, list]:
     return hard, soft
 
 
+ENVFILE = FEAT / "_environment.json"
+
+
+def read_env() -> dict | None:
+    """抽出を始めたときの環境。03番は版を記録しないので、こちらで横に置く。"""
+    try:
+        import json
+        return json.loads(ENVFILE.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def write_env(got: dict) -> None:
+    import json
+    ENVFILE.parent.mkdir(parents=True, exist_ok=True)
+    ENVFILE.write_text(json.dumps(got, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def env_conflict(got: dict) -> list:
+    """記録された環境と今の環境の食い違い。記録が無ければ空。"""
+    rec = read_env()
+    if not rec:
+        return []
+    return [(k, rec.get(k), got.get(k)) for k in REF if rec.get(k) != got.get(k)]
+
+
 def progress() -> dict:
     n_meta = len(list(FEAT.glob("case_*_meta.json"))) if FEAT.exists() else 0
     return {
+        "env_recorded": ENVFILE.exists(),
         "cases_csv": (DATA / "cases.csv").exists(),
         "trks_csv": (DATA / "trks.csv").exists(),
         "target_csv": (DATA / "target_cases.csv").exists(),
@@ -99,7 +135,13 @@ def show(got: dict, hard: list, soft: list, pr: dict) -> None:
     print(f"  data/target_cases.csv   {'あり' if pr['target_csv'] else '無し'}")
     print(f"  抽出済みの症例          {pr['n_extracted']} / {N_TARGET} 例")
     if pr["n_extracted"]:
-        print(f"                          （残り約 {max(0, N_TARGET - pr['n_extracted'])} 例）")
+        if pr["env_recorded"]:
+            rec = read_env() or {}
+            print(f"  その出所                記録あり（python {rec.get('python')} / "
+                  f"vitaldb {rec.get('vitaldb')}）")
+        else:
+            print("  その出所                **記録が無い。どの環境で作ったか分からない**")
+        print(f"  残り                    約 {max(0, N_TARGET - pr['n_extracted'])} 例")
 
 
 def step(label: str, cmd: list[str]) -> int:
@@ -111,7 +153,7 @@ def step(label: str, cmd: list[str]) -> int:
     return rc
 
 
-def run(jobs: int, force: bool) -> int:
+def run(jobs: int, force: bool, keep_existing: bool) -> int:
     got = versions()
     hard, soft = check_versions(got)
     pr = progress()
@@ -119,6 +161,31 @@ def run(jobs: int, force: bool) -> int:
     if hard and not force:
         print("\n止めた。版を合わせてからやり直すか、承知のうえなら --force を付ける。")
         return 2
+
+    # 既にある抽出結果の出所を確かめる。混ざると 1 つの解析に別環境の症例が入る
+    if pr["n_extracted"]:
+        if not pr["env_recorded"]:
+            print(f"\n★ 抽出済みの {pr['n_extracted']} 例に出所の記録が無い。")
+            print("  03番は症例ごとのキャッシュを飛ばすので、これらは作り直されない。")
+            print("  別の環境で作られていれば、新しく抽出する分と混ざる。")
+            print("\n  作り直す（勧める。数分で済む）:")
+            print(f"    rm -rf {FEAT.relative_to(ROOT).as_posix()}")
+            print("  そのまま使う（出所を今の環境として記録する）:")
+            print("    --keep-existing を付けてやり直す")
+            if not keep_existing:
+                return 3
+            print("\n  --keep-existing が指定されたので、今の環境として記録して続ける。")
+        else:
+            bad = env_conflict(got)
+            if bad:
+                print("\n★ 抽出済みの症例を作った環境と今の環境が違う。")
+                for k, was, now in bad:
+                    print(f"    {k}: 記録 {was} → 今 {now}")
+                print(f"\n  作り直す:  rm -rf {FEAT.relative_to(ROOT).as_posix()}")
+                if not force:
+                    return 3
+                print("  --force が指定されたので続ける。")
+    write_env(got)
 
     py = sys.executable
     if not (pr["cases_csv"] and pr["trks_csv"]):
@@ -171,7 +238,8 @@ def selftest() -> int:
     rep("vitaldb 未導入も止める側に入る", len(h) == 1 and h[0][1] == "未導入")
 
     pr = progress()
-    rep("進み具合を数えられる", set(pr) == {"cases_csv", "trks_csv", "target_csv", "n_extracted"})
+    rep("進み具合を数えられる",
+        set(pr) == {"env_recorded", "cases_csv", "trks_csv", "target_csv", "n_extracted"})
     rep("抽出済みの数が 0 以上の整数", isinstance(pr["n_extracted"], int) and pr["n_extracted"] >= 0,
         f"{pr['n_extracted']} 例")
 
@@ -183,6 +251,26 @@ def selftest() -> int:
     import re as _re
     src_imports = _re.findall(r"^\s*(?:from|import)\s+src\b",
                               Path(__file__).read_text(encoding="utf-8"), _re.M)
+    # 出所の記録の検査（一時ディレクトリで本物には触れない）
+    import tempfile
+    global ENVFILE, FEAT
+    keep_env, keep_feat = ENVFILE, FEAT
+    with tempfile.TemporaryDirectory() as td:
+        FEAT = Path(td) / "features"
+        ENVFILE = FEAT / "_environment.json"
+        rep("記録が無ければ食い違いは空", env_conflict(REF) == [])
+        write_env(REF)
+        rep("記録を書いて読み戻せる", read_env() == REF)
+        rep("同じ環境なら食い違いなし", env_conflict(REF) == [])
+        bad = env_conflict({**REF, "vitaldb": "1.7.2"})
+        rep("vitaldb が変わると食い違いとして出る",
+            len(bad) == 1 and bad[0][0] == "vitaldb", str(bad))
+        bad2 = env_conflict({**REF, "numpy": "9.9.9", "scipy": "9.9.9"})
+        rep("複数変われば複数出る", len(bad2) == 2, str(sorted(k for k, _, _ in bad2)))
+        rep("進み具合が記録の有無を返す", progress()["env_recorded"] is True)
+    ENVFILE, FEAT = keep_env, keep_feat
+    rep("検査のあと本物の場所に戻っている", FEAT == ROOT / "data" / "features")
+
     rep("この台本は解析の中身に触れない（src を import しない）",
         not src_imports, str(src_imports))
 
@@ -197,6 +285,8 @@ def main() -> None:
     ap.add_argument("--check", action="store_true", help="版と進み具合だけ見る")
     ap.add_argument("--run", action="store_true", help="取得から表の値まで通す")
     ap.add_argument("--jobs", type=int, default=4, help="並列に処理する症例数（既定4）")
+    ap.add_argument("--keep-existing", action="store_true",
+                    help="出所の記録が無い抽出結果をそのまま使う（勧めない）")
     ap.add_argument("--force", action="store_true",
                     help="版が違っても取得を始める（41番の再現検査で判定させる）")
     a = ap.parse_args()
@@ -204,7 +294,7 @@ def main() -> None:
     if a.selftest:
         sys.exit(selftest())
     if a.run:
-        sys.exit(run(a.jobs, a.force))
+        sys.exit(run(a.jobs, a.force, a.keep_existing))
     got = versions()
     h, s = check_versions(got)
     show(got, h, s, progress())
