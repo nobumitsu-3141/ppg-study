@@ -63,3 +63,19 @@ python3 analysis/scripts/check_terminology.py
 - `37_ri_svr_screen.py`・`38_couceiro_svr.py` は `data/features/`・`data/vasotone/` が要る。
   **これらがある 1 台目でしか動かない。**
 - `39_ri_svr_standalone.py` は自己完結で、ネットワークだけで最初から走る。
+- `41_fill_tables.py` は `data/features/`・`data/cases.csv`・`data/target_cases.csv` が要る
+  （`data/vasotone/` は要らない）。
+- `42_rebuild_on_new_mac.py` は 2 台目でその 3 つを作り直して 41番まで通す
+  （00番 → 01番 → 03番 → 41番）。数時間かかる。
+
+**版を合わせてから始めること。**確認的解析は Python 3.9.6・NumPy 2.0.2・SciPy 1.13.1・
+pandas 2.3.3・**vitaldb 1.5.8** で回した。vitaldb 1.7.2 は波形の再標本化が変わり、
+拍の型と脈波伝播時間が変わる（lab_log 追記22）。42番は取得の前に照合して止まる。
+
+```sh
+python3 scripts/42_rebuild_on_new_mac.py --check
+```
+
+`data/features/` に**出所の分からない症例が残っていると 42番は止まる。**
+03番はキャッシュがある症例を飛ばすので、別の環境で作ったものが混ざるのを防ぐため。
+`rm -rf data/features` で作り直す（lab_log 追記97）。
