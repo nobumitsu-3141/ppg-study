@@ -55,14 +55,31 @@ N_TARGET = 862          # 主解析の解析症例数
 LIMIT = 900             # target_cases.csv の先頭から見る症例数（874 例を含む余裕）
 
 
+def modver(mod: str):
+    """その組み込みの版。入っていなければ None。
+
+    **`__version__` を当てにしない。**vitaldb 1.5.8 は `__version__` を定義していない。
+    `__import__("vitaldb").__version__` は AttributeError になるので、それだけを見ると
+    正しく入っているのに「未導入」と判定してしまう（実際にやった。lab_log 追記99）。
+    まず import できることを確かめ、版は配布物のメタデータから読む。
+    32番・34番の `vitaldb_version()` と同じ読み方である。
+    """
+    try:
+        m = __import__(mod)
+    except Exception:       # noqa: BLE001
+        return None
+    try:
+        from importlib.metadata import version
+        return version(mod)
+    except Exception:       # noqa: BLE001
+        return getattr(m, "__version__", None) or "版不明"
+
+
 def versions() -> dict:
     import platform
     got = {"python": platform.python_version()}
     for mod in ("numpy", "scipy", "pandas", "vitaldb"):
-        try:
-            got[mod] = __import__(mod).__version__
-        except Exception:
-            got[mod] = None
+        got[mod] = modver(mod)
     return got
 
 
@@ -236,6 +253,26 @@ def selftest() -> int:
     h, s = check_versions({"python": "3.9.6", "numpy": "2.0.2", "scipy": "1.13.1",
                            "pandas": "2.3.3", "vitaldb": None})
     rep("vitaldb 未導入も止める側に入る", len(h) == 1 and h[0][1] == "未導入")
+
+    # 版の読み取り。__version__ を持たない配布物を「未導入」と誤らないこと（追記99）
+    import tempfile as _tf
+    with _tf.TemporaryDirectory() as td:
+        Path(td, "zz_mod_without_version.py").write_text("x = 1\n", encoding="utf-8")
+        sys.path.insert(0, td)
+        try:
+            v = modver("zz_mod_without_version")
+        finally:
+            sys.path.remove(td)
+            sys.modules.pop("zz_mod_without_version", None)
+    rep("__version__ が無い組み込みを未導入と誤らない", v is not None, repr(v))
+    rep("本当に入っていないものは None", modver("zz_no_such_module_zz") is None)
+    rep("入っているものはメタデータの版を返す", modver("numpy") == __import__("numpy").__version__,
+        str(modver("numpy")))
+    if modver("vitaldb") is not None:
+        rep("vitaldb を入れてあれば版を読める（__version__ は無い）",
+            modver("vitaldb") not in (None, "版不明")
+            and not hasattr(__import__("vitaldb"), "__version__"),
+            str(modver("vitaldb")))
 
     pr = progress()
     rep("進み具合を数えられる",
