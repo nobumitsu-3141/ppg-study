@@ -59,7 +59,7 @@ Categories of rejection overlap.
 | ΔT-based index | +0.50 |
 | RI | +0.43 |
 | Am_b/Am_p1 (2026-09-07 exploratory analysis) | +0.394 |
-| Mean arterial pressure | [[read from output — 0.695 in the 2026-09-07 run]] |
+| Mean arterial pressure (2026-09-07 exploratory analysis) | +0.695 |
 
 | Exploratory positive and negative controls (849 adults) | Value |
 |---|---|
@@ -110,6 +110,13 @@ Table 6 (in the main text) covers the nine variants that required re-extraction.
 Percentage error for the control estimator fell with aggregation (26.9% at 60 s, 23.9% at
 5 min, 21.5% at 20 min), as expected when comparing monitors of differing response time;
 the correction improved accuracy at no level.
+
+> **投稿前に照合すること。**この表の 5 分・20 分の行はウィンドウ長の感度解析の出力から採っている。
+> その出力の「60 秒（主解析）」の行は補正推定器の誤差率を **27.1%**、ΔPE を **+0.1 〜 +0.3**
+> と記録しており、主解析の確定値（**27.2%**、**+0.1 〜 +0.4**）と 0.1 ポイントずれる。
+> ΔPE は症例単位のブートストラップで求めるので、プールした誤差率の差と一致しないこと自体は
+> ありうる。**しかしこの表の 1 行目だけ別の計算から採ると、行どうしが直接は比べられない。**
+> 3 行を同じ計算から採り直すか、脚注でずれの理由を書くかを決める。
 
 | Reference independent of the arterial pressure waveform (descriptive only) | Value |
 |---|---|
