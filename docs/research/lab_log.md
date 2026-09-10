@@ -6844,3 +6844,37 @@ python3 scripts/42_rebuild_on_new_mac.py --run --jobs 4
 **1 項目が最初 FAIL した。**`progress()` に `env_recorded` を足したのに、
 「進み具合を数えられる」の検査が古い 4 つの鍵のままだった。自分で足した項目を
 自分の検査に反映し忘れたもので、検査の側を直した。
+
+## 2026-09-10（追記98）　使用例に zsh の地雷が 13 行あった
+
+2 台目で 03番を走らせる直前に気づいた。台本の docstring の使用例が
+
+```
+python3 scripts/03_run_analysis.py --limit 20 --jobs 6  # 6並列で20例（推奨）
+```
+
+の形になっていた。**この行をそのまま貼ると zsh で落ちる。**対話 zsh は既定で
+`interactive_comments` が無効なので `#` が引数として渡り、
+`unrecognized arguments: #` になる。CLAUDE.md 2節で禁じている書き方を、
+自分の台本の使用例の中で 13 行やっていた。
+
+03番（5 行）・39番（5 行）・check_terminology.py（3 行）を直した。
+**説明をコマンドの前の行に置く**形にした。
+
+```
+  6並列で20例（勧める）
+      python3 scripts/03_run_analysis.py --limit 20 --jobs 6
+```
+
+リポジトリ全体を機械で走査し、貼り付けうる行（`python3`・`bash`・`pip` などで
+始まり、後ろに `#` の付いた行）が **0 行**になったことを確かめた。
+
+### ついでに確かめたこと ― `--jobs` は結果を変えない
+
+03番の `--jobs` は `ProcessPoolExecutor(max_workers=...)` の幅を決めるだけで、
+症例は互いに独立、それぞれ `data/features/` の自分のファイルに書く。統計は抽出の
+あとキャッシュから `crossval(seed=0)`・`bootstrap_diff_ci(seed=0)` で計算する。
+**したがって `--jobs` の値は結果を変えない。**その旨を 03番の docstring に書いた。
+
+台本の自己検査（39番 27/27、41番、42番 22/22）と用語検査（残件 439 件のまま）を
+通してから commit した。

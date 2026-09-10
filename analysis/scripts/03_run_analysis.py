@@ -4,12 +4,21 @@
 GATE P0-2（倫理委員会の該当性照会）は 2026-08-28 に通過済み（審査不要との回答）。
 Mac・クラウドセッションのどちらでも実行できる（ネットワーク許可済み環境）。
 
-実行例:
-  python3 scripts/03_run_analysis.py                 # 先頭20例でパイロット
-  python3 scripts/03_run_analysis.py --limit 100     # 例数を増やす
-  python3 scripts/03_run_analysis.py --device Vigileo  # 参照CO装置を固定
-  python3 scripts/03_run_analysis.py --stats-only    # 抽出済み特徴量から統計だけ再計算
-  python3 scripts/03_run_analysis.py --limit 20 --jobs 6  # 6並列で20例（推奨）
+実行例（説明はコマンドの前の行に置く。コマンドの後ろに # を付けると zsh で落ちる）:
+  先頭20例でパイロット
+      python3 scripts/03_run_analysis.py
+  例数を増やす
+      python3 scripts/03_run_analysis.py --limit 100
+  参照CO装置を固定する
+      python3 scripts/03_run_analysis.py --device Vigileo
+  抽出済み特徴量から統計だけ再計算する
+      python3 scripts/03_run_analysis.py --stats-only
+  6並列で20例（勧める）
+      python3 scripts/03_run_analysis.py --limit 20 --jobs 6
+
+--jobs は症例ごとの抽出を何本並べるかだけを決める。症例は互いに独立で、それぞれ
+data/features/ の自分のファイルに書く。統計は抽出のあとキャッシュから乱数種 0 で
+計算するので、**--jobs の値は結果を変えない。**
 
 流れ（1症例あたり）:
   1. SNUADC/PLETH + SNUADC/ECG_II + SNUADC/ART（500Hz）と 参照CO（1s）を取得

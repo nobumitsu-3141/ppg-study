@@ -16,9 +16,12 @@
 
 使い方
 ------
-    python3 scripts/check_terminology.py             # 既定の対象を検査
-    python3 scripts/check_terminology.py --all       # 歴史的文書も含めて一覧
-    python3 scripts/check_terminology.py path ...    # 対象を指定
+    既定の対象を検査する
+        python3 scripts/check_terminology.py
+    歴史的文書も含めて一覧する
+        python3 scripts/check_terminology.py --all
+    対象を指定する
+        python3 scripts/check_terminology.py path ...
 
 終了コード 0 = 禁止語なし、1 = 禁止語あり。
 """

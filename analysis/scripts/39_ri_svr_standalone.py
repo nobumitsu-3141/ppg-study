@@ -34,14 +34,24 @@ SVR 方向にまったく動かない場合にのみ除外の判断として意�
 
 使い方
 ------
+説明はコマンドの前の行に置いてある。コマンドの後ろに # を付けると zsh で落ちる。
+
     pip install numpy pandas scipy vitaldb
-    python3 scripts/39_ri_svr_standalone.py --selftest              # ネットワーク不要
-    python3 scripts/39_ri_svr_standalone.py --lists                 # 症例表を取得（初回のみ）
-    python3 scripts/39_ri_svr_standalone.py --run --limit 40 --jobs 4
-    python3 scripts/39_ri_svr_standalone.py --run --jobs 4          # 全例
-    python3 scripts/39_ri_svr_standalone.py --stats
-    python3 scripts/39_ri_svr_standalone.py --diag      # 症例ごとの脱落の内訳
-    python3 scripts/39_ri_svr_standalone.py --dose      # SVR の振れ幅で絞ると相関は上がるか
+
+    筋道を検算する（ネットワーク不要）
+        python3 scripts/39_ri_svr_standalone.py --selftest
+    症例表を取得する（初回のみ）
+        python3 scripts/39_ri_svr_standalone.py --lists
+    40例だけ試す
+        python3 scripts/39_ri_svr_standalone.py --run --limit 40 --jobs 4
+    全例を処理する
+        python3 scripts/39_ri_svr_standalone.py --run --jobs 4
+    集計する
+        python3 scripts/39_ri_svr_standalone.py --stats
+    症例ごとの脱落の内訳を見る
+        python3 scripts/39_ri_svr_standalone.py --diag
+    SVR の振れ幅で絞ると相関は上がるかを見る
+        python3 scripts/39_ri_svr_standalone.py --dose
 
 出力
 ----
