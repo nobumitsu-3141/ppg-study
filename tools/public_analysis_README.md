@@ -92,6 +92,7 @@ clone 直後と同じ木で確認）。走行中に `data/` へ書き出され�
 | `scripts/39_ri_svr_standalone.py` | 【探索】37番と同じ問いを、中間生成物なしで最初から走らせる自己完結版 |
 | `scripts/40_downsample_125hz.py` | 【探索】500 Hz を 125 Hz に間引いたときに各指標が保たれるか。3 通りの間引き方で比べる |
 | `scripts/41_fill_tables.py` | 論文1 の表2・表4・表5 に残った未記入の値を出す。主解析と同じ関数・規準・乱数種を使い、確定済みの値が再現することを併せて表示する。再現しなければ止まる。`data/features/` が要る |
+| `scripts/42_rebuild_on_new_mac.py` | 主解析を回していない機械で、取得から表の値まで一本で走らせる台本（00→01→03→41）。**取得を始める前に版を照合し、`vitaldb` が違えば止まる。**途中で止めても続きから進む |
 | `scripts/check_terminology.py` | 文書の用語検査（`preregistration/terminology.md` の規則。記録との差分だけを見る） |
 
 ## 事前登録
