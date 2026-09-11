@@ -29,8 +29,18 @@ exploratory sensitivity analysis.
 | Cases with the predicted sign on ΔSI% | 78% |
 | Effect size | a 10% change in the stiffness index predicts a 0.27% change in PWTT |
 
-> 95% confidence intervals for the pooled coefficients are not in the Results text.
-> [[compute by case-level bootstrap, 2,000 resamples, as used for ΔPE, and insert.]]
+> 95% confidence intervals for the pooled coefficients, by case-level bootstrap with 2,000
+> resamples and seed 0 — the resampling scheme used for ΔPE in Table 4 — are computed by
+> `analysis/scripts/41_fill_tables.py` (section 表2 プール係数の 95%CI). The script checks
+> that the point estimates reproduce `premise_test` and `premise_with_intercept` exactly
+> before reporting the intervals.
+>
+> 〔主解析のデータがある機械で 41番を回し、下の 4 行を出力の値に置き換える〕
+>
+> | Model | β per ΔSI% (95% CI) | β per ΔRI% (95% CI) |
+> |---|---|---|
+> | Prespecified, through the origin | −0.027 〔CI〕 | −0.003 〔CI〕 |
+> | With an intercept (exploratory) | −0.022 〔CI〕 | −0.001 〔CI〕 |
 
 ---
 

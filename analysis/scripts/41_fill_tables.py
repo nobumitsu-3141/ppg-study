@@ -18,9 +18,13 @@
 * **表4 と 16 例の行** … 主解析の `crossval(seed=0)` を 1 回だけ回し、その結果から
   行と症例を抜き出す。**16 例だけで学習し直すことはしない。**
 
-埋める 11 箇所
---------------
+埋める 11 箇所＋信頼区間
+------------------------
 表2  切片つきモデルの β ΔSI%・β ΔRI%（2 箇所）
+     プール係数の 95% 信頼区間（事前指定の原点通過と切片つき、各 2 本）。
+     回数・乱数種・区間の取り方は表4 の ΔPE と同じ（症例単位ブートストラップ
+     2,000 回・種 0・百分位 2.5／97.5）。正規方程式を症例ごとに足し合わせるので、
+     161,737 行を毎回当てはめ直さずに厳密に同じ推定量が出る
 表4  「平均血圧を加えた」「血管指標＋平均血圧」の対照との差と 95% 信頼区間（2 箇所）
 表5  5 分・20 分に集約したときのウィンドウ数（2 箇所）
      心拍数を投入した前提検証の符号の揃い（1 箇所）
@@ -116,6 +120,72 @@ def premise_with_intercept(cases: list[dict]) -> dict:
             "n_windows": int(y.size)}
 
 
+def _normal_equations(cases: list[dict]) -> dict:
+    """症例ごとに XᵀX と Xᵀy を作る。行の採否は `premise_test` と同じ。
+
+    `premise_test` は ΔMAP% 列の有限性も含めて行を落とすので（血管指標だけの
+    モデルでも落とす）、ここでも同じ `good` を使う。ここがずれると β が動く。
+    """
+    out = {"origin": [], "intercept": []}
+    for c in cases:
+        d = _deltas(c)
+        y = d["dpwtt_rel"]
+        X2 = np.column_stack([d["dsi"], d["dri"]])
+        Xm = np.column_stack([d["dsi"], d["dri"], d["dmap"]])
+        good = np.isfinite(y) & np.isfinite(X2).all(axis=1) & np.isfinite(Xm).all(axis=1)
+        yg, Xo = y[good], X2[good]
+        Xi = np.column_stack([np.ones(len(yg)), Xo])
+        out["origin"].append((Xo.T @ Xo, Xo.T @ yg))
+        out["intercept"].append((Xi.T @ Xi, Xi.T @ yg))
+    return {k: (np.array([a for a, _ in v]), np.array([b for _, b in v]))
+            for k, v in out.items()}
+
+
+def _rows_used(cases: list[dict]) -> int:
+    """`_normal_equations` が実際に使った行数。premise_test のウィンドウ数と一致するはず。"""
+    n = 0
+    for c in cases:
+        d = _deltas(c)
+        y = d["dpwtt_rel"]
+        X2 = np.column_stack([d["dsi"], d["dri"]])
+        Xm = np.column_stack([d["dsi"], d["dri"], d["dmap"]])
+        n += int((np.isfinite(y) & np.isfinite(X2).all(axis=1)
+                  & np.isfinite(Xm).all(axis=1)).sum())
+    return n
+
+
+def _solve(A: np.ndarray, b: np.ndarray) -> np.ndarray:
+    try:
+        return np.linalg.solve(A, b)
+    except np.linalg.LinAlgError:
+        return np.linalg.lstsq(A, b, rcond=None)[0]
+
+
+def pooled_beta_ci(cases: list[dict], n_boot: int = N_BOOT, seed: int = SEED) -> dict:
+    """表2 のプール係数の 95% 信頼区間。症例単位ブートストラップ。
+
+    回数・乱数種・区間の取り方は表4 の ΔPE と同じにする
+    （`src.stats.bootstrap_diff_ci`: 復元抽出で症例数ぶん引き、百分位 2.5／97.5）。
+
+    最小二乗の正規方程式は症例ごとに足し合わせられるので、症例を引き直して
+    XᵀX と Xᵀy の和を取り直せば、161,737 行を毎回当てはめ直さずに厳密に同じ
+    推定量が出る。全症例を 1 回ずつ足した点推定が `premise_test` の β と
+    一致することを併せて返し、一致しなければ呼び出し側で止める。
+    """
+    eq = _normal_equations(cases)
+    n = len(cases)
+    rng = np.random.default_rng(seed)
+    idx = [rng.integers(0, n, n) for _ in range(n_boot)]   # 両モデルで同じ引き直しを使う
+    res: dict = {}
+    for name, (A, b) in eq.items():
+        point = _solve(A.sum(axis=0), b.sum(axis=0))
+        boots = np.array([_solve(A[i].sum(axis=0), b[i].sum(axis=0)) for i in idx])
+        lo, hi = np.percentile(boots, [2.5, 97.5], axis=0)
+        res[name] = {"point": point, "lo": lo, "hi": hi,
+                     "n_boot": n_boot, "seed": seed, "n_cases": n}
+    return res
+
+
 def sign_consistency(cases: list[dict], with_hr: bool) -> float:
     """症例内で係数が仮説と同じ向き（β ΔSI% が負）だった症例の割合。
 
@@ -201,6 +271,43 @@ def run(cases: list[dict], as_json: Path | None) -> int:
     print(f"\n  → 表に入れる:  β per ΔSI% = {pi['beta_dsi']:+.3f}   "
           f"β per ΔRI% = {pi['beta_dri']:+.3f}")
     out["table2_intercept"] = pi
+
+    print("\n" + "=" * 74)
+    print(f"表2  プール係数の 95%CI（症例単位ブートストラップ {N_BOOT:,} 回・種 {SEED}）")
+    print("=" * 74)
+    ci = pooled_beta_ci(cases)
+    o, ii = ci["origin"], ci["intercept"]
+    # 点推定が premise_test・premise_with_intercept と一致するか（正規方程式の足し算の検算）
+    for got, want, lab in ((o["point"][0], pt["beta_dsi"], "原点通過 β ΔSI%"),
+                           (o["point"][1], pt["beta_dri"], "原点通過 β ΔRI%"),
+                           (ii["point"][1], pi["beta_dsi"], "切片つき β ΔSI%"),
+                           (ii["point"][2], pi["beta_dri"], "切片つき β ΔRI%")):
+        agree = abs(got - want) <= 1e-9
+        print(f"  点推定の照合 {lab:18s} {got:+.6f} 対 {want:+.6f}  "
+              f"{'一致' if agree else '★ずれ'}")
+        if not agree:
+            bad += 1
+    print(f"\n  → 表に入れる（事前指定・原点通過）:")
+    print(f"       β per ΔSI% = {o['point'][0]:+.3f} "
+          f"(95% CI {o['lo'][0]:+.3f} to {o['hi'][0]:+.3f})")
+    print(f"       β per ΔRI% = {o['point'][1]:+.3f} "
+          f"(95% CI {o['lo'][1]:+.3f} to {o['hi'][1]:+.3f})")
+    print(f"  → 表に入れる（切片つき・探索的）:")
+    print(f"       β per ΔSI% = {ii['point'][1]:+.3f} "
+          f"(95% CI {ii['lo'][1]:+.3f} to {ii['hi'][1]:+.3f})")
+    print(f"       β per ΔRI% = {ii['point'][2]:+.3f} "
+          f"(95% CI {ii['lo'][2]:+.3f} to {ii['hi'][2]:+.3f})")
+    print("  ※ 「ΔSI% のみ」「ΔHR% を加えた」の行の β は 41番では計算していない"
+          "（09番の出力）。同じ要領で足せる")
+    out["table2_ci"] = {
+        k: {"beta_dsi": float(v["point"][0 if k == "origin" else 1]),
+            "dsi_lo": float(v["lo"][0 if k == "origin" else 1]),
+            "dsi_hi": float(v["hi"][0 if k == "origin" else 1]),
+            "beta_dri": float(v["point"][1 if k == "origin" else 2]),
+            "dri_lo": float(v["lo"][1 if k == "origin" else 2]),
+            "dri_hi": float(v["hi"][1 if k == "origin" else 2]),
+            "n_boot": v["n_boot"], "seed": v["seed"], "n_cases": v["n_cases"]}
+        for k, v in ci.items()}
 
     print("\n" + "=" * 74)
     print(f"表4  対照との差（症例単位ブートストラップ {N_BOOT:,} 回・種 {SEED}）")
@@ -347,6 +454,63 @@ def selftest() -> int:
     rep("効果を消すと符号の揃いが五分に寄る", 30 < sc_null < 70, f"{sc_null:.0f}%")
     rep("心拍数を足しても揃いが壊れない",
         sign_consistency(cs, with_hr=True) > 90)
+
+    # --- プール係数の 95%CI（症例単位ブートストラップ）---
+    # 乱数の引き順を変えないよう、既に作ってある cs・cs_null をそのまま使う
+    ci = pooled_beta_ci(cs, n_boot=200)          # 検算なので回数は落とす
+    o, ii = ci["origin"], ci["intercept"]
+    rep("点推定が premise_test の β と厳密に一致する（正規方程式の足し算）",
+        abs(o["point"][0] - pt["beta_dsi"]) < 1e-9
+        and abs(o["point"][1] - pt["beta_dri"]) < 1e-9,
+        f"{o['point'][0]:+.6f} 対 {pt['beta_dsi']:+.6f}")
+    rep("点推定が premise_with_intercept の β と厳密に一致する",
+        abs(ii["point"][1] - pi["beta_dsi"]) < 1e-9
+        and abs(ii["point"][2] - pi["beta_dri"]) < 1e-9,
+        f"{ii['point'][1]:+.6f} 対 {pi['beta_dsi']:+.6f}")
+    rep("信頼区間が点推定を含む",
+        all(lo <= q <= hi for lo, q, hi in zip(o["lo"], o["point"], o["hi"])),
+        f"β ΔSI% {o['lo'][0]:+.3f} 〜 {o['hi'][0]:+.3f}")
+    rep("下限 < 上限", bool(np.all(o["lo"] < o["hi"]) and np.all(ii["lo"] < ii["hi"])))
+    rep("仕込んだ −0.30 を原点通過の区間が覆う",
+        o["lo"][0] <= -0.30 <= o["hi"][0], f"{o['lo'][0]:+.3f} 〜 {o['hi'][0]:+.3f}")
+    # 「効果が無ければ区間が 0 をまたぐ」は、乱数の 1 引きでは検査にならない。
+    # 95% 区間は真値を 20 回に 1 回は外すからで、実際 cs_null の 1 引きでは外れた
+    # （点 +0.120・区間 +0.020〜+0.227）。そこで乱数を使わない集団で確かめる。
+    # ΔPWTT% を ΔRI% だけで決め（係数 −0.30）、ΔSI% は無関係にする。
+    import copy as _copy
+    cs_dri = _copy.deepcopy(cs)
+    for j, c in enumerate(cs_dri):
+        w = c["windows"]
+        dri = (w["ri"] - w["ri"][0]) / abs(w["ri"][0])
+        k = np.arange(len(dri))
+        w["pwtt"] = 200.0 * (1.0 - 0.30 * dri + 0.002 * np.sin(0.7 * k + j))
+    cin = pooled_beta_ci(cs_dri, n_boot=200)["origin"]
+    rep("ΔSI% が無関係な集団では β ΔSI% の区間が 0 をまたぐ",
+        cin["lo"][0] <= 0.0 <= cin["hi"][0],
+        f"{cin['lo'][0]:+.4f} 〜 {cin['hi'][0]:+.4f}（点 {cin['point'][0]:+.4f}）")
+    rep("同じ集団で β ΔRI% の区間は仕込んだ −0.30 を覆う",
+        cin["lo"][1] <= -0.30 <= cin["hi"][1],
+        f"{cin['lo'][1]:+.4f} 〜 {cin['hi'][1]:+.4f}（点 {cin['point'][1]:+.4f}）")
+    rep("回数を増やしても区間はほぼ動かない",
+        abs(pooled_beta_ci(cs, n_boot=800)["origin"]["lo"][0] - o["lo"][0]) < 0.05)
+    rep("既定の回数と乱数種が表の脚注どおり",
+        pooled_beta_ci.__defaults__ == (N_BOOT, SEED) and (N_BOOT, SEED) == (2000, 0),
+        f"{N_BOOT} 回・種 {SEED}")
+    # 行の採否が premise_test と同じであること（ΔMAP% だけが欠測の行も落とす）
+    import copy as _copy
+    cs_nanmap = _copy.deepcopy(cs[:3])
+    cs_nanmap[0]["windows"]["map"] = cs_nanmap[0]["windows"]["map"].copy()
+    cs_nanmap[0]["windows"]["map"][5] = np.nan
+    rows_before = int(_normal_equations(cs[:3])["origin"][0][0][0, 0] > 0) and \
+        premise_test(cs[:3], with_map=False)["n_windows"]
+    rows_after = premise_test(cs_nanmap, with_map=False)["n_windows"]
+    A0 = _normal_equations(cs_nanmap)["origin"][0]
+    rep("ΔMAP% だけが欠測の行も落ちる（premise_test と同じ扱い）",
+        rows_after == rows_before - 1, f"{rows_before} → {rows_after} 行")
+    rep("正規方程式の行数の合計が premise_test のウィンドウ数と一致する",
+        int(round(sum(np.linalg.norm(a) > 0 for a in A0))) == 3
+        and _rows_used(cs_nanmap) == rows_after,
+        f"{_rows_used(cs_nanmap)} 対 {rows_after}")
     sc_ref = premise_by_case(cs)["sign_consistency"] * 100.0
     rep("符号の揃いが主解析 premise_by_case と一致する（切片あり）",
         abs(sc - sc_ref) < 1e-9, f"{sc:.6f}% 対 {sc_ref:.6f}%")
