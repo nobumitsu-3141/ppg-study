@@ -1,7 +1,7 @@
 # 研究プログラムの現在地 ― 分かったことと、これからやること（2026-09-07）
 
 麻酔科の初学者にも読めるようにまとめた要約。数値の出どころは `lab_log.md`（追記1〜24）、
-判定の規則は `gate0_rules_v2.md`、正本の方針は `roadmap_v1.md`。この文書は読むためのもので、
+判定の規則は `gate0_rules_v2.md`、いま有効な方針は `roadmap_v1.md`。この文書は読むためのもので、
 判定の根拠にはしない（判定は上の 3 つが正）。用語は `terminology.md` に従う。
 
 **閲覧用**: https://claude.ai/code/artifact/1ea6a65f-a73b-4278-94bd-eff36bcc9e86
@@ -502,7 +502,7 @@ RI 自体の臨床的価値は、別の問いとして残っている。**
 | 何 | どこ |
 |---|---|
 | 実験ノート（時系列・全数値） | `docs/research/lab_log.md` |
-| 正本の方針・判定 | `docs/research/roadmap_v1.md` |
+| いま有効な方針と判定 | `docs/research/roadmap_v1.md` |
 | 研究1 の統計解析計画 | `docs/research/sap_v0.md`（§1.2 参照 CO の独立性、§7 事前指定解析、§7.6 解釈規準） |
 | 研究0 の判定規則（事前固定） | `docs/research/gate0_rules_v2.md` |
 | 用語の決まり | `docs/research/terminology.md` |
