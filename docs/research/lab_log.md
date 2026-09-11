@@ -7337,3 +7337,57 @@ python3 scripts/41_fill_tables.py --table2-only --case-windows /tmp/cw_mac2.csv
 ```
 
 1 台目でも同じものを出して差を取れば、1 症例に絞れる。1 台目のキャッシュが要る。
+
+## 2026-09-11（追記106）　倫理の定型文を VitalDB 原著の記載に合わせた ― **同意免除の帰属が根拠なしだった**
+
+`02_submission_kit.md` §3 の倫理の定型文に残っていた
+`[[出典: VitalDB の原著論文の記載に合わせて確認・調整する]]` を閉じた。
+
+### 作業の分担（この日から）
+
+方針と検証は Fable が持ち、実装は Opus／Sonnet が行う。今回は Opus が原著を取得して
+定型文を書き換え、Fable が一次資料へ独立に照合してから commit した。
+
+### 一次資料
+
+Lee HC ほか. Sci Data 2022;9:279（PMID 35676300、PMC9178032）の
+「Approval for data collection」節。出版社サイト・PMC の閲覧ページ・doi.org は
+この環境の出口で遮断されるが、`eutils.ncbi.nlm.nih.gov` の efetch（PMC の全文 XML）は通る。
+そこから原文を取った。原文:
+
+> The acquisition and free disclosure of the data was approved by the Institutional
+> Review Board of Seoul National University Hospital (H-1408-101-605). The study was
+> also registered at clinicaltrials.gov (NCT02914444). Written informed consent was
+> waived due to anonymity of the data. Data collection was performed in accordance with
+> relevant guidelines and regulations of the institutional Ethics Committee.
+
+### 直したこと
+
+1. **旧文は「同意免除は SNUH の IRB が決めた（waived by that board）」と書いていたが、
+   原著はそう言っていない。**原著は免除の主体を書かず、理由を「データの匿名性」としている。
+   帰属を消し、理由を原著どおりにした。
+2. 承認の対象を原著どおり「データの取得と公開（acquisition and free disclosure）」にした。
+   旧文の「データベースが承認された」は対象が曖昧だった。
+3. IRB 番号 H-1408-101-605 と clinicaltrials.gov の登録 NCT02914444 を入れた。
+   登録されたのは**データ収集の研究**であって本解析ではないので、そう読める語順にした。
+4. 五島中央病院の判断の文（2026-08-28 付の回答）は一字も変えていない。
+   `[[Goto Chuoh Hospital]]` は先生が確定する。
+
+### 二次資料の誤りを見つけた
+
+`refs_digest_raw.txt` の倫理の項（125 行目）にある「他の SNUH 系論文の書き方」は、
+2 点で原著と食い違う。(a)「後ろ向き研究のため同意を免除」― 原著は「匿名性のため」で、
+しかも VitalDB の収集は**前向き**である。(b)「ヘルシンキ宣言に従った」― 原著に
+ヘルシンキ宣言への言及は無い。どちらも原稿に入れていない。同じ行に CAUTION を書き足し、
+あとで写し込まれないようにした。
+
+**教訓。**二次資料の「原文どおり」は途中で切れていることがある（123 行目は
+「registered at cl」で切れていた）。切れた先に、旧文が間違えた 2 文があった。
+定型文でも一次資料まで戻る。
+
+### 検証
+
+- 差分は当該段落のみ（`git diff` で確認）。
+- 4 つの主張（IRB 番号・NCT 番号・同意免除の理由・倫理委員会の文）を efetch の全文で
+  それぞれ照合した。Helsinki が原著に無いことも同じ全文で確かめた。
+- `check_terminology.py` 終了コード 0。
