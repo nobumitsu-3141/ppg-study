@@ -18,7 +18,7 @@ exploratory sensitivity analysis.
 | Model | r² | β per ΔSI% | β per ΔRI% |
 |---|---|---|---|
 | **Prespecified, through the origin** | **0.000** | **−0.027** | **−0.003** |
-| With an intercept (exploratory) | 0.044 | [[read from output]] | [[read from output]] |
+| With an intercept (exploratory) | 0.044 | −0.022 | −0.001 |
 | ΔSI% only, through the origin | 0.041 | −0.022 | — |
 | ΔSI% + ΔRI% + ΔHR% (exploratory) | 0.077 | −0.020 | −0.003 (β ΔHR% −0.057) |
 | ΔMAP% only (exploratory, for comparison) | 0.139 | — | — |
@@ -82,8 +82,8 @@ interpretive weight on their own.
 |---|---|---|
 | Control (PWTT only) | 26.9% | — |
 | **Proposed (vascular correction)** | **27.2%** | **+0.2 points (95% CI +0.1 to +0.4)** |
-| Control + mean arterial pressure | 27.0% | [[read from output]] |
-| Control + vascular indices + mean arterial pressure | 27.1% | [[read from output]] |
+| Control + mean arterial pressure | 27.0% | +0.3 points (95% CI +0.2 to +0.5) |
+| Control + vascular indices + mean arterial pressure | 27.1% | +0.3 points (95% CI +0.2 to +0.5) |
 
 | Bland–Altman and trending, corrected estimator | Value |
 |---|---|
@@ -103,26 +103,25 @@ Table 6 (in the main text) covers the nine variants that required re-extraction.
 |---|---|---|---|---|---|---|
 | Primary analysis | 862 | 161,737 | 0.000 | −0.027 | 78% | +0.2 (+0.1 to +0.4) |
 | Excluding the 15 pipeline-development cases | 847 | 158,445 | 0.005 | −0.028 | 78% | +0.2 (+0.1 to +0.3) |
-| Windows aggregated to 5 minutes | 844 | [[read from output]] | — | — | — | −0.1 (−0.2 to +0.1) |
-| Windows aggregated to 20 minutes | 606 | [[read from output]] | — | — | — | −0.2 (−0.5 to +0.0) |
-| Heart rate added to the premise regression | 862 | 161,737 | 0.077 | −0.020 | [[read from output]] | — |
+| Windows aggregated to 5 minutes | 844 | 31,933 | — | — | — | 0.0 (−0.2 to +0.1) |
+| Windows aggregated to 20 minutes | 606 | 6,838 | — | — | — | −0.2 (−0.5 to +0.0) |
+| Heart rate added to the premise regression | 862 | 161,737 | 0.077 | −0.020 | 74% | — |
 
-Percentage error for the control estimator fell with aggregation (26.9% at 60 s, 23.9% at
-5 min, 21.5% at 20 min), as expected when comparing monitors of differing response time;
+Percentage error for the control estimator fell with aggregation (26.9% at 60 s, 24.0% at
+5 min, 21.8% at 20 min), as expected when comparing monitors of differing response time;
 the correction improved accuracy at no level.
 
-> **投稿前に照合すること。**この表の 5 分・20 分の行はウィンドウ長の感度解析の出力から採っている。
-> その出力の「60 秒（主解析）」の行は補正推定器の誤差率を **27.1%**、ΔPE を **+0.1 〜 +0.3**
-> と記録しており、主解析の確定値（**27.2%**、**+0.1 〜 +0.4**）と 0.1 ポイントずれる。
-> ΔPE は症例単位のブートストラップで求めるので、プールした誤差率の差と一致しないこと自体は
-> ありうる。**しかしこの表の 1 行目だけ別の計算から採ると、行どうしが直接は比べられない。**
-> 3 行を同じ計算から採り直すか、脚注でずれの理由を書くかを決める。
+> **照合済み（2026-09-11、lab_log 追記101）。**以前この表の 5 分・20 分の行は、症例をファイル名順に並べる
+> 別プログラム（09番）の出力から採っており、主解析（対象症例一覧の行順）と 5-fold の割り付けが違っていた。
+> 60 秒の行が 27.1%・+0.1〜+0.3 と 0.1 ポイントずれていたのはそのためである。並びを主解析にそろえて
+> 3 行を同じ計算から採り直した（41番・09番）。60 秒の行は主解析の確定値（27.2%、+0.1〜+0.4）に一致する。
 
 | Reference independent of the arterial pressure waveform (descriptive only) | Value |
 |---|---|
 | Cases | 16 (CardioQ 11, Vigilance II 5) |
-| Percentage error, control / proposed | [[read from output]] |
-| Direction of the difference | [[read from output — report descriptively, no test]] |
+| Percentage error, control / proposed | 41.0% / 41.6% |
+| Direction of the difference | Correction worse by 0.6 points (descriptive only, no test) |
+The 16 cases are taken from the validation folds of the primary case-level cross-validation (models fitted on the derivation folds); no model was refitted on these cases alone.
 
 ---
 

@@ -16,67 +16,21 @@
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.models import _deltas, _rel, crossval, premise_test  # noqa: E402
-from src.stats import bootstrap_diff_ci, per_case_pe          # noqa: E402
+# 症例の読み込みと集約は src/cases.py に置いた（41番と共用・主解析と同じ並び）。
+# 並びが変わると 5-fold の割り付けが変わり、PE が 0.1 ポイント単位でずれる。
+from src.cases import aggregate, load_cached_cases              # noqa: E402
+from src.models import _deltas, _rel, crossval, premise_test    # noqa: E402
+from src.stats import bootstrap_diff_ci, per_case_pe            # noqa: E402
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 FEAT = DATA / "features"
-MIN_WINDOWS = 12
-KEYS = ["pwtt", "si", "ri", "hr", "map", "co_ref"]
-
-
-def load_cases() -> list[dict]:
-    demo = pd.read_csv(DATA / "cases.csv", encoding="utf-8-sig").set_index("caseid")
-    cases = []
-    for meta_p in sorted(FEAT.glob("case_*_meta.json")):
-        try:
-            meta = json.loads(meta_p.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        if meta.get("v") != 3:
-            continue
-        cid = meta["caseid"]
-        f = FEAT / f"case_{cid}.csv"
-        if not f.exists():
-            continue
-        try:
-            df = pd.read_csv(f)
-        except Exception:
-            continue
-        if len(df) < MIN_WINDOWS or "si" not in df.columns:
-            continue
-        if cid not in demo.index:
-            continue
-        h = float(demo["height"].get(cid, np.nan))
-        if not np.isfinite(h) or h < 100:
-            continue
-        cases.append({"caseid": cid, "height": h / 100.0,
-                      "windows": {k: df[k].to_numpy(float) for k in KEYS}})
-    return cases
-
-
-def aggregate(case: dict, k: int) -> dict | None:
-    """連続する有効ウィンドウ k 個ずつの平均で1ブロックを作る。
-
-    採用は「較正1＋評価5以上」= 6ブロック以上（探索的解析のためここで固定）。
-    棄却で生じた時間の飛びは詰める（真に連続な k 分ではない。本文に明記）。
-    """
-    w = case["windows"]
-    n = len(w["pwtt"]) // k
-    if n < 6:
-        return None
-    agg = {key: np.array([np.nanmean(w[key][i * k:(i + 1) * k]) for i in range(n)])
-           for key in KEYS}
-    return {"caseid": case["caseid"], "height": case["height"], "windows": agg}
 
 
 def accuracy(cases: list[dict], label: str) -> None:
@@ -90,7 +44,7 @@ def accuracy(cases: list[dict], label: str) -> None:
 
 
 def main() -> None:
-    cases = load_cases()
+    cases = load_cached_cases(verbose=False)
     print(f"キャッシュから {len(cases)} 症例を読み込み")
     if len(cases) < 10:
         print("症例不足。本解析の完走後に実行してください。")

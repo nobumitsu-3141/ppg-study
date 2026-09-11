@@ -36,6 +36,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.cases import case_order                               # noqa: E402
 from src.models import crossval, premise_test, premise_by_case  # noqa: E402
 from src.stats import bootstrap_diff_ci                        # noqa: E402
 
@@ -76,7 +77,10 @@ def say(msg: str = "") -> None:
 
 # ---------------------------------------------------------------- 読み込み
 def load_joined(data: Path) -> tuple[dict[int, pd.DataFrame], dict]:
-    """主解析と代替定義のウィンドウを t0 で結合し、症例ごとの DataFrame を返す。"""
+    """主解析と代替定義のウィンドウを t0 で結合し、症例ごとの DataFrame を返す。
+
+    返す辞書の並びは主解析と同じ target_cases.csv の行順（`_in_main_order`）。
+    """
     feat, vfeat = data / "features", data / "features_variants"
     inv = {"meta": 0, "meta_bad": 0, "csv_missing": 0, "read_error": 0,
            "short": 0, "no_height": 0, "joined": 0}
@@ -110,7 +114,23 @@ def load_joined(data: Path) -> tuple[dict[int, pd.DataFrame], dict]:
         j.attrs["height_m"] = h / 100.0
         out[cid] = j
     inv["joined"] = len(out)
-    return out, inv
+    return _in_main_order(out), inv
+
+
+def _in_main_order(out: dict[int, pd.DataFrame]) -> dict[int, pd.DataFrame]:
+    """症例の並びを主解析（target_cases.csv の行順）にそろえる。
+
+    build_cases は辞書の並びのまま症例を並べ、crossval は乱数種 0 の置換で
+    5-fold を切る。並びが変われば fold の割り付けが変わり、PE と信頼区間が
+    0.1 ポイント単位でずれる（以前はファイル名順だった）。
+    target_cases.csv が無い機械（自己検査の合成データなど）では読み込み順のまま。
+    """
+    try:
+        rank = {cid: i for i, (cid, _dev, _h) in enumerate(case_order())}
+    except Exception:
+        return out
+    keys = sorted(out, key=lambda cid: rank.get(cid, len(rank)))  # 一覧に無い症例は末尾
+    return {cid: out[cid] for cid in keys}
 
 
 def build_cases(joined: dict, dt_col: str, ri_col: str) -> list[dict]:
