@@ -15,10 +15,10 @@ Dependent variable is ΔPWTT% (relative change from the case's first window). 86
 relative change is zero at calibration; the estimate with an intercept is reported as an
 exploratory sensitivity analysis.
 
-| Model | r² | β per ΔSI% | β per ΔRI% |
+| Model | r² | β per ΔSI% (95% CI) | β per ΔRI% (95% CI) |
 |---|---|---|---|
-| **Prespecified, through the origin** | **0.000** | **−0.027** | **−0.003** |
-| With an intercept (exploratory) | 0.044 | −0.022 | −0.001 |
+| **Prespecified, through the origin** | **0.000** | **−0.027 (−0.033 to −0.021)** | **−0.003 (−0.004 to −0.001)** |
+| With an intercept (exploratory) | 0.044 | −0.022 (−0.027 to −0.016) | −0.001 (−0.002 to −0.000) |
 | ΔSI% only, through the origin | 0.041 | −0.022 | — |
 | ΔSI% + ΔRI% + ΔHR% (exploratory) | 0.077 | −0.020 | −0.003 (β ΔHR% −0.057) |
 | ΔMAP% only (exploratory, for comparison) | 0.139 | — | — |
@@ -29,18 +29,21 @@ exploratory sensitivity analysis.
 | Cases with the predicted sign on ΔSI% | 78% |
 | Effect size | a 10% change in the stiffness index predicts a 0.27% change in PWTT |
 
-> 95% confidence intervals for the pooled coefficients, by case-level bootstrap with 2,000
-> resamples and seed 0 — the resampling scheme used for ΔPE in Table 4 — are computed by
-> `analysis/scripts/41_fill_tables.py` (section 表2 プール係数の 95%CI). The script checks
-> that the point estimates reproduce `premise_test` and `premise_with_intercept` exactly
-> before reporting the intervals.
+> Confidence intervals are from a case-level bootstrap with 2,000 resamples and seed 0 —
+> the resampling scheme used for ΔPE in Table 4 — computed by
+> `analysis/scripts/41_fill_tables.py`, which checks that the point estimates reproduce
+> `premise_test` and `premise_with_intercept` exactly before reporting the intervals.
+> They are given for the two rows the script recomputes; the remaining rows come from
+> `09_extra_sensitivity.py` and carry no interval here.
 >
-> 〔主解析のデータがある機械で 41番を回し、下の 4 行を出力の値に置き換える〕
+> **The intervals exclude zero, and that is the point of the table rather than a caveat
+> to it.** With 862 cases and 161,737 windows the coefficients are estimated precisely;
+> what they show is that the effect, while distinguishable from zero, is about two orders
+> of magnitude too small to serve as a correction input. A 10% change in the stiffness
+> index moves PWTT by 0.27%.
 >
-> | Model | β per ΔSI% (95% CI) | β per ΔRI% (95% CI) |
-> |---|---|---|
-> | Prespecified, through the origin | −0.027 〔CI〕 | −0.003 〔CI〕 |
-> | With an intercept (exploratory) | −0.022 〔CI〕 | −0.001 〔CI〕 |
+> 〔投稿前に確認: 切片つきモデルの β per ΔRI% の上限は 3 桁では −0.000 と表示される。
+> 4 桁の値は `41_fill_tables.py --table2-only` で出る〕
 
 ---
 

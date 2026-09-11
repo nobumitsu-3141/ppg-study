@@ -234,7 +234,7 @@ def near(a: float, b: float, tol: float) -> str:
     return "一致" if abs(a - b) <= tol else f"★ずれ {a - b:+.3f}"
 
 
-def run(cases: list[dict], as_json: Path | None) -> int:
+def run(cases: list[dict], as_json: Path | None, table2_only: bool = False) -> int:
     out: dict = {}
     bad = 0
 
@@ -287,16 +287,23 @@ def run(cases: list[dict], as_json: Path | None) -> int:
               f"{'一致' if agree else '★ずれ'}")
         if not agree:
             bad += 1
+    # 4 桁で出す。β ΔRI% は 0.001 の桁なので 3 桁だと上限が「-0.000」になり、
+    # 区間が 0 を含むのか含まないのかが読めない
     print(f"\n  → 表に入れる（事前指定・原点通過）:")
-    print(f"       β per ΔSI% = {o['point'][0]:+.3f} "
-          f"(95% CI {o['lo'][0]:+.3f} to {o['hi'][0]:+.3f})")
-    print(f"       β per ΔRI% = {o['point'][1]:+.3f} "
-          f"(95% CI {o['lo'][1]:+.3f} to {o['hi'][1]:+.3f})")
+    print(f"       β per ΔSI% = {o['point'][0]:+.4f} "
+          f"(95% CI {o['lo'][0]:+.4f} to {o['hi'][0]:+.4f})")
+    print(f"       β per ΔRI% = {o['point'][1]:+.4f} "
+          f"(95% CI {o['lo'][1]:+.4f} to {o['hi'][1]:+.4f})")
     print(f"  → 表に入れる（切片つき・探索的）:")
-    print(f"       β per ΔSI% = {ii['point'][1]:+.3f} "
-          f"(95% CI {ii['lo'][1]:+.3f} to {ii['hi'][1]:+.3f})")
-    print(f"       β per ΔRI% = {ii['point'][2]:+.3f} "
-          f"(95% CI {ii['lo'][2]:+.3f} to {ii['hi'][2]:+.3f})")
+    print(f"       β per ΔSI% = {ii['point'][1]:+.4f} "
+          f"(95% CI {ii['lo'][1]:+.4f} to {ii['hi'][1]:+.4f})")
+    print(f"       β per ΔRI% = {ii['point'][2]:+.4f} "
+          f"(95% CI {ii['lo'][2]:+.4f} to {ii['hi'][2]:+.4f})")
+    for nm, lo, hi in (("原点通過 β ΔSI%", o["lo"][0], o["hi"][0]),
+                       ("原点通過 β ΔRI%", o["lo"][1], o["hi"][1]),
+                       ("切片つき β ΔSI%", ii["lo"][1], ii["hi"][1]),
+                       ("切片つき β ΔRI%", ii["lo"][2], ii["hi"][2])):
+        print(f"       {nm:16s} 区間は 0 を {'含む' if lo <= 0 <= hi else '含まない'}")
     print("  ※ 「ΔSI% のみ」「ΔHR% を加えた」の行の β は 41番では計算していない"
           "（09番の出力）。同じ要領で足せる")
     out["table2_ci"] = {
@@ -308,6 +315,15 @@ def run(cases: list[dict], as_json: Path | None) -> int:
             "dri_hi": float(v["hi"][1 if k == "origin" else 2]),
             "n_boot": v["n_boot"], "seed": v["seed"], "n_cases": v["n_cases"]}
         for k, v in ci.items()}
+
+    if table2_only:
+        print("\n" + "=" * 74)
+        print("--table2-only なので表4・表5 は出していない（交差検証を回していない）")
+        print("=" * 74)
+        if as_json:
+            as_json.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"\n{as_json} に書き出した")
+        return 1 if bad else 0
 
     print("\n" + "=" * 74)
     print(f"表4  対照との差（症例単位ブートストラップ {N_BOOT:,} 回・種 {SEED}）")
@@ -598,6 +614,8 @@ def main() -> None:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--selftest", action="store_true", help="合成データで計算の筋道を検算する")
     ap.add_argument("--json", type=str, default=None, help="値を JSON でも書き出す")
+    ap.add_argument("--table2-only", action="store_true",
+                    help="表2 と信頼区間だけ出す（交差検証を回さないので短い）")
     args = ap.parse_args()
 
     if args.selftest:
@@ -612,7 +630,8 @@ def main() -> None:
     if len(cases) < 100:
         explain_missing()
         sys.exit(2)
-    sys.exit(run(cases, Path(args.json) if args.json else None))
+    sys.exit(run(cases, Path(args.json) if args.json else None,
+                 table2_only=args.table2_only))
 
 
 if __name__ == "__main__":
