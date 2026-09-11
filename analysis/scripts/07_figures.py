@@ -32,7 +32,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -45,6 +44,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from src.cases import load_cached_cases          # noqa: E402
 from src.models import _deltas, premise_by_case  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -89,39 +89,21 @@ def style() -> None:
 
 
 def load_cases(min_windows: int = MIN_WINDOWS) -> list[dict]:
-    """03_run_analysis.py と同じ規則でキャッシュから症例を組み立てる。"""
+    """03_run_analysis.py と同じ並び・同じ規則でキャッシュから症例を組み立てる。
+
+    本体は `src.cases.load_cached_cases`（= target_cases.csv の行順）。図4 の
+    Bland-Altman は crossval(seed=0) を使うので、並びが主解析とずれると
+    fold の割り付けが変わって図の値が動く。ここでは作図にだけ要る
+    年齢（図3a）と時刻 t0（図2a）を足す。
+    """
+    cases = load_cached_cases(min_windows=min_windows, verbose=False)
     demo = pd.read_csv(DATA / "cases.csv", encoding="utf-8-sig").set_index("caseid")
-    cases = []
-    for meta_p in sorted(FEAT.glob("case_*_meta.json")):
-        try:
-            meta = json.loads(meta_p.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        if meta.get("v") != 3:
-            continue
-        cid = meta["caseid"]
-        csv_p = FEAT / f"case_{cid}.csv"
-        if not csv_p.exists():
-            continue
-        try:
-            df = pd.read_csv(csv_p)
-        except Exception:
-            continue
-        if len(df) < min_windows or "si" not in df.columns:
-            continue
-        if cid not in demo.index:
-            continue
-        h_cm = float(demo["height"].get(cid, np.nan))
-        if not np.isfinite(h_cm) or h_cm < 100:
-            continue
-        cases.append({
-            "caseid": cid, "height": h_cm / 100.0,
-            "age": float(demo["age"].get(cid, np.nan)),
-            "device": meta.get("device", "?"),
-            "t0": df["t0"].to_numpy(float) if "t0" in df else np.arange(len(df)) * 60.0,
-            "windows": {k: df[k].to_numpy(float)
-                        for k in ["pwtt", "si", "ri", "hr", "map", "co_ref"]},
-        })
+    for c in cases:
+        cid = c["caseid"]
+        c["age"] = float(demo["age"].get(cid, np.nan))
+        t = pd.read_csv(FEAT / f"case_{cid}.csv", usecols=lambda col: col == "t0")
+        c["t0"] = (t["t0"].to_numpy(float) if "t0" in t.columns
+                   else np.arange(len(c["windows"]["pwtt"]), dtype=float) * 60.0)
     return cases
 
 

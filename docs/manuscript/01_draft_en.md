@@ -612,9 +612,9 @@ arms, difference +0.2 percentage points, 95% CI +0.1 to +0.3). In the 16 cases w
 reference independent of the arterial pressure waveform, results are reported
 descriptively in Table 5. Aggregating windows to 5 and 20 minutes reduced percentage
 error in both arms, as expected when comparing monitors with differing response times
-(control 26.9% at 60 s; 23.9% at 5 min, 844 cases; 21.5% at 20 min in the 606 cases with
+(control 26.9% at 60 s; 24.0% at 5 min, 844 cases; 21.8% at 20 min in the 606 cases with
 sufficient data), but the correction improved accuracy at no aggregation level (difference
-−0.1 points, 95% CI −0.2 to +0.1 at 5 min; −0.2, 95% CI −0.5 to +0.0 at 20 min) —
+0.0 points, 95% CI −0.2 to +0.1 at 5 min; −0.2, 95% CI −0.5 to +0.0 at 20 min) —
 the accuracy null is therefore not an artefact of the 60-second window. Adding heart rate
 to the premise regression raised the explained fraction from 0.000 to 0.077 while leaving
 the vascular coefficients essentially unchanged (ΔSI% −0.020, ΔRI% −0.003, ΔHR% −0.057):

@@ -7,6 +7,17 @@
 数値（表2 の 1 行目、表4 の 1〜2 行目、表5 の 1〜2 行目）が再現することを併せて表示する。
 再現しなければ入力が主解析と違うので、その旨を出して止める。
 
+主解析と揃えてあるもの（ここがずれると値が 0.1 ポイント単位で動く）
+------------------------------------------------------------------
+* **症例の並び** … `src.cases.load_cached_cases`（= data/target_cases.csv の行順）。
+  5-fold は乱数種 0 の置換で切るので、並びが変われば fold の割り付けが変わる。
+  以前は data/features/ のファイル名順で並べていて、主解析と一致していなかった。
+* **符号の揃い** … 症例内回帰は `src.models.premise_by_case` と同じ **切片あり**
+  （設計行列 [1, ΔSI%, ΔRI%]）。心拍数を入れる行だけ ΔHR% を末尾に足す。
+  心拍数なしの値が premise_by_case と一致するかを毎回検算する。
+* **表4 と 16 例の行** … 主解析の `crossval(seed=0)` を 1 回だけ回し、その結果から
+  行と症例を抜き出す。**16 例だけで学習し直すことはしない。**
+
 埋める 11 箇所
 --------------
 表2  切片つきモデルの β ΔSI%・β ΔRI%（2 箇所）
@@ -28,7 +39,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -39,13 +49,13 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.models import (_deltas, _rel, crossval, premise_test)          # noqa: E402
+from src.cases import aggregate, load_cached_cases                      # noqa: E402
+from src.models import (_deltas, _rel, crossval, premise_by_case,       # noqa: E402
+                        premise_test)
 from src.stats import bootstrap_diff_ci, per_case_pe, percentage_error  # noqa: E402
 
 DATA = ROOT / "data"
 FEAT = DATA / "features"
-KEYS = ["pwtt", "si", "ri", "hr", "map", "co_ref"]
-MIN_WINDOWS = 12
 N_BOOT = 2000          # 表4 の脚注が指定する回数
 SEED = 0               # 主解析と同じ
 
@@ -55,57 +65,16 @@ KNOWN = {
     "r2_origin": 0.000, "beta_dsi": -0.027, "beta_dri": -0.003,
     "r2_intercept": 0.044,
     "pe_ctrl": 26.9, "pe_prop": 27.2,
+    "diff": 0.2, "ci_lo": 0.1, "ci_hi": 0.4,
     "pe_ctrl_map": 27.0, "pe_ctrl_vasc_map": 27.1,
     "r2_hr": 0.077, "beta_dsi_hr": -0.020,
     "sign_consistency": 78,
 }
-TOL = {"r2": 0.002, "beta": 0.002, "pe": 0.15, "n_cases": 0}
-
-
-def _load(stem: str, name: str):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / stem)
-    m = importlib.util.module_from_spec(spec)
-    sys.modules[name] = m
-    spec.loader.exec_module(m)
-    return m
+TOL = {"r2": 0.002, "beta": 0.002, "pe": 0.15, "diff": 0.05, "n_cases": 0}
 
 
 # ---------------------------------------------------------------- 入力
-def load_cases(verbose: bool = True) -> list[dict]:
-    """09番と同じ読み方。参照CO装置も保持する（表5 の 16 例の行に要る）。"""
-    demo = pd.read_csv(DATA / "cases.csv", encoding="utf-8-sig").set_index("caseid")
-    tc = pd.read_csv(DATA / "target_cases.csv").set_index("caseid")
-    M03 = _load("03_run_analysis.py", "m03_41")
-    cases = []
-    for meta_p in sorted(FEAT.glob("case_*_meta.json")):
-        try:
-            meta = json.loads(meta_p.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        if meta.get("v") != 3:
-            continue
-        cid = meta["caseid"]
-        f = FEAT / f"case_{cid}.csv"
-        if not f.exists() or cid not in demo.index or cid not in tc.index:
-            continue
-        try:
-            df = pd.read_csv(f)
-        except Exception:
-            continue
-        if len(df) < MIN_WINDOWS or "si" not in df.columns:
-            continue
-        h = float(demo["height"].get(cid, np.nan))
-        if not np.isfinite(h) or h < 100:
-            continue
-        cases.append({
-            "caseid": cid, "height": h / 100.0,
-            "windows": {k: df[k].to_numpy(float) for k in KEYS},
-            "device": M03.pick_device(tc.loc[cid], None),
-        })
-    if verbose:
-        print(f"キャッシュから {len(cases)} 症例 "
-              f"（{sum(len(c['windows']['pwtt']) for c in cases):,} ウィンドウ）")
-    return cases
+# 症例の読み込みと集約は src/cases.py に置いた（09番と共用・主解析と同じ並び）。
 
 
 def explain_missing() -> None:
@@ -150,37 +119,39 @@ def premise_with_intercept(cases: list[dict]) -> dict:
 def sign_consistency(cases: list[dict], with_hr: bool) -> float:
     """症例内で係数が仮説と同じ向き（β ΔSI% が負）だった症例の割合。
 
-    主解析の 78% と同じ求め方にする。症例ごとに同じ設計行列で回帰し、β ΔSI% の符号を数える。
+    主解析の 78%（`src.models.premise_by_case`）と同じ求め方にする。設計行列は
+    **切片つき** の [1, ΔSI%, ΔRI%]。心拍数を入れる行だけ ΔHR% を末尾に足す。
+    有限な行が 8 未満の症例は premise_by_case と同じく飛ばし、切片の次の列
+    （β ΔSI%）が負の症例を数える。
+
+    以前はここだけ切片なしで回していたため 74%（主解析は 78%）になっていた。
     """
     n_ok = n_tot = 0
     for c in cases:
         d = _deltas(c)
-        cols = [d["dsi"], d["dri"]] + ([_rel(c["windows"]["hr"])] if with_hr else [])
-        X = np.column_stack(cols)
         y = d["dpwtt_rel"]
+        cols = [np.ones(len(y)), d["dsi"], d["dri"]]
+        if with_hr:
+            cols.append(_rel(c["windows"]["hr"]))
+        X = np.column_stack(cols)
         m = np.isfinite(y) & np.isfinite(X).all(axis=1)
-        if m.sum() < len(cols) + 2:
+        if m.sum() < 8:
             continue
         coef, *_ = np.linalg.lstsq(X[m], y[m], rcond=None)
         n_tot += 1
-        n_ok += int(coef[0] < 0)
+        n_ok += int(coef[1] < 0)
     return 100.0 * n_ok / max(n_tot, 1)
 
 
-def aggregate(case: dict, k: int) -> dict | None:
-    """09番と同一。連続する有効ウィンドウ k 個ずつの平均で 1 ブロック。"""
-    w = case["windows"]
-    n = len(w["pwtt"]) // k
-    if n < 6:
-        return None
-    agg = {key: np.array([np.nanmean(w[key][i * k:(i + 1) * k]) for i in range(n)])
-           for key in KEYS}
-    return {"caseid": case["caseid"], "height": case["height"],
-            "windows": agg, "device": case.get("device")}
+def accuracy(cases: list[dict], regressors=("dsi", "dri"),
+             res: list[dict] | None = None) -> dict:
+    """交差検証 1 本ぶんの対照 PE・提案 PE・差と 95%CI。
 
-
-def accuracy(cases: list[dict], regressors=("dsi", "dri")) -> dict:
-    res = crossval(cases, seed=SEED, regressors=regressors)
+    res を渡したときは回し直さない（表4 の 1 行目と 16 例の行は、主解析と同じ
+    `crossval(cases, seed=0, regressors=("dsi","dri"))` の結果を使い回す）。
+    """
+    if res is None:
+        res = crossval(cases, seed=SEED, regressors=regressors)
     ci = bootstrap_diff_ci(res, n_boot=N_BOOT, seed=SEED)
     return {"n_cases": len(cases),
             "pe_ctrl": float(np.nanmedian(per_case_pe(res, "est_ctrl"))),
@@ -211,6 +182,9 @@ def run(cases: list[dict], as_json: Path | None) -> int:
     print(f"           β ΔSI% {pt['beta_dsi']:+.3f}（確定 {KNOWN['beta_dsi']:+.3f}）  "
           f"{near(pt['beta_dsi'], KNOWN['beta_dsi'], TOL['beta'])}")
     print(f"           ウィンドウ {pt['n_windows']:,}（確定 {KNOWN['n_windows']:,}）")
+    if pt["n_windows"] != KNOWN["n_windows"]:
+        print(f"           ※ {pt['n_windows'] - KNOWN['n_windows']:+d} ウィンドウの差は未解明。"
+              f"主解析を回した機械の症例別記録が要る（bad には数えない）")
     for got, want, key in ((pt["r2_vasc"], KNOWN["r2_origin"], "r2"),
                            (pt["beta_dsi"], KNOWN["beta_dsi"], "beta")):
         if abs(got - want) > TOL[key]:
@@ -231,20 +205,40 @@ def run(cases: list[dict], as_json: Path | None) -> int:
     print("\n" + "=" * 74)
     print(f"表4  対照との差（症例単位ブートストラップ {N_BOOT:,} 回・種 {SEED}）")
     print("=" * 74)
-    rows = [("Control (PWTT only)", ("dsi", "dri"), None),
+    out["table4"] = {}
+
+    # 1 行目は主解析そのもの。ここで回した res を 16 例の行でも使い回す
+    res_main = crossval(cases, seed=SEED, regressors=("dsi", "dri"))
+    a1 = accuracy(cases, regressors=("dsi", "dri"), res=res_main)
+    print(f"  {'Control (PWTT only)':44s} PE {a1['pe_ctrl']:.1f}%"
+          f"  （確定 {KNOWN['pe_ctrl']:.1f}%  {near(a1['pe_ctrl'], KNOWN['pe_ctrl'], TOL['pe'])}）")
+    print(f"  {'Proposed (vascular correction)':44s} PE {a1['pe_prop']:.1f}%"
+          f"  （確定 {KNOWN['pe_prop']:.1f}%  {near(a1['pe_prop'], KNOWN['pe_prop'], TOL['pe'])}）")
+    print(f"    差 {a1['diff']:+.1f} points (95% CI {a1['lo']:+.1f} to {a1['hi']:+.1f})"
+          f"  （確定 {KNOWN['diff']:+.1f} [{KNOWN['ci_lo']:+.1f}, {KNOWN['ci_hi']:+.1f}]  "
+          f"差 {near(a1['diff'], KNOWN['diff'], TOL['diff'])} / "
+          f"下限 {near(a1['lo'], KNOWN['ci_lo'], TOL['diff'])} / "
+          f"上限 {near(a1['hi'], KNOWN['ci_hi'], TOL['diff'])}）")
+    for got, want in ((a1["pe_ctrl"], KNOWN["pe_ctrl"]), (a1["pe_prop"], KNOWN["pe_prop"])):
+        if abs(got - want) > TOL["pe"]:
+            bad += 1
+    for got, want in ((a1["diff"], KNOWN["diff"]), (a1["lo"], KNOWN["ci_lo"]),
+                      (a1["hi"], KNOWN["ci_hi"])):
+        if abs(got - want) > TOL["diff"]:
+            bad += 1
+    out["table4"]["Control (PWTT only) / Proposed (vascular correction)"] = a1
+
+    for label, reg, want_pe in (
             ("Control + mean arterial pressure", ("dmap",), KNOWN["pe_ctrl_map"]),
             ("Control + vascular + mean arterial pressure", ("dsi", "dri", "dmap"),
-             KNOWN["pe_ctrl_vasc_map"])]
-    out["table4"] = {}
-    for label, reg, want_pe in rows:
+             KNOWN["pe_ctrl_vasc_map"])):
         a = accuracy(cases, regressors=reg)
-        chk = "" if want_pe is None else f"  （確定 {want_pe:.1f}%  {near(a['pe_prop'], want_pe, TOL['pe'])}）"
-        print(f"  {label:44s} PE {a['pe_prop']:.1f}%{chk}")
-        if want_pe is not None:
-            if abs(a["pe_prop"] - want_pe) > TOL["pe"]:
-                bad += 1
-            print(f"    → 表に入れる:  {a['diff']:+.1f} points "
-                  f"(95% CI {a['lo']:+.1f} to {a['hi']:+.1f})")
+        print(f"\n  {label:44s} PE 対照 {a['pe_ctrl']:.1f}% / 提案 {a['pe_prop']:.1f}%"
+              f"  （提案の確定 {want_pe:.1f}%  {near(a['pe_prop'], want_pe, TOL['pe'])}）")
+        if abs(a["pe_prop"] - want_pe) > TOL["pe"]:
+            bad += 1
+        print(f"    → 表に入れる:  {a['diff']:+.1f} points "
+              f"(95% CI {a['lo']:+.1f} to {a['hi']:+.1f})")
         out["table4"][label] = a
 
     print("\n" + "=" * 74)
@@ -260,26 +254,34 @@ def run(cases: list[dict], as_json: Path | None) -> int:
 
     sc0 = sign_consistency(cases, with_hr=False)
     sc1 = sign_consistency(cases, with_hr=True)
+    sc_ref = premise_by_case(cases)["sign_consistency"] * 100.0
     print(f"\n  符号の揃い  心拍数なし {sc0:.0f}%（確定 {KNOWN['sign_consistency']}%）  "
           f"{near(sc0, KNOWN['sign_consistency'], 1.0)}")
+    print(f"    主解析 premise_by_case と突き合わせ: {sc0:.6f}% 対 {sc_ref:.6f}%  "
+          f"{'一致' if abs(sc0 - sc_ref) <= 1e-9 else '★ずれ（切片の扱いが違う）'}")
+    if abs(sc0 - sc_ref) > 1e-9:
+        bad += 1
     if abs(sc0 - KNOWN["sign_consistency"]) > 1.0:
         bad += 1
     print(f"    → 表に入れる:  心拍数を投入したときの符号の揃い = {sc1:.0f}%")
     out["table5"]["sign_consistency_hr"] = sc1
 
-    nonart = [c for c in cases if c.get("device") in ("CardioQ", "Vigilance")]
-    print(f"\n  参照が動脈圧に依存しない症例: {len(nonart)} 例 "
-          f"（{', '.join(sorted({str(c['device']) for c in nonart})) or '該当なし'}）")
-    if len(nonart) >= 5:
-        res = crossval(nonart, seed=SEED)
-        pc = float(np.nanmedian(per_case_pe(res, "est_ctrl")))
-        pp = float(np.nanmedian(per_case_pe(res, "est_prop")))
+    nonart_ids = {c["caseid"] for c in cases if c.get("device") in ("CardioQ", "Vigilance")}
+    nonart_devs = sorted({str(c["device"]) for c in cases if c["caseid"] in nonart_ids})
+    sub = [r for r in res_main if r["caseid"] in nonart_ids]
+    print(f"\n  参照が動脈圧に依存しない症例: {len(sub)} 例 "
+          f"（{', '.join(nonart_devs) or '該当なし'}）")
+    print("    ※ 主解析の交差検証結果（表4 1 行目の res）から該当症例を抜き出すだけ。"
+          "16 例だけで学習し直さない")
+    if len(sub) >= 5:
+        pc = float(np.nanmedian(per_case_pe(sub, "est_ctrl")))
+        pp = float(np.nanmedian(per_case_pe(sub, "est_prop")))
         direction = "提案が悪い" if pp > pc else ("提案が良い" if pp < pc else "同じ")
         print(f"    → 表に入れる:  Percentage error, control / proposed = "
               f"{pc:.1f}% / {pp:.1f}%")
         print(f"    → 表に入れる:  Direction of the difference = "
               f"{direction}（{pp - pc:+.1f} points, descriptive only, no test）")
-        out["table5"]["nonarterial"] = {"n": len(nonart), "pe_ctrl": pc, "pe_prop": pp}
+        out["table5"]["nonarterial"] = {"n": len(sub), "pe_ctrl": pc, "pe_prop": pp}
     else:
         print("    ★ 症例が少なすぎる。表の 16 例と合うか確かめること")
         bad += 1
@@ -345,6 +347,9 @@ def selftest() -> int:
     rep("効果を消すと符号の揃いが五分に寄る", 30 < sc_null < 70, f"{sc_null:.0f}%")
     rep("心拍数を足しても揃いが壊れない",
         sign_consistency(cs, with_hr=True) > 90)
+    sc_ref = premise_by_case(cs)["sign_consistency"] * 100.0
+    rep("符号の揃いが主解析 premise_by_case と一致する（切片あり）",
+        abs(sc - sc_ref) < 1e-9, f"{sc:.6f}% 対 {sc_ref:.6f}%")
 
     a5 = [x for c in cs if (x := aggregate(c, 5)) is not None]
     rep("5 個ずつの集約でブロック数が 1/5 になる",
@@ -369,6 +374,57 @@ def selftest() -> int:
     rep("ブートストラップ回数が表の脚注どおり 2,000", N_BOOT == 2000)
     rep("乱数種が主解析と同じ 0", SEED == 0)
 
+    # --- 症例の並び: target_cases.csv の行順か（ファイル名順ではないか） ---
+    import tempfile
+    from src import cases as cases_mod
+
+    # 行順 7 → 100 → 20。ファイル名順なら 100 が先に来るので区別がつく
+    plan = [(7, "EV1000", 170.0, 20), (100, "Vigileo", 165.0, 20),
+            (20, "CardioQ", 158.0, 20), (3, None, 160.0, 20),
+            (40, "EV1000", 80.0, 20), (55, "EV1000", 172.0, 5)]
+    with tempfile.TemporaryDirectory() as td:
+        data = Path(td)
+        (data / "features").mkdir()
+        tc_rows, demo_rows = [], []
+        for cid, dev, h_cm, n_win in plan:
+            row = {"caseid": cid}
+            for d in ("Vigileo", "EV1000", "Vigilance", "CardioQ"):
+                row[f"{d}_CO"] = (d == dev)
+            tc_rows.append(row)
+            demo_rows.append({"caseid": cid, "height": h_cm})
+            pd.DataFrame({
+                "t0": np.arange(n_win) * 60.0,
+                "pwtt": 0.25 + 0.01 * rng.standard_normal(n_win),
+                "si": 8.0 + rng.standard_normal(n_win),
+                "ri": 0.5 + 0.05 * rng.standard_normal(n_win),
+                "hr": 70.0 + 5 * rng.standard_normal(n_win),
+                "map": 80.0 + 5 * rng.standard_normal(n_win),
+                "co_ref": 5.0 + 0.3 * rng.standard_normal(n_win),
+            }).to_csv(data / "features" / f"case_{cid}.csv", index=False)
+        pd.DataFrame(tc_rows).to_csv(data / "target_cases.csv", index=False)
+        pd.DataFrame(demo_rows).to_csv(data / "cases.csv", index=False, encoding="utf-8-sig")
+
+        keep = (cases_mod.DATA, cases_mod.FEAT)
+        try:
+            cases_mod.DATA, cases_mod.FEAT = data, data / "features"
+            got = cases_mod.load_cached_cases(verbose=False)
+            got_ids = [c["caseid"] for c in got]
+            got_devs = [c["device"] for c in got]
+            lim_ids = [c["caseid"] for c in cases_mod.load_cached_cases(limit=2, verbose=False)]
+            name_ids = [int(p.stem.split("_")[1])
+                        for p in sorted((data / "features").glob("case_*.csv"))]
+        finally:
+            cases_mod.DATA, cases_mod.FEAT = keep
+
+    rep("症例の並びが target_cases.csv の行順（ファイル名順ではない）",
+        got_ids == [7, 100, 20] and name_ids[0] != got_ids[0],
+        f"読み込み {got_ids} / ファイル名順なら {name_ids}")
+    rep("装置なし・身長100cm未満・ウィンドウ不足の症例は落ちる",
+        got_ids == [7, 100, 20], f"採用 {got_ids}（3・40・55 が落ちるはず）")
+    rep("参照CO装置は pick_device が決める",
+        got_devs == ["EV1000", "Vigileo", "CardioQ"], f"{got_devs}")
+    rep("limit は先頭から数える", lim_ids == [7, 100], f"{lim_ids}")
+
     print("\n" + ("ALL PASS" if ok else "FAIL あり"))
     return 0 if ok else 1
 
@@ -384,11 +440,11 @@ def main() -> None:
         sys.exit(selftest())
 
     missing = [p for p in (FEAT, DATA / "cases.csv", DATA / "target_cases.csv") if not p.exists()]
-    if missing or len(list(FEAT.glob("case_*_meta.json"))) < 100:
+    if missing or len(list(FEAT.glob("case_*.csv"))) < 100:
         explain_missing()
         sys.exit(2)
 
-    cases = load_cases()
+    cases = load_cached_cases()
     if len(cases) < 100:
         explain_missing()
         sys.exit(2)
