@@ -55,19 +55,24 @@ in advance.
 
 **Results.** The positive control passed (median absolute correlation 0.571, predicted
 sign in all six decades). For the frozen decomposition, ΔT (the interval between the two
-component peaks) versus aortic pulse wave velocity reached 0.223 and the reflection index
-RI (the ratio of the peak heights) versus peripheral resistance 0.207; neither met the
-criterion. From the same waveforms, fiducial-point indices reached 0.710 and 0.504 and the
-early amplitude ratio 0.836; all met it. The negative persisted in a version rebuilt to
-match five source papers (0.167), across twelve combinations of basis and component count
-(best 0.56), and under the fitting conditions of six published papers applied unchanged
-(best 0.578). Adding components improved the fit to the waveform while lowering the
-correlation with truth. Pulse wave velocity had the largest effect on
-decomposition-derived ΔT (−17.0% from −1 SD to +1 SD), but heart rate (−10.9%) and aortic
-diameter (−12.6%) had effects of the same size, and subjects were ordered by heart rate
-(correlation −0.54) more than by pulse wave velocity (−0.26). When pulse wave velocity
-alone was moved across its three levels, ΔT went 332, 353 and 251 ms — it reversed
-direction, so the response was not monotone.
+component peaks) versus aortic pulse wave velocity reached 0.223 and the reflection
+index RI (the ratio of the peak heights) versus peripheral resistance 0.207; neither met
+the criterion. From the same waveforms, fiducial-point indices reached 0.710 and 0.504
+and the early amplitude ratio 0.836; all met it. The negative persisted in a version
+rebuilt to match five source papers (0.167), across twelve combinations of basis and
+component count (best 0.56), and under the fitting conditions of six published papers
+applied unchanged (best 0.578), neither approaching the fiducial-point value on the same
+subjects (0.71); the last two are explorations on subsets to which the six-stratum
+criterion was not applied. Adding components improved the fit to the waveform while
+lowering the correlation with truth. Pulse wave velocity had the largest effect on
+decomposition-derived ΔT (−17.0% from −1 SD to +1 SD), but heart rate (−10.9%) and
+aortic diameter (−12.6%) had effects of the same size. Ordering the subjects of one age
+stratum by ΔT reproduced their ordering by heart rate (rank correlation −0.54) more
+closely than their ordering by pulse wave velocity (−0.26). When pulse wave velocity
+alone was moved across its low, middle and high levels, ΔT went 332, 353 and 251 ms: it
+lengthened and then shortened. A rank correlation assumes a monotone relation, so even
+the factor with the largest change in the mean (the largest main effect) can have a
+small rank correlation.
 
 **Conclusions.** In a population where truth is known, vascular indices obtained by
 fitting the photoplethysmogram as a sum of component waves did not track aortic pulse wave
@@ -116,9 +121,11 @@ component waves is an ill-posed problem: more than one set of parameters (the po
 widths and heights of the components) reproduces the same waveform to almost the same
 accuracy, so many parameter combinations give almost the same residual, the difference
 between waveform and model (Figure 2). Every goodness-of-fit criterion is, by
-construction, nearly invariant to which of those solutions the optimiser lands on, while
-the extracted parameters are not. A method can therefore be excellent by every published
-criterion and still return a quantity that does not track the vascular property it names.
+construction, nearly invariant to which of those solutions the optimiser — the numerical
+procedure that searches for the parameter set with the smallest residual, here
+trust-region-reflective least squares — lands on, while the extracted parameters are not.
+A method can therefore be excellent by every published criterion and still return a
+quantity that does not track the vascular property it names.
 
 Separating these two things requires knowing the truth. In measured data, the subjects
 whose finger photoplethysmogram is recorded almost never have aortic pulse wave velocity
@@ -159,9 +166,15 @@ peripheral vascular resistance therefore carries the effects of mean arterial pr
 heart rate and stroke volume, **and the sign of that contamination differs by factor**.
 Raising mean arterial pressure raises resistance but lowers RI (0.294 → 0.254 → 0.236 in the
 single-factor sweep), pulling the association negative; raising heart rate raises cardiac
-output, lowers resistance and also lowers RI (main effect −40%), pulling it positive.
-**The observed association therefore cannot be attributed to resistance as such.** The
-factors are separated by the main-effect analysis.
+output, lowers resistance and also lowers RI, pulling it positive. The main effect used
+here is the change in an index when one factor alone is moved from −1 SD to +1 SD, averaged
+over all combinations of the other factors and expressed as a fraction of the stratum mean;
+the main effect of heart rate on RI is −40%. **Peripheral vascular resistance in this model
+is not an input but a quantity fixed by mean arterial pressure, heart rate and stroke
+volume.** An association between RI and resistance therefore cannot by itself show whether
+it arises from the resistance or from the pressure and heart rate that set the resistance.
+Which input is at work is told apart by the change in RI when the inputs are moved one at a
+time (the main effect of each factor).
 
 Two properties make this the appropriate substrate for the present question. The vascular
 quantities are known by construction rather than estimated, and the factors are varied
@@ -185,16 +198,17 @@ ratio or an interval, the amplitude scale cancels; the baseline level does not, 
 baseline removal above is a precondition for the reflection-index family. This
 preprocessing was applied to every index computed in this study (the rebuilt
 decomposition, fiducial-point analysis and the early amplitude ratio). The frozen
-decomposition, identical to that of Study 1, kept its original processing (subtraction of
-the minimum and amplitude normalisation) in keeping with the freeze, and the
-fiducial-point indices distributed with the Pulse Wave Database are the original authors'
-own processing.
+decomposition, identical to that of our companion VitalDB study of 862 cases (paper 1),
+kept its original processing (subtraction of the minimum and amplitude normalisation) in
+keeping with the freeze, and the fiducial-point indices distributed with the Pulse Wave
+Database are the original authors' own processing.
 
 ### 2.3 Indices
 
 **Pulse decomposition (frozen version).** The principal object of this study is the
-decomposition used in Study 1 and not modified since (the frozen version). It represents
-the beat as the sum of two skew-Gaussian components, asymmetric bell-shaped curves:
+decomposition used in our companion VitalDB study of 862 cases (paper 1) and not modified
+since (the frozen version). It represents the beat as the sum of two skew-Gaussian
+components, asymmetric bell-shaped curves:
 
   g(t; a, μ, σ, α) = a · exp(−z²/2) · [ 1 + erf( αz / √2 ) ],   z = (t − μ)/σ         (1)
 
@@ -303,7 +317,9 @@ report the stratum median of each index at each level; because the other factors
 identical, no confounding enters and the shape of the response, monotone or not, can be
 seen directly. Waveforms were classified by the visibility of the dicrotic notch (Dawber
 type 1: notch present; type 3: no notch but an inflection on the descending limb; type 4:
-neither).
+neither). Of Dawber's four types, types 2 and 3 — both of which lack a notch — are not
+distinguished by our detection: every beat with an inflection on the descending limb is
+counted as type 3.
 
 ### 2.7 Software and reproducibility
 
@@ -347,17 +363,20 @@ Neither decomposition version passed. The frozen version passed its convergence 
 4,036 of 4,374 subjects (92%), so all three tiers could be evaluated. The skew-Gaussian
 route of the rebuilt version accepted almost no beats (2 of 4,374) because the
 right-skewed tail filled in the shallow notch and displaced the fiducial points by 15–25
-ms, more than the 6 ms tolerance of the Wang criterion; tiers A and B could therefore not
-be evaluated, and tier C did not reach the threshold. The gamma route accepted 103 beats
-and passed some tiers but not all, and **87.4% of accepted beats had at least one
-parameter resting on a search bound**. Widening the bounds moved the correlation among
-*accepted* beats to 0.119, but left the all-subject value unchanged at 0.55 (§3.3); the
-right reading of the pinning is therefore that the parameters of this basis are not
-identified in these beats — more than one parameter set reproduces the waveform — rather
-than that the search range fixes the answer. Note that the rebuilt version was evaluated
-on tier C only, that is, on beats it would itself have rejected; this asymmetry could work
-against decomposition, but the frozen version, evaluated on the beats it accepted, reached
-only 0.223, so the conclusion does not depend on how acceptance is handled.
+ms, more than the 6 ms tolerance of the Wang criterion, and changing the thresholds does
+not raise the acceptance. Two accepted beats cannot support a verdict, so this route is
+read on the fitted values of all subjects (tier C), and that only two beats were
+accepted is itself a result: tiers A and B could therefore not be evaluated, and tier C
+did not reach the threshold. The gamma route accepted 103 beats and passed some tiers
+but not all, and **87.4% of accepted beats had at least one parameter resting on a
+search bound**. Widening the bounds moved the correlation among *accepted* beats to
+0.119, but left the all-subject value unchanged at 0.55 (§3.3); the right reading of the
+pinning is therefore that the parameters of this basis are not identified in these beats
+— more than one parameter set reproduces the waveform — rather than that the search
+range fixes the answer. Note that the rebuilt version was evaluated on tier C only, that
+is, on beats it would itself have rejected; this asymmetry could work against
+decomposition, but the frozen version, evaluated on the beats it accepted, reached only
+0.223, so the conclusion does not depend on how acceptance is handled.
 
 Two further fiducial-point indices passed (SI versus PWV 0.710; the second-derivative ageing
 index AGI_mod 0.885) and one failed (augmentation index versus resistance 0.143). Defining
@@ -377,10 +396,13 @@ acceptance criterion of five source papers, gave 0.167, failing the criterion as
 frozen version (0.223) did.
 
 **Basis function (table 3).** This sweep was run after the confirmatory judgment and is
-reported as exploratory; it uses the 98 notch-bearing beats available from 120 subjects in
-four strata, so its values are wider than those of the confirmatory run. Across twelve
-combinations of basis and component count the best value reached was **0.56**, below the
-0.710 obtained by fiducial-point analysis on the same subjects. Four observations recur:
+reported as exploratory. Subjects were taken at equal intervals through the 4,374 in
+subject-number order and those whose beat was classified as type 1 (notch present) were
+kept: the run was set to collect 120 such beats, but the equally spaced scan was exhausted
+at 98, in four strata, so its values are wider than those of the confirmatory run. Across
+twelve combinations of basis and component count the best value reached was **0.56**, below
+the 0.710 obtained by fiducial-point analysis on the same subjects; the six-stratum
+criterion was not applied to this subset. Four observations recur:
 
 - **The failure of the skew-Gaussian family is not a matter of the sign of the skew.**
   Allowing left skew, as Basso 2024 does, reproduced the frozen row exactly at two components
@@ -400,16 +422,19 @@ combinations of basis and component count the best value reached was **0.56**, b
 
 **Published conditions (table 4).** Applied unchanged to 624 subjects, none of the six
 published protocols reached the fiducial-point value (0.705 in the same subset). The best was
-0.578 (the gamma, three-component model recommended by Tigges 2017). For RI, one protocol
-did exceed fiducial-point analysis: Couceiro's R1_d reached 0.585 against 0.501. Under the
+0.578 (the gamma, three-component model recommended by Tigges 2017); the six-stratum
+criterion was not applied to these 624 subjects either. For RI, one protocol did exceed
+fiducial-point analysis: Couceiro's R1_d reached 0.585 against 0.501. Under the
 prespecified rule this row is not taken into the verdict; §4.3 discusses why it is
 nevertheless the one result consistent with the proposed mechanism.
 
 ### 3.4 Where the decomposition-derived index does respond
 
-Main effects within strata (table 2) show that decomposition-derived ΔT is not inert. Its
-largest single main effect is that of pulse wave velocity (−17.0%). What distinguishes it
-from the fiducial-point index is the size of the competing effects.
+Main effects within strata (table 2) show that decomposition ΔT does respond to pulse wave
+velocity (−17.0%). The point is not whether it responds, but that heart rate (−10.9%) and
+aortic diameter (−12.6%) move it by about as much, so that it is no longer pulse wave
+velocity that decides the ordering of the subjects. What distinguishes it from the
+fiducial-point index is the size of the competing effects.
 
 | Factor | Fiducial ΔT | Decomposition ΔT | Am_b/Am_p1 |
 |---|---|---|---|
@@ -421,12 +446,10 @@ from the fiducial-point index is the size of the competing effects.
 | Stroke volume | +15.9% | −4.1% | −0.2% |
 
 For fiducial ΔT the pulse-wave-velocity column is twelve times the heart-rate column; for
-the decomposition it is 1.6 times. Ranking within a stratum reflects this: for
-decomposition ΔT the correlation with heart rate (ρ = −0.54) is stronger than the
-correlation with pulse wave velocity (ρ = −0.26). **Ordering the subjects of a stratum by
-ΔT therefore reproduces their ordering by heart rate better than their ordering by pulse
-wave velocity: an index meant to rank subjects by stiffness is in fact ranking them
-largely by heart rate.**
+the decomposition it is 1.6 times. Ranking within a stratum reflects this: ordering the
+subjects of one age stratum by ΔT reproduces their ordering by heart rate (ρ = −0.54) more
+closely than their ordering by pulse wave velocity (ρ = −0.26). **An index meant to rank
+subjects by stiffness is in fact ranking them largely by heart rate.**
 
 ### 3.5 The response is not monotone
 
@@ -438,8 +461,9 @@ response to mean arterial pressure folds slightly around baseline (ΔT 337.2, 35
 348.7 ms), in the direction opposite to its full-factorial main effect (−7.7%), because
 the effect of pressure depends on the levels of the other factors (an interaction). This
 reconciles the largest main effect with the small rank correlation (ΔT: −17.0% main
-effect, ρ = −0.26; RI: +33.7%, ρ = −0.17): **a rank correlation assumes monotonicity, and
-across a range that crosses the turning point it cannot be established in principle.**
+effect, ρ = −0.26; RI: +33.7%, ρ = −0.17): **a rank correlation assumes a monotone
+relation, so over a range in which the response changes direction even the factor with the
+largest change in the mean (the largest main effect) can have a small rank correlation.**
 
 Inspection of the fitted beats of the single-factor-sweep subjects indicates why. In
 subjects with high pulse wave velocity, where the reflection moves forward into systole,
@@ -452,11 +476,18 @@ correspond to physical waves, and here it occurs in noiseless, ideal waveforms.
 ### 3.6 Waveform types and true transit times
 
 Waveform types were: type 1 (notch present) 891 (20.4%), type 3 (inflection only) 3,378
-(77.2%), type 4 (neither) 105 (2.4%). The rebuilt decomposition accepts only type 1 beats
-by rule, so its verdicts rest on type 1; type 3 was read with fiducial points (the
-inflection standing in for the diastolic peak), the p1 construction and the upstroke
-ratio. The frozen decomposition has no such rule and was fitted to all subjects regardless
-of type.
+(77.2%), type 4 (neither) 105 (2.4%). Our detection separates the types only by the
+presence of a notch and of an inflection on the descending limb, so Dawber types 2 and 3
+are both counted as type 3, and these three types account for all 4,374 subjects. The
+rebuilt decomposition accepts only type 1 beats by rule, so its verdicts rest on type 1.
+The Wang acceptance criterion decides a fit by whether the fitted components reproduce the
+positions of the measured fiducial points (the notch and the diastolic peak), so it cannot
+be applied to beats that have neither; for tiers A and B of the rebuilt version the rule
+therefore gives up the very advantage of decomposition, that it returns a value in beats
+without a notch. Type 3 was read with fiducial points (the inflection standing in for the
+diastolic peak), the p1 construction and the upstroke ratio. The frozen decomposition has
+no such rule and was fitted to all subjects regardless of type, so how decomposition
+performs in beats without a notch is read from the frozen version and from tier C.
 
 The model's true transit times (which contain no pre-ejection period) were 96 ms (5th–95th
 centile 66–120) from the aortic root to the digit and **8 ms (4–16)** from the radial
@@ -558,8 +589,8 @@ in table 4.
 A pooled correlation across a wide age range is inflated by the common dependence of both
 variables on age, and in our data the within-stratum correlation of decomposition ΔT varies
 from −0.14 in the youngest stratum to −0.61 in the oldest. The stratified criterion was not
-chosen to be severe but to match the intended use. In the application that motivated this
-work — correcting a calibration constant that already contains age and body size — an index
+chosen to be severe but to match how the index is meant to be used, namely to correct a
+calibration constant that already contains age and body size. In that application an index
 whose information is age adds nothing. **The question that has to be answered is whether two
 subjects of the same age can be ordered by stiffness, and that is what a within-stratum rank
 correlation asks.**
