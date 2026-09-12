@@ -352,8 +352,22 @@ original authors from the site-specific waveforms) correlated with aortic PWV at
 within-stratum |ρ| of **0.571** (0.5 required), with the predicted sign in 6/6 strata. The
 table was therefore read. Separately, the true transit time computed from the database's
 table of onset times correlated with aortic PWV at ρ = **−0.99** in all six strata, so the
-truth values are mutually consistent. Why the distributed transit time correlates only at
-0.571 was not established at this stage.
+truth values are mutually consistent. In a post hoc, exploratory analysis we asked why the
+distributed transit time correlates only at 0.571. Across all 4,374 subjects (tier C), the
+distributed transit time minus the true transit time had a median of −18 ms (interquartile
+range −24 to −14 ms). In 972 of the 4,374 subjects (22.2%) the absolute difference was
+between 0.8 and 1.2 cardiac cycles, and in every one of them the distributed value was
+shorter than the true one by about one cycle: for those subjects the distributed column
+assigns the arrival to the wrong cardiac cycle. Adding one cardiac cycle (60/HR) to the
+distributed value in those 972 subjects raises its median within-stratum correlation with
+aortic PWV from 0.571 to 0.986, the same as the true transit time (0.987 in this
+computation). What remains after that correction is a nearly constant offset (median 16 ms, the
+distributed value the shorter; interquartile range 14 to 20 ms in the 3,402 subjects
+without the cycle error) whose correlation
+with heart rate (|ρ| 0.218) and with aortic diameter (0.103) is below 0.30. The 0.571
+therefore reflects misassignment of the cardiac cycle in the distributed column in about a
+fifth of subjects, not a defect of the analysis pipeline or of the truth values; the
+prespecified positive control had already passed and its verdict is unchanged.
 
 ### 3.2 Principal comparison
 
@@ -478,9 +492,21 @@ largest change in the mean (the largest main effect) can have a small rank corre
 Inspection of the fitted beats of the single-factor-sweep subjects indicates why. In
 subjects with high pulse wave velocity, where the reflection moves forward into systole,
 the second component captures a different physical feature — the late-systolic wave rather
-than the diastolic wave — and the correspondence between component and event changes. How
-many subjects in the whole population show this exchange was not counted. This is the
-concrete form of the caution raised by Epstein 2014 that fitted components need not
+than the diastolic wave — and the correspondence between component and event changes. In a
+post hoc, exploratory analysis we counted how often this exchange occurs. Among the 4,036
+subjects the frozen version accepted, the exchange was counted as present when the peak of
+the second component fell before the dicrotic notch; since the frozen version stores only
+ΔT, the time of that peak was approximated as the distributed systolic-peak time plus ΔT.
+The exchange was judgeable in 3,995 subjects (41 lacked a notch time or a ΔT) and was
+present in 116 of them (2.9%). By age stratum it was 0% at 25, 35 and 45 years, 2.8% at
+55, 6.6% at 65 and 9.5% at 75 years; it was 4.7% at pulse wave velocity +1 SD against 0.4%
+at −1 SD, and 7.0% at stroke volume +1 SD against 0.0% at −1 SD. Subjects with the
+exchange had a median aortic PWV of 9.83 m/s, against 7.15 m/s in those without. Excluding
+the 116 changed the within-stratum correlations little: ΔT versus aortic PWV 0.223 to
+0.166, RI versus peripheral resistance 0.207 to 0.247, both still below the 0.30 required.
+The exchange is real, but it occurs in a small minority of the stiffest,
+largest-stroke-volume subjects and is not the main cause of the negative result. This is
+the concrete form of the caution raised by Epstein 2014 that fitted components need not
 correspond to physical waves, and here it occurs in noiseless, ideal waveforms.
 
 ### 3.6 Waveform types and true transit times
@@ -593,6 +619,29 @@ peripheral resistance governs diastolic decay, so part of the association is bui
 (a caution recorded in the frozen rules); RI-type indices require a diastolic peak, which is
 often unavailable in recorded waveforms; and our reproduction carries the deviations listed
 in table 4.
+
+In a post hoc, exploratory analysis we asked whether adjusting RI for heart rate makes it
+a better index of peripheral resistance. The largest main effect on RI is that of heart
+rate (−40%, §2.1), so removing heart rate is the obvious thing to try. In this model,
+however, peripheral resistance is mean arterial pressure divided by the product of heart
+rate and stroke volume, so heart rate is part of the target quantity and not a confounder.
+Dividing RI by heart rate raised the median within-stratum correlation with peripheral
+resistance — frozen version 0.207 to 0.293, rebuilt version on the gamma basis 0.280 to
+0.375, fiducial-point analysis 0.504 to 0.545 — while removing heart rate by regression
+lowered it (frozen 0.174, fiducial-point 0.265), and removing heart rate and ejection time
+together lowered it further (frozen 0.071, fiducial-point 0.168). Frozen-version values
+are computed on tier A (the 4,036 subjects that version accepted) and the others on tier
+C. The control is the early amplitude ratio against aortic PWV, a target that does not
+contain heart rate: dividing by heart rate dropped it from 0.836 to 0.351, and regressing
+heart rate out left it unchanged (0.876). The gain from dividing by heart rate is
+therefore inherited from the 1/HR dependence of the target itself, not from RI tracking
+vascular state more closely, and the loss from regressing heart rate out is the removal of
+the part of the target that heart rate carries: the associations of a derived quantity are
+inherited from its inputs. The same structure holds for measured systemic vascular
+resistance, which is mean arterial pressure divided by cardiac output, cardiac output
+being heart rate × stroke volume. Heart-rate adjustment therefore does not make RI a
+better index of vascular state. This analysis is exploratory and no verdict is attached to
+it.
 
 ### 4.4 Why the criterion was stratified by age
 
