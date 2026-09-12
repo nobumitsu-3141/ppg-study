@@ -29,6 +29,11 @@
 
 どちらをデータが支持するかを述べる。
 
+**2e（周期補正）について。**（2026-09-12 追記。監督者による。計算の前に固定した。）
+Q2-P3 が周期の取り違えを支持するなら、外れた側（|d| が 1 周期の 0.8 倍以上）に周期を
+1 つ足し引きすれば、真の伝播時間に近づくはずである。補正後の digital_ptt_corr と
+大動脈PWV の年齢層内 |ρ| は、補正前の 0.571 から **0.9 を超えて上がる**と予測する。
+
 照合の規準（これも計算の前に決める。`3. 予測との照合` の節はこの 6 条で判定する）
 
     Q1-P1  入れ替わりの全体の割合が 0.20 以上 0.40 以下
@@ -54,7 +59,9 @@
 第2成分が拡張期波ではなく収縮期後半の波を拾っている状態である。近似の誤差は、第2版が
 成分ピークの絶対時刻を保存している（`tf_v2_ms`・`tr_v2_ms`。26番の同じ関数）ので、
 `tf_v2_ms − digital_ppgsys_t` の分布として表に出す。第2版の厳密なピーク時刻による
-入れ替わりの割合も参考に並べる。
+入れ替わりの割合も参考に並べる。**この判定に使う `dt_v1_ms`・`ri_v1`（と、そこから作る
+`t2_v1_ms`・入れ替わりの旗）は 26番の A 段（`ok_v1 == 1`）に絞って計算する**
+（節 1a〜1d のすべて。下の `規約` を参照。C 段は節の最後に参考として 1 か所添える）。
 
 特徴点の時刻は PWDB 同梱の値である（23番 `23_pwdb_landmarks.py` の `_to_ms` で ms に
 換算してから 26番の CSV に入っている）。
@@ -81,6 +88,16 @@
 
 どれも無ければ Q2 の真値側は計算せず、そのことを出力に書く（終了コード 2）。
 
+**2e。**2b で |d| が 1 周期の 0.8〜1.2 倍の被験者が見つかったら、その被験者だけ周期を
+1 つ足し引きして補正する（`cycle_correct` 関数）。
+
+    digital_ptt_corr = digital_ptt + 周期   （d ≤ −0.8 × 周期）
+    digital_ptt_corr = digital_ptt − 周期   （d ≥ +0.8 × 周期）
+    digital_ptt_corr = digital_ptt          （それ以外はそのまま）
+
+補正後の digital_ptt_corr と大動脈PWV の年齢層内 Spearman、および残差
+`digital_ptt_corr − ptt_root_fin_ms` と心拍数・大動脈径の年齢層内 Spearman を出す。
+
 規約
 ----
 年齢層内 Spearman ρ の規約は 26番・23番・20番と共有する（`20_pwdb_validity.py` の
@@ -90,9 +107,13 @@
 （`> 0.5` を +1 SD、`< -0.5` を −1 SD、それ以外を基準）。**判定（成立・不成立）は
 出さない。**事前規準による判定は 26番のものが有効で、事後の探索で上書きしない。
 
-相関は対応のある行（pairwise-complete）で取る。これは 26番の C 段（採否を無視した全例）に
-当たる。26番にはもう一つ A 段（その手法が自分で採用した例だけ＝`ok_v1 == 1`）があるので、
-節 0 ではその値も参考に出す（照合の合否には使わない）。
+相関は対応のある行（pairwise-complete）で取る。**凍結版（`dt_v1_ms`・`ri_v1`。
+`V1_STAGE_A_COLS`）は 26番の A 段（その手法が自分で採用した例だけ＝`ok_v1 == 1`）に
+絞って計算する。**論文2 の 0.223・0.207 がその段の値だから（2026-09-12 の訂正。従来は
+採否を無視した C 段で照合していて再現しなかった）。同梱 PTT・真の伝播時間（Q2・2e）は
+採否と無関係な量なので、従来どおり C 段（採否を無視した全例＝26番の C 段）で計算する。
+凍結版の C 段の値は、節 0・節 1 の最後に「参考」として添える（照合・予測の判定には
+使わない。何も失わないための行である）。
 
 データ
 ------
@@ -192,6 +213,19 @@ LEVEL_LABEL = {-1: "−1 SD", 0: "基準", +1: "+1 SD"}
 # 入れ替わりの判定に要る列
 T_SYS, T_DIC, T_DIA = "digital_ppgsys_t", "digital_ppgdic_t", "digital_ppgdia_t"
 DT_V1, RI_V1, OK_V1 = "dt_v1_ms", "ri_v1", "ok_v1"
+
+# 凍結版 (*_v1: dt_v1_ms・ri_v1、およびそこから作る t2_v1_ms・swap_v1) は
+# ok_v1 == 1（A 段）に絞る。論文2 の 0.223／0.207 はこの段で計算されている
+# （2026-09-12 の訂正。`規約` の節を参照）。digital_ptt・ptt_root_fin_ms（Q2・2e）は対象外
+V1_STAGE_A_COLS = {DT_V1, RI_V1}
+
+
+def _stage_a1(d: pd.DataFrame) -> pd.DataFrame:
+    """ok_v1 == 1（A 段）の行だけ。凍結版 (*_v1) の計算はすべてこの部分集合で行う。"""
+    if OK_V1 not in d.columns:
+        return d
+    return d[pd.to_numeric(d[OK_V1], errors="coerce") == 1]
+
 
 # Q1 の年齢層内相関で並べる対。(指標, 真値, 予測の向き, 表示名)
 Q1_PAIRS = [(DT_V1, "PWV_a", -1, "ΔT 凍結PDA × 大動脈PWV"),
@@ -368,24 +402,52 @@ def add_diff(d: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
+def cycle_correct(digital_ptt, d_ptt_ms, cycle_ms) -> np.ndarray:
+    """2e の周期補正。d ≤ −0.8×周期 の行は +周期、d ≥ +0.8×周期 の行は −周期、
+    それ以外はそのまま返す。d = digital_ptt − ptt_root_fin_ms、周期 = 60000/HR ms。
+    3 引数は同じ長さの配列（欠損・周期 0 の行はどの側にも当たらず、そのまま返る）。
+    """
+    ptt = np.array(digital_ptt, dtype=float, copy=True)
+    d_ = np.asarray(d_ptt_ms, dtype=float)
+    cyc = np.asarray(cycle_ms, dtype=float)
+    ok = np.isfinite(ptt) & np.isfinite(d_) & np.isfinite(cyc) & (cyc > 0)
+    lo = ok & (d_ <= -0.8 * cyc)          # digital_ptt が真値より 1 周期ほど早い
+    hi = ok & (d_ >= 0.8 * cyc)           # digital_ptt が真値より 1 周期ほど遅い
+    ptt[lo] = ptt[lo] + cyc[lo]
+    ptt[hi] = ptt[hi] - cyc[hi]
+    return ptt
+
+
 # ---------------------------------------------------------------- 節 0
 def check_known(d: pd.DataFrame, have_true: bool) -> tuple[int, list[str]]:
-    """節 0。既知の 4 つの値（0.223・0.207・0.571・−0.99）を再現するか。"""
+    """節 0。既知の 4 つの値（0.223・0.207・0.571・−0.99）を再現するか。
+
+    凍結版（dt_v1_ms・ri_v1。V1_STAGE_A_COLS）は 26番の A 段（ok_v1 == 1）で照合する。
+    論文2 の 0.223・0.207 が A 段の値だから（2026-09-12 の訂正。従来は採否を無視した
+    C 段で照合していて ★ずれ になっていた）。同梱 PTT・真の伝播時間は採否と無関係な量
+    なので、従来どおり C 段（採否を無視した全例）で照合する。
+    """
     print(f"\n{'-' * 100}")
     print(f"0. 論文2 の既知の値を再現するか（年齢層内 Spearman の中央値 |ρ|。許容差 {TOL_KNOWN}）")
     print("-" * 100)
+    print("  凍結版（dt_v1_ms・ri_v1）は 26番の A 段（ok_v1 == 1）で照合する。論文2 の")
+    print("  0.223・0.207 がその段の値だから。同梱 PTT・真の伝播時間は採否と無関係なので、")
+    print("  従来どおり C 段（採否を無視した全例）で照合する。")
     print(_pad("指標 × 真値", 44) + _pad("論文2", 9, right=True)
           + _pad("この機械", 10, right=True) + _pad("差", 9, right=True)
-          + _pad("向きの層", 10, right=True) + "   照合")
+          + _pad("向きの層", 10, right=True) + _pad("段", 4, right=True) + "  照合")
     notes, cannot = [], False
+    d1 = _stage_a1(d)
     for (col, tgt), (known, sign, lab, _src) in KNOWN.items():
+        stg = "A" if col in V1_STAGE_A_COLS else "C"
         if col == "ptt_root_fin_ms" and not have_true:
             print(_pad(lab, 44) + f"{known:>9.3f}" + _pad("—", 10, right=True)
                   + _pad("—", 9, right=True) + _pad("—", 10, right=True)
-                  + "   照合できない（真の伝播時間の列が無い）")
+                  + _pad(stg, 4, right=True) + "  照合できない（真の伝播時間の列が無い）")
             cannot = True
             continue
-        s = strat(d, col, tgt, sign)
+        dd = d1 if col in V1_STAGE_A_COLS else d
+        s = strat(dd, col, tgt, sign)
         got = s["med_abs"]
         if not np.isfinite(got):
             mark = "照合できない（8 名以上の年齢層が無い）"
@@ -398,21 +460,23 @@ def check_known(d: pd.DataFrame, have_true: bool) -> tuple[int, list[str]]:
         ok = f"{s['n_ok']}/{s['n_ages']}" if s["n_ages"] else "—"
         print(_pad(lab, 44) + f"{known:>9.3f}" + _f(got, 10)
               + _f(got - known if np.isfinite(got) else float("nan"), 9, sign=True)
-              + _pad(ok, 10, right=True) + f"   {mark}")
+              + _pad(ok, 10, right=True) + _pad(stg, 4, right=True) + "  " + mark)
     print("  出典（論文2 側）:")
     for (_c, _t), (known, _s, lab, src) in KNOWN.items():
         print(f"    {lab} {known:.3f} … {src}")
     print("  この機械の側はすべて、この台本（46番）が --csv の CSV から計算した値。")
-    print("  照合は対応のある行（pairwise-complete）で、26番の C 段（採否を無視した全例）に当たる。")
-    # 20番の Q1・Q2 は ok2（2カーネルが収束した 92%）で計算されている。26番の A 段に当たる
-    if OK_V1 in d.columns:
-        a = d[_col(d, OK_V1) == 1]
-        for col, tgt, sign in ((DT_V1, "PWV_a", -1), (RI_V1, "pvr", +1)):
-            s_a = strat(a, col, tgt, sign)
-            print(f"  （参考）26番 A 段（{OK_V1} == 1 の {len(a)} 名だけ）の {col} × {tgt}: "
-                  f"中央値|ρ| {_n(s_a['med_abs'])}・層 {s_a['n_ages']}・最小n {s_a['min_n']}")
-        print("  （20番の Q1・Q2 は 2カーネルが収束した例＝A 段で計算されている。採択 92% なので")
-        print("    C 段とは近いが同じではない。照合の合否は上の C 段で見る。）")
+    print("  照合は対応のある行（pairwise-complete）。段 A の行は 26番の A 段（その手法が")
+    print("  自分で採用した例だけ＝ok_v1 == 1）、段 C の行は採否を無視した全例（26番の C 段）。")
+    pct_a = f"{100.0 * len(d1) / len(d):.1f}%" if len(d) else "—"
+    print(f"  A 段は {len(d1)} / {len(d)} 名（{pct_a}）。")
+    print("  参考: C 段（採否を無視した全例。何も失わないための行で、照合の合否には使わない）:")
+    for col, tgt, sign in ((DT_V1, "PWV_a", -1), (RI_V1, "pvr", +1)):
+        s_c = strat(d, col, tgt, sign)
+        known_c, _s2, lab_c, _src2 = KNOWN[(col, tgt)]
+        dc = s_c["med_abs"] - known_c if np.isfinite(s_c["med_abs"]) else float("nan")
+        print(f"    {lab_c}: 中央値|ρ| {_n(s_c['med_abs'])}"
+              f"（論文2 {known_c:.3f} との差 {_n(dc, sign=True)}）・"
+              f"層 {s_c['n_ages']}・最小n {s_c['min_n']}")
     state = 1 if notes else (2 if cannot else 0)
     if state == 1:
         print("\n  ★ 入力が論文2 と違う。**この先の表を論文2 の続きとして読んではいけない。**")
@@ -425,6 +489,11 @@ def check_known(d: pd.DataFrame, have_true: bool) -> tuple[int, list[str]]:
 
 # ---------------------------------------------------------------- 節 1（Q1）
 def q1_report(d: pd.DataFrame) -> dict:
+    """節 1（Q1）。dt_v1_ms・ri_v1・t2_v1_ms・swap_v1 は 26番の A 段（ok_v1 == 1）で
+    計算する（1a〜1d すべて。論文2 の値がその段だから。2026-09-12 の訂正）。
+    C 段（採否を無視した全例）は節の最後に参考として 1a の割合と 1d の表だけ添える
+    （1b・1c・1c' は詳細な内訳なので、参考では再掲しない。何も失わない趣旨は 1a・1d で
+    足りると判断した）。"""
     print(f"\n{'-' * 100}")
     print("1. Q1 第2成分が収縮期に入る割合（成分の入れ替わり）と、除いたときの年齢層内相関")
     print("-" * 100)
@@ -432,36 +501,42 @@ def q1_report(d: pd.DataFrame) -> dict:
     print("        （第2成分が拡張期波ではなく収縮期後半の波を拾っている）。")
     print("  **凍結版は CSV に ΔT しか持たないので、第2成分のピーク時刻は近似である**:")
     print(f"        t2 ≈ {T_SYS} + {DT_V1}（26番の out.update(dt_v1_ms=..., ri_v1=...) の行）。")
+    print("  **dt_v1_ms・ri_v1・t2_v1_ms・swap_v1 は 26番の A 段（ok_v1 == 1）で計算する**")
+    print("  （論文2 の値がその段だから。C 段は節の最後に参考として添える）。")
+
+    d1 = _stage_a1(d)
+    pct_a = f"{100.0 * len(d1) / len(d):.1f}%" if len(d) else "—"
+    print(f"  A 段は {len(d1)} / {len(d)} 名（{pct_a}）。以下 1a〜1d はこの A 段で計算する。")
 
     out: dict = {}
-    sw = _col(d, "swap_v1")
+    sw = _col(d1, "swap_v1")
     f_all, k_all, n_all = frac(sw)
-    n_undef = int(np.isfinite(_col(d, DT_V1)).sum() - n_all) if DT_V1 in d.columns else 0
+    n_undef = int(np.isfinite(_col(d1, DT_V1)).sum() - n_all) if DT_V1 in d1.columns else 0
     out["frac_all"], out["k_all"], out["n_all"] = f_all, k_all, n_all
-    print(f"\n  1a. 全体: 入れ替わり {k_all} / 判定できた {n_all} 名 = {_pct(f_all)}"
+    print(f"\n  1a. 全体（A 段）: 入れ替わり {k_all} / 判定できた {n_all} 名 = {_pct(f_all)}"
           f"（切痕か ΔT が欠けて判定できない {max(0, n_undef)} 名は除く）")
 
     # 近似の検算（第2版は成分ピークの絶対時刻を持つ）
-    off = _col(d, "tf_minus_sys_ms")
+    off = _col(d1, "tf_minus_sys_ms")
     if np.isfinite(off).any():
         o5, o25, o50, o75, o95 = q(off)
         print(f"      近似の検算: tf_v2_ms − {T_SYS} の中央値 {o50:.1f} ms"
               f"（四分位 {o25:.1f}〜{o75:.1f}・5–95% {o5:.1f}〜{o95:.1f}、"
               f"{int(np.isfinite(off).sum())} 名）。")
         print("      これが 0 に近いほど、同梱の収縮期ピークを第1成分のピーク時刻に使う近似が効く。")
-    f2, k2, n2 = frac(_col(d, "swap_v2"))
+    f2, k2, n2 = frac(_col(d1, "swap_v2"))
     out["frac_v2"] = f2
     if n2:
         print(f"      （参考）第2版の厳密なピーク時刻 tr_v2_ms による入れ替わり: "
               f"{k2} / {n2} = {_pct(f2)}。別の分解なので値は一致しない。")
 
     # 1b. 年齢層ごと
-    print("\n  1b. 年齢層ごとの入れ替わりの割合")
+    print("\n  1b. 年齢層ごとの入れ替わりの割合（A 段）")
     print("      " + _pad("年齢", 8) + _pad("入れ替わり", 12, right=True)
           + _pad("判定できた n", 14, right=True) + _pad("割合", 9, right=True))
     rows_age = []
-    if "age" in d.columns:
-        for age, g in d.groupby("age", sort=True):
+    if "age" in d1.columns:
+        for age, g in d1.groupby("age", sort=True):
             fa, ka, na = frac(_col(g, "swap_v1"))
             rows_age.append((float(age), fa, ka, na))
             print("      " + _pad(f"{int(age)} 歳", 8) + _pad(ka, 12, right=True)
@@ -469,20 +544,20 @@ def q1_report(d: pd.DataFrame) -> dict:
     out["by_age"] = rows_age
 
     # 1c. 因子の水準ごと
-    print("\n  1c. 振った因子の水準ごとの入れ替わりの割合"
-          "（水準は 20番の `_factor_effects` と同じ規則で var_* から読む）")
+    print("\n  1c. 振った因子の水準ごとの入れ替わりの割合（A 段。水準は 20番の")
+    print("      `_factor_effects` と同じ規則で var_* から読む）")
     print("      " + _pad("因子", 16) + "".join(_pad(LEVEL_LABEL[lv], 20, right=True)
                                                 for lv in (-1, 0, 1)))
     by_factor: dict = {}
     for f, lab in FACTOR_COLS:
         c = f"var_{f}"
-        if c not in d.columns:
+        if c not in d1.columns:
             continue
-        lv = levels_of(_col(d, c))
+        lv = levels_of(_col(d1, c))
         cells, line = {}, "      " + _pad(lab, 16)
         for want in (-1, 0, 1):
             sel = lv == want
-            fa, ka, na = frac(_col(d, "swap_v1")[sel])
+            fa, ka, na = frac(_col(d1, "swap_v1")[sel])
             cells[want] = (fa, ka, na)
             line += _pad(f"{_pct(fa)} ({ka}/{na})", 20, right=True)
         by_factor[f] = cells
@@ -495,13 +570,13 @@ def q1_report(d: pd.DataFrame) -> dict:
         print("      その水準の被験者がいない（部分集合ではよく起きる）。")
 
     # 1c'. 入れ替わった側の心拍数・駆出時間（水準列が無くても読める記述）
-    print("\n  1c'. 入れ替わった側とそうでない側の心拍数・駆出時間・大動脈PWV（中央値）")
+    print("\n  1c'. 入れ替わった側とそうでない側の心拍数・駆出時間・大動脈PWV（中央値、A 段）")
     print("      " + _pad("群", 22) + _pad("n", 7, right=True)
           + _pad("HR [bpm]", 12, right=True) + _pad("LVET [ms]", 12, right=True)
           + _pad("PWV_a [m/s]", 13, right=True))
     grp = {}
     for name, sel in (("入れ替わりあり", sw == 1), ("入れ替わりなし", sw == 0)):
-        g = d[sel]
+        g = d1[sel]
         vals = tuple(float(np.nanmedian(_col(g, c))) if len(g) and np.isfinite(_col(g, c)).any()
                      else float("nan") for c in ("HR", "lvet", "PWV_a"))
         grp[name] = (len(g),) + vals
@@ -510,14 +585,14 @@ def q1_report(d: pd.DataFrame) -> dict:
     out["groups"] = grp
 
     # 1d. 除外して年齢層内相関を取り直す
-    print("\n  1d. 入れ替わりを除くと年齢層内 Spearman ρ は変わるか（探索的・事後）")
+    print("\n  1d. 入れ替わりを除くと年齢層内 Spearman ρ は変わるか（A 段。探索的・事後）")
     print("      " + _pad("指標 × 真値", 34) + _pad("部分集合", 22)
           + _pad("中央値|ρ|", 11, right=True) + _pad("ρ中央値", 10, right=True)
           + _pad("向きの層", 10, right=True) + _pad("最小n", 8, right=True)
           + _pad("計 n", 8, right=True))
-    subsets = [("(a) 全例", d),
-               ("(b) 入れ替わりを除く", d[sw == 0]),
-               ("(c) 入れ替わりだけ", d[sw == 1])]
+    subsets = [("(a) 全例", d1),
+               ("(b) 入れ替わりを除く", d1[sw == 0]),
+               ("(c) 入れ替わりだけ", d1[sw == 1])]
     tbl: dict = {}
     for col, tgt, sign, lab in Q1_PAIRS:
         first = True
@@ -535,7 +610,25 @@ def q1_report(d: pd.DataFrame) -> dict:
     print(f"      計算できた層数。1 層 {MIN_PER_AGE} 名以上（20番の `_by_age` の既定）。")
     print("      **判定（成立・不成立）は出さない。**事前規準による判定は 26番のものが有効で、")
     print("      この表は事後の探索なので上書きしない。")
-    print("      出典: この台本（46番）が --csv の CSV から計算した値。")
+    print("      出典: この台本（46番）が --csv の CSV から計算した値。1a〜1d はすべて A 段。")
+
+    # 参考: C 段（採否を無視した全例）。1a の割合と 1d の表だけを添える（何も失わない）
+    swC = _col(d, "swap_v1")
+    fC, kC, nC = frac(swC)
+    print(f"\n  参考: C 段（採否を無視した全例、{len(d)} 名。何も失わないための行で、判定・")
+    print("  予測の照合には使わない）:")
+    print(f"      1a 全体の入れ替わり: {kC} / {nC} = {_pct(fC)}")
+    subsets_c = [("(a) 全例", d), ("(b) 入れ替わりを除く", d[swC == 0]),
+                 ("(c) 入れ替わりだけ", d[swC == 1])]
+    rho_c: dict = {}
+    for col, tgt, sign, lab in Q1_PAIRS:
+        parts = []
+        for sname, sub in subsets_c:
+            s = strat(sub, col, tgt, sign)
+            rho_c[(col, tgt, sname)] = s
+            parts.append(f"{sname} {_n(s['med_abs'])}")
+        print(f"      1d {lab}: " + "・".join(parts))
+    out["c_stage"] = {"frac_all": fC, "k_all": kC, "n_all": nC, "rho": rho_c}
     return out
 
 
@@ -632,6 +725,58 @@ def q2_report(d: pd.DataFrame, have_true: bool, src_true: str) -> dict:
               + f"   （論文2 {known:.3f}）")
     print("      出典: この台本（46番）が --csv と立ち上がり時刻の表から計算した値。")
     print("      論文2 側は lab_log 2026-09-03（同梱 PTT 0.571・真の伝播時間 −0.99）。")
+
+    # 2e. 周期補正した同梱到達時間（監督者の予測: |ρ| は 0.571 → 0.9 超に上がる。docstring 参照）
+    print("\n  2e. 周期補正した同梱到達時間 digital_ptt_corr")
+    print("      2b で |d| が 1 周期の 0.8〜1.2 倍の被験者が見つかった。周期の取り違えなら、")
+    print("      外れた側に周期を 1 つ足し引きすれば真の伝播時間に近づくはずである。")
+    print("      d ≤ −0.8×周期 → digital_ptt_corr = digital_ptt + 周期")
+    print("      d ≥ +0.8×周期 → digital_ptt_corr = digital_ptt − 周期")
+    print("      それ以外       → digital_ptt_corr = digital_ptt（そのまま）")
+
+    ptt_raw = _col(d, "digital_ptt")
+    ptt_corr = cycle_correct(ptt_raw, dd, cyc)
+    lo_e = m2 & (dd <= -0.8 * cyc)
+    hi_e = m2 & (dd >= 0.8 * cyc)
+    n_corr_e = int((lo_e | hi_e).sum())
+    dcp = d.copy()
+    dcp["digital_ptt_corr"] = ptt_corr
+    dcp["d_corr_ms"] = ptt_corr - _col(dcp, "ptt_root_fin_ms")
+    dcorr = _col(dcp, "d_corr_ms")
+    a50_after = float(np.nanmedian(np.abs(dcorr))) if np.isfinite(dcorr).any() else float("nan")
+    print(f"\n      補正した人数 {n_corr_e} / {len(d)}"
+          f"（d ≤ −0.8×周期側 {int(lo_e.sum())} 名・d ≥ +0.8×周期側 {int(hi_e.sum())} 名）")
+    print(f"      |d| の中央値: 補正前 {_n(a50, 1)} ms → 補正後 {_n(a50_after, 1)} ms")
+
+    s_corr = strat(dcp, "digital_ptt_corr", "PWV_a", -1)
+    s_raw = out.get("digital_ptt", EMPTY)
+    s_true = out.get("ptt_root_fin_ms", EMPTY)
+    print("\n      年齢層内 Spearman × 大動脈PWV（中央値|ρ|・ρ中央値）")
+    print(f"        補正前 同梱 PTT              {_n(s_raw['med_abs'])}（{_n(s_raw['med'], sign=True)}）")
+    print(f"        補正後 digital_ptt_corr      {_n(s_corr['med_abs'])}（{_n(s_corr['med'], sign=True)}）")
+    print(f"        真の伝播時間                 {_n(s_true['med_abs'])}（{_n(s_true['med'], sign=True)}）")
+
+    s_resid_hr = strat(dcp, "d_corr_ms", "HR", 0)
+    s_resid_dia = strat(dcp, "d_corr_ms", "dia_asca", 0)
+    remain = ((np.isfinite(s_resid_hr["med_abs"]) and s_resid_hr["med_abs"] >= PRED_D_RHO)
+              or (np.isfinite(s_resid_dia["med_abs"]) and s_resid_dia["med_abs"] >= PRED_D_RHO))
+    print("\n      補正後の残差 digital_ptt_corr − ptt_root_fin_ms は形の因子とまだ動くか")
+    print("      （形に依存する検出のずれがなお残っているかを見る）")
+    print(f"        × 心拍数 HR         中央値|ρ| {_n(s_resid_hr['med_abs'])}"
+          f"（ρ中央値 {_n(s_resid_hr['med'], sign=True)}）")
+    print(f"        × 大動脈径 dia_asca 中央値|ρ| {_n(s_resid_dia['med_abs'])}"
+          f"（ρ中央値 {_n(s_resid_dia['med'], sign=True)}）")
+    print(f"        形に依存する残差は{'残る' if remain else '残らない'}"
+          f"（{PRED_D_RHO:.2f} 以上を残ると数える。Q2-P2 と同じ閾値）")
+
+    rose = np.isfinite(s_corr["med_abs"]) and s_corr["med_abs"] > 0.9
+    print(f"\n      監督者の予測（周期補正で |ρ| は 0.571 → 0.9 超に上がる）: "
+          f"{'はい' if rose else 'いいえ'}（実際 {_n(s_corr['med_abs'])}）")
+    print("      出典: この台本（46番）の 2e が --csv と立ち上がり時刻の表から計算した値。")
+
+    out["ptt_corr"] = {"n_corrected": n_corr_e, "med_abs_before": a50, "med_abs_after": a50_after,
+                        "corr": s_corr, "resid_hr": s_resid_hr, "resid_dia": s_resid_dia,
+                        "rose_above_0_9": rose}
     return out
 
 

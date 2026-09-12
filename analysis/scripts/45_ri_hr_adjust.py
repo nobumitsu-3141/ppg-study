@@ -150,9 +150,6 @@ PAIRS = [
     ("amb_amp1",   "PWV_a", -1, "早期振幅比 Am_b/Am_p1 × 大動脈PWV"),
 ]
 
-# 26番の A 段（その手法が自分で採用した例だけ）を参考に出すための採否列
-OK_COL = {"ri_v1": "ok_v1", "ri_v2": "ok_v2", "ri_v2g": "ok_v2g"}
-
 # 凍結版 (*_v1) は 26番の A 段（ok_v1 == 1）で計算する。論文2 の 0.207 がその段の値だから
 # （2026-09-12 の訂正。データ の節を参照）。ri_v2・ri_v2g・digital_ri・amb_amp1 は対象外で、
 # 採否を無視した C 段（全例）のまま計算する
@@ -335,11 +332,21 @@ def compute_all_c_stage(d: pd.DataFrame, pairs: list[tuple]) -> dict:
             for kind, _l, _e in ADJUST}
 
 
-def adjustment_table(res: dict, pairs: list[tuple]) -> None:
-    """指標 × 調整の表。中央値 |ρ|・ρ の中央値（符号つき）・予測の向きの層・最小 n。"""
+def adjustment_table(res: dict, pairs: list[tuple], res_c: dict | None = None) -> None:
+    """指標 × 調整の表。中央値 |ρ|・ρ の中央値（符号つき）・予測の向きの層・最小 n。
+
+    `res` の *_v1 の行（V1_STAGE_A）は ok_v1 == 1（A 段）で計算されている前提。
+    `res_c`（`compute_all_c_stage` の戻り値）を渡すと、その行のあとに C 段
+    （採否を無視した全例）を「参考」として 1 行添える。「何も失わない」ための行で、
+    判定には使わない。
+    """
+    res_c = res_c or {}
     print(f"\n{'-' * 92}")
     print("2. 調整ごとの年齢層内 Spearman ρ（探索的・事後）")
     print("-" * 92)
+    if any(col in V1_STAGE_A for col, *_r in pairs):
+        print("  ri_v1 の行は 26番の A 段（ok_v1 == 1）で計算する。それ以外は C 段（採否を")
+        print("  無視した全例）のまま。ri_v1 の C 段は各行のあとに「参考」として 1 行添える。")
     print(_pad("指標 × 真値", 38) + _pad("調整", 27)
           + _pad("中央値|ρ|", 10, right=True) + _pad("ρ中央値", 10, right=True)
           + _pad("向きの層", 10, right=True) + _pad("最小n", 8, right=True))
@@ -355,23 +362,42 @@ def adjustment_table(res: dict, pairs: list[tuple]) -> None:
         exp = {1: "正", -1: "負", 0: "事前の向きの予測なし"}[sign]
         print(_pad("", 38) + f"（予測の向き {exp}・全 {N_AGES_FULL} 層中、"
               f"{MIN_PER_AGE} 名以上の層だけ数える）")
+        if col in V1_STAGE_A and res_c:
+            parts = [f"{adj_lab} {_n(res_c[(col, tgt, kind)]['med_abs'])}"
+                     for kind, adj_lab, _extra in ADJUST
+                     if (col, tgt, kind) in res_c]
+            if parts:
+                print(_pad("", 38) + "参考: C 段（採否を無視した全例）: " + "・".join(parts))
     print("  「向きの層」は予測の向きに一致した層数／ρ を計算できた層数。")
     print("  **判定（成立・不成立）は出さない。**事前規準による判定は 26番のものが有効で、")
     print("  この表は事後の探索なので上書きしない。")
 
 
-def check_known(d: pd.DataFrame, res: dict) -> tuple[int, list[str]]:
-    """未調整の値が論文2 の既知の値を再現するか。"""
+def check_known(d: pd.DataFrame, res: dict, res_c: dict | None = None) -> tuple[int, list[str]]:
+    """未調整の値が論文2 の既知の値を再現するか。
+
+    `res`（`compute_all` の戻り値）は ri_v1（V1_STAGE_A）を ok_v1 == 1（A 段）で、
+    それ以外を C 段（採否を無視した全例）で計算してある。論文2 の 0.207 は A 段の値
+    なので、ここも A 段で照合する（2026-09-12 の訂正。従来は C 段で照合して ★ずれ に
+    なっていた）。`res_c`（`compute_all_c_stage`）を渡すと、ri_v1 の C 段の値を
+    「参考」として添える（何も失わない）。
+    """
+    res_c = res_c or {}
     print(f"\n{'-' * 92}")
     print(f"0. 未調整の値が論文2 と一致するか（許容差 {TOL_KNOWN}）")
     print("-" * 92)
+    print("  ri_v1 は 26番の A 段（ok_v1 == 1）で照合する。論文2 の 0.207 がその段の値")
+    print("  だから。digital_ri・amb_amp1 は採否と無関係なので、従来どおり C 段（採否を")
+    print("  無視した全例）で照合する。")
     print(_pad("指標 × 真値", 38) + _pad("論文2", 9, right=True)
-          + _pad("この機械", 10, right=True) + _pad("差", 9, right=True) + "   照合")
+          + _pad("この機械", 10, right=True) + _pad("差", 9, right=True)
+          + _pad("段", 4, right=True) + "  照合")
     notes, cannot = [], False
     for (col, tgt), known in KNOWN.items():
         s = res.get((col, tgt, "unadj"))
         got = s["med_abs"] if s else float("nan")
         lab = next((l for c, t, _s, l in PAIRS if c == col and t == tgt), f"{col} × {tgt}")
+        stg = "A" if col in V1_STAGE_A else "C"
         if not np.isfinite(got):
             mark = "照合できない（8 名以上の年齢層が無い）"
             cannot = True
@@ -382,20 +408,24 @@ def check_known(d: pd.DataFrame, res: dict) -> tuple[int, list[str]]:
             notes.append(f"{lab}: 論文2 {known:.3f} に対し {got:.3f}")
         d_ = got - known if np.isfinite(got) else float("nan")
         print(_pad(lab, 38) + f"{known:>9.3f}" + _f(got, 10)
-              + _f(d_, 9, sign=True) + f"   {mark}")
+              + _f(d_, 9, sign=True) + _pad(stg, 4, right=True) + "  " + mark)
     state = 1 if notes else (2 if cannot else 0)
     print("  出典: 論文2 側は lab_log 2026-09-03 の表（凍結版 RI 0.207）と 2026-09-09 の")
     print("  26番の表（特徴点 RI 0.504・早期振幅比 × 大動脈PWV 0.836）。")
-    print("  照合は対応のある行（pairwise-complete）で、26番の C 段（採否を無視した全例）に当たる。")
-    # 26番には A 段（その手法が自分で採用した例だけ）もある。凍結版 PDA は採択 92.3% なので
-    # 両者は近いが同じではない。どちらとも突き合わせられるよう A 段も出す（照合の合否には使わない）
-    for (col, tgt), _known in KNOWN.items():
-        okc = OK_COL.get(col)
-        if not okc or okc not in d.columns:
-            continue
-        s_a = summarise(d[pd.to_numeric(d[okc], errors="coerce") == 1], col, tgt, +1, "unadj")
-        print(f"  （参考）26番 A 段（{okc} == 1 の例だけ）の {col} × {tgt}: "
-              f"中央値|ρ| {_n(s_a['med_abs'])}・層 {s_a['n_ages']}・最小n {s_a['min_n']}")
+    print("  照合は対応のある行（pairwise-complete）。段 A の行は 26番の A 段（その手法が")
+    print("  自分で採用した例だけ）、段 C の行は採否を無視した全例（26番の C 段）。")
+    if res_c:
+        print("  参考: C 段（採否を無視した全例。何も失わないための行で、照合の合否には")
+        print("  使わない）:")
+        for (col, tgt), known in KNOWN.items():
+            if col not in V1_STAGE_A:
+                continue
+            s_c = res_c.get((col, tgt, "unadj"))
+            lab = next((l for c, t, _s, l in PAIRS if c == col and t == tgt), f"{col} × {tgt}")
+            got_c = s_c["med_abs"] if s_c else float("nan")
+            dc = got_c - known if np.isfinite(got_c) else float("nan")
+            print(f"    {lab}: 中央値|ρ| {_n(got_c)}（論文2 {known:.3f} との差 {_n(dc, sign=True)}）・"
+                  f"層 {s_c['n_ages'] if s_c else 0}・最小n {s_c['min_n'] if s_c else 0}")
     if state == 1:
         print("\n  ★ 入力が論文2 と違う。**この先の表を論文2 の続きとして読んではいけない。**")
         for n in notes:
@@ -417,6 +447,8 @@ def compare_prediction(res: dict, state: int) -> None:
     print(f"        数値では ri_v1 約 0.21 → 最大でも 約 {PRED_RI_V1_MAX:.2f}、")
     print(f"        digital_ri は 約 0.50 から差 {PRED_DIGITAL_MOVE:.2f} 以内で動かない。")
     print("        ri_v2・ri_v2g・amb_amp1 には事前の数値予測を置いていない（参考）。")
+    print("  ri_v1 は 26番の A 段（ok_v1 == 1）で計算した res から取る（未調整 約 0.21 は")
+    print("  A 段の値。論文2 の 0.207 と同じ段）。")
 
     def spread(col, tgt):
         """未調整の値と、4 通りの調整の最大・最小・最大を与えた調整の名前。"""
@@ -471,10 +503,13 @@ def report(d: pd.DataFrame, src: str, pairs: list[tuple] | None = None) -> int:
           f"（1 層に {MIN_PER_AGE} 名以上を要求。確認的解析の機械では 4,374 名）")
     print(f"  規約は 20番・23番・26番と共有（CRIT_RHO {M.CRIT_RHO} は参考として載せるだけで、"
           "この台本は判定を出さない）")
+    print("  ri_v1（V1_STAGE_A）は 26番の A 段（ok_v1 == 1）、それ以外は C 段（採否を無視した")
+    print("  全例）で計算する（2026-09-12 の訂正。ri_v1 の C 段は各節に「参考」として添える）。")
     res = compute_all(d, pairs)
-    state, _notes = check_known(d, res)
+    res_c = compute_all_c_stage(d, pairs)
+    state, _notes = check_known(d, res, res_c)
     hr_main_effect(d, pairs)
-    adjustment_table(res, pairs)
+    adjustment_table(res, pairs, res_c)
     compare_prediction(res, state)
     return state
 
@@ -615,6 +650,29 @@ def selftest() -> int:
     t0, t0b, t1 = render(0), render(0), render(1)
     rep("(f) 同じ乱数種なら出力が同一", t0 == t0b, f"{len(t0)} 文字")
     rep("(f) 乱数種を変えれば値は変わる（比較が効いている）", t0 != t1)
+
+    # (g) 2026-09-12 の訂正の検算: ok_v1 = 0 の行にだけ別の関係（符号を反転した関係）を
+    #     仕込むと、A 段（既定の計算）はそれを無視し、C 段（参考の行）には混ざって出るか
+    dg = synth(seed=9).copy()
+    dg["ri_v1"] = dg["idx_syn"].to_numpy(copy=True)
+    rng_g = np.random.default_rng(109)
+    bad = rng_g.random(len(dg)) < 0.5
+    dg.loc[bad, "ri_v1"] = -dg.loc[bad, "idx_syn"].to_numpy()  # ok_v1 = 0 の行だけ関係を反転する
+    dg["ok_v1"] = np.where(bad, 0, 1)
+
+    v1_pairs = [("ri_v1", "pvr", +1, "検算 ri_v1 × 抵抗")]
+    a_stage = compute_all(dg, v1_pairs)[("ri_v1", "pvr", "unadj")]["med_abs"]
+    c_stage = summarise(dg, "ri_v1", "pvr", +1, "unadj")["med_abs"]
+    c_stage_fn = compute_all_c_stage(dg, v1_pairs)[("ri_v1", "pvr", "unadj")]["med_abs"]
+    rep("(g) ok_v1 = 0 の行に別の関係（符号反転）を仕込むと、A 段はそれを無視する",
+        abs(a_stage - exp_un) < 0.08,
+        f"A 段 {a_stage:.3f}（未仕込みの期待値 {exp_un:.3f}・仕込んだ ok_v1=0 は "
+        f"{int(bad.sum())}/{len(dg)} 名）")
+    rep("(g) 同じ仕込みで C 段（参考の行）は混ざって A 段と明確に違う値になる",
+        np.isfinite(c_stage) and abs(c_stage - a_stage) > 0.15,
+        f"C 段 {c_stage:.3f}・A 段 {a_stage:.3f}・差 {abs(c_stage - a_stage):.3f}")
+    rep("(g) compute_all_c_stage（参考の行で使う関数）が同じ C 段の値を返す",
+        abs(c_stage_fn - c_stage) < 1e-9)
 
     # 部品そのものの検算
     y = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
