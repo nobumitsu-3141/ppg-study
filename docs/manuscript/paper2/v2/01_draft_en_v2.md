@@ -235,11 +235,21 @@ papers in full, adding (i) the preprocessing of Tigges 2017 and Basso 2024 descr
 §2.2, (ii) weighted least squares with weights concentrated at the fiducial points, and
 (iii) the acceptance criterion of Wang 2013 — **the fit is judged by whether it reproduces
 the positions of the measured fiducial points, not by how small the residual is**
-(absolute time error summed over fiducial points ≤ 6 ms; amplitude error ≤ 0.01). A fit
-was also rejected if the uncertainty of ΔT exceeded 20 ms. The same 20 ms is applied to
-the standard error of ΔT, to the spread of ΔT across competing solutions, and to near-ties
-between candidate reflected waves, because all three express the same quantity and were
-frozen together. Two bases were carried in parallel, skew-Gaussian and gamma.
+(absolute time error summed over fiducial points ≤ 6 ms; amplitude error ≤ 0.01). Wang's
+criterion asks whether the positions and amplitudes of the fiducial points read from the
+fitted waveform as a whole match those of the measured waveform; it is a criterion of
+representational fidelity and does not ask whether individual components correspond to
+physiological waves. We used it to reproduce the published acceptance procedure, and the
+verdict for the rebuilt version is read on all subjects irrespective of acceptance (tier
+C). Wang defines fiducial points for notch-less waveform types as well (from zero
+crossings of the second derivative or at 0.5 T); our rebuilt version applied the criterion
+only to beats whose measured waveform has the same kind of fiducial points, i.e. notched
+(type 1) beats. This is a deviation from Wang and one reason for the small number of
+accepted fits. A fit was also rejected if the uncertainty of ΔT exceeded 20 ms. The same
+20 ms is applied to the standard error of ΔT, to the spread of ΔT across competing
+solutions, and to near-ties between candidate reflected waves, because all three express
+the same quantity and were frozen together. Two bases were carried in parallel,
+skew-Gaussian and gamma.
 
 **Fiducial-point analysis.** The systolic peak, the dicrotic notch and the diastolic peak
 were located on the waveform itself. ΔT_lm is the systolic-to-diastolic peak interval,
@@ -616,20 +626,22 @@ would not change the conclusion.
 
 The database is the output of a one-dimensional fluid model and contains **no optical
 element**: tissue scattering, the venous component and the non-pulsatile component are
-absent. A property of the real photoplethysmogram that decomposition captures optically would
-not appear here. The waveforms are noiseless, single-beat and free of motion, so the noise
-robustness claimed for decomposition cannot show itself; we note, however, that **this cannot
-be the reason decomposition loses**, since fitting is easier without noise. The model
-represents healthy ageing and contains no disease, anaesthesia or vasoactive drug. Charlton's
-subsequent work reports that stiffness indices perform better in vivo than in silico, which
-would counsel caution about generalising a negative — although in our hands the
-fiducial-point indices performed *well* in silico, so that argument does not account for the
-present negative. The literature replication retains deviations (optimiser and resampling
-details) listed in table 4, and a different implementation by the original authors could
-give different values. The non-monotonicity of §3.5 is visible because six factors are varied
-independently at ±1 SD; whether a comparable range occurs in patients cannot be decided here.
-Finally, the conclusion concerns the six published protocols and twelve bases tested, not
-pulse decomposition in general.
+absent. A property of the real photoplethysmogram that decomposition captures optically
+would not appear here. The waveforms are noiseless, single-beat and free of motion, so the
+noise robustness claimed for decomposition cannot show itself; we note, however, that
+**this cannot be the reason decomposition loses**, since fitting is easier without noise.
+The model represents healthy ageing and contains no disease, anaesthesia or vasoactive
+drug. Charlton's subsequent work reports that stiffness indices perform better in vivo
+than in silico, which would counsel caution about generalising a negative — although in
+our hands the fiducial-point indices performed *well* in silico, so that argument does not
+account for the present negative. The literature replication retains deviations (optimiser
+and resampling details) listed in table 4, and a different implementation by the original
+authors could give different values. The thresholds of Wang's criterion used for the
+rebuilt version (6 ms and 0.01) are values for which the original paper gives no external
+basis; we used them unchanged. The non-monotonicity of §3.5 is visible because six factors
+are varied independently at ±1 SD; whether a comparable range occurs in patients cannot be
+decided here. Finally, the conclusion concerns the six published protocols and twelve
+bases tested, not pulse decomposition in general.
 
 ### 4.6 Implications
 
