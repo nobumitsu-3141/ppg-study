@@ -7748,3 +7748,5 @@ v2 の md は `check_terminology.py` で禁止語 0 件。docx は `build_ja_doc
 
 1 回の描画確認で 2 つ直した ― 種別の凡例が縦に積まれて空白の大きい箱になっていたこと、
 400 px 幅で本文がはみ出していたこと。表だけを横に流し、他は折り返す。
+公開先: https://claude.ai/code/artifact/c28fb1d6-a1c7-4c1a-b7c9-38fe6b13e520（PPG血管指標の解析一覧、第 1 版）。
+生成器は scratchpad の `build_catalog.py` で、md と HTML を同じ行データから出す（md は不変を検査済み）。
