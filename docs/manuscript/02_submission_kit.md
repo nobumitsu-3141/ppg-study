@@ -62,7 +62,7 @@ We hope you find the work suitable for [[JOURNAL]] and look forward to your resp
 Yours sincerely,
 
 [[Nobumitsu Kawazoe, MD]]
-Department of Anesthesiology, [[Goto Chuoh Hospital]], Nagasaki, Japan
+Department of Anesthesiology, Nagasaki Goto Chuoh Hospital, Goto, Nagasaki, Japan
 [[email]] / ORCID [[xxxx-xxxx-xxxx-xxxx]]
 ```
 
@@ -115,11 +115,14 @@ Department of Anesthesiology, [[Goto Chuoh Hospital]], Nagasaki, Japan
 
 ```
 This study analysed only anonymised data that are publicly available without
-restriction. The institutional ethics committee of [[Goto Chuoh Hospital]] was consulted
+restriction. The institutional ethics committee of Nagasaki Goto Chuoh Hospital was consulted
 and determined that review by the committee was not required (response dated 28 August
-2026). The original database was approved by the Institutional Review Board of Seoul
-National University Hospital, and the requirement for written informed consent was waived
-by that board. [[出典: VitalDB の原著論文の記載に合わせて確認・調整する]]
+2026). The acquisition and free disclosure of the data in the original database were
+approved by the Institutional Review Board of Seoul National University Hospital
+(H-1408-101-605), and that data-collection study was registered at clinicaltrials.gov
+(NCT02914444). Written informed consent was waived due to the anonymity of the data, and
+data collection was performed in accordance with the relevant guidelines and regulations
+of that hospital's institutional Ethics Committee.
 ```
 
 ### データおよびコードの利用可能性

@@ -243,12 +243,10 @@ present; type 3: inflection only; type 4: neither).
 
 ### 2.7 Software and reproducibility
 
-Python, NumPy, SciPy and pandas. The version identifier of the decomposition module was
-`048d2b43bb05` for the confirmatory run, and the interpreter and library versions are
-recorded in every output row of the result table
-[[read the `python_version`, `numpy_version` and `scipy_version` columns of
-`data/pwdb/pwdb_compare.csv` on the machine that produced the confirmatory run and insert
-them here; the copy in the cloud environment is a self-test subset and its versions differ]].
+Python 3.9.6 with NumPy 2.0.2, SciPy 1.13.1 and pandas. The version identifier of the
+decomposition module was `048d2b43bb05` for the confirmatory run, and the interpreter and
+library versions are recorded in every output row of the result table (a single
+environment produced all 4,374 rows).
 Analysis code, the frozen decision document and the result tables are archived at
 https://github.com/nobumitsu-3141/ppg-pda-analysis (doi:10.5281/zenodo.22676038, the concept DOI, resolving to the latest version; the
 analyses used v1.0.0).

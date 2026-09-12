@@ -110,6 +110,11 @@ def premise_test(cases: list[dict], with_map: bool = True) -> dict:
 
     def _r2(M):
         coef, *_ = np.linalg.lstsq(M, y, rcond=None)
+        # good で非有限を落としたあとなので M も coef も有限。
+        # それでも macOS の Accelerate を BLAS にしていると、この行で
+        # 「divide by zero / overflow / invalid value encountered in matmul」が出る。
+        # 行列積は除算をしないので、この文言自体があり得ない。演算後に読まれる
+        # 浮動小数点例外の旗であって、値には出ていない（lab_log 追記105）。抑制しない。
         sse = float(np.sum((y - M @ coef) ** 2))
         return 1.0 - sse / max(sst, 1e-12), coef
 
@@ -170,6 +175,7 @@ def premise_by_case(cases: list[dict]) -> dict:
             continue
         X = np.column_stack([np.ones(n), d["dsi"][mfin], d["dri"][mfin]])
         coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+        # mfin で非有限を落としたあと。警告が出る理由は上の _r2 と同じ
         resid = y - X @ coef
         sst = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - float(np.sum(resid ** 2)) / max(sst, 1e-12)

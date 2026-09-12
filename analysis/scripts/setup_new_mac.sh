@@ -2,8 +2,11 @@
 # 別の Mac で解析を継続するための立ち上げ。何度実行してもよい（既存物は壊さない）。
 #
 #   bash analysis/scripts/setup_new_mac.sh
-#   bash analysis/scripts/setup_new_mac.sh --skip-lists   # VitalDB の一覧取得を省く
-#   bash analysis/scripts/setup_new_mac.sh --skip-tests   # 自己検査を省く
+#   bash analysis/scripts/setup_new_mac.sh --skip-lists
+#   bash analysis/scripts/setup_new_mac.sh --skip-tests
+#
+# --skip-lists は VitalDB の一覧取得を省く。--skip-tests は自己検査を省く。
+# 説明をコマンドの後ろに付けないのは、zsh がそれを引数として読むため。
 #
 # やること
 #   1. python3 と仮想環境を用意し、requirements.txt を入れる

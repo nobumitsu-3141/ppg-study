@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -113,6 +114,8 @@ def premise_with_intercept(cases: list[dict]) -> dict:
     good = np.isfinite(y) & np.isfinite(X).all(axis=1)
     X, y = X[good], y[good]
     coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+    # good で非有限を落としたあと。macOS の Accelerate では、ここで matmul の警告が
+    # 出ることがある。値には出ていない（lab_log 追記105）
     sse = float(np.sum((y - X @ coef) ** 2))
     sst = float(np.sum((y - y.mean()) ** 2))
     return {"r2": 1.0 - sse / max(sst, 1e-12),
@@ -152,6 +155,24 @@ def _rows_used(cases: list[dict]) -> int:
         n += int((np.isfinite(y) & np.isfinite(X2).all(axis=1)
                   & np.isfinite(Xm).all(axis=1)).sum())
     return n
+
+
+def case_windows(cases: list[dict]) -> list[tuple]:
+    """症例ごとの (caseid, キャッシュの生のウィンドウ数, 当てはめに使った行数)。
+
+    2 台目の合計が確定値と 1 ウィンドウ食い違う。どの症例かは、主解析を回した機械で
+    同じものを出して差分を取れば分かる。そのための出力であって、値の計算には使わない。
+    """
+    rows = []
+    for c in cases:
+        d = _deltas(c)
+        y = d["dpwtt_rel"]
+        X2 = np.column_stack([d["dsi"], d["dri"]])
+        Xm = np.column_stack([d["dsi"], d["dri"], d["dmap"]])
+        used = int((np.isfinite(y) & np.isfinite(X2).all(axis=1)
+                    & np.isfinite(Xm).all(axis=1)).sum())
+        rows.append((int(c["caseid"]), int(y.size), used))
+    return rows
 
 
 def _solve(A: np.ndarray, b: np.ndarray) -> np.ndarray:
@@ -234,7 +255,20 @@ def near(a: float, b: float, tol: float) -> str:
     return "一致" if abs(a - b) <= tol else f"★ずれ {a - b:+.3f}"
 
 
-def run(cases: list[dict], as_json: Path | None) -> int:
+def write_case_windows(cases: list[dict], path: Path) -> int:
+    """症例別のウィンドウ数を CSV に落とす。合計も返す。"""
+    rows = case_windows(cases)
+    lines = ["caseid,windows_cached,rows_used"]
+    lines += [f"{cid},{raw},{used}" for cid, raw, used in rows]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    total = sum(used for _, _, used in rows)
+    print(f"\n{path} に症例別のウィンドウ数を書き出した"
+          f"（{len(rows)} 症例・当てはめに使った行の合計 {total:,}）")
+    return total
+
+
+def run(cases: list[dict], as_json: Path | None, table2_only: bool = False,
+        case_windows_csv: Path | None = None) -> int:
     out: dict = {}
     bad = 0
 
@@ -254,7 +288,9 @@ def run(cases: list[dict], as_json: Path | None) -> int:
     print(f"           ウィンドウ {pt['n_windows']:,}（確定 {KNOWN['n_windows']:,}）")
     if pt["n_windows"] != KNOWN["n_windows"]:
         print(f"           ※ {pt['n_windows'] - KNOWN['n_windows']:+d} ウィンドウの差は未解明。"
-              f"主解析を回した機械の症例別記録が要る（bad には数えない）")
+              f"bad には数えない")
+        print(f"             どの症例かを出すには、この機械と主解析を回した機械の両方で")
+        print(f"             --case-windows を付けて回し、出てきた 2 つの表の差を取る")
     for got, want, key in ((pt["r2_vasc"], KNOWN["r2_origin"], "r2"),
                            (pt["beta_dsi"], KNOWN["beta_dsi"], "beta")):
         if abs(got - want) > TOL[key]:
@@ -287,16 +323,23 @@ def run(cases: list[dict], as_json: Path | None) -> int:
               f"{'一致' if agree else '★ずれ'}")
         if not agree:
             bad += 1
+    # 4 桁で出す。β ΔRI% は 0.001 の桁なので 3 桁だと上限が「-0.000」になり、
+    # 区間が 0 を含むのか含まないのかが読めない
     print(f"\n  → 表に入れる（事前指定・原点通過）:")
-    print(f"       β per ΔSI% = {o['point'][0]:+.3f} "
-          f"(95% CI {o['lo'][0]:+.3f} to {o['hi'][0]:+.3f})")
-    print(f"       β per ΔRI% = {o['point'][1]:+.3f} "
-          f"(95% CI {o['lo'][1]:+.3f} to {o['hi'][1]:+.3f})")
+    print(f"       β per ΔSI% = {o['point'][0]:+.4f} "
+          f"(95% CI {o['lo'][0]:+.4f} to {o['hi'][0]:+.4f})")
+    print(f"       β per ΔRI% = {o['point'][1]:+.4f} "
+          f"(95% CI {o['lo'][1]:+.4f} to {o['hi'][1]:+.4f})")
     print(f"  → 表に入れる（切片つき・探索的）:")
-    print(f"       β per ΔSI% = {ii['point'][1]:+.3f} "
-          f"(95% CI {ii['lo'][1]:+.3f} to {ii['hi'][1]:+.3f})")
-    print(f"       β per ΔRI% = {ii['point'][2]:+.3f} "
-          f"(95% CI {ii['lo'][2]:+.3f} to {ii['hi'][2]:+.3f})")
+    print(f"       β per ΔSI% = {ii['point'][1]:+.4f} "
+          f"(95% CI {ii['lo'][1]:+.4f} to {ii['hi'][1]:+.4f})")
+    print(f"       β per ΔRI% = {ii['point'][2]:+.4f} "
+          f"(95% CI {ii['lo'][2]:+.4f} to {ii['hi'][2]:+.4f})")
+    for nm, lo, hi in (("原点通過 β ΔSI%", o["lo"][0], o["hi"][0]),
+                       ("原点通過 β ΔRI%", o["lo"][1], o["hi"][1]),
+                       ("切片つき β ΔSI%", ii["lo"][1], ii["hi"][1]),
+                       ("切片つき β ΔRI%", ii["lo"][2], ii["hi"][2])):
+        print(f"       {nm:16s} 区間は 0 を {'含む' if lo <= 0 <= hi else '含まない'}")
     print("  ※ 「ΔSI% のみ」「ΔHR% を加えた」の行の β は 41番では計算していない"
           "（09番の出力）。同じ要領で足せる")
     out["table2_ci"] = {
@@ -308,6 +351,18 @@ def run(cases: list[dict], as_json: Path | None) -> int:
             "dri_hi": float(v["hi"][1 if k == "origin" else 2]),
             "n_boot": v["n_boot"], "seed": v["seed"], "n_cases": v["n_cases"]}
         for k, v in ci.items()}
+
+    if case_windows_csv:
+        write_case_windows(cases, case_windows_csv)
+
+    if table2_only:
+        print("\n" + "=" * 74)
+        print("--table2-only なので表4・表5 は出していない（交差検証を回していない）")
+        print("=" * 74)
+        if as_json:
+            as_json.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"\n{as_json} に書き出した")
+        return 1 if bad else 0
 
     print("\n" + "=" * 74)
     print(f"表4  対照との差（症例単位ブートストラップ {N_BOOT:,} 回・種 {SEED}）")
@@ -511,6 +566,25 @@ def selftest() -> int:
         int(round(sum(np.linalg.norm(a) > 0 for a in A0))) == 3
         and _rows_used(cs_nanmap) == rows_after,
         f"{_rows_used(cs_nanmap)} 対 {rows_after}")
+    # 症例別のウィンドウ数（機械どうしの突き合わせ用の出力）
+    cw = case_windows(cs_nanmap)
+    rep("症例別のウィンドウ数が症例ごとに 1 行",
+        len(cw) == len(cs_nanmap) and [r[0] for r in cw] == [c["caseid"] for c in cs_nanmap],
+        f"{len(cw)} 行")
+    rep("症例別の『使った行数』の合計が premise_test のウィンドウ数と一致する",
+        sum(r[2] for r in cw) == rows_after, f"{sum(r[2] for r in cw)} 対 {rows_after}")
+    rep("欠測のある症例だけ 生の数 > 使った行数 になる",
+        cw[0][1] == cw[0][2] + 1 and all(r[1] == r[2] for r in cw[1:]),
+        f"{[(r[1], r[2]) for r in cw]}")
+    with tempfile.TemporaryDirectory() as td:
+        csvp = Path(td) / "cw.csv"
+        tot = write_case_windows(cs_nanmap, csvp)
+        body = csvp.read_text(encoding="utf-8").splitlines()
+        rep("CSV は見出し 1 行 + 症例数",
+            body[0] == "caseid,windows_cached,rows_used"
+            and len(body) == len(cs_nanmap) + 1 and tot == rows_after,
+            f"{len(body)} 行・合計 {tot}")
+
     sc_ref = premise_by_case(cs)["sign_consistency"] * 100.0
     rep("符号の揃いが主解析 premise_by_case と一致する（切片あり）",
         abs(sc - sc_ref) < 1e-9, f"{sc:.6f}% 対 {sc_ref:.6f}%")
@@ -539,7 +613,6 @@ def selftest() -> int:
     rep("乱数種が主解析と同じ 0", SEED == 0)
 
     # --- 症例の並び: target_cases.csv の行順か（ファイル名順ではないか） ---
-    import tempfile
     from src import cases as cases_mod
 
     # 行順 7 → 100 → 20。ファイル名順なら 100 が先に来るので区別がつく
@@ -598,6 +671,11 @@ def main() -> None:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--selftest", action="store_true", help="合成データで計算の筋道を検算する")
     ap.add_argument("--json", type=str, default=None, help="値を JSON でも書き出す")
+    ap.add_argument("--case-windows", type=str, default=None,
+                    help="症例別のウィンドウ数を CSV に書き出す"
+                         "（機械どうしでウィンドウ数が食い違うときの突き合わせ用）")
+    ap.add_argument("--table2-only", action="store_true",
+                    help="表2 と信頼区間だけ出す（交差検証を回さないので短い）")
     args = ap.parse_args()
 
     if args.selftest:
@@ -612,7 +690,9 @@ def main() -> None:
     if len(cases) < 100:
         explain_missing()
         sys.exit(2)
-    sys.exit(run(cases, Path(args.json) if args.json else None))
+    sys.exit(run(cases, Path(args.json) if args.json else None,
+                 table2_only=args.table2_only,
+                 case_windows_csv=Path(args.case_windows) if args.case_windows else None))
 
 
 if __name__ == "__main__":
