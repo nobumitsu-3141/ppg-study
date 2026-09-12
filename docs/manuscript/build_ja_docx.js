@@ -1,6 +1,7 @@
 // 和文原稿の【和文要旨】【本文】だけを Word ファイルにする。
 // 原稿 md を機械的に読むだけで、本文の書き写しは一切行わない。
 //   実行例: NODE_PATH=<docx のある node_modules> node docs/manuscript/build_ja_docx.js
+//   1 本だけ作る: node docs/manuscript/build_ja_docx.js --src <md> --out <docx>
 const fs = require('fs');
 const path = require('path');
 const {
@@ -88,5 +89,19 @@ function build({ src, out }) {
   });
 }
 
-TARGETS.reduce((p, t) => p.then(() => build(t)), Promise.resolve())
+// --src <md> --out <docx> を与えたときは、その 1 本だけを作る。
+// 引数が無いときの動作（TARGETS の 2 本を作る）は変えない。
+const argOf = name => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+};
+const srcArg = argOf('src');
+const outArg = argOf('out');
+if ((srcArg === undefined) !== (outArg === undefined)) {
+  console.error('--src と --out は両方まとめて指定する');
+  process.exit(1);
+}
+const targets = srcArg ? [{ src: srcArg, out: outArg }] : TARGETS;
+
+targets.reduce((p, t) => p.then(() => build(t)), Promise.resolve())
   .catch(e => { console.error(e.message); process.exit(1); });
