@@ -14,7 +14,7 @@
 
     python3 analysis/scripts/check_terminology.py
 
-`terminology_baseline.json` に制定前の残件（423 件）を記録してあり、**そこから増えたときだけ
+`terminology_baseline.json` に制定前の残件（431 件）を記録してあり、**そこから増えたときだけ
 落ちる。**`docs/manuscript/` は残件を認めない（投稿する文章だから）。古い文書を直したら
 `--update-baseline` で記録しなおす。`lab_log.md` は 2026-09-07 以降の追記だけを検査する。
 
