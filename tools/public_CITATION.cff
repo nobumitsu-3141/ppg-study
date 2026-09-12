@@ -13,7 +13,7 @@ type: software
 authors:
   - family-names: "Kawazoe"
     given-names: "Nobumitsu"
-    affiliation: "Department of Anesthesiology, Goto Chuoh Hospital, Nagasaki, Japan"
+    affiliation: "Department of Anesthesiology, Nagasaki Goto Chuoh Hospital, Goto, Nagasaki, Japan"
 keywords:
   - photoplethysmography
   - pulse decomposition analysis

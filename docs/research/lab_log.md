@@ -7485,7 +7485,7 @@ Significance 1 文・Funding・COI・CRediT。いずれも先生ご自身のも�
 所属行には市名 Goto を足した（市・県・国の順）。和文は以前から 長崎県五島中央病院 で変更なし。
 
 **見つけたこと。**公開リポジトリの `tools/public_CITATION.cff` と `tools/public_zenodo.json`
-の所属も旧表記のままだった（追記 5609 行目付近の記録から）。同じ表記にそろえる（別 commit）。
+の所属も旧表記のままだった（追記 5609 行目付近の記録から）。同じ表記にそろえた（次の commit。JSON と CFF の構文を確かめた）。
 また**論文2 の英文原稿には所属行そのものが無い。**投稿キットで補う。
 
 置換は Sonnet（置換前に一致 1 件を assert）、確認と commit は Fable。
