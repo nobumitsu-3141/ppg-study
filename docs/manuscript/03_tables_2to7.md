@@ -31,8 +31,10 @@ exploratory sensitivity analysis.
 
 > Confidence intervals are from a case-level bootstrap with 2,000 resamples and seed 0 —
 > the resampling scheme used for ΔPE in Table 4 — computed by
-> `analysis/scripts/41_fill_tables.py`, which checks that the point estimates reproduce
-> `premise_test` and `premise_with_intercept` exactly before reporting the intervals.
+> `analysis/scripts/41_fill_tables.py` on the machine and feature cache of the confirmatory
+> run (`docs/research/results/41_fill_tables_mac1.txt`, 2026-09-12, 161,737 windows). The
+> script checks that the point estimates reproduce `premise_test` and
+> `premise_with_intercept` exactly before reporting the intervals.
 > They are given for the two rows the script recomputes; the remaining rows come from
 > `09_extra_sensitivity.py` and carry no interval here.
 >
@@ -42,8 +44,9 @@ exploratory sensitivity analysis.
 > of magnitude too small to serve as a correction input. A 10% change in the stiffness
 > index moves PWTT by 0.27%.
 >
-> 〔投稿前に確認: 切片つきモデルの β per ΔRI% の上限は 3 桁では −0.000 と表示される。
-> 4 桁の値は `41_fill_tables.py --table2-only` で出る〕
+> At four decimals the upper bound of β per ΔRI% in the intercept model is −0.0002
+> (`41_fill_tables_mac1.txt`); it is printed as −0.000 at three decimals. All four
+> intervals exclude zero.
 
 ---
 
@@ -96,7 +99,7 @@ interpretive weight on their own.
 | Control (PWTT only) | 26.9% | — |
 | **Proposed (vascular correction)** | **27.2%** | **+0.2 points (95% CI +0.1 to +0.4)** |
 | Control + mean arterial pressure | 27.0% | +0.3 points (95% CI +0.2 to +0.5) |
-| Control + vascular indices + mean arterial pressure | 27.1% | +0.3 points (95% CI +0.2 to +0.5) |
+| Control + vascular indices + mean arterial pressure | 27.1% | +0.3 points (95% CI +0.1 to +0.5) |
 
 | Bland–Altman and trending, corrected estimator | Value |
 |---|---|
@@ -116,7 +119,7 @@ Table 6 (in the main text) covers the nine variants that required re-extraction.
 |---|---|---|---|---|---|---|
 | Primary analysis | 862 | 161,737 | 0.000 | −0.027 | 78% | +0.2 (+0.1 to +0.4) |
 | Excluding the 15 pipeline-development cases | 847 | 158,445 | 0.005 | −0.028 | 78% | +0.2 (+0.1 to +0.3) |
-| Windows aggregated to 5 minutes | 844 | 31,933 | — | — | — | 0.0 (−0.2 to +0.1) |
+| Windows aggregated to 5 minutes | 844 | 31,934 | — | — | — | 0.0 (−0.2 to +0.1) |
 | Windows aggregated to 20 minutes | 606 | 6,838 | — | — | — | −0.2 (−0.5 to +0.0) |
 | Heart rate added to the premise regression | 862 | 161,737 | 0.077 | −0.020 | 74% | — |
 
@@ -128,6 +131,7 @@ the correction improved accuracy at no level.
 > 別プログラム（09番）の出力から採っており、主解析（対象症例一覧の行順）と 5-fold の割り付けが違っていた。
 > 60 秒の行が 27.1%・+0.1〜+0.3 と 0.1 ポイントずれていたのはそのためである。並びを主解析にそろえて
 > 3 行を同じ計算から採り直した（41番・09番）。60 秒の行は主解析の確定値（27.2%、+0.1〜+0.4）に一致する。
+> ウィンドウ数と区間は確定解析の機械で回した 41番の値（`41_fill_tables_mac1.txt`、追記111）。
 
 | Reference independent of the arterial pressure waveform (descriptive only) | Value |
 |---|---|
