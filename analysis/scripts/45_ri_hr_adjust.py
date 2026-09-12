@@ -42,7 +42,9 @@
 ------------
 指標 ri_v1・ri_v2・ri_v2g・digital_ri・amb_amp1 と真値 pvr（末梢血管抵抗）について、
 26番と同じ年齢層内 Spearman ρ の規約で、次の 5 通りを並べる。amb_amp1 は論文2 の目標が
-大動脈PWV なのでその行も出す。
+大動脈PWV なのでその行も出す。**ri_v1 は 26番の A 段（`ok_v1 == 1`）、それ以外
+（ri_v2・ri_v2g・digital_ri・amb_amp1）は C 段（採否を無視した全例）で計算する**
+（`データ` の節を参照。V1_STAGE_A）。
 
     1 未調整            Spearman(指標, 真値)
     2 心拍数で割る       Spearman(指標 / HR, 真値)
@@ -63,10 +65,14 @@
 `data/pwdb/pwdb_compare.csv`（26番の出力）。**確認的解析を回した機械では 4,374 行**
 （仮想被験者 1 名 1 行）。この台本はまず未調整の値が論文2 の既知の値
 （ri_v1 0.207・digital_ri 0.504・amb_amp1 × 大動脈PWV 0.836。lab_log 2026-09-03／09-09）を
-再現するかを照合し、ずれていればその旨を出す。照合は対応のある行（pairwise-complete）で
-行う。これは 26番の C 段（採否を無視した全例）に当たる。26番にはもう一つ A 段（その手法が
-自分で採用した例だけ）があるので、採否列を持つ指標はその値も 1 行だけ参考に出す
-（照合の合否には使わない）。**クラウド側の複製は 24 行しかなく、
+再現するかを照合し、ずれていればその旨を出す。**ri_v1 は凍結版（`*_v1`）なので、26番の
+A 段（`ok_v1 == 1`。確認的解析を回した機械では 4,374 例中 4,036 例）だけで照合する。**
+論文2 の 0.207 はこの段で計算されているためで、採否を無視した C 段（全例）では再現しない。
+digital_ri・amb_amp1 は採否と無関係な指標なので、従来どおり対応のある行（pairwise-complete）・
+26番の C 段（採否を無視した全例）で照合する。ri_v1 の C 段の値は 1 行だけ参考に出す
+（照合の合否には使わない）。以降の表（節 1・節 2・節 3）でも同じ規則で、ri_v1 が絡む行は
+すべて A 段、それ以外（digital_ri・amb_amp1・ri_v2・ri_v2g）は C 段のまま計算する。
+**クラウド側の複製は 24 行しかなく、
 1 層 4 名で 8 名に満たないため、どの ρ も計算できない。**自己検査で動くことだけを確かめる
 用途にしか使えない。
 
@@ -120,7 +126,9 @@ MIN_PER_AGE = 8        # 1 年齢層に要る人数。26番の MIN_PER_AGE と�
 N_AGES_FULL = 6        # PWDB の年齢層（25・35・45・55・65・75 歳）
 
 # 論文2 で確定している未調整の値（lab_log 2026-09-03 の表・2026-09-09 の 26番の表）。
-# ここが再現しなければ入力が論文2 と違うので、表全体を読んではいけない
+# ここが再現しなければ入力が論文2 と違うので、表全体を読んではいけない。
+# ri_v1 の 0.207 は 26番の A 段（ok_v1 == 1）で計算されている（V1_STAGE_A）。
+# digital_ri・amb_amp1 は採否と無関係なので、従来どおり C 段（採否を無視した全例）
 KNOWN = {("ri_v1", "pvr"): 0.207,
          ("digital_ri", "pvr"): 0.504,
          ("amb_amp1", "PWV_a"): 0.836}
@@ -144,6 +152,20 @@ PAIRS = [
 
 # 26番の A 段（その手法が自分で採用した例だけ）を参考に出すための採否列
 OK_COL = {"ri_v1": "ok_v1", "ri_v2": "ok_v2", "ri_v2g": "ok_v2g"}
+
+# 凍結版 (*_v1) は 26番の A 段（ok_v1 == 1）で計算する。論文2 の 0.207 がその段の値だから
+# （2026-09-12 の訂正。データ の節を参照）。ri_v2・ri_v2g・digital_ri・amb_amp1 は対象外で、
+# 採否を無視した C 段（全例）のまま計算する
+V1_STAGE_A = {"ri_v1": "ok_v1"}
+
+
+def _stage_for(d: pd.DataFrame, col: str) -> pd.DataFrame:
+    """*_v1 の指標は ok_v1 == 1（A 段）に絞る。それ以外はそのまま（C 段）を返す。"""
+    okc = V1_STAGE_A.get(col)
+    if okc and okc in d.columns:
+        return d[pd.to_numeric(d[okc], errors="coerce") == 1]
+    return d
+
 
 INDEX_LABEL = {"ri_v1": "ri_v1      凍結PDA 2カーネル",
                "ri_v2": "ri_v2      第2版 歪みガウス",
@@ -264,29 +286,53 @@ def _pad(s: str, w: int, right: bool = False) -> str:
 
 # ---------------------------------------------------------------- 表
 def hr_main_effect(d: pd.DataFrame, pairs: list[tuple]) -> dict:
-    """心拍数が指標をどれだけ動かすか（年齢層内 Spearman(指標, HR) の中央値）。"""
+    """心拍数が指標をどれだけ動かすか（年齢層内 Spearman(指標, HR) の中央値）。
+    *_v1 の指標（ri_v1）は ok_v1 == 1（A 段）で計算する（V1_STAGE_A）。"""
     print(f"\n{'-' * 92}")
     print("1. 心拍数が指標をどれだけ動かすか（年齢層内 Spearman(指標, HR)。真値は関係しない）")
     print("-" * 92)
     print(_pad("指標", 30) + _pad("ρ中央値", 11, right=True)
           + _pad("|ρ|中央値", 12, right=True) + _pad("層", 6, right=True)
           + _pad("最小n", 8, right=True))
+    idxs = list(dict.fromkeys(c for c, _t, _s, _l in pairs))
     got = {}
-    for idx in dict.fromkeys(c for c, _t, _s, _l in pairs):
-        s = summarise(d, idx, "HR", 0, "unadj")
+    for idx in idxs:
+        s = summarise(_stage_for(d, idx), idx, "HR", 0, "unadj")
         got[idx] = s
         print(_pad(INDEX_LABEL.get(idx, idx), 30) + _f(s["med"], 11, sign=True)
               + _f(s["med_abs"], 12) + f"{s['n_ages']:>6}{s['min_n']:>8}")
-    print("  出典: この台本（45番）が --csv の CSV から計算した値。20番の因子別主効果")
+    print("  出典: この台本（45番）が --csv の CSV から計算した値。ri_v1 は 26番の A 段")
+    print("  （ok_v1 == 1）、それ以外は C 段（採否を無視した全例）。20番の因子別主効果")
     print("  （lab_log 2026-09-03）では凍結版 RI の心拍数主効果 −40.3%（ρ −0.37）、")
     print("  大動脈径 +33.2%（ρ +0.30）、脈波伝播速度 +33.7%（ρ −0.17、非単調）である。")
+    v1_idxs = [idx for idx in idxs if idx in V1_STAGE_A]
+    if v1_idxs:
+        print("  参考: C 段（採否を無視した全例）:")
+        for idx in v1_idxs:
+            s_c = summarise(d, idx, "HR", 0, "unadj")
+            print(f"    {INDEX_LABEL.get(idx, idx).strip()}: "
+                  f"ρ中央値 {_n(s_c['med'], sign=True)}・|ρ|中央値 {_n(s_c['med_abs'])}・"
+                  f"層 {s_c['n_ages']}・最小n {s_c['min_n']}")
     return got
 
 
 def compute_all(d: pd.DataFrame, pairs: list[tuple]) -> dict:
-    """指標 × 真値 × 調整のまとめを全部作る（表示はしない）。"""
+    """指標 × 真値 × 調整のまとめを全部作る（表示はしない）。
+    *_v1 の指標（V1_STAGE_A）は ok_v1 == 1（A 段）に絞って計算する。"""
+    out = {}
+    for col, tgt, sign, _lab in pairs:
+        dd = _stage_for(d, col)
+        for kind, _l, _e in ADJUST:
+            out[(col, tgt, kind)] = summarise(dd, col, tgt, sign, kind)
+    return out
+
+
+def compute_all_c_stage(d: pd.DataFrame, pairs: list[tuple]) -> dict:
+    """V1_STAGE_A にある指標だけ、参考として C 段（採否を無視した全例）でも計算する。
+    `d` はそのまま（絞らずに）渡すこと。「参考: C 段」の行を出すためだけに使う。"""
     return {(col, tgt, kind): summarise(d, col, tgt, sign, kind)
-            for col, tgt, sign, _lab in pairs for kind, _l, _e in ADJUST}
+            for col, tgt, sign, _lab in pairs if col in V1_STAGE_A
+            for kind, _l, _e in ADJUST}
 
 
 def adjustment_table(res: dict, pairs: list[tuple]) -> None:
