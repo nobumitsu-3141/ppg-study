@@ -7469,3 +7469,24 @@ Significance 1 文・Funding・COI・CRediT。いずれも先生ご自身のも�
 
 前版との差分 3 行（100・198・281 行目）をそれぞれ表示して確かめた。
 `check_terminology.py` 終了コード 0。
+
+## 2026-09-12（追記109）　所属の英語名を公式の表記にした ― Nagasaki Goto Chuoh Hospital
+
+先生から病院の公式ロゴ（長崎県五島中央病院 ／ NAGASAKI GOTO CHUOH HOSPITAL）を受け取り、
+「これを正式に」との指示。英文の所属と倫理の文にあった `[[Goto Chuoh Hospital]]`（および
+括弧なしの `Goto Chuoh Hospital`）を **Nagasaki Goto Chuoh Hospital** に統一した。
+
+| 場所 | 変更 |
+|---|---|
+| `02_submission_kit.md` 所属行 | Department of Anesthesiology, Nagasaki Goto Chuoh Hospital, Goto, Nagasaki, Japan |
+| `02_submission_kit.md` 倫理の定型文 | The institutional ethics committee of Nagasaki Goto Chuoh Hospital |
+| `01_draft_en.md` §2 と Statements | 同上（2 箇所） |
+
+所属行には市名 Goto を足した（市・県・国の順）。和文は以前から 長崎県五島中央病院 で変更なし。
+
+**見つけたこと。**公開リポジトリの `tools/public_CITATION.cff` と `tools/public_zenodo.json`
+の所属も旧表記のままだった（追記 5609 行目付近の記録から）。同じ表記にそろえる（別 commit）。
+また**論文2 の英文原稿には所属行そのものが無い。**投稿キットで補う。
+
+置換は Sonnet（置換前に一致 1 件を assert）、確認と commit は Fable。
+`check_terminology.py` 終了コード 0。

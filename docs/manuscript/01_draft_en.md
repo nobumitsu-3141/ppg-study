@@ -150,7 +150,7 @@ University Hospital [Lee 2022]. The database contains 6,388 cases
 with anonymised waveform data released for unrestricted research use.
 
 Because the study used only anonymised, publicly released data and involved no patient
-contact, the institutional ethics committee of Goto Chuoh Hospital was formally
+contact, the institutional ethics committee of Nagasaki Goto Chuoh Hospital was formally
 consulted and responded that ethics committee review was not required. The written
 response is retained by the authors.
 
@@ -1008,7 +1008,7 @@ Figures are produced by `analysis/scripts/07_figures.py` in the archived code.
 ## Statements
 
 - **Ethics**: This study analysed only anonymised, publicly released data with no patient
-  contact. The ethics committee of Goto Chuoh Hospital determined that committee review was
+  contact. The ethics committee of Nagasaki Goto Chuoh Hospital determined that committee review was
   not required (response dated 28 August 2026). Collection of the source database was
   approved by the Institutional Review Board of Seoul National University Hospital with
   waiver of written informed consent [Lee 2022].

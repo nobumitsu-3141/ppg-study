@@ -62,7 +62,7 @@ We hope you find the work suitable for [[JOURNAL]] and look forward to your resp
 Yours sincerely,
 
 [[Nobumitsu Kawazoe, MD]]
-Department of Anesthesiology, [[Goto Chuoh Hospital]], Nagasaki, Japan
+Department of Anesthesiology, Nagasaki Goto Chuoh Hospital, Goto, Nagasaki, Japan
 [[email]] / ORCID [[xxxx-xxxx-xxxx-xxxx]]
 ```
 
@@ -115,7 +115,7 @@ Department of Anesthesiology, [[Goto Chuoh Hospital]], Nagasaki, Japan
 
 ```
 This study analysed only anonymised data that are publicly available without
-restriction. The institutional ethics committee of [[Goto Chuoh Hospital]] was consulted
+restriction. The institutional ethics committee of Nagasaki Goto Chuoh Hospital was consulted
 and determined that review by the committee was not required (response dated 28 August
 2026). The acquisition and free disclosure of the data in the original database were
 approved by the Institutional Review Board of Seoul National University Hospital
