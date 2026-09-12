@@ -1097,6 +1097,13 @@ def selftest() -> int:
     rep("(iii) 真の伝播時間 × 大動脈PWV が強い負（仕込み 50 + 1200/PWV）",
         q2b["ptt_root_fin_ms"]["med"] < -0.9,
         f"ρ中央値 {q2b['ptt_root_fin_ms']['med']:+.3f}")
+    n_planted3 = int(_t3["cycle_off"].sum())
+    rep("(iii) 節 2e が仕込んだ 1 周期のずれの人数をちょうど補正する",
+        q2b["ptt_corr"]["n_corrected"] == n_planted3,
+        f"補正した人数 {q2b['ptt_corr']['n_corrected']}・仕込んだ人数 {n_planted3}")
+    rep("(iii) 節 2e の補正後は補正前より真の伝播時間に近づく（|ρ| が下がらない）",
+        q2b["ptt_corr"]["corr"]["med_abs"] >= q2b["digital_ptt"]["med_abs"],
+        f"補正前 {q2b['digital_ptt']['med_abs']:.3f} → 補正後 {q2b['ptt_corr']['corr']['med_abs']:.3f}")
 
     # --- (iv) 欠測の扱い
     d4in, t4 = synth(seed=3, cycle_frac=0.05, nan_frac=0.4)
@@ -1165,6 +1172,58 @@ def selftest() -> int:
     got4, how4 = attach_true_ptt(no_col, None, None)
     rep("(vi) どこにも無ければ無いと言う（作り話をしない）",
         "ptt_root_fin_ms" not in got4.columns and how4 == "見つからない", how4)
+
+    # --- (vii) 2026-09-12 の訂正の検算: ok_v1 = 0 の行にだけ別の関係（符号を反転した関係）を
+    #     仕込むと、A 段（既定の計算）はそれを無視し、C 段（参考の行）には混ざって出るか
+    rng7 = np.random.default_rng(700)
+    n7 = 150 * N_AGES_SYN
+    age7 = 25 + 10 * (np.arange(n7) % N_AGES_SYN)
+    z7 = rng7.normal(0, 1, n7)
+    pwv7 = 4.0 + 1.5 * z7 + rng7.normal(0, 0.2, n7)
+    pvr7 = 1.5e8 * np.exp(0.3 * z7)
+    dt_good7 = -20.0 * z7 + rng7.normal(0, 3.0, n7)         # 大動脈PWV と負の関係（仕込み）
+    ri_good7 = 0.30 * z7 + 0.2 + rng7.normal(0, 0.05, n7)   # 末梢血管抵抗と正の関係（仕込み）
+    bad7 = rng7.random(n7) < 0.5
+    d7 = pd.DataFrame({"age": age7, "HR": 70.0 + rng7.normal(0, 8, n7),
+                        "PWV_a": pwv7, "pvr": pvr7,
+                        DT_V1: np.where(bad7, -dt_good7, dt_good7),
+                        RI_V1: np.where(bad7, -ri_good7, ri_good7),
+                        OK_V1: np.where(bad7, 0, 1)})
+    a7_dt = strat(_stage_a1(d7), DT_V1, "PWV_a", -1)["med"]
+    c7_dt = strat(d7, DT_V1, "PWV_a", -1)["med"]
+    a7_ri = strat(_stage_a1(d7), RI_V1, "pvr", +1)["med"]
+    c7_ri = strat(d7, RI_V1, "pvr", +1)["med"]
+    rep("(vii) ok_v1 = 0 の行に別の関係（符号反転）を仕込むと、A 段はそれを無視する",
+        a7_dt < -0.5 and a7_ri > 0.5,
+        f"A 段 ΔT×PWV ρ中央値 {a7_dt:+.3f}・RI×抵抗 ρ中央値 {a7_ri:+.3f}"
+        f"（ok_v1=0 は {int(bad7.sum())}/{n7} 名）")
+    rep("(vii) 同じ仕込みで C 段（参考）は混ざって A 段と明確に違う値になる",
+        abs(c7_dt - a7_dt) > 0.3 and abs(c7_ri - a7_ri) > 0.3,
+        f"C 段 ΔT×PWV {c7_dt:+.3f}（差 {abs(c7_dt - a7_dt):.3f}）・"
+        f"C 段 RI×抵抗 {c7_ri:+.3f}（差 {abs(c7_ri - a7_ri):.3f}）")
+    rep("(vii) _stage_a1 は ok_v1 == 1 の行だけを残す（人数が合う）",
+        len(_stage_a1(d7)) == int((d7[OK_V1] == 1).sum()) < len(d7))
+
+    # --- (viii) 2026-09-12 の訂正の検算: 1 周期のずれを 20% に仕込むと、周期補正
+    #     （cycle_correct）はそれを厳密に元の値へ戻し、仕込んでいない側には触れないか
+    rng8 = np.random.default_rng(800)
+    n8 = 600
+    hr8 = rng8.uniform(50.0, 100.0, n8)
+    cycle8 = 60000.0 / hr8
+    true8 = rng8.uniform(150.0, 400.0, n8)
+    off8 = rng8.random(n8) < 0.20                          # 被験者の 20% に仕込む
+    sign8 = np.where(rng8.random(n8) < 0.5, 1.0, -1.0)     # +1 周期・−1 周期を半々仕込む
+    ptt8 = true8 + np.where(off8, sign8 * cycle8, 0.0)
+    d8v = ptt8 - true8                                      # d = digital_ptt − ptt_root_fin_ms
+    corr8 = cycle_correct(ptt8, d8v, cycle8)
+    rep("(viii) 周期補正 cycle_correct: 仕込んだ 1 周期のずれ（20%）を厳密に元の値へ戻す",
+        bool(np.allclose(corr8[off8], true8[off8], atol=1e-9)),
+        f"最大誤差 {float(np.max(np.abs(corr8[off8] - true8[off8]))):.2e} ms"
+        f"（仕込み {int(off8.sum())}/{n8} 名・+1 周期 {int((off8 & (sign8 > 0)).sum())} 名・"
+        f"−1 周期 {int((off8 & (sign8 < 0)).sum())} 名）")
+    rep("(viii) 周期補正 cycle_correct: 仕込んでいない側の値にはまったく触れない",
+        bool(np.array_equal(corr8[~off8], ptt8[~off8])),
+        f"不一致 {int(np.sum(corr8[~off8] != ptt8[~off8]))} / {int((~off8).sum())} 名")
 
     # --- (v) 同じ乱数種なら出力が一字一句同じ
     def render(seed):
