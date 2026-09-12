@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""2 本の和文原稿（.md）を機械的に 1 枚の HTML に組む。転記は一切しない。"""
+"""2 本の和文原稿（.md）を機械的に 1 枚の HTML に組む。転記は一切しない。
+
+使い方（引数は 2 つ。出力先、次に雛形）:
+
+    python3 docs/manuscript/build_ja_page.py 出力先.html docs/manuscript/ja_shell.html
+
+雛形の <!--NAV--> と <!--DOCS--> を置き換える。頁の日付は雛形の側にある。
+"""
 import html, re, sys
 from pathlib import Path
 
