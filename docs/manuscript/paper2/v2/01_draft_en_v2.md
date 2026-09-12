@@ -361,10 +361,10 @@ shorter than the true one by about one cycle: for those subjects the distributed
 assigns the arrival to the wrong cardiac cycle. Adding one cardiac cycle (60/HR) to the
 distributed value in those 972 subjects raises its median within-stratum correlation with
 aortic PWV from 0.571 to 0.986, the same as the true transit time (0.987 in this
-computation). What remains after that correction is a nearly constant offset (median 16 ms, the
-distributed value the shorter; interquartile range 14 to 20 ms in the 3,402 subjects
-without the cycle error) whose correlation
-with heart rate (|ρ| 0.218) and with aortic diameter (0.103) is below 0.30. The 0.571
+computation). What remains after that correction is a nearly constant offset (median 16
+ms, the distributed value the shorter; interquartile range 14 to 20 ms in the 3,402
+subjects without the cycle error) whose correlation with heart rate (|ρ| 0.218) and with
+aortic diameter (0.103) is below 0.30. The 0.571
 therefore reflects misassignment of the cardiac cycle in the distributed column in about a
 fifth of subjects, not a defect of the analysis pipeline or of the truth values; the
 prespecified positive control had already passed and its verdict is unchanged.
