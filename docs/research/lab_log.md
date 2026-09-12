@@ -7391,3 +7391,40 @@ Lee HC ほか. Sci Data 2022;9:279（PMID 35676300、PMC9178032）の
 - 4 つの主張（IRB 番号・NCT 番号・同意免除の理由・倫理委員会の文）を efetch の全文で
   それぞれ照合した。Helsinki が原著に無いことも同じ全文で確かめた。
 - `check_terminology.py` 終了コード 0。
+
+## 2026-09-12（追記107）　論文2 §2.7 の版の記載を埋めた ― 確定解析は 1 つの環境で全 4,374 行
+
+`paper2/01_draft_en.md` §2.7 の `[[read the python_version … columns]]` と
+`paper2/05_draft_ja.md` の `Python〔版を記入〕` を閉じた。
+
+### 出典
+
+1 台目の `~/ppg-study/analysis/data/pwdb/pwdb_compare.csv`。4,374 行（PWDB の仮想被験者数と
+同じで、全件）。`python_version`・`numpy_version`・`scipy_version` の重複を除くと
+**1 組だけ**: Python 3.9.6・NumPy 2.0.2・SciPy 1.13.1。複数環境の行は混ざっていない。
+CLAUDE.md §4 に記録した確定環境と一致する。
+
+はじめに出した 1 行コマンドは `analysis/` からの相対パスで、先生がリポジトリの根元に
+居たので `FileNotFoundError` になった。2 つのリポジトリ（`ppg-study`・`ppg-study-private`）を
+両方探す形に直して見つけた。クラウドの複製は自己検査用の部分集合で、版も
+3.11.15／2.4.6／1.17.1 と違う。原稿の注意書きどおりだった。
+
+### 書き方で決めたこと
+
+- **pandas の版は入れない。**表に pandas の版の列が無い。原稿は「版を出力の各行に記録した」と
+  言っているので、記録してある 3 つだけを書く。CLAUDE.md の pandas 2.3.3 を借りてこない。
+- 和文は英文に合わせ、分解モジュールの版識別子（048d2b43bb05）と「4,374 行すべてが同一の
+  環境」を足した。英文にあって和文に無かった内容で、新しい主張ではない。
+
+### 分担
+
+コマンドの作成と出典の確定は Fable、原稿の書き換えは Sonnet（置換前に一致が 1 件であることを
+assert させた）、差分の確認と commit は Fable。
+
+### 残る `[[ ]]`（論文2）
+
+Significance 1 文・Funding・COI・CRediT。いずれも先生ご自身のもの。
+
+### 検証
+
+`check_terminology.py` 終了コード 0。差分は当該 2 箇所のみ。
