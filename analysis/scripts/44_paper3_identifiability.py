@@ -97,6 +97,7 @@
 
     python3 analysis/scripts/44_paper3_identifiability.py --pilot --jobs 4
     python3 analysis/scripts/44_paper3_identifiability.py --pilot --estimate
+    python3 analysis/scripts/44_paper3_identifiability.py --pilot --pilot-ref-32 docs/research/results/32_vitaldb_landmark_summary_mac1_v158.csv
 
 凍結後に母集団 840 例を回して集計する
 
@@ -1673,6 +1674,11 @@ def main() -> None:                       # noqa: C901
     ap.add_argument("--sap-tag", type=str, default=None, help="凍結した事前登録の git タグ")
     ap.add_argument("--allow-env-mismatch", action="store_true",
                     help="主環境と版が違っても走らせる（出力はすべて環境依存と記す）")
+    ap.add_argument("--pilot-ref-32", type=str, default=None,
+                    help="--pilot の段階1 の照合先 CSV。既定は docs/research/results/32_vitaldb_landmark_summary_v158.csv"
+                         "（雲で作った表。lab_log 追記23）。同じ機械で 32番を回した summary.csv を指すと環境の差が消える")
+    ap.add_argument("--pilot-ref-34", type=str, default=None,
+                    help="--pilot の段階2 の照合先 CSV。既定は data/vitaldb_methods*/summary.csv の順に探す")
     ap.add_argument("--refresh-stale", action="store_true",
                     help="環境が食い違う記録を消して作り直す（既定は止まる）")
     ap.add_argument("--no-retry-failed", action="store_true", help="前回失敗した症例を取り直さない")
@@ -1797,10 +1803,15 @@ def main() -> None:                       # noqa: C901
                     if k in was:
                         print(f"  {k}: 今 {now.get(k)} ／ パイロットの report {was[k]}"
                               f"  {'一致' if was[k] == now.get(k) else '★違う（§6 の識別子）'}")
+            ref32 = Path(args.pilot_ref_32) if args.pilot_ref_32 else PILOT_REF_32
             print("\n段階1（32番）")
-            for ln in compare_pilot(summ, PILOT_REF_32):
+            if ref32 == PILOT_REF_32:
+                print("  注意: 既定の照合先は雲（Python 3.11・NumPy 2.4・SciPy 1.17・pandas 3.0・vitaldb 1.5.8）で"
+                      "作った表である（lab_log 追記23）。環境が違えば段階1 の値は一致しない（追記24）。\n"
+                      "        同じ機械で 32番を回した summary.csv を --pilot-ref-32 で指すこと。")
+            for ln in compare_pilot(summ, ref32):
                 print(ln)
-            ref34 = find_pilot_ref_34()
+            ref34 = Path(args.pilot_ref_34) if args.pilot_ref_34 else find_pilot_ref_34()
             print("\n段階2（34番）")
             if ref34 is None:
                 print("  照合先が無い（34番の症例ごとの表が見つからない）")
