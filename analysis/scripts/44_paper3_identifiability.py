@@ -1807,7 +1807,7 @@ def main() -> None:                       # noqa: C901
             ref32 = Path(args.pilot_ref_32) if args.pilot_ref_32 else PILOT_REF_32
             print("\n段階1（32番）")
             if ref32 == PILOT_REF_32:
-                print("  照合先は 1 台目（主環境）で 2026-09-13 に 32番を回した表（91ea703）。同じ環境なら段階1 は"
+                print("  照合先は 1 台目（主環境）で 2026-09-13 に 32番を回した表（91ea703）。同じ環境なら段階1 は "
                       "35 列すべて最大差 0 で再現する（lab_log 追記125）。")
             elif ref32 == PILOT_REF_32_CLOUD:
                 print("  注意: この照合先は雲（Python 3.11・NumPy 2.4・SciPy 1.17・pandas 3.0・vitaldb 1.5.8）で"
