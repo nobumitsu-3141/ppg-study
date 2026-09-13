@@ -21,12 +21,28 @@
        取得や解析に失敗した症例も分母に残し、数を報告する（§3「差し替えをしない」）。
 段階1  解析できるウィンドウをすべて使う指標 ― 特徴点法の ΔT・早期振幅比 Am_b/Am_p1・
        PWTT（陽性対照）。32番の `extract_case`・`case_summary` をそのまま呼ぶ（§6）。
-段階2  分解由来の 6 行 ― 34番の抜き取り規則（記録の 20%・50%・80% から連続 6 ウィンドウを
-       3 ブロック、計 18 ウィンドウ）で、凍結版 2 カーネル・第2版 歪みガウス・第2版 ガンマの
-       ΔT と RI（§6）。ブロックの選択は 34番の `pick_blocks` を呼ぶ。
+段階2  分解由来の 6 行（凍結版 2 行・第2版 4 行。合否は凍結版だけ）― 34番の抜き取り規則
+       （記録の 20%・50%・80% から連続 6 ウィンドウを 3 ブロック、計 18 ウィンドウ）で、
+       凍結版 2 カーネル・第2版 歪みガウス・第2版 ガンマの ΔT と RI（§6）。
+       ブロックの選択は 34番の `pick_blocks` を呼ぶ。
+主要   **合否を出す行は 4 行と陽性対照 1 行だけである**（事前登録 版 1 の §5.1）。
+       特徴点法の ΔT（段階1）・早期振幅比（段階1）・分解 ΔT 凍結版 2 カーネル（段階2）・
+       分解 RI 凍結版 2 カーネル（段階2）、および陽性対照 = **段階1 の** PWTT（§7）。
+参考   **第2版（歪みガウス・ガンマ）の 4 行は主要評価から外れている**（版 1・§5.2）。
+       採択率と有限な値になった割合の両方を印字し、**合否を付けない。**
+       理由: 第2版の採否は Wang 2013 の規準を切痕のある型1 の拍にだけ当てており
+       （`lab_log.md` 追記121 の逸脱）、採択が事実上「拍の型の判定」になる。モニタ波形の
+       平均拍は型3〜型5 が大半なので、**採択率はほぼ 0 になると事前に予測してある**
+       （§5.3。パイロットは歪みガウス・ガンマとも症例中央値 0.000。34番 v158・20 例・
+       360 ウィンドウ。同じパイロットで凍結版 2 カーネルは 0.778）。主要評価に置けば、
+       新しい症例を 1 例も見ないうちに 4 行の不成立が決まってしまう（追記122 の食い違い 2）。
+       ブロックのウィンドウで計算した PWTT（34番・パイロット 0.697）も参考である（§7）。
 同定率 特徴点法・早期振幅比・PWTT は「有限な値になったウィンドウ ÷ 解析できるウィンドウ」、
        分解由来は「その版の採否を通ったウィンドウ（採択率）÷ ブロックのウィンドウ」（§7）。
        分解由来の「有限な値になった割合」も併記するが、そちらは記述である（§7）。
+再現性 隣接ウィンドウの lag-1 自己相関。**採否と関係なく、有限な値になったウィンドウを
+       すべて使う**（34番の `summarize` と同じ計算。§7）。隣接対の最小数は段階1 が 10
+       （32番の `MIN_PAIRS`）、段階2 が 8（34番の `summarize`。1 ブロックは 5 対）（§3）。
 判定   症例中央値の点推定で行う。症例を単位とした 95% 信頼区間を併記するが判定に使わない（§7）。
        陽性対照 PWTT の自己相関の症例中央値が 0.50 に達しなければ**表全体を無効**とする（§7）。
 環境   Python 3.9.6・NumPy 2.0.2・SciPy 1.13.1・pandas 2.3.3・vitaldb 1.5.8（§10・`CLAUDE.md` §4）。
@@ -48,9 +64,11 @@
 計算するもの
 ------------
 症例ごとに 段階1 と 段階2 の要約を出し、`--summarise` で症例中央値・95% 信頼区間・
-事前規準の合否を組み立てる。主要評価は §5 の 8 行（特徴点法 ΔT・早期振幅比・
-分解 3 条件 × ΔT と RI）と陽性対照 1 行。それ以外はすべて「参考」と記す。
-34番が並べた**文献 6 本の分解は入れない**（§5「主要評価に入れない」）。必要なら 34番を回す。
+事前規準の合否を組み立てる。**合否を出すのは §5.1 の 4 行（特徴点法 ΔT・早期振幅比・
+分解 ΔT と RI の凍結版 2 カーネル）と陽性対照 1 行だけである。**第2版 歪みガウス・
+第2版 ガンマの 4 行はそれ自身の節に「参考」として印字し（採択率と有限な値になった割合の
+両方）、**合否を出さない**（§5.2・§5.3）。それ以外の行もすべて「参考」と記す。
+34番が並べた**文献 6 本の分解は入れない**（§5.2）。必要なら 34番を回す。
 
 出力
 ----
@@ -154,8 +172,8 @@ GATE_AC = M32.GATE_AUTOCORR           # 0.30
 GATE_CTL = M32.GATE_CONTROL           # 0.50
 MIN_GOOD = M32.MIN_GOOD               # 解析できるウィンドウの条件（SQI 通過拍 8 以上）
 MIN_PAIRS_WIN = M32.MIN_PAIRS         # 段階1 の自己相関に要る隣接対（10）
-# 段階2 の自己相関に要る隣接対。**34番の `summarize` が 8 を渡している**（事前登録 §3 の
-# 本文は 32番の 10 を引いているが、分解由来の行は 34番の規則に従う旨が §6 にある）。
+# 段階2 の自己相関に要る隣接対。**34番の `summarize` が 8 を渡している**（1 ブロックは連続 6
+# ウィンドウなので隣接対が 5 組しか出ない）。事前登録 版 1 の §3 が段階1 の 10 とあわせて明記した。
 MIN_PAIRS_BLOCK = 8
 N_BLOCKS = M34.N_BLOCKS               # 3
 BLOCK_LEN = M34.BLOCK_LEN             # 連続 6 ウィンドウ
@@ -164,20 +182,26 @@ NAN = float("nan")
 # 記録に「片づいた」と印を付けて取り直さない。数は分母つきで報告する（§3）
 E_NO_BLOCK = "ブロックが取れない（連続して解析できるウィンドウが足りない）"
 
-# 主要評価の 8 行（§5）。(列, 表示名, 段階, 採否列)
+# 主要評価の 4 行（事前登録 版 1 の §5.1）。(列, 表示名, 段階, 採否列)
 # 採否列があるものは、同定率に**採択率**を使う（§7）。無いものは有限な値になった割合。
+# **第2版の 4 行はここに入れない**（版 1 で参考に移した。SECOND_VERSION_ROWS・§5.2）。
 PRIMARY_ROWS = [
     ("ens_dt_lm_ms", "特徴点法の ΔT（平均拍）",            1, None),
     ("ens_amb",      "早期振幅比 Am_b/Am_p1（平均拍）",     1, None),
     ("dt_v1_ms",     "分解 ΔT 凍結版 2 カーネル",           2, "ok_v1"),
     ("ri_v1",        "分解 RI 凍結版 2 カーネル",           2, "ok_v1"),
+]
+CONTROL_ROW = ("pwtt_ms", "PWTT（陽性対照）", 1, None)
+# 第2版（歪みガウス・ガンマ）の 4 行。**主要評価ではない。合否を出さない**（§5.2・§5.3）。
+# 採択率と有限な値になった割合を並べて印字するだけである。値は今までどおり計算する
+# （`BLOCK_COLS`・`BLOCK_OK_COLS` は変えていない）。
+SECOND_VERSION_ROWS = [
     ("dt_v2_ms",     "分解 ΔT 第2版 歪みガウス",            2, "ok_v2"),
     ("ri_v2",        "分解 RI 第2版 歪みガウス",            2, "ok_v2"),
     ("dt_v2g_ms",    "分解 ΔT 第2版 ガンマ",                2, "ok_v2g"),
     ("ri_v2g",       "分解 RI 第2版 ガンマ",                2, "ok_v2g"),
 ]
-CONTROL_ROW = ("pwtt_ms", "PWTT（陽性対照）", 1, None)
-# 参考（§5 で主要評価に入れないと決めた行と、§9 の記述）
+# 参考（§5.2 で主要評価に入れないと決めた行と、§9 の記述）
 REFERENCE_ROWS = [
     ("ens_dt1_ms", "型1 だけの ΔT（平均拍）",                1, None),
     ("dt_lm_ms",   "特徴点法 ΔT（ブロックのウィンドウ）",    2, None),
@@ -201,10 +225,24 @@ READING = {
     ("ens_amb", False): "パイロットの合格は境界での結果であったと書き、研究1 の探索的解析"
                         "（35番・36番）が前提にした可測性に留保を付ける（§8）",
 }
-READING_DECOMP_PASS = ("予測どおりであり新しい情報ではない。分解は拡張期の特徴点が無くても"
-                       "値を返すので同定性の規準では合格する。**妥当性の証拠ではない**（§8）")
-READING_DECOMP_FAIL = ("34番の探索（同定率 ≈ 1.00）が 20 例に固有だったことになるので、"
-                       "その旨を書く（§8）")
+READING_DECOMP_PASS = ("**有限な値が返るから自動的に合格した行ではない。**この行の同定率は"
+                       "収束検算を通った割合（採択率）で、パイロットの症例中央値は 0.778 である"
+                       "（有限な値になった割合 1.00 とは別の量）。合格が示すのは採択と再現性までで、"
+                       "**妥当性の証拠ではない**（§8）")
+READING_DECOMP_FAIL = ("34番の探索（採択率 0.778・有限な値になった割合 ≈ 1.00）が 20 例に固有だった"
+                       "ことになるので、その旨を書く。採択率と自己相関のどちらで届かなかったかを"
+                       "明示する（§8）")
+# 第2版の 4 行について事前に書いた予測（§5.3）。合否を出さないので、表にはこの文を添える
+SECOND_VERSION_NOTE = [
+    "第2版（歪みガウス・ガンマ）の 4 行は主要評価ではない。**合否を出さない**（§5.2）。",
+    "理由: 第2版の採否は Wang 2013 の規準を切痕のある型1 の拍にだけ当てており"
+    "（lab_log 追記121 の逸脱）、採択が事実上「拍の型の判定」になる。",
+    "予測（§5.3。結果を見る前に書いた）: モニタ波形の平均拍は型3〜型5 が大半なので、"
+    "**採択率の症例中央値は 0 に近い値になる**。",
+    "  パイロットは歪みガウス・ガンマとも 0.000（34番 v158・20 例・360 ウィンドウ）。"
+    "同じパイロットで凍結版 2 カーネルは 0.778。",
+    "予測が外れても**この 4 行に合否を付け直さない**。事実を書くだけにとどめる（§8）。",
+]
 
 
 # ================================================================ 版と環境
@@ -355,7 +393,7 @@ def our_methods_on_beat(y, fs: float) -> dict:
     """平均拍 1 拍に、我々の 3 版の分解と特徴点法を当てる。
 
     **34番の `methods_on_beat` から、文献 6 本の再現（33番の呼び出し）だけを外したもの。**
-    事前登録 §5 が「文献 6 本の分解は主要評価に入れない」と決めており、Wang 2013 の
+    事前登録 §5.2 が「文献 6 本の分解は主要評価に入れない」と決めており、Wang 2013 の
     当てはめだけで 1 ウィンドウ十数秒かかるためである（文献の行が要るときは 34番を回す）。
     列名・順序・例外の扱いは 34番と同じにしてある。自己検査
     「段階2 の 1 拍が 34番の `methods_on_beat` と一致する」で毎回突き合わせる。
@@ -643,8 +681,13 @@ def row_values(summ, col: str, acc_col: str | None, with_ci: bool = True) -> dic
 
 
 def apply_criteria(summ, with_ci: bool = True) -> dict:
-    """事前規準（§7）を機械的に当てる。**この関数は閾値を決めない。**"""
-    res = {"control": None, "primary": [], "reference": []}
+    """事前規準（§7）を機械的に当てる。**この関数は閾値を決めない。**
+
+    合否（`pass`）が付くのは `res["primary"]`（§5.1 の 4 行）と `res["control"]` だけである。
+    `res["second"]`（第2版の 4 行）と `res["reference"]` には**どんな値でも合否を付けない**
+    （§5.2・§5.3）。自己検査「第2版には規準を超えても合否が付かない」で毎回確かめる。
+    """
+    res = {"control": None, "primary": [], "second": [], "reference": []}
     c = row_values(summ, CONTROL_ROW[0], CONTROL_ROW[3], with_ci)
     c.update({"label": CONTROL_ROW[1], "stage": CONTROL_ROW[2],
               "pass": bool(np.isfinite(c["ac"]) and c["ac"] >= GATE_CTL)})
@@ -663,6 +706,11 @@ def apply_criteria(summ, with_ci: bool = True) -> dict:
         r.update({"label": label, "stage": stage, "acc_col": acc,
                   "pass": ok_id and ok_ac, "why": "・".join(why)})
         res["primary"].append(r)
+    for col, label, stage, acc in SECOND_VERSION_ROWS:
+        r = row_values(summ, col, acc, with_ci)
+        # **合否は付けない**（§5.2）。採択率（id）と有限な値になった割合（finite）を並べるだけ
+        r.update({"label": label, "stage": stage, "acc_col": acc})
+        res["second"].append(r)
     for col, label, stage, acc in REFERENCE_ROWS:
         r = row_values(summ, col, acc, with_ci)
         r.update({"label": label, "stage": stage, "acc_col": acc})
@@ -718,7 +766,7 @@ def render_outcome(res: dict, meta: dict) -> list:
           "-" * W]
 
     L += ["", "-" * W,
-          f"1. 主要評価（§5 の 8 行。同定率の症例中央値 ≥ {GATE_ID:.2f} かつ "
+          f"1. 主要評価（§5.1 の {len(PRIMARY_ROWS)} 行。同定率の症例中央値 ≥ {GATE_ID:.2f} かつ "
           f"自己相関の症例中央値 ≥ {GATE_AC:.2f}）",
           "-" * W,
           "  " + rpad("指標", 34) + lpad("同定率", 7) + lpad("95%区間", 14)
@@ -735,7 +783,7 @@ def render_outcome(res: dict, meta: dict) -> list:
                  + lpad(verdict, 10) + "  " + (r["why"] if verdict in ("不成立",) else ""))
     L += ["",
           "  同定率の出どころ（§7）: 特徴点法・早期振幅比は「有限な値になったウィンドウ ÷ 解析できるウィンドウ」、",
-          "  分解由来は「その版の採否を通ったウィンドウ（採択率）÷ ブロックのウィンドウ」。",
+          "  分解由来（凍結版 2 カーネル）は「その版の収束検算を通ったウィンドウ（採択率）÷ ブロックのウィンドウ」。",
           "  95% 区間は症例を単位とした平滑化ブートストラップ（43番と同じ・"
           f"{M43.N_BOOT:,} 回・種 {M43.SEED}）。**判定には使わない**（§7）。",
           "  n は中央値を計算できた症例数。分母は母集団 "
@@ -743,14 +791,25 @@ def render_outcome(res: dict, meta: dict) -> list:
 
     dec = [r for r in res["primary"] if r["acc_col"]]
     if dec:
-        L += ["", "  分解由来の行の併記（§7。**記述であって合否には使わない**）",
+        L += ["", "  分解由来（凍結版 2 カーネル）の併記（§7。**記述であって合否には使わない**）",
               "  " + rpad("指標", 34) + lpad("採択率", 8) + lpad("有限な値の割合", 16)]
         for r in dec:
             L.append("  " + rpad(r["label"], 34) + lpad(_f(r["id"]), 8) + lpad(_f(r["finite"]), 16))
 
     L += ["", "-" * W,
-          "2. 参考（§5 で主要評価に入れないと決めた行・§9 の記述）。**合否を出さない**",
-          "-" * W,
+          "2. 参考（§5.2 で主要評価に入れないと決めた行・§9 の記述）。**合否を出さない**",
+          "-" * W]
+    L += ["  2-1. 第2版（歪みガウス・ガンマ）の 4 行 ― 採択率と有限な値になった割合の両方を出す（§5.2）",
+          "  " + rpad("指標", 34) + lpad("採択率", 8) + lpad("有限な値の割合", 16)
+          + lpad("自己相関", 10) + lpad("n採択率", 8) + lpad("n自己相関", 10) + lpad("判定", 10)]
+    for r in res.get("second", []):
+        # **判定の欄は必ず「―（合否を出さない）」である。**規準を超えていても付けない（§5.2）
+        L.append("  " + rpad(r["label"], 34) + lpad(_f(r["id"]), 8) + lpad(_f(r["finite"]), 16)
+                 + lpad(_f(r["ac"], 2, True), 10) + lpad(str(r["n_id"]), 8)
+                 + lpad(str(r["n_ac"]), 10) + lpad("―", 10))
+    for ln in SECOND_VERSION_NOTE:
+        L.append("  " + ln)
+    L += ["", "  2-2. そのほかの参考の行（§5.2・§9）",
           "  " + rpad("指標", 38) + lpad("同定率", 8) + lpad("自己相関", 10)
           + lpad("n同定", 6) + lpad("n自己相関", 10) + lpad("段階", 6)]
     for r in res["reference"]:
@@ -779,6 +838,8 @@ def render_outcome(res: dict, meta: dict) -> list:
                     and r["finite"] >= GATE_ID and np.isfinite(r["id"]) and r["id"] < GATE_ID):
                 L.append(f"          注 この行の不成立は採択率 {r['id']:.3f} による。"
                          f"有限な値になった割合は {r['finite']:.3f} である（§7 と §8 の前提の違い）")
+        L.append("  " + lpad("―", 6) + "  第2版（歪みガウス・ガンマ）の 4 行: 2-1 のとおり"
+                 "合否を出さない。§5.3 の予測と照らして述べるだけにする（§8）")
     L += ["",
           "  いずれの場合も、論文1 の結論（roadmap_v1.md §12.1）と論文2 の判定は動かさない（§8）。",
           "  同定は再現性までで、妥当性（何を測っているか）は別の問いである（§2・§12）。",
@@ -792,7 +853,11 @@ def outcome_json(res: dict, meta: dict) -> dict:
                                               "n_done", "n_failed", "date", "env_dependent")},
             "control": {"ac": res["control"]["ac"], "pass": res["control"]["pass"]},
             "primary": {r["col"]: {"label": r["label"], "id": r["id"], "ac": r["ac"],
-                                   "pass": bool(r["pass"])} for r in res["primary"]}}
+                                   "pass": bool(r["pass"])} for r in res["primary"]},
+            # **第2版には `pass` を入れない**（§5.2）。環境どうしの突き合わせ
+            # （`compare_environments`）も `primary` しか見ないので、合否は生まれない
+            "second": {r["col"]: {"label": r["label"], "acc": r["id"], "finite": r["finite"],
+                                  "ac": r["ac"]} for r in res.get("second", [])}}
 
 
 def compare_environments(res: dict, other: dict) -> list:
@@ -1186,16 +1251,30 @@ def selftest() -> int:                    # noqa: C901
     rep("解析できるウィンドウの条件と段階1 の対の数が 32番と同じ",
         MIN_GOOD == M32.MIN_GOOD == 8 and MIN_PAIRS_WIN == M32.MIN_PAIRS == 10)
     rep("段階2 の対の数は 34番の summarize と同じ 8", MIN_PAIRS_BLOCK == 8,
-        "34番 summarize の min_pairs=8。事前登録 §3 の本文は 32番の 10 を引いている")
+        "34番 summarize の min_pairs=8。事前登録 版 1 の §3 が段階1 の 10 とあわせて明記")
     rep("ブロックの取り方が 34番と同じ（3 ブロック × 連続 6）",
         (N_BLOCKS, BLOCK_LEN) == (M34.N_BLOCKS, M34.BLOCK_LEN) == (3, 6))
     rep("主環境が 42番・CLAUDE.md §4 と同じ 5 つ",
         REF == M42.REF and REF["vitaldb"] == "1.5.8" and REF["python"] == "3.9.6", str(REF["numpy"]))
-    rep("主要評価は 8 行、陽性対照 1 行（§5）", len(PRIMARY_ROWS) == 8)
-    rep("分解由来の 6 行に採否列がある（同定率に採択率を使う。§7）",
-        sum(1 for _c, _l, _s, a in PRIMARY_ROWS if a) == 6)
-    rep("文献 6 本の分解は入れない（§5）",
-        not any("Goswami" in lab or "Wang" in lab or "Basso" in lab for _c, lab, _s, _a in PRIMARY_ROWS))
+    rep("主要評価は 4 行、陽性対照 1 行（版 1 の §5.1）", len(PRIMARY_ROWS) == 4)
+    rep("主要評価の 4 行は 特徴点法 ΔT・早期振幅比・凍結版 ΔT・凍結版 RI（§5.1）",
+        [c for c, _l, _s, _a in PRIMARY_ROWS] == ["ens_dt_lm_ms", "ens_amb", "dt_v1_ms", "ri_v1"])
+    rep("**第2版の 4 行は主要評価に入っていない（版 1・§5.2）**",
+        not any(c.endswith(("_v2_ms", "_v2g_ms")) or c in ("ri_v2", "ri_v2g")
+                for c, _l, _s, _a in PRIMARY_ROWS)
+        and [c for c, _l, _s, _a in SECOND_VERSION_ROWS] == ["dt_v2_ms", "ri_v2",
+                                                             "dt_v2g_ms", "ri_v2g"])
+    rep("凍結版の 2 行に採否列がある（同定率に採択率を使う。§7）",
+        sum(1 for _c, _l, _s, a in PRIMARY_ROWS if a) == 2
+        and all(a for _c, _l, _s, a in PRIMARY_ROWS[2:]))
+    rep("第2版の 4 行にも採否列がある（採択率を印字するため。§5.2）",
+        all(a for _c, _l, _s, a in SECOND_VERSION_ROWS))
+    rep("段階2 の列は今までどおり 6 本すべて計算する（第2版も値は出す）",
+        all(c in BLOCK_COLS for c, _l, _s, _a in SECOND_VERSION_ROWS)
+        and set(BLOCK_OK_COLS) == {"ok_v1", "ok_v2", "ok_v2g"})
+    rep("文献 6 本の分解は入れない（§5.2）",
+        not any("Goswami" in lab or "Wang" in lab or "Basso" in lab
+                for _c, lab, _s, _a in PRIMARY_ROWS + SECOND_VERSION_ROWS + REFERENCE_ROWS))
     rep("信頼区間は 43番の方法A（2,000 回・種 0）", M43.N_BOOT == 2000 and M43.SEED == 0)
 
     # ---------------- 2. 除外する症例が文書と一致するか
@@ -1274,7 +1353,7 @@ def selftest() -> int:                    # noqa: C901
 
     def fake(n=21, **kw):
         d = {"caseid": list(range(1, n + 1)), "ac_pwtt_ms": [0.80] * n, "id_pwtt_ms": [1.0] * n}
-        for c, _l, _s, acc in PRIMARY_ROWS:
+        for c, _l, _s, acc in PRIMARY_ROWS + SECOND_VERSION_ROWS:
             d[f"id_{c}"] = [0.99] * n
             d[f"ac_{c}"] = [0.99] * n
             if acc:
@@ -1304,16 +1383,34 @@ def selftest() -> int:                    # noqa: C901
     r = apply_criteria(fake(ac_pwtt_ms=0.49), with_ci=False)
     rep("陽性対照 0.49 は不合格（0.50 に達しない）", not r["control"]["pass"])
     rep("陽性対照 0.50 ちょうどは合格", apply_criteria(fake(ac_pwtt_ms=0.50), with_ci=False)["control"]["pass"])
-    # 分解由来は採択率で判定する（§7）。有限な値の割合が 1.00 でも採択率が低ければ不成立
+    # 分解由来（凍結版）は採択率で判定する（§7）。有限な値の割合が 1.00 でも採択率が低ければ不成立
     s = fake()
-    s["acc_ok_v2"] = [0.10] * 21
-    s["id_dt_v2_ms"] = [1.00] * 21
+    s["acc_ok_v1"] = [0.10] * 21
+    s["id_dt_v1_ms"] = [1.00] * 21
     r = apply_criteria(s, with_ci=False)
-    row = [x for x in r["primary"] if x["col"] == "dt_v2_ms"][0]
-    rep("分解由来は採択率で判定し、有限な値の割合は併記だけ（§7）",
+    row = [x for x in r["primary"] if x["col"] == "dt_v1_ms"][0]
+    rep("分解由来（凍結版）は採択率で判定し、有限な値の割合は併記だけ（§7）",
         not row["pass"] and row["id"] == 0.10 and row["finite"] == 1.00,
         f"採択率 {row['id']:.2f}・有限 {row['finite']:.2f}")
     rep("参考の行には合否が付かない", all("pass" not in x for x in r["reference"]))
+    # **第2版は規準を超えていても合否を出さない**（版 1・§5.2）。
+    # `fake()` は第2版の採択率・自己相関を 0.99（0.70／0.30 のどちらも上回る）で作る
+    s2 = fake()
+    r2 = apply_criteria(s2, with_ci=False)
+    sec = r2["second"]
+    rep("第2版の 4 行は res['second'] に入り、res['primary'] に無い（§5.2）",
+        [x["col"] for x in sec] == ["dt_v2_ms", "ri_v2", "dt_v2g_ms", "ri_v2g"]
+        and not any(x["col"] in ("dt_v2_ms", "ri_v2", "dt_v2g_ms", "ri_v2g")
+                    for x in r2["primary"]))
+    rep("**第2版は採択率 0.99・自己相関 +0.99 と規準を超えていても合否が付かない（§5.2）**",
+        all(x["id"] >= GATE_ID and x["ac"] >= GATE_AC for x in sec)
+        and all("pass" not in x for x in sec),
+        f"採択率 {sec[0]['id']:.2f}・自己相関 {sec[0]['ac']:+.2f}・合否なし {len(sec)} 行")
+    rep("第2版は採択率と有限な値になった割合の両方を持つ（§5.2）",
+        all(np.isfinite(x["id"]) and np.isfinite(x["finite"]) for x in sec))
+    rep("合否と突き合わせる json にも第2版の `pass` は入らない（§10）",
+        all("pass" not in v for v in outcome_json(r2, {}).get("second", {}).values())
+        and set(outcome_json(r2, {})["primary"]) == {c for c, _l, _s, _a in PRIMARY_ROWS})
     # 欠測のある症例は中央値に入らないが、分母（母集団）は変わらない
     s = fake()
     s.loc[s.index[:5], "ac_ens_amb"] = np.nan
@@ -1503,9 +1600,19 @@ def selftest() -> int:                    # noqa: C901
         a = render_outcome(res, meta)
         b = render_outcome(res, meta)
         rep("表は二度組み立てても 1 行も違わない（時刻を読まない）", a == b, f"{len(a)} 行")
-        rep("表に主要評価の 8 行と陽性対照と読み方が載る",
-            sum(1 for ln in a if any(lab in ln for _c, lab, _s, _x in PRIMARY_ROWS)) >= 8
+        rep("表に主要評価の 4 行と陽性対照と読み方が載る",
+            all(any(lab in ln for ln in a) for _c, lab, _s, _x in PRIMARY_ROWS)
             and any("陽性対照" in ln for ln in a) and any("結果の読み方" in ln for ln in a))
+        rep("第2版の 4 行は参考の節に載り、判定の欄が「―」である（§5.2）",
+            all(any(lab in ln and ln.rstrip().endswith("―") for ln in a)
+                for _c, lab, _s, _x in SECOND_VERSION_ROWS)
+            and any("2-1. 第2版" in ln for ln in a))
+        rep("第2版の予測（採択率はほぼ 0）が表に写る（§5.3）",
+            any("採択率の症例中央値は 0 に近い値になる" in ln for ln in a)
+            and any("0.778" in ln for ln in a))
+        rep("**第2版の行に 成立／不成立 が書かれない（規準を超えていても。§5.2）**",
+            not any(any(lab in ln for _c, lab, _s, _x in SECOND_VERSION_ROWS)
+                    and ("成立" in ln) for ln in a))
         meta_env = dict(meta, env_dependent=True)
         c_env = render_outcome(res, meta_env)
         rep("環境依存なら判定を出さず、その旨が表に出る（§8）",
