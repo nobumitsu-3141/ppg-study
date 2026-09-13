@@ -97,7 +97,7 @@
 
     python3 analysis/scripts/44_paper3_identifiability.py --pilot --jobs 4
     python3 analysis/scripts/44_paper3_identifiability.py --pilot --estimate
-    python3 analysis/scripts/44_paper3_identifiability.py --pilot --pilot-ref-32 docs/research/results/32_vitaldb_landmark_summary_mac1_v158.csv
+    python3 analysis/scripts/44_paper3_identifiability.py --pilot --pilot-ref-32 docs/research/results/32_vitaldb_landmark_summary_v158.csv
 
 凍結後に母集団 840 例を回して集計する
 
@@ -983,13 +983,14 @@ def age_lines(summ) -> list:
 
 
 # ================================================================ パイロットの再現（§13）
-PILOT_REF_32 = RESULTS / "32_vitaldb_landmark_summary_v158.csv"
+PILOT_REF_32 = RESULTS / "32_vitaldb_landmark_summary_mac1_v158.csv"   # 1 台目（主環境）で回した 32番の表（91ea703）
+PILOT_REF_32_CLOUD = RESULTS / "32_vitaldb_landmark_summary_v158.csv"  # 雲で回した表（lab_log 追記23）。環境の差の記録用
 PILOT_REF_34 = [DATA / "vitaldb_methods_v158" / "summary.csv",
                 DATA / "vitaldb_methods" / "summary.csv",
                 RESULTS / "34_vitaldb_methods_summary_v158.csv"]
 
 
-PILOT_REPORT_32 = RESULTS / "32_vitaldb_landmark_report_v158.txt"
+PILOT_REPORT_32 = RESULTS / "32_vitaldb_landmark_report_mac1_v158.txt"
 
 
 def pilot_report_versions(path: Path | None = None) -> dict:
@@ -1675,8 +1676,8 @@ def main() -> None:                       # noqa: C901
     ap.add_argument("--allow-env-mismatch", action="store_true",
                     help="主環境と版が違っても走らせる（出力はすべて環境依存と記す）")
     ap.add_argument("--pilot-ref-32", type=str, default=None,
-                    help="--pilot の段階1 の照合先 CSV。既定は docs/research/results/32_vitaldb_landmark_summary_v158.csv"
-                         "（雲で作った表。lab_log 追記23）。同じ機械で 32番を回した summary.csv を指すと環境の差が消える")
+                    help="--pilot の段階1 の照合先 CSV。既定は docs/research/results/32_vitaldb_landmark_summary_mac1_v158.csv"
+                         "（1 台目で回した 32番の表）。雲の表 32_vitaldb_landmark_summary_v158.csv を指すと環境の差が見える")
     ap.add_argument("--pilot-ref-34", type=str, default=None,
                     help="--pilot の段階2 の照合先 CSV。既定は data/vitaldb_methods*/summary.csv の順に探す")
     ap.add_argument("--refresh-stale", action="store_true",
@@ -1806,9 +1807,11 @@ def main() -> None:                       # noqa: C901
             ref32 = Path(args.pilot_ref_32) if args.pilot_ref_32 else PILOT_REF_32
             print("\n段階1（32番）")
             if ref32 == PILOT_REF_32:
-                print("  注意: 既定の照合先は雲（Python 3.11・NumPy 2.4・SciPy 1.17・pandas 3.0・vitaldb 1.5.8）で"
-                      "作った表である（lab_log 追記23）。環境が違えば段階1 の値は一致しない（追記24）。\n"
-                      "        同じ機械で 32番を回した summary.csv を --pilot-ref-32 で指すこと。")
+                print("  照合先は 1 台目（主環境）で 2026-09-13 に 32番を回した表（91ea703）。同じ環境なら段階1 は"
+                      "35 列すべて最大差 0 で再現する（lab_log 追記125）。")
+            elif ref32 == PILOT_REF_32_CLOUD:
+                print("  注意: この照合先は雲（Python 3.11・NumPy 2.4・SciPy 1.17・pandas 3.0・vitaldb 1.5.8）で"
+                      "作った表である（lab_log 追記23）。環境が違えば段階1 の値は一致しない（追記24・追記124）。")
             for ln in compare_pilot(summ, ref32):
                 print(ln)
             ref34 = Path(args.pilot_ref_34) if args.pilot_ref_34 else find_pilot_ref_34()
