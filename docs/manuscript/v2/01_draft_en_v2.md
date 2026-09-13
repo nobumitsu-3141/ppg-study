@@ -1184,7 +1184,7 @@ Figures are produced by `analysis/scripts/07_figures.py` in the archived code.
 27. Yang S, Sohn J, Lee S, Lee J, Kim HC. Estimation and validation of arterial blood
     pressure using photoplethysmogram morphology features in conjunction with pulse
     arrival time in large open databases. IEEE J Biomed Health Inform.
-    2021;25(4):1018-1030. PMID 32750963. **← 引用漏れは隠蔽と受け取られる。最重要**
+    2021;25(4):1018-1030. PMID 32750963.
 28. Lee J, Yang S, Lee S, Kim HC. Analysis of pulse arrival time as an indicator of blood
     pressure in a large surgical biosignal database. J Clin Med. 2019;8(11):1773.
     PMID 31653002.
