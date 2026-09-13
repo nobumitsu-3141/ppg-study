@@ -8243,3 +8243,21 @@ ms 単位の分散分解を足す（Opus。既存の節の出力は変えない�
    ms 単位の SD（12.1／17.5／19.0）を結果に足す（Sonnet。README_v2 の Q）。
 
 分担: 読みは Fable、原稿は Sonnet、実行は先生（1 台目）。
+
+## 2026-09-13（追記129）　解析の一覧を A4 横 1 枚の PDF にした。一覧の生成器をリポジトリに入れた
+
+- `docs/research/analysis_catalog_a4.pdf`（A4 横・1 ページ・Noto Sans JP・葉 7.6 pt）。全体像（問い → 3 論文 → 枝 → 葉 36 件）と
+  各論文の答え、種別の凡例。全表（45 行）は入らないので、`analysis_catalog.md` と閲覧ページに残す。組版の HTML は
+  `analysis_catalog_a4.html`。実装は Opus、確認は Fable（はみ出し無し・PDF の本文に葉と答えがすべて入ることを機械で確認）。
+- 一覧の生成器 `build_catalog.py` はこれまでクラウドの作業場（セッション限り）にしかなく、`analysis_catalog.md` を作り直せなくなる
+  危険があった。`tools/catalog/` に移し、出力先をリポジトリ相対にした。移した版で作り直した markdown は元と 1 バイトも違わない。
+  閲覧ページの HTML も `docs/research/analysis_catalog.html` に置く。
+
+作り直し方（クラウドか Mac。Chromium と Noto Sans JP が要る。Mac なら `fc-match "Noto Sans JP"` で確かめる）:
+
+    python3 tools/catalog/build_catalog.py
+    python3 tools/catalog/make_a4.py --selftest
+    python3 tools/catalog/make_a4.py
+
+`make_a4.py` の Chromium の場所は `/opt/pw-browsers/chromium-*/chrome-linux/chrome`（クラウド）を探す。Mac では
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` を `--chrome` で渡す必要がある（未実装。次に Mac で使うときに足す）。

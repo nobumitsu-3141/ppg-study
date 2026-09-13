@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>解析の一覧（A4 横 1 ページ）</title>
+<style>
+@page { size: A4 landscape; margin: 9mm; }
+* { box-sizing: border-box; }
+html {
+  padding: 9mm; margin: 0; background: #E7E4DE;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
+}
+body {
+  margin: 0; padding: 0; background: #FCFBF8; color: #17181A;
+  font-family: "Noto Sans JP", "WenQuanYi Zen Hei", sans-serif;
+  font-variant-numeric: tabular-nums; font-feature-settings: "palt" 1;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
+}
+@media print {
+  html { padding: 0; background: #FCFBF8; }
+}
+.page {
+  width: 279mm; height: 192mm; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* 見出し帯 */
+.head { display: flex; align-items: flex-end; gap: 6mm; padding-bottom: 1.5mm; }
+.head-l { flex: 1 1 auto; min-width: 0; }
+.h1row { display: flex; align-items: baseline; gap: 3.2mm; }
+h1 { margin: 0; font-size: 16.5pt; font-weight: 700; letter-spacing: .06em; }
+.date { font-size: 8.0pt; color: #5E5C57; font-variant-numeric: tabular-nums; }
+.q { margin-top: 1.1mm; font-size: 8.6pt; line-height: 1.3; color: #2C2E31; }
+.head-r { flex: 0 0 auto; text-align: right; font-size: 6.3pt;
+  line-height: 1.45; color: #6B6862; max-width: 72mm; }
+.rule { height: 0; border-top: .5pt solid #2C2E31; }
+
+/* 本体 3 列 */
+.body { flex: 1 1 auto; min-height: 0; display: flex; padding-top: 3.0mm; }
+.col { min-width: 0; padding: 0 3.4mm; }
+.col:first-child { padding-left: 0; }
+.col:last-child { padding-right: 0; }
+.col + .col { border-left: .4pt solid #D9D6D0; }
+.col.c1 { flex: 0 0 41.5%; }
+.col.c2 { flex: 0 0 31.0%; }
+.col.c3 { flex: 0 0 27.5%; display: flex; flex-direction: column; }
+.gextra { margin-top: auto; }
+
+.phead { margin-bottom: 2.0mm; }
+.pname { font-size: 10.0pt; font-weight: 700; letter-spacing: .03em; }
+.psub { font-size: 6.8pt; line-height: 1.34; color: #6B6862; margin-top: .5mm; }
+
+.brh { display: flex; align-items: center; gap: 1.6mm; margin: 2.8mm 0 1.3mm; }
+.brh:first-of-type { margin-top: 1.4mm; }
+.brl { font-size: 7.0pt; letter-spacing: .12em; white-space: nowrap; }
+.brr { flex: 1 1 auto; height: .9pt; opacity: .55; }
+
+.leaf {
+  font-size: 7.6pt; line-height: 1.32; margin-bottom: 1.95mm;
+  padding-left: 3.4mm; text-indent: -3.4mm; color: #17181A;
+}
+.chip {
+  font-family: "DejaVu Sans Mono", "Noto Sans JP", monospace;
+  font-size: 7.0pt; color: #24262A;
+  background: #ECE9E2; border-radius: 1pt; padding: .15mm .7mm;
+  margin-right: 1.1mm; white-space: nowrap;
+}
+.chip.bare { background: none; padding: 0; margin-right: 0; white-space: normal; }
+.ltxt { }
+
+.gdiv { border-top: .4pt solid #D9D6D0; margin: 0 0 2.6mm; }
+
+/* 脚 */
+.foot { flex: 0 0 auto; padding-top: 3.0mm; }
+.foot-rule { height: 0; border-top: .5pt solid #C9C6C0; margin-bottom: 1.8mm; }
+.answers { display: flex; gap: 3.4mm; }
+.abox { flex: 1 1 0; min-width: 0; border-left: 1.4pt solid #888; padding-left: 2.0mm; }
+.aline { display: flex; align-items: baseline; gap: 1.6mm; }
+.aname { font-size: 7.4pt; font-weight: 700; white-space: nowrap;
+  letter-spacing: .04em; }
+.ahead { font-size: 7.8pt; font-weight: 700; }
+.abody { font-size: 6.8pt; line-height: 1.32; color: #4A4843; margin-top: .8mm; }
+.legend { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 4mm; margin-top: 2.4mm; }
+.lgs { display: flex; gap: 3.4mm; flex-wrap: wrap; font-size: 6.6pt; color: #4A4843; }
+.lg { display: inline-flex; align-items: center; gap: 1.1mm; white-space: nowrap; }
+.lgd { width: 4.6mm; height: 1.1pt; display: inline-block; }
+.note { font-size: 6.3pt; color: #6B6862; white-space: nowrap; }
+#probe-json { display: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div class="head-l">
+      <div class="h1row"><h1>解析の一覧</h1><span class="date">2026-09-13</span></div>
+      <div class="q">問い ― 光電容積脈波の形態から作った血管指標（ΔT・SI・RI）で、脈波伝播時間法による心拍出量推定の較正定数を補正できるか</div>
+    </div>
+    <div class="head-r">docs/research/analysis_catalog.md ／<br>数値は結果ファイル・原稿の表・lab_log の追記から引用</div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="body">
+    <div class="col c1"><div class="phead"><div class="pname">論文1</div><div class="psub">VitalDB 862 例・161,737 ウィンドウ。前提検証と精度（事前登録）</div></div>
+<div class="brh" style="color:#0072B2"><span class="brl">確認的（事前登録）</span><span class="brr" style="background:#0072B2"></span></div>
+<div class="leaf"><span class="chip">03番</span><span class="ltxt">前提検証 r² 0.000／0.044、β ΔSI% −0.027。PE 26.9% → 27.2%（差 +0.2）。無益性の基準に該当</span></div>
+<div class="brh" style="color:#56B4E9"><span class="brl">感度解析</span><span class="brr" style="background:#56B4E9"></span></div>
+<div class="leaf"><span class="chip">09番</span><span class="ltxt">5 分・20 分に集約しても補正は改善しない（ΔPE 0.0／−0.2）。ΔHR% を入れると r² 0.077</span></div>
+<div class="leaf"><span class="chip">11番＋12番</span><span class="ltxt">定義・成分数・品質基準を変えた 9 通りすべてで悪化（+0.1〜+0.4）</span></div>
+<div class="leaf"><span class="chip">41番</span><span class="ltxt">β の 95% 信頼区間 4 本はいずれも 0 を含まない</span></div>
+<div class="brh" style="color:#D55E00"><span class="brl">探索的（凍結後）</span><span class="brr" style="background:#D55E00"></span></div>
+<div class="leaf"><span class="chip">06番</span><span class="ltxt">陽性対照 ρ(ΔT, 年齢) −0.197。RI は年齢と無関係で、この信号源では解釈しない</span></div>
+<div class="leaf"><span class="chip">13番</span><span class="ltxt">ΔPWTT% の説明は 血管 0.044 &lt; 心拍数 0.081 &lt; 平均血圧 0.139 &lt; 測定 4 変数 0.196</span></div>
+<div class="leaf"><span class="chip">14番</span><span class="ltxt">立ち上がり系の形態指標（抽出の見込みのみ。前提検証の結果は記録なし）</span></div>
+<div class="leaf"><span class="chip">16番</span><span class="ltxt">RI × 全身血管抵抗 +0.098。ただし参照側に構造的な循環がある</span></div>
+<div class="leaf"><span class="chip">35番＋36番</span><span class="ltxt">早期振幅比で問い直しても r² 0.0002・符号の揃い 51%</span></div>
+<div class="leaf"><span class="chip">37番・38番・39番</span><span class="ltxt">抵抗と血圧が逆向きのウィンドウで、抵抗側が有意な指標は一つも無い</span></div>
+<div class="leaf"><span class="chip">40番</span><span class="ltxt">125 Hz では 4 指標とも不採用。MIMIC-III を使う方針は取り下げ</span></div>
+<div class="brh" style="color:#8A8782"><span class="brl">研究1b ― 脈波伝播時間の分解</span><span class="brr" style="background:#8A8782"></span></div>
+<div class="leaf"><span class="chip">15番</span><span class="ltxt">T1 中央値 180 ms。末梢区間は可測性の基準を通る（自己相関 +0.654）</span></div>
+<div class="leaf"><span class="chip">21番</span><span class="ltxt">前駆出期を除いた末梢区間でも r² 0.008。打ち消し説は否定された。節4: 症例内 SD は T1 12.1 ms・末梢区間 17.5 ms で同じ桁。2 区間の変化は負に相関し、区間ごとの取り分「53% 対 7%」は歪んでいた（厳密に成り立つのは合計 0.977 のみ）</span></div>
+<div class="brh" style="color:#009E73"><span class="brl">方法の検証</span><span class="brr" style="background:#009E73"></span></div>
+<div class="leaf"><span class="chip">08番</span><span class="ltxt">拍の内部で時定数 0.25 秒に時変する利得だけが RI を +60.7% 壊す</span></div>
+<div class="leaf"><span class="chip">tests 9 本</span><span class="ltxt">合成データで処理系の各段を固定（実データ不使用）</span></div>
+<div class="brh" style="color:#777777"><span class="brl">道具</span><span class="brr" style="background:#777777"></span></div>
+<div class="leaf"><span class="chip bare">00番・01番・02番・05番・07番・10番・41番・42番</span></div></div>
+    <div class="col c2"><div class="phead"><div class="pname">論文2</div><div class="psub">Charlton PWDB 仮想被験者 4,374 名。真値既知の構成概念妥当性（事前登録）</div></div>
+<div class="brh" style="color:#0072B2"><span class="brl">確認的（事前登録）</span><span class="brr" style="background:#0072B2"></span></div>
+<div class="leaf"><span class="chip">20番</span><span class="ltxt">凍結版 PDA は ΔT 0.223／RI 0.207 で不成立</span></div>
+<div class="leaf"><span class="chip">23番</span><span class="ltxt">同じ波形の特徴点法は ΔT 0.710／RI 0.504 で成立。陽性対照 PTT 0.571</span></div>
+<div class="leaf"><span class="chip">26番</span><span class="ltxt">第2版も不成立（歪みガウスは採択 2/4,374・C 0.167）。早期振幅比 0.836 は成立</span></div>
+<div class="leaf"><span class="chip">27番</span><span class="ltxt">どの閾値でも不成立（採否を全部外しても 0.054）</span></div>
+<div class="brh" style="color:#009E73"><span class="brl">方法の検証</span><span class="brr" style="background:#009E73"></span></div>
+<div class="leaf"><span class="chip">25番</span><span class="ltxt">第2版を合成脈波で検証（67 項目 ALL PASS）</span></div>
+<div class="leaf"><span class="chip">28番</span><span class="ltxt">乱数 150 拍の不変条件。領域内の誤採用 3/48・3/68 で門番を通過</span></div>
+<div class="leaf"><span class="chip">24番</span><span class="ltxt">実装の切り分けの道具（合成データのみ。PWDB 本番の結果は記録なし）</span></div>
+<div class="brh" style="color:#D55E00"><span class="brl">探索（事後）</span><span class="brr" style="background:#D55E00"></span></div>
+<div class="leaf"><span class="chip">29番</span><span class="ltxt">失敗は 2 様式 ― 右歪みの裾が浅い切痕を埋める／ガンマが境界に張り付く（97.5%）</span></div>
+<div class="leaf"><span class="chip">31番</span><span class="ltxt">基底 12 通りの最良は 0.56。当てはまりを良くする方向と真値を追う方向は逆</span></div>
+<div class="leaf"><span class="chip">33番</span><span class="ltxt">文献 6 本の条件でも ΔT の最良は 0.578。RI は Couceiro の R1_d 0.585 のみ</span></div>
+<div class="leaf"><span class="chip">45番</span><span class="ltxt">RI を心拍数で調整しても改善しない ― 割ると 0.207→0.293（6/6 層）まで上がるが、末梢血管抵抗の分母 HR を共有するだけ</span></div>
+<div class="leaf"><span class="chip">46番</span><span class="ltxt">成分の入れ替わりは 2.9%・除いても向上せず。同梱 PTT 0.571 は周期の取り違え 22.2% が原因 ― 補正後 0.986</span></div>
+<div class="brh" style="color:#777777"><span class="brl">道具</span><span class="brr" style="background:#777777"></span></div>
+<div class="leaf"><span class="chip">22番</span><span class="ltxt">PWDB の巨大 zip から 3 ファイルだけを取り出す</span></div></div>
+    <div class="col c3"><div class="phead"><div class="pname">論文3（計画中）</div><div class="psub">実機のモニタ波形で指標を同定できるか</div></div>
+<div class="leaf"><span class="chip">32番</span><span class="ltxt">特徴点法 ΔT 0.67／0.64「同定できない」、早期振幅比 0.95／0.36「同定できる」</span></div>
+<div class="leaf"><span class="chip">34番</span><span class="ltxt">分解由来は常に値を返す（同定率 1.00 対 0.61）が、年齢の向きを持たない</span></div>
+<div class="leaf"><span class="chip">43番</span><span class="ltxt">症例数は 315／335 例。母集団 840 例の全例を解析すると決定</span></div>
+<div class="leaf"><span class="chip">44番</span><span class="ltxt">SAP 版 1（未凍結）に合わせた台本（1,892 行・自己検査 86 件 ALL PASS）。判定行は 4 行＋陽性対照、第2版は参考。実データは未着手</span></div>
+<div class="gextra"><div class="gdiv"></div>
+<div class="phead"><div class="pname">中止・閉じたもの</div></div>
+<div class="leaf"><span class="chip">30番</span><span class="ltxt">フェニレフリンの用量ステップ ― 成立する動作点が無く、SAP-1d は凍結しない</span></div>
+<div class="leaf"><span class="chip">40番</span><span class="ltxt">MIMIC-III（125 Hz）― 4 指標とも不採用で、この道は閉じた</span></div>
+<div class="leaf"><span class="chip">研究2（生波形）・研究3</span><span class="ltxt">― 行わない（roadmap_v1.md §12.2）</span></div></div></div>
+  </div>
+
+  <div class="foot">
+    <div class="foot-rule"></div>
+    <div class="answers"><div class="abox" style="border-left-color:#0072B2"><div class="aline"><span class="aname" style="color:#0072B2">論文1</span><span class="ahead">説明しない。</span></div><div class="abody">r² 0.000（原点通過）／0.044（切片あり）、β ΔSI% −0.027（95%CI −0.033〜−0.021）。</div></div><div class="abox" style="border-left-color:#009E73"><div class="aline"><span class="aname" style="color:#009E73">論文2</span><span class="ahead">追わない。</span></div><div class="abody">分解由来は凍結版 0.223／0.207、第2版 歪みガウス 0.167（採択 2/4,374）。</div></div><div class="abox" style="border-left-color:#D55E00"><div class="aline"><span class="aname" style="color:#D55E00">論文3（計画中）</span><span class="ahead">まだ出ていない。</span></div><div class="abody">20 例の予備的検討では特徴点法 ΔT 0.67／0.64 で「同定できない」、早期振幅比 0.95／0.36 で「同定できる」（32番）。</div></div></div>
+    <div class="legend">
+      <div class="lgs"><span class="lg"><span class="lgd" style="background:#0072B2"></span>確認的（事前登録）</span><span class="lg"><span class="lgd" style="background:#D55E00"></span>探索的</span><span class="lg"><span class="lgd" style="background:#009E73"></span>方法の検証</span><span class="lg"><span class="lgd" style="background:#56B4E9"></span>感度解析</span><span class="lg"><span class="lgd" style="background:#777777"></span>道具・その他</span></div>
+      <div class="note">全表（45 行）と出典は analysis_catalog.md と閲覧ページにある</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
