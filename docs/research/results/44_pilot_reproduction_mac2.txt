@@ -1,0 +1,84 @@
+/Users/kawazoenobumitsu/ppg-study/analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+症例 20 例のうち、処理するのは 20 例（済み 0 例・台本の版が古い 0 例）
+/Users/kawazoenobumitsu/ppg-study/analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+/Users/kawazoenobumitsu/ppg-study/analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+/Users/kawazoenobumitsu/ppg-study/analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+/Users/kawazoenobumitsu/ppg-study/analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+  case 418: 段階1 ウィンドウ 322（18 秒）・段階2 ウィンドウ 18（33 秒）  [1/20・経過 0.9 分・0.9 分/例・残り約 0.3 時間]
+  case 217: 段階1 ウィンドウ 270（17 秒）・段階2 ウィンドウ 18（46 秒）  [2/20・経過 1.1 分・0.5 分/例・残り約 0.2 時間]
+  case 1030: 段階1 ウィンドウ 179（16 秒）・段階2 ウィンドウ 18（48 秒）  [3/20・経過 1.1 分・0.4 分/例・残り約 0.1 時間]
+  case 97: 段階1 ウィンドウ 257（18 秒）・段階2 ウィンドウ 18（69 秒）  [4/20・経過 1.5 分・0.4 分/例・残り約 0.1 時間]
+  case 1602: 段階1 ウィンドウ 431（16 秒）・段階2 ウィンドウ 18（29 秒）  [5/20・経過 1.6 分・0.3 分/例・残り約 0.1 時間]
+  case 3170: 段階1 ウィンドウ 182（5 秒）・段階2 ウィンドウ 18（34 秒）  [6/20・経過 2.1 分・0.4 分/例・残り約 0.1 時間]
+  case 1826: 段階1 ウィンドウ 137（5 秒）・段階2 ウィンドウ 18（63 秒）  [7/20・経過 2.2 分・0.3 分/例・残り約 0.1 時間]
+  case 3150: 段階1 ウィンドウ 340（10 秒）・段階2 ウィンドウ 18（64 秒）  [8/20・経過 2.3 分・0.3 分/例・残り約 0.1 時間]
+  case 3537: 段階1 ウィンドウ 381（13 秒）・段階2 ウィンドウ 18（17 秒）  [9/20・経過 2.6 分・0.3 分/例・残り約 0.1 時間]
+  case 3973: 段階1 ウィンドウ 360（13 秒）・段階2 ウィンドウ 18（14 秒）  [10/20・経過 2.8 分・0.3 分/例・残り約 0.0 時間]
+  case 3449: 段階1 ウィンドウ 184（7 秒）・段階2 ウィンドウ 18（68 秒）  [11/20・経過 2.9 分・0.3 分/例・残り約 0.0 時間]
+  case 4012: 段階1 ウィンドウ 116（5 秒）・段階2 ウィンドウ 18（18 秒）  [12/20・経過 3.0 分・0.3 分/例・残り約 0.0 時間]
+  case 5109: 段階1 ウィンドウ 350（11 秒）・段階2 ウィンドウ 18（46 秒）  [13/20・経過 4.0 分・0.3 分/例・残り約 0.0 時間]
+  case 4617: 段階1 ウィンドウ 294（9 秒）・段階2 ウィンドウ 18（60 秒）  [14/20・経過 4.0 分・0.3 分/例・残り約 0.0 時間]
+  case 3846: 段階1 ウィンドウ 426（14 秒）・段階2 ウィンドウ 18（95 秒）  [15/20・経過 4.0 分・0.3 分/例・残り約 0.0 時間]
+  case 4048: 段階1 ウィンドウ 83（3 秒）・段階2 ウィンドウ 18（72 秒）  [16/20・経過 4.0 分・0.3 分/例・残り約 0.0 時間]
+  case 5973: 段階1 ウィンドウ 259（11 秒）・段階2 ウィンドウ 18（25 秒）  [17/20・経過 4.6 分・0.3 分/例・残り約 0.0 時間]
+  case 6163: 段階1 ウィンドウ 196（7 秒）・段階2 ウィンドウ 18（41 秒）  [18/20・経過 4.8 分・0.3 分/例・残り約 0.0 時間]
+  case 5319: 段階1 ウィンドウ 482（24 秒）・段階2 ウィンドウ 18（30 秒）  [19/20・経過 4.9 分・0.3 分/例・残り約 0.0 時間]
+  case 5809: 段階1 ウィンドウ 406（16 秒）・段階2 ウィンドウ 18（73 秒）  [20/20・経過 5.5 分・0.3 分/例・残り約 0.0 時間]
+
+処理を終えた。失敗 0 例（分母は解析対象の全例。§3）
+
+================================================================================================
+パイロット 20 例の再現の確認（32番・34番が既に解析した症例。**新しい解析ではない**）
+================================================================================================
+  処理できた 20 例・失敗 0 例
+  vitaldb: 今 1.5.8 ／ パイロットの report 1.5.8  一致
+  pda2: 今 03727d43b293 ／ パイロットの report 03727d43b293  一致
+
+段階1（32番）
+  照合先は 1 台目（主環境）で 2026-09-13 に 32番を回した表（91ea703）。同じ環境なら段階1 は35 列すべて最大差 0 で再現する（lab_log 追記125）。
+  照合先 docs/research/results/32_vitaldb_landmark_summary_mac1_v158.csv・共通の症例 20 例
+  列                            最大の差  比べた例数  片方だけ欠測
+  med_ens_dt1_ms                0.000000          20             0
+  med_ens_dt_lm_ms              0.000000          20             0
+  beat_dt_sd_med                0.000000          20             0
+  hr_med                        0.000000          20             0
+  ac_ens_dt1_ms                 0.000000          12             0
+  ac_ens_dt_lm_ms               0.000000          19             0
+  beat_amb_ok_med               0.000000          20             0
+  beat_k13_med                  0.000000          20             0
+  beat_k1_med                   0.000000          20             0
+  frac_analyzable               0.000000          20             0
+  id_ens_amb                    0.000000          20             0
+  id_ens_dt_lm_ms               0.000000          20             0
+  id_pwtt_ms                    0.000000          20             0
+  med_ens_amb                   0.000000          20             0
+  cv_ens_amb                    0.000000          20             0
+  cv_pwtt_ms                    0.000000          20             0
+  ens_prom_med                  0.000000          20             0
+  ens_type3                     0.000000          20             0
+  sigma_med                     0.000000          20             0
+  ens_type5                     0.000000          20             0
+  beat_amb_sd_med               0.000000          20             0
+  cv_ens_dt1_ms                 0.000000          20             0
+  cv_ens_dt_lm_ms               0.000000          20             0
+  ens_type1                     0.000000          20             0
+  id_ens_dt1_ms                 0.000000          20             0
+  ens_type4                     0.000000          20             0
+  ac_ens_amb                    0.000000          20             0
+  ac_pwtt_ms                    0.000000          20             0
+  med_pwtt_ms                   0.000000          20             0
+  n_analyzable                  0.000000          20             0
+  n_windows                     0.000000          20             0
+  npair_ens_amb                 0.000000          20             0
+  npair_ens_dt1_ms              0.000000          20             0
+  npair_ens_dt_lm_ms            0.000000          20             0
+  npair_pwtt_ms                 0.000000          20             0
+
+段階2（34番）
+  照合先が無い（34番の症例ごとの表が見つからない）
