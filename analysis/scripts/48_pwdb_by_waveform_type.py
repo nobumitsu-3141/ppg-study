@@ -947,8 +947,11 @@ def selftest() -> int:
         b5 = io.StringIO()
         with redirect_stdout(b5):
             code_n, _o = report(d_real, str(DEFAULT_CSV), allow_partial=False)
-        rep("既定の CSV は --allow-partial 無しでは終了コード 2 で止まる",
-            code_n == 2, f"終了コード {code_n}")
+        # 抜粋（1 層 8 名未満）なら照合できずに exit 2、全例の表なら照合が一致して exit 0 になるはず。
+        # どちらの機械で走らせても意味のある検査になるよう、期待値を行数で切り替える。
+        want = 2 if len(d_real) < 100 else 0
+        rep("既定の CSV を --allow-partial 無しで走らせると、抜粋なら終了コード 2・全例の表なら 0",
+            code_n == want, f"{len(d_real)} 行・終了コード {code_n}（期待 {want}）")
         if len(d_real) < 100:
             short = out_r["s3"]["short"]
             no_age = all(s["n_ages"] == 0 for s in out_r["s3"]["s"].values())
