@@ -8,7 +8,7 @@
   size: A4 landscape;
   margin: 10mm 8mm 13mm 8mm;
   @top-left {
-    content: "解析の一覧 ― B. 一覧表（2026-09-13）";
+    content: "解析の一覧 ― B. 一覧表（2026-09-14）";
     font-family: "Noto Sans JP", "WenQuanYi Zen Hei", sans-serif;
     font-size: 6.5pt; color: #5E5C57; vertical-align: bottom;
   }
@@ -109,7 +109,7 @@ tr { break-inside: avoid; page-break-inside: avoid; }
     <th scope="col">分かったこと</th>
   </tr></thead>
   <tbody>
-    <tr class="grp"><td colspan="9">論文1（研究1・1b・1c・1d を含む） ― 25 行</td></tr>
+    <tr class="grp"><td colspan="9">論文1（研究1・1b・1c・1d を含む） ― 26 行</td></tr>
     <tr class="row">
       <th scope="row" class="c-no">01番</th>
       <td>共通（論文1）</td>
@@ -384,6 +384,17 @@ tr { break-inside: avoid; page-break-inside: avoid; }
       <td>1 台目（確定解析の機械）の症例別ウィンドウ数。</td>
       <td>2 台目の再構築は 862 例・161,738 ウィンドウで、1 台目の 161,737 と 9 症例が ±1 ウィンドウ違った（+1 が 5 例・−1 が 4 例）。5 分集約だけ 31,933 対 31,934 とずれ、20 分集約は 6,838 で一致。報告値は 3 桁では動かない（41_case_windows_mac1.csv・41_case_windows_mac2.csv、lab_log 追記111・追記114）。</td>
       <td>同じ版・同じ規準・同じコードでも、再構築はビット単位では一致しない。品質規準の境界にあるウィンドウの採否が機械で入れ替わる（862 例中 9 例・0.006%）。確定値は 1 台目のものを使い、再構築した機械の値に直さない。</td>
+    </tr>
+    <tr class="alt">
+      <th scope="row" class="c-no">47番</th>
+      <td>論文1（探索）</td>
+      <td><span class="chip k-expl">探索的（凍結後）</span></td>
+      <td>ΔT と血圧の関連を心拍数の調整つきで出す。凍結版 PDA と特徴点法で同じ指標（ΔT・RI）を同じウィンドウで出し、同じ相手（ΔMAP%・ΔHR%・ΔPWTT%・ΔT1%・Δ(T2−T1)%・年齢）との関連と両法の一致を並べる。先生の問い「ΔT と血圧は」「特徴点法の ΔT で解析したか」に答える（lab_log 追記133）。</td>
+      <td>ΔT_PDA = 身長/SI、RI_PDA（論文1 の features）。特徴点法は 32番の window_landmarks（pda2.find_landmarks・平均拍・型1・3）の ΔT に、平均拍の拡張期ピーク高さ ÷ 収縮期ピーク高さ（RI_LM）を足したもの。症例内 Spearman、ΔHR% を与えた偏順位相関、ΔT% ~ ΔMAP% + ΔHR% の回帰、心周期で正規化した ΔT、年齢との症例間 ρ、36番と同じ規約の前提検証の r²、両法の症例内 ρ と ms の差。</td>
+      <td>VitalDB 862 例（論文1 の採用症例）。features・features_art（15番）・features_lm（本台本が新しく抽出する data/features_lm/）を t0 で結合。全ウィンドウ（21番と同じ条件）と共通ウィンドウ（型1・3 で特徴点 ΔT・RI が有限）の 2 集合。32番・44番は変更しない。</td>
+      <td>計算前に固定した予測 P1〜P5（lab_log 追記133）: ΔMAP% との ρ は +0.10 以上で ΔHR% 調整後は半分以下、ΔHR% との ρ は −0.20 以下、特徴点 ΔT のほうが ΔT1% を追う（差 0.05 以上）、両法の ρ は +0.20 以上 +0.60 未満、特徴点法の前提検証の r²（切片あり）は 0.05 未満。判定は付けない。</td>
+      <td>未実行。Mac 1 で --extract（862 例。8 並列で 1〜2 時間の見込み）→ --stats-only。特徴点 ΔT・早期振幅比の同定率と自己相関は論文3 の主要評価項目なので印字しない。</td>
+      <td>（未実行）自前の特徴点実装は PWDB で ΔT 0.513・RI 0.236（33番。同梱値 0.705／0.501）なので、特徴点法の上限はこの実装の値である。共通ウィンドウは全体の約 3 分の 2（32番: 型4 が 34.9%）。論文3 の SAP を凍結する前に走らせるなら、規準 0.70／0.30 をその後に変えないこと。</td>
     </tr>
     <tr class="grp"><td colspan="9">論文2 ― 14 行</td></tr>
     <tr class="row">
