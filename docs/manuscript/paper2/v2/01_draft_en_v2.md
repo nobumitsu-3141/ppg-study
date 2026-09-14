@@ -54,25 +54,29 @@ component waves (the basis function) or to the published fitting conditions were
 in advance.
 
 **Results.** The positive control passed (median absolute correlation 0.571, predicted
-sign in all six decades). For the frozen decomposition, ΔT (the interval between the two
-component peaks) versus aortic pulse wave velocity reached 0.223 and the reflection
-index RI (the ratio of the peak heights) versus peripheral resistance 0.207; neither met
-the criterion. From the same waveforms, fiducial-point indices reached 0.710 and 0.504
-and the early amplitude ratio 0.836; all met it. The negative persisted in a version
-rebuilt to match five source papers (0.167), across twelve combinations of basis and
-component count (best 0.56), and under the fitting conditions of six published papers
-applied unchanged (best 0.578), neither approaching the fiducial-point value on the same
-subjects (0.71); the last two are explorations on subsets to which the six-stratum
-criterion was not applied. Adding components improved the fit to the waveform while
-lowering the correlation with truth. Pulse wave velocity had the largest effect on
-decomposition-derived ΔT (−17.0% from −1 SD to +1 SD), but heart rate (−10.9%) and
-aortic diameter (−12.6%) had effects of the same size. Ordering the subjects of one age
-stratum by ΔT reproduced their ordering by heart rate (rank correlation −0.54) more
-closely than their ordering by pulse wave velocity (−0.26). When pulse wave velocity
-alone was moved across its low, middle and high levels, ΔT went 332, 353 and 251 ms: it
-lengthened and then shortened. A rank correlation assumes a monotone relation, so even
-the factor with the largest change in the mean (the largest main effect) can have a
-small rank correlation.
+sign in all six decades). A post hoc check showed that the distributed transit time had
+been assigned to the wrong cardiac cycle in 22.2% of subjects; correcting this raised the
+correlation to 0.986. For the frozen decomposition, ΔT (the interval between the two
+component peaks) versus aortic pulse wave velocity reached 0.223 and the reflection index
+RI (the ratio of the peak heights) versus peripheral resistance 0.207; neither met the
+criterion. From the same waveforms, fiducial-point indices reached 0.710 and 0.504 and the
+early amplitude ratio 0.836; all met it. The negative persisted in a version rebuilt to
+match five source papers (0.167), across twelve combinations of basis and component count
+(best 0.56), and under the fitting conditions of six published papers applied unchanged
+(best 0.578), neither approaching the fiducial-point value on the same subjects (0.71);
+the last two are explorations on subsets to which the six-stratum criterion was not
+applied. Adding components improved the fit to the waveform while lowering the correlation
+with truth. Pulse wave velocity had the largest effect on decomposition-derived ΔT (−17.0%
+from −1 SD to +1 SD), but heart rate (−10.9%) and aortic diameter (−12.6%) had effects of
+the same size. Ordering the subjects of one age stratum by ΔT reproduced their ordering by
+heart rate (rank correlation −0.54) more closely than their ordering by pulse wave
+velocity (−0.26). When pulse wave velocity alone was moved across its low, middle and high
+levels, ΔT went 332, 353 and 251 ms: it lengthened and then shortened. The exchange in
+which the second component captures the late-systolic rather than the diastolic wave
+occurred in 2.9% of the beats the frozen version accepted, and excluding those subjects
+left the correlation below 0.30. A rank correlation assumes a monotone relation, so even
+the factor with the largest change in the mean (the largest main effect) can have a small
+rank correlation.
 
 **Conclusions.** In a population where truth is known, vascular indices obtained by
 fitting the photoplethysmogram as a sum of component waves did not track aortic pulse wave
