@@ -61,11 +61,7 @@ correlated with aortic pulse wave velocity in the predicted direction in all six
 decades but weakly (median |ρ| 0.22), and RI with peripheral resistance at 0.21, whereas
 indices read directly from the systolic and diastolic peaks of the same waveforms
 (fiducial-point method) met the prespecified criterion (ΔT 0.71, reflection index 0.50,
-second-derivative ageing index 0.89). When PWTT was split, most within-case variation lay
-in the interval from the radial upstroke to the photoplethysmographic foot, and its size
-(a median within-case standard deviation of 17.5 ms) exceeds the physiological range of
-transit time there (4–16 ms), so it reads as movement of the photoplethysmographic foot
-time rather than arterial transit. Correcting the calibration constant did not improve
+second-derivative ageing index 0.89). When PWTT was split, the within-case variation of the interval from the radial upstroke to the photoplethysmographic foot (a median within-case standard deviation of 17.5 ms) was of the same order as that of the interval from the R wave to the radial upstroke (12.1 ms) and exceeds the physiological range of transit time there (4–16 ms), so it reads as movement of the photoplethysmographic foot time rather than arterial transit. Correcting the calibration constant did not improve
 accuracy (percentage error 27.2% corrected versus 26.9% uncorrected; difference +0.2
 points, 95% CI +0.1 to +0.4). With the early amplitude ratio, the explained fraction fell
 to 0.0002 and the within-case sign agreement fell to 51%, chance level.
@@ -659,8 +655,7 @@ sufficient data), but the correction improved accuracy at no aggregation level (
 the accuracy null is therefore not an artefact of the 60-second window. Adding heart rate
 to the premise regression raised the explained fraction from 0.000 to 0.077 while leaving
 the vascular coefficients essentially unchanged (ΔSI% −0.020, ΔRI% −0.003, ΔHR% −0.057):
-within-case PWTT variation tracks heart rate, not the vascular indices, and the vascular
-null is not produced by heart-rate confounding.
+within-case PWTT variation tracks heart rate, not the vascular indices, and the vascular null is not produced by heart-rate confounding [Md Lazin 2020].
 
 Nine analyses that required re-computing the indices from the waveforms were run on the
 same windows as the primary analysis (Table 6): (i) a re-computation under identical
@@ -721,10 +716,7 @@ photoplethysmographic foot, T2 − T1, passed the measurability gate (lag-1 auto
 wave to the radial upstroke, T1, was 180 ms (IQR 166–192). Δ(T2 − T1), which contains no
 pre-ejection period, was explained by ΔT no better than ΔPWTT was (r² = 0.008; within-case
 ρ +0.122 against +0.216 for ΔPWTT), so the null of the primary analysis is not produced by
-opposing movements of the pre-ejection period and transit time. Within cases, most of the
-variance of ΔPWTT lay in the interval from the radial upstroke to the
-photoplethysmographic foot: ΔPWTT% regressed on the relative change of that interval alone
-gave r² 0.534, on the interval from the R wave to the radial upstroke (ΔT1%) alone 0.073,
+opposing movements of the pre-ejection period and transit time. Within cases, ΔPWTT% regressed on the relative change of the interval from the radial upstroke to the photoplethysmographic foot alone gave r² 0.534, on the interval from the R wave to the radial upstroke (ΔT1%) alone 0.073,
 and on both together 0.977. Because PWTT is the sum of the two intervals, both together
 would explain it completely if fitted case by case; the pooled value falls short of 1
 because the two intervals make up different proportions of PWTT in different cases while a
@@ -916,14 +908,7 @@ pre-ejection period varies by tens of milliseconds under sympathetic activation 
 vascular indices. Most pointedly, the manufacturer's own investigators reported that the
 pre-ejection period accounted for approximately half of the change in PWTT [Sugo 2012].
 The present study confirms the first half of that mechanism — the vascular indices do not
-explain PWTT — but not the second: when PWTT was split at the radial line (§3.6), the term
-containing the pre-ejection period accounted for only 7% of its within-case variance, and
-removing it did not unmask a vascular relationship. In this intraoperative cohort most of
-the within-case variation of PWTT lay on the photoplethysmographic side of the
-measurement, in the interval from the radial upstroke to the photoplethysmographic foot,
-where a median within-case standard deviation of 17.5 ms exceeds the 4–16 ms physiological
-range of transit time, so it is read as movement of the photoplethysmographic foot time
-rather than arterial transit. That the vascular indices did not account for ΔPWTT is
+explain PWTT — but not the second: when PWTT was split at the radial line (§3.6), removing the term containing the pre-ejection period did not unmask a vascular relationship, and the within-case variation of the two intervals was of the same order (median within-case standard deviations 12.1 ms for the R-wave-to-radial interval and 17.5 ms for the interval from the radial upstroke to the photoplethysmographic foot). The latter, on the photoplethysmographic side of the measurement, exceeds the 4–16 ms physiological range of transit time, so it is read as movement of the photoplethysmographic foot time rather than arterial transit. That the vascular indices did not account for ΔPWTT is
 consistent with this, the variation not being transit. Either way, the result explains why
 improving the calibration procedure alone does not repair the method [Smetkin 2017].
 Consistent with it, when heart rate — a marker of chronotropic and autonomic state — was
@@ -954,12 +939,7 @@ therefore exists and is measurable; it is simply not what the pulse-decompositio
 captured. Second, all measured variables together (indices, pressure, heart rate)
 explained 0.196, whereas the lag-1 autocorrelation of PWTT (+0.75) implies a reproducible,
 non-noise component of roughly 0.56–0.75. A substantial reproducible fraction of PWTT
-variation therefore remains unexplained by anything we measured. Splitting PWTT at the
-radial line (§3.6) located most of that variance in the interval from the radial upstroke
-to the photoplethysmographic foot, whose true physiological range in a virtual population
-is only 4–16 ms against a median within-case standard deviation of 17.5 ms here, so it is
-more plausibly a property of how the photoplethysmographic foot is timed than of the
-vasculature or the heart. The honest statement is not that vascular correction has no
+variation therefore remains unexplained by anything we measured. Splitting PWTT at the radial line (§3.6) showed that the interval from the radial upstroke to the photoplethysmographic foot, whose true physiological range in a virtual population is only 4–16 ms, varied with a median within-case standard deviation of 17.5 ms here, so that variation is more plausibly a property of how the photoplethysmographic foot is timed than of the vasculature or the heart. The honest statement is not that vascular correction has no
 room, but that the room lies outside what single-site photoplethysmographic decomposition
 indices reach.
 
@@ -1060,10 +1040,7 @@ would recover the same information was not tested. Dynamic correction of the cal
 constant of transit-time cardiac output estimation using these indices has little room to
 work. Two directions follow, and both are testable in existing data: whether
 fiducial-point features survive in a processed monitor photoplethysmogram well enough to
-repeat the premise test, and the measurement of transit time itself, since most of the
-intraoperative variation lay on the photoplethysmographic side of the measurement, in the
-interval from the radial upstroke to the photoplethysmographic foot, whose physiological
-range of transit time is far too narrow to account for it.
+repeat the premise test, and the measurement of transit time itself, since the intraoperative variation on the photoplethysmographic side of the measurement, in the interval from the radial upstroke to the photoplethysmographic foot, exceeded the physiological range of transit time there.
 
 ## Figure legends
 
