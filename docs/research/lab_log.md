@@ -8261,3 +8261,17 @@ ms 単位の分散分解を足す（Opus。既存の節の出力は変えない�
 
 `make_a4.py` の Chromium の場所は `/opt/pw-browsers/chromium-*/chrome-linux/chrome`（クラウド）を探す。Mac では
 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` を `--chrome` で渡す必要がある（未実装。次に Mac で使うときに足す）。
+
+## 2026-09-14（追記130）　解析の一覧 B（一覧表 45 行・9 列）を A4 横 8 ページの PDF にした
+
+- `docs/research/analysis_catalog_table.pdf`（8 ページ・A4 横・列は 9 列のまま・見出し行は各ページに繰り返し・行はページを
+  またがない・論文ごとに区切りの行〔論文1 25 行・論文2 14 行・論文3 3 行・共通 3 行〕・ページ番号つき）。組版は
+  `analysis_catalog_table.html`、台本は `tools/catalog/make_table_pdf.py`（`--selftest` 55 項目 ALL PASS）。実装は Opus、
+  確認は Fable（45 行の番号がすべて本文にあること、各行が 1 ページに収まること、1 ページ目と 8 ページ目の見た目）。
+- 34番（論文3／論文2）は 論文2 の群に入れた（論文1 → 2 → 3 の順で最初に当たった論文に割り当てる規則）。
+- c7f0b34 で `tools/catalog/__pycache__/*.pyc` を誤って追跡していたので外し、`.gitignore` に `__pycache__/` を足した。
+
+作り直し方:
+
+    python3 tools/catalog/build_catalog.py
+    python3 tools/catalog/make_table_pdf.py
