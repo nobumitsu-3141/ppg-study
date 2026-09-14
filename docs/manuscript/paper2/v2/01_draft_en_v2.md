@@ -391,20 +391,25 @@ Neither decomposition version passed. The frozen version passed its convergence 
 4,036 of 4,374 subjects (92%), so all three tiers could be evaluated. The skew-Gaussian
 route of the rebuilt version accepted almost no beats (2 of 4,374) because the
 right-skewed tail filled in the shallow notch and displaced the fiducial points by 15–25
-ms, more than the 6 ms tolerance of the Wang criterion, and changing the thresholds does
-not raise the acceptance. Two accepted beats cannot support a verdict, so this route is
-read on the fitted values of all subjects (tier C), and that only two beats were
+ms, more than the 6 ms tolerance of the Wang criterion. In the prespecified sensitivity
+analysis, loosening the time tolerance to 12 ms, 25 ms and no limit did not yield enough
+accepted subjects per stratum for a verdict (ΔT versus aortic PWV 0.33, 0.41 and 0.23),
+and removing every acceptance criterion accepted 77.5% of subjects but gave 0.054. On the
+gamma route, removing every criterion accepted 91.9% and gave 0.554 for ΔT versus aortic
+PWV and 0.286 for RI versus peripheral resistance. The verdict is therefore not a product
+of the acceptance thresholds. Two accepted beats cannot support a verdict, so this route
+is read on the fitted values of all subjects (tier C), and that only two beats were
 accepted is itself a result: tiers A and B could therefore not be evaluated, and tier C
-did not reach the threshold. The gamma route accepted 103 beats and passed some tiers
-but not all, and **87.4% of accepted beats had at least one parameter resting on a
-search bound**. Widening the bounds moved the correlation among *accepted* beats to
-0.119, but left the all-subject value unchanged at 0.55 (§3.3); the right reading of the
-pinning is therefore that the parameters of this basis are not identified in these beats
-— more than one parameter set reproduces the waveform — rather than that the search
-range fixes the answer. Note that the rebuilt version was evaluated on tier C only, that
-is, on beats it would itself have rejected; this asymmetry could work against
-decomposition, but the frozen version, evaluated on the beats it accepted, reached only
-0.223, so the conclusion does not depend on how acceptance is handled.
+did not reach the threshold. The gamma route accepted 103 beats and passed some tiers but
+not all, and **87.4% of accepted beats had at least one parameter resting on a search
+bound**. Widening the bounds moved the correlation among *accepted* beats to 0.119, but
+left the all-subject value unchanged at 0.55 (§3.3); the right reading of the pinning is
+therefore that the parameters of this basis are not identified in these beats — more than
+one parameter set reproduces the waveform — rather than that the search range fixes the
+answer. Note that the rebuilt version was evaluated on tier C only, that is, on beats it
+would itself have rejected; this asymmetry could work against decomposition, but the
+frozen version, evaluated on the beats it accepted, reached only 0.223, so the conclusion
+does not depend on how acceptance is handled.
 
 Two further fiducial-point indices passed (SI versus PWV 0.710; the second-derivative ageing
 index AGI_mod 0.885) and one failed (augmentation index versus resistance 0.143). Defining
