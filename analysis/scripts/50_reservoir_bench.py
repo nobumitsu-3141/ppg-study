@@ -82,7 +82,9 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
   出す表     型ごとに、時定数の層ごとの 順位相関 ρ・|誤差| の中央値・全拍の最小・
              下限の詰まり（新旧 2 つの規準。下記）、
              診断の表（凍結版と同じ収束検算の規則を当てた 通過・Δμ が探索範囲の下限に
-             張り付いた拍数・境界・高さ・別解の拍数。**採否には使わない**）、および
+             張り付いた拍数・境界・高さ・別解の拍数。**採否には使わない**）と、その下に
+             境界の内訳（どの母数が探索範囲の端に付いたか。掃引は拍数が少ないので
+             割合ではなく拍数で出す）、および
              1 拍ずつの表（真値・型・各当てはめの返り値と誤差・特徴点法）
 
 **下限の詰まりの規準（2026-09-15 に差し替えた）**: 真値の小さいほうから 3 拍で、
@@ -200,16 +202,28 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              （`dt_lm_ms`・`digital_ri`）は 23番の `load` で読む（26番と同じ扱い）。
              波形の型 `klass_own` は 26番と同じ手順（`pda2.preprocess` →
              `find_landmarks`）で**この台本が自分で付ける**
-  当てはめ   `--variants`（既定 `fb,relax,conv,conv01,trunc` ＝ (0)(2)(4)(4b)(6)）。
-             節A と同じ `fit_kind` を呼ぶ。(0) は `src/pda.py` の `fit_beat` そのもので、
-             26番の `dt_v1_ms`・`ri_v1`・`ok_v1` と一致するはずである（C0 で照合する）
+  当てはめ   `--variants`（既定 `fb,relax,conv,conv01,trunc,trunc08,decay`
+             ＝ (0)(2)(4)(4b)(6)(6b)(3)）。節A と同じ `fit_kind` を呼ぶ。(0) は
+             `src/pda.py` の `fit_beat` そのもので、26番の `dt_v1_ms`・`ri_v1`・`ok_v1` と
+             一致するはずである（C0 で照合する）。
+             **(6b) と (3) は 2026-09-15 の実データの結果を見てから足した**（lab_log
+             追記144）。(6b) は打ち切りと Δμ の緩和を実データで分けて読むためである
+             （合成脈波では (6) の 2 つの変更が同時に効いていて分けられなかったが、
+             実データでは Δμ の下限に 1 拍も張り付かない）。(3) 自由な減衰項は合成では
+             効かなかったが、実データで効いているのは拡張期の下降の扱いなので、順位が
+             変わりうる。どちらも「どの変更が効いたか」を分けて読むための行で、判定の
+             規準は動かさない（この台本はもともと事後の探索である）
   記録       `data/pwdb/50_refit.csv`（`--refit-csv` で変えられる。`--limit N` のときは
              `50_refit_limitN.csv`。26番の CSV と同じ規約で、限った実行が全例の記録を
-             上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・残差と、
+             上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・残差・
+             **境界の内訳**（`pin_{型}`。端に付いた母数を「s2:hi;al2:hi」のように並べる。
+             どれも付かなければ「-」）と、
              `subj_no`・`fs`・`n_samp`・`klass_own`・`sys_own_ms`・`dia_own_ms`・
              `why`（失敗の理由。no_beat／preprocess_none／EXC:…）・版（python・numpy・scipy）
-  再開       既定で再開する。記録にある被験者のうち、頼まれた型がすべて入っているものは
-             飛ばし、足りない型だけを当てて記録を書き直す（`--no-resume` で全部やり直す）
+  再開       既定で再開する。記録にある被験者のうち、頼まれた型の列が**すべて**入って
+             いるものは飛ばし、足りない型だけを当てて記録を書き直す（`--no-resume` で
+             全部やり直す）。**2026-09-15 より前に書いた記録は `pin_{型}` の列が無いので、
+             その型は当てはめ直される**（境界の内訳が無いと C1b が出せないため）
   並べ方     `--limit N` は 26番と同じ**等間隔**の取り方（先頭 N 名ではない。年齢層内で
              読むので全層が要る）。`--jobs J` は 26番と同じ ProcessPoolExecutor
 
@@ -217,6 +231,9 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
       `klass_own`）と一致するか（`--csv` があるときだけ）
   C1  型（1・3・4・全）ごとの採否と縮退。通過率（凍結版と同じ収束検算の規則）と、
       Δμ が探索範囲の下限に張り付いた割合・境界・高さ・別解の割合（C 段）
+  C1b 境界の内訳。C1 の「境界率」がどの母数のものかを、型 × 当てはめごとに多い順で
+      並べる（`s2:hi 0.71・al2:hi 0.33` のように、上位 5 個と解が出た拍に対する割合）。
+      1 拍が複数の母数で端に付くことがあるので、割合の合計は 1 にならない
   C2  ΔT × 大動脈脈波伝播速度（`PWV_a`・向き 負）。型 × 当てはめ × 段（A・C）の表。
       ます目は |ρ| の中央値（向きの合った層数／評価できた層数）と 20番 `_judge` の規準
   C3  RI × 末梢血管抵抗（`pvr`・向き 正）。同じ表に加え、型3・A 段の年齢層別 ρ
@@ -246,6 +263,11 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
 起点 8 点。畳み込みの 2 型が母数 10 個で重い）。4,374 名では **1 コアで約 4.7 時間、
 `--jobs 8` で 35〜40 分**である。最初に書いた「10 分前後」は 1 当てはめ 0.16 秒という
 低い見積もりから出した誤りで、実測に置き換えた。
+既定の型を 7 つに増やしたので（(6b)(3) を足した。lab_log 追記144）、**1 名あたり
+約 5.5 秒・4,374 名で 1 コアで約 6.6 時間・`--jobs 8` で 50〜60 分**になる見込みである。
+これは実測 3.9 秒（5 型）を型の数で割って 7 倍した概算で、実測ではない。足した 2 型の
+うち (3) は母数 10 個で重く、(6b) は 8 母数で打ち切るぶん軽いので、型ごとの重さは
+同じではない。
 
 **進み具合を 200 名ごとに印字し、400 名ごとに途中の記録を書く**（`PROGRESS_EVERY`・
 `CKPT_EVERY`）。印字が無いと止まっているように見えるため 2026-09-15 に足した。
@@ -646,17 +668,78 @@ def _ri_of(x, kind: str, t0: float, t1: float) -> float:
     return h2 / max(h1, 1e-9)
 
 
+# 母数の名前（並びは `_bounds`・`_components` と同じ）。「境界」の印だけでは**どの母数が
+# 端に付いたか**が分からないので、内訳を名前で残す（2026-09-15 に足した）。実データの節C
+# では (4) 畳み込みの境界率が型3 で 0.903 に達したのに τ上限率は 0.006 しかなく、どの母数が
+# 端に付いているのかを印から読めなかった（lab_log 追記144）。
+PIN_NAMES8 = ("a1", "mu1", "s1", "al1", "a2", "dmu", "s2", "al2")
+PIN_NONE = "-"      # 解は出たが、どの母数も端に付かなかった拍の印（欠測と区別する）
+PIN_MAX = 60        # 記録（CSV）に書く内訳の長さの上限 [文字]
+PIN_TOP = 5         # C1b に並べる母数の数（多い順）
+
+
+def _pin_names(kind: str) -> tuple:
+    """型ごとの母数の名前。8 母数の並びは `src/pda.py` と同じ。
+
+    `tied`（(5)(5b)）は末尾 2 つ（s2・al2）を σ の比 c に置き換えて 7 母数、
+    `decay`（(3)）・`conv`（(4)(4b)）は貯留槽の g・τ を足して 10 母数になる。
+    (0) は `fit_beat` の模型そのもので 8 母数である。
+    """
+    shape = KIND_SHAPE.get(kind, "plain")
+    if shape == "tied":
+        return PIN_NAMES8[:6] + ("c",)
+    if shape in ("decay", "conv"):
+        return PIN_NAMES8 + ("g", "tau")
+    return PIN_NAMES8
+
+
+def _pins_of(p, lo, hi, kind: str):
+    """探索範囲の端から CHK_TOL 以内にある母数を「名前:lo」「名前:hi」で並べる。
+
+    数えない母数は `boundary` と同じである（歪度 α の下限・貯留槽の g の下限・τ の
+    上限）。τ の上限は別の印 tau_hi で数えるので、この内訳には入れない。
+
+    返り値は (内訳, 下限に付いた印, 上限に付いた印, τ が上限か) で、`boundary` は
+    呼ぶ側が今までどおり 2 つの印から作る。こうしておけば内訳と `boundary` が
+    食い違わない（内訳が空でないことと `boundary` が真であることは同値になる）。
+    """
+    p = np.asarray(p, float)
+    lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
+    names = _pin_names(kind)
+    shape = KIND_SHAPE.get(kind, "plain")
+    skip_lo = {3}                            # α1 の下限（対称ガウスは正当な解）
+    if shape != "tied":
+        skip_lo.add(7)                       # α2 の下限（同上。形を縛る型に α2 は無い）
+    if shape in ("decay", "conv"):
+        skip_lo.add(8)                       # g の下限（g = 0 は「貯留槽なし」の解）
+    lo_hit = np.abs(p - lo_a) < CHK_TOL
+    for i in skip_lo:
+        lo_hit[i] = False
+    hi_hit = np.abs(p - hi_a) < CHK_TOL
+    tau_hi = False
+    if shape in ("decay", "conv"):
+        tau_hi = bool(hi_hit[9])             # τ の上限は境界に数えず、別の印にする
+        hi_hit[9] = False
+    pins = []
+    for i, nm in enumerate(names):
+        if lo_hit[i]:
+            pins.append(f"{nm}:lo")
+        if hi_hit[i]:
+            pins.append(f"{nm}:hi")
+    return pins, lo_hit, hi_hit, tau_hi
+
+
 def _checks_fail() -> dict:
     """当てはめそのものが成らなかった拍の診断（通過しなかったとだけ記録する）。"""
     return {"dmu_lo": False, "boundary": False, "amp_zero": False,
-            "ambiguous": False, "tau_hi": False, "ok": False}
+            "ambiguous": False, "tau_hi": False, "ok": False, "pins": []}
 
 
 def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
               t0: float, t1: float) -> dict:
     """凍結版 `fit_beat` の収束検算と同じ規則を解に当てる。**記録するだけで採否に使わない。**
 
-    返す印は次の 5 つ。
+    返す印は次の 6 つと、境界の内訳 `pins` である。
 
         dmu_lo     Δμ が探索範囲の下限に張り付いた（2 成分の縮退の目安。`fit_beat` には
                    無い印で、この台本が下限の詰まりを数えるために足した）
@@ -672,22 +755,13 @@ def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
         ambiguous  RSS が CHK_RSS 倍以内で Δμ が CHK_DMU 以上離れ、RI も CHK_RI 以上
                    違う解がある（`fit_beat` の reproducible の否定）
         ok         boundary・amp_zero・ambiguous のいずれでもない（`fit_beat` の ok）
+        pins       境界に付いた母数の名前（「s2:hi」のように どちらの端かまで書く。
+                   数え方は boundary と同じなので、空でないことと boundary が真で
+                   あることは同値である。τ の上限は tau_hi にだけ数える）
     """
     p = np.asarray(best.x, float)
-    lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
-    skip_lo = {3}                            # α1 の下限（対称ガウスは正当な解）
-    if KIND_SHAPE[kind] != "tied":
-        skip_lo.add(7)                       # α2 の下限（同上。形を縛る型に α2 は無い）
-    if KIND_SHAPE[kind] in ("decay", "conv"):
-        skip_lo.add(8)                       # g の下限（g = 0 は「貯留槽なし」の解）
-    lo_hit = np.abs(p - lo_a) < CHK_TOL
-    for i in skip_lo:
-        lo_hit[i] = False
-    hi_hit = np.abs(p - hi_a) < CHK_TOL
-    tau_hi = False
-    if KIND_SHAPE[kind] in ("decay", "conv"):
-        tau_hi = bool(hi_hit[9])             # τ の上限は境界に数えず、別の印にする
-        hi_hit[9] = False
+    lo_a = np.asarray(lo, float)
+    pins, lo_hit, hi_hit, tau_hi = _pins_of(p, lo, hi, kind)
     boundary = bool(np.any(lo_hit) or np.any(hi_hit))
     ri_best = h2 / max(h1, 1e-9)
     ambiguous = any(abs(_ri_of(r.x, kind, t0, t1) - ri_best) > CHK_RI for r in sols
@@ -697,7 +771,8 @@ def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
     return {"dmu_lo": bool(p[5] - lo_a[5] < CHK_TOL),
             "boundary": boundary, "amp_zero": amp_zero, "ambiguous": bool(ambiguous),
             "tau_hi": tau_hi,
-            "ok": bool((not boundary) and (not amp_zero) and (not ambiguous))}
+            "ok": bool((not boundary) and (not amp_zero) and (not ambiguous)),
+            "pins": pins}
 
 
 def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
@@ -713,13 +788,20 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
 
     型 `fb`（(0) 凍結版本体）だけは `src/pda.py` の `fit_beat` を既定の引数でそのまま
     呼ぶ。正規化は `fit_beat` が中で行うので生の y を渡す（`_norm` と同じ扱いである）。
-    `fit_beat` が返す収束検算の結果はそのまま `checks` に写す。
+    `fit_beat` が返す収束検算の結果はそのまま `checks` に写す。境界の内訳 `pins` だけは
+    `fit_beat` が返さないので、同じ探索範囲を作り直してこの台本が数える。
     """
     if kind == "fb":
         try:
             r = pda.fit_beat(t, y)
             c1, c2 = r["components"][0], r["components"][1]
             ck = r["checks"]
+            # 境界の内訳。`_bounds8` の式は `fit_beat` の lo・hi と同じもので、Δμ の
+            # 下限も `fit_beat` の既定（0.08 s）である。正規化も `fit_beat` の中と同じ
+            # （床を 0 に合わせて最大で割る）なので、探索範囲は 1 対 1 で復元できる。
+            # 採否・境界・高さ・別解は `fit_beat` 自身の検算のままで、内訳だけを足す。
+            lo_fb, hi_fb = _bounds8(np.asarray(t, float), _norm(y), DMU_LO_FROZEN)
+            pins = _pins_of(r["params"], lo_fb, hi_fb, "fb")[0]
             return {"dt_s": float(c2["t_peak"] - c1["t_peak"]),
                     "ri": float(c2["height"]) / max(float(c1["height"]), 1e-9),
                     "ok": bool(r["ok"]), "cost": float(r["rss"]) / 2.0,
@@ -729,7 +811,8 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
                         "boundary": bool(ck["boundary_stick"]),
                         "amp_zero": bool(ck["amp_zero"]),
                         "ambiguous": bool(not ck["reproducible"]),
-                        "ok": bool(r["ok"])}}
+                        "ok": bool(r["ok"]),
+                        "pins": pins}}
         except Exception:
             return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
                     "cost": float("nan"), "checks": _checks_fail()}
@@ -962,6 +1045,24 @@ def print_checks(rec: dict) -> None:
               + _pad(_cnt(rows, "amp_zero"), 12, right=True)
               + _pad(_cnt(rows, "ambiguous"), 8, right=True)
               + _pad(_cnt(rows, "tau_hi"), 8, right=True))
+
+    # 境界の内訳（どの母数が端に付いたか）。掃引は 7〜10 拍しかないので、割合ではなく
+    # 拍数で出す。境界に 1 拍も付かなかった型は行を出さない。
+    lines = []
+    for k in keys:
+        cnt = {}
+        for c in chk[k]:
+            for nm in c.get("pins", ()):
+                cnt[nm] = cnt.get(nm, 0) + 1
+        if cnt:
+            lines.append("    " + _pad(f"{_kind_no(k)} {KIND_HEAD[k]}", 18)
+                         + "・".join(f"{nm} {v} 拍" for nm, v
+                                     in sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0]))))
+    if lines:
+        print("    境界の内訳（どの母数が探索範囲の端に付いたか。拍数。1 拍が複数の母数で"
+              "付くことがある）:")
+        for ln in lines:
+            print(ln)
 
 
 def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
@@ -1634,7 +1735,14 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
 # 節A・節A-2 で候補になった当てはめの型を、**26番と同じ拍**（PWDB の指尖 PPG）に当て直し、
 # 26番の枠組み（波形の型・A 段と C 段・年齢層内 Spearman）でそのまま並べる。
 # **探索・事後であり、26番の事前規準による判定は動かさない。**
-VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "trunc")
+# 既定の型は 7 つ。(6b) と (3) は 2026-09-15 の実データの結果を見て足した（lab_log 追記144）。
+# (6b) は**打ち切りと Δμ の緩和を分けて読む**ために要る。合成脈波では 2 つが同時に効いて
+# いたが（(6) は両方を変えてある）、実データでは Δμ の下限に 1 拍も張り付かないので、
+# 打ち切り単独の (6b) が (6) と同じ結果になるかどうかで、効き目の出どころが分かる。
+# (3) 自由な減衰項は合成では効かなかったが、実データで効いているのは拡張期の下降の扱い
+# なので、合成とは違う順位になりうる。**この 2 つを足したのは結果を見た後だが、どちらも
+# 「どの変更が効いたか」を分けて読むための行で、判定の規準は動かさない（事後の探索）。**
+VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "trunc", "trunc08", "decay")
 REFIT_NAME = "50_refit.csv"     # 再当てはめの記録（--refit-csv で変えられる）
 # 記録に残す診断の列の頭 → `fit_kind` が返す `checks` の鍵
 CHK_COLS = (("dmulo", "dmu_lo"), ("bnd", "boundary"), ("amp", "amp_zero"),
@@ -1694,13 +1802,14 @@ def refit_subject(args_tuple):
     """
     subj, row, hr, variants = args_tuple
     out = {"subj_no": int(subj)}
-    for k in variants:                    # 先に空で埋める（再開の判定が `ok_{型}` を見る）
+    for k in variants:                    # 先に空で埋める（当てはめが成らなければこのまま）
         out[f"dt_{k}_ms"] = float("nan")
         out[f"ri_{k}"] = float("nan")
         out[f"ok_{k}"] = 0
         for tag, _q in CHK_COLS:
             out[f"{tag}_{k}"] = float("nan")
         out[f"cost_{k}"] = float("nan")
+        out[f"pin_{k}"] = ""              # 境界の内訳（空＝当てはめが成らなかった拍）
     why = []
     try:
         y, fs = M.beat_of(row, hr)
@@ -1732,6 +1841,9 @@ def refit_subject(args_tuple):
                 for tag, q in CHK_COLS:
                     out[f"{tag}_{k}"] = int(bool(ck[q]))
                 out[f"cost_{k}"] = float(r["cost"])
+                # 境界の内訳。どの母数も端に付かなかった拍は PIN_NONE を書く
+                # （空欄のままだと CSV から読み直したときに欠測と区別できない）。
+                out[f"pin_{k}"] = (";".join(ck.get("pins", [])) or PIN_NONE)[:PIN_MAX]
             except Exception as e:        # noqa: BLE001
                 why.append((f"EXC:{k}:" + str(e))[:40])
     except Exception as e:                # noqa: BLE001
@@ -1772,16 +1884,32 @@ def _cached_rows(path: Path) -> dict:
 
 
 def _has_variant(rec: dict, k: str) -> bool:
-    """記録にその型の結果が入っているか（`ok_{型}` が書かれているかで見る）。"""
+    """記録にその型の結果が入っているか。
+
+    その型が書く列（`dt_`・`ri_`・`ok_`・診断の印・`cost_`・`pin_`）が**すべて**
+    埋まっているときだけ「入っている」と見なし、1 つでも欠けていれば当てはめ直す。
+    2026-09-15 までは `ok_{型}` だけを見ていたが、それでは `pin_`（境界の内訳）を
+    足す前に書いた記録をそのまま使ってしまい、C1b が空のままになる（lab_log 追記144）。
+    当てはめが成らなかった拍（`dt_` が欠測）も、この規則では毎回やり直すことになる。
+    拍を作れない被験者は `beat_of` の段で即座に戻るので、費用は小さい。
+    """
     if not rec:
         return False
-    v = rec.get(f"ok_{k}")
-    if v is None:
+    num = ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}"]
+           + [f"{tag}_{k}" for tag, _q in CHK_COLS] + [f"cost_{k}"])
+    for c in num:
+        v = rec.get(c)
+        if v is None:
+            return False
+        try:
+            if not np.isfinite(float(v)):
+                return False
+        except (TypeError, ValueError):
+            return False
+    pin = rec.get(f"pin_{k}")              # 文字の列なので float では見られない
+    if pin is None or (isinstance(pin, float) and not np.isfinite(pin)):
         return False
-    try:
-        return bool(np.isfinite(float(v)))
-    except (TypeError, ValueError):
-        return False
+    return str(pin).strip() != ""
 
 
 def _order_cols(df: pd.DataFrame, variants) -> pd.DataFrame:
@@ -1790,7 +1918,8 @@ def _order_cols(df: pd.DataFrame, variants) -> pd.DataFrame:
     per = []
     for k in variants:
         per += ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}"]
-                + [f"{tag}_{k}" for tag, _q in CHK_COLS] + [f"cost_{k}"])
+                + [f"{tag}_{k}" for tag, _q in CHK_COLS]
+                + [f"cost_{k}", f"pin_{k}"])
     tail = ["why", "python_version", "numpy_version", "scipy_version"]
     order = [c for c in head + per + tail if c in df.columns]
     rest = [c for c in df.columns if c not in order]
@@ -2012,6 +2141,7 @@ def print_c1(d: pd.DataFrame, variants) -> dict:
     print("  「Δμ下限率」は Δμ が探索範囲の下限に張り付いた割合で、2 成分の縮退の目安である。")
     print("  n は当てはめを試した拍の数（拍を作れなかった被験者は数えない）。縮退の 4 列は、")
     print("  解が出た拍だけを分母にする。")
+    print("  「境界率」がどの母数のものかは、次の C1b に内訳を出す。")
     out = {}
     for kt, kname in _ktypes():
         g = _sub_k(d, kt)
@@ -2032,6 +2162,65 @@ def print_c1(d: pd.DataFrame, variants) -> dict:
             print("    " + _pad(_kind_lab(k), 18) + _pad(n, 8, right=True)
                   + _f(rec["ok"], 10)
                   + "".join(_f(rec[t], 12) for t, _q in CHK_COLS))
+    print("\n  出典: この台本（50番）の節C が PWDB の拍に当てはめ直して数えた値。")
+    return out
+
+
+# ---------------------------------------------------------------- C1b
+def _pin_counts(g: pd.DataFrame, k: str) -> tuple:
+    """その型の境界の内訳を数える。返り値は (解が出た拍の数, [(母数, 拍数), ...] 多い順)。
+
+    記録の `pin_{型}` は「s2:hi;al2:hi」のように並べた文字である。欠測（当てはめが
+    成らなかった拍）は分母に入れない。PIN_NONE は「解は出たが、どの母数も端に
+    付かなかった拍」なので分母には入れ、内訳には数えない。記録は PIN_MAX 文字で
+    切ってあるので、末尾が途中で切れた語（`:lo`・`:hi` で終わらない）は数えない。
+    """
+    col = f"pin_{k}"
+    if col not in g.columns:
+        return 0, []
+    n, cnt = 0, {}
+    for v in g[col]:
+        if v is None or (isinstance(v, float) and not np.isfinite(v)):
+            continue
+        txt = str(v).strip()
+        if txt == "" or txt.lower() == "nan":
+            continue
+        n += 1
+        if txt == PIN_NONE:
+            continue
+        for nm in txt.split(";"):
+            nm = nm.strip()
+            if nm.endswith((":lo", ":hi")):
+                cnt[nm] = cnt.get(nm, 0) + 1
+    return n, sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
+def print_c1b(d: pd.DataFrame, variants) -> dict:
+    """C1b 境界の内訳（C1 の「境界率」がどの母数のものかを型ごとに並べる）。"""
+    print("\n" + "-" * 100)
+    print("C1b. 境界の内訳: C1 の「境界率」はどの母数が探索範囲の端に付いたものか（C 段）")
+    print("-" * 100)
+    print("  1 つの拍が複数の母数で端に付くことがあるので、**割合の合計は 1 にならない。**")
+    print("  母数の名前は a1・mu1・s1・al1（第1成分の 高さ・位置・幅・歪度）、"
+          "a2・dmu・s2・al2（第2成分）、")
+    print("  g・tau（貯留槽）、c（形を縛る型の σ の比）で、:lo は下限・:hi は上限に付いた"
+          "ことを表す。")
+    print("  数え方は C1 の「境界率」と同じ（歪度 α の下限・g の下限・τ の上限は数えない。"
+          "τ の上限は")
+    print(f"  「τ上限率」で見る）。分母は解が出た拍で、多い順に上位 {PIN_TOP} 個まで出す。")
+    out = {}
+    for kt, _kname in _ktypes():
+        g = _sub_k(d, kt)
+        lab = KLASS_LABEL.get(kt, "全例（型を分けない）")
+        print(f"\n  {lab}  n = {len(g)} 名")
+        print("    " + _pad("当てはめの型", 18) + _pad("n", 8, right=True)
+              + "  " + "張り付いた母数（多い順・数字は解が出た拍に対する割合）")
+        for k in variants:
+            n, rows = _pin_counts(g, k)
+            out[(kt, k)] = {"n": n, "rows": rows}
+            txt = ("—" if not rows or not n
+                   else "・".join(f"{nm} {c / n:.2f}" for nm, c in rows[:PIN_TOP]))
+            print("    " + _pad(_kind_lab(k), 18) + _pad(n, 8, right=True) + "  " + txt)
     print("\n  出典: この台本（50番）の節C が PWDB の拍に当てはめ直して数えた値。")
     return out
 
@@ -2316,6 +2505,7 @@ def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
            "variants": variants}
     out["c0"] = print_c0(d, variants)
     out["c1"] = print_c1(d, variants)
+    out["c1b"] = print_c1b(d, variants)
     out["c2"] = print_c2(d, variants)
     out["c3"] = print_c3(d, variants)
     out["c4"] = print_c4(d, variants)
@@ -2634,6 +2824,32 @@ def selftest() -> int:
     rep("(1) の診断は (0) の検算と一致する", n_dif == 0,
         f"{n_chk} 拍で 通過・境界・高さ・別解 の 4 つを照合し、食い違い {n_dif} 拍")
 
+    # 境界の内訳（2026-09-15 に足した）。内訳が空でないことと「境界」の印が立つことは
+    # 同値でなければならない（τ の上限は境界に数えないので、内訳にも入らない）。
+    n_pin, n_bad_pin, n_any = 0, 0, 0
+    for rc in list(res.values()) + list(a2["res"].values()):
+        for k in KIND_KEYS:
+            for c in rc["checks"][k]:
+                n_pin += 1
+                pins = c.get("pins", [])
+                n_any += int(bool(pins))
+                if bool(pins) != bool(c["boundary"]):
+                    n_bad_pin += 1
+    rep("境界の内訳は「境界」の印と食い違わない（空でないことと境界が立つことが同値）",
+        n_bad_pin == 0 and n_any > 0,
+        f"節A {len(TAUS_FAST)} 層・節A-2 {len(RI_CONDS)} 条件 × 当てはめ "
+        f"{len(KIND_KEYS)} 型の {n_pin} 拍で照合し、食い違い {n_bad_pin} 拍"
+        f"（内訳が空でない拍は {n_any}）")
+
+    n_dif_pin = 0
+    for rc in list(res.values()) + list(a2["res"].values()):
+        for c_fb, c_fz in zip(rc["checks"]["fb"], rc["checks"]["frozen"]):
+            if list(c_fb.get("pins", [])) != list(c_fz.get("pins", [])):
+                n_dif_pin += 1
+    rep("(1) の境界の内訳は (0) のものと同じ（母数の名前まで一致する）",
+        n_dif_pin == 0,
+        f"{n_chk} 拍で照合し、食い違い {n_dif_pin} 拍")
+
     n_bad = 0
     for rc in list(res.values()) + list(a2["res"].values()):
         for k in KIND_KEYS:
@@ -2761,6 +2977,26 @@ def selftest() -> int:
             and refit_p.read_text(encoding="utf-8") == txt_first,
             f"当てはめ直した {c2['info']['n_fit']} 名・再利用 {c2['info']['n_cache']} 名")
 
+        # 境界の内訳の列（2026-09-15 に足した）。これが無い記録は古いので、再開の
+        # ときに当てはめ直されなければならない。列を落とした記録を作って確かめる。
+        pin_cols = [f"pin_{k}" for k in vars_c]
+        pd.read_csv(refit_p).drop(columns=pin_cols).to_csv(refit_p, index=False)
+        bufc3 = io.StringIO()
+        with redirect_stdout(bufc3):
+            c3 = section_c(root, limit=24, jobs=1, variants=vars_c, refit_csv=refit_p,
+                           resume=True, d26=None)
+        got3 = pd.read_csv(refit_p)
+        rep("(g) 記録に境界の内訳 pin_{型} の列があり、値が入っている",
+            all(c in got.columns for c in pin_cols)
+            and all(c in got3.columns for c in pin_cols)
+            and bool(got3[pin_cols[0]].astype(str).str.strip().ne("").all()),
+            f"列 {pin_cols}・(0) の値の例 "
+            + "・".join(sorted(set(got3[pin_cols[0]].astype(str)))[:3]))
+        rep("(g) pin_{型} が無い記録は再開のときに当てはめ直す（古い記録を使い回さない）",
+            c3["info"]["n_fit"] == 24 and c3["info"]["n_cache"] == 0,
+            f"当てはめ直した {c3['info']['n_fit']} 名・再利用 {c3['info']['n_cache']} 名"
+            "（列を落とす前の再開は 0 名だった）")
+
         # 3 名だけ、記録の値が `fit_beat` ＋ `si_ri_from_fit` の直接計算と一致するか
         from src.indices import si_ri_from_fit
         hr_by_ = dict(zip(hae_["subj_no"].astype(int), hae_["HR"].astype(float)))
@@ -2798,6 +3034,20 @@ def selftest() -> int:
         rep("(g) 26番の列が無いので C0 と P10 は「照合できない」になる",
             c1["c0"]["state"] == "照合できない" and not c1["c5"]["P10"]["ev"]
             and "P10 検算  (0) と 26番の列: 照合できない" in txt_c1)
+
+        # C1b（境界の内訳）が C1 の後に出て、型 × 当てはめのます目が埋まっているか。
+        # 模擬の拍では境界に付く母数が無いことがあるので、「—」でも表としては正しい。
+        c1b = c1["c1b"]
+        rep("(g) C1b 境界の内訳が C1 の後に印字され、型 × 当てはめのます目が揃う",
+            "C1b. 境界の内訳" in txt_c1
+            and txt_c1.index("C1. 採否と縮退") < txt_c1.index("C1b. 境界の内訳")
+            < txt_c1.index("C2. ΔT ×")
+            and set(c1b.keys()) == set((kt, k) for kt, _nm in _ktypes()
+                                       for k in vars_c),
+            f"ます目 {len(c1b)} 個・全例の (0) は 解が出た拍 "
+            f"{c1b[(None, 'fb')]['n']} ・内訳 "
+            + (("・".join(f"{nm} {c}" for nm, c in c1b[(None, 'fb')]["rows"][:PIN_TOP]))
+               or "どの母数も端に付かない"))
 
     # --- (g) --pwdb が無いまま節C を頼まれたら、落ちずに終了コード 2
     bufp = io.StringIO()
