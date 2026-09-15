@@ -15,7 +15,7 @@ REPO = Path(__file__).resolve().parents[2]
 MD_OUT = REPO / "docs" / "research" / "analysis_catalog.md"
 HTML_OUT = REPO / "docs" / "research" / "analysis_catalog.html"
 
-TITLE = "解析の一覧 ― 何を、何で、何と比べ、何が分かったか（2026-09-14）"
+TITLE = "解析の一覧 ― 何を、何で、何と比べ、何が分かったか（2026-09-15）"
 # 閲覧用ページの <title>（ギャラリーとタブに出る名前）。本文の h1 は「解析の一覧」のまま。
 PAGE_TITLE = "PPG血管指標の解析一覧"
 
