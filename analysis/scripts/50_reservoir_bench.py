@@ -242,9 +242,15 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
      （26番の列が無ければ「照合できない」）。根拠: (0) は `fit_beat` そのものであり、
      型別 ρ は 48番が同じ入力から出した値である（lab_log 追記137）。
 
-所要の見込み: 1 当てはめ 0.16 秒（起点 8 点）なので、5 型 × 4,374 名でおよそ 1 時間
-（1 コア）、`--jobs 8` で 10 分前後である。記録があれば再開するので、途中で止めても
-やり直しにはならない。**節C が書き込むのは自分の記録（50_refit[_limitN].csv）だけである。**
+所要（実測して直した。2026-09-15）: **1 名あたり 5 型で約 3.9 秒**（この環境・1 コア・
+起点 8 点。畳み込みの 2 型が母数 10 個で重い）。4,374 名では **1 コアで約 4.7 時間、
+`--jobs 8` で 35〜40 分**である。最初に書いた「10 分前後」は 1 当てはめ 0.16 秒という
+低い見積もりから出した誤りで、実測に置き換えた。
+
+**進み具合を 200 名ごとに印字し、400 名ごとに途中の記録を書く**（`PROGRESS_EVERY`・
+`CKPT_EVERY`）。印字が無いと止まっているように見えるため 2026-09-15 に足した。
+記録があれば再開するので、途中で止めてもやり直しにはならない。
+**節C が書き込むのは自分の記録（50_refit[_limitN].csv）だけである。**
 
 前提と限界
 ----------
@@ -1641,6 +1647,8 @@ SIGN_DT = -1               # ΔT × 大動脈PWV の予測の向き（26番・48
 SIGN_RI = +1               # RI × 末梢血管抵抗 の予測の向き（同上）
 MIN_N_POOL = 20            # C4 の順位相関に要る人数（26番の MIN_N と同じ）
 C_KLASSES = (1, 3, 4)      # C1〜C4 で分ける波形の型（これに「全」を足す）
+PROGRESS_EVERY = 200       # 節C の進み具合を印字する間隔 [名]
+CKPT_EVERY = 400           # 節C が途中の記録を書く間隔 [名]（止めても再開できる）
 
 # 予測の規準（docstring の P6〜P10）。2026-09-15 実装前に固定（lab_log 追記143）
 PRED_P7_GAP = 0.10         # P7 型3・C 段: (2) の Δμ 下限の割合が (4) より これ以上大きい
@@ -1821,33 +1829,55 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
     print(f"\n  {len(subjects)} 名中 {len(work)} 名に当てはめる"
           f"（記録から {n_cache} 名を再利用）・型 {list(variants)} / jobs={jobs}", flush=True)
 
-    rows_new = []
-    if work and jobs > 1:
-        from concurrent.futures import ProcessPoolExecutor
-        with ProcessPoolExecutor(max_workers=jobs) as ex:
-            rows_new = list(ex.map(refit_subject, work, chunksize=8))
-    elif work:
-        for n, w in enumerate(work, 1):
-            rows_new.append(refit_subject(w))
-            if n % 200 == 0:
-                print(f"  [{n}/{len(work)}]", flush=True)
-
-    if rows_new:
-        # 版も記録する（26番と同じ。scipy の版が違うと最適化の最終桁が変わりうる）
-        import platform
-        import scipy
-        meta = {"python_version": platform.python_version(),
-                "numpy_version": np.__version__, "scipy_version": scipy.__version__}
-        for r in rows_new:
-            r.update(meta)
-            s = int(r["subj_no"])
-            base = dict(have.get(s, {}))
-            base.update(r)
-            have[s] = base
-
-    df = _order_cols(pd.DataFrame([have[s] for s in sorted(have)]), variants)
+    # 版も記録する（26番と同じ。scipy の版が違うと最適化の最終桁が変わりうる）
+    import platform
+    import time
+    import scipy
+    meta = {"python_version": platform.python_version(),
+            "numpy_version": np.__version__, "scipy_version": scipy.__version__}
     path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False)
+
+    def _absorb(r: dict) -> None:
+        r.update(meta)
+        s_ = int(r["subj_no"])
+        base = dict(have.get(s_, {}))
+        base.update(r)
+        have[s_] = base
+
+    def _write() -> pd.DataFrame:
+        df_ = _order_cols(pd.DataFrame([have[s_] for s_ in sorted(have)]), variants)
+        df_.to_csv(path, index=False)
+        return df_
+
+    # 進み具合を PROGRESS_EVERY 名ごとに印字し、CKPT_EVERY 名ごとに記録を書く。
+    # 並列でも黙って走らせない（Mac 1 で 4,374 名を --jobs 8 で回すと、印字が無いと
+    # 止まっているように見えた。2026-09-15）。途中で止めても記録から再開できる。
+    t_start = time.time()
+    n_done = 0
+
+    def _tick(r: dict) -> None:
+        nonlocal n_done
+        _absorb(r)
+        n_done += 1
+        if n_done % PROGRESS_EVERY == 0 or n_done == len(work):
+            el = time.time() - t_start
+            eta = el / n_done * (len(work) - n_done)
+            print(f"  [{n_done}/{len(work)}] {el:.0f} 秒経過・残り約 {eta:.0f} 秒", flush=True)
+        if n_done % CKPT_EVERY == 0 and n_done < len(work):
+            _write()
+            print(f"  途中の記録を書いた: {path}（{len(have)} 名）", flush=True)
+
+    if work and jobs > 1:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        with ProcessPoolExecutor(max_workers=jobs) as ex:
+            futs = [ex.submit(refit_subject, w) for w in work]
+            for fut in as_completed(futs):
+                _tick(fut.result())
+    elif work:
+        for w in work:
+            _tick(refit_subject(w))
+
+    df = _write()
     print(f"  再当てはめの記録: {path}（{len(df)} 名・{len(df.columns)} 列）", flush=True)
     keep = df[df["subj_no"].isin(subjects)].reset_index(drop=True)
     return keep, path, {"n_fit": len(work), "n_cache": n_cache, "n_sub": len(subjects)}

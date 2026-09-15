@@ -8795,3 +8795,15 @@ ms 単位の分散分解を足す（Opus。既存の節の出力は変えない�
     python3 analysis/scripts/50_reservoir_bench.py --selftest
     python3 analysis/scripts/50_reservoir_bench.py --section ABC --pwdb ~/pwdb --jobs 8 --csv analysis/data/pwdb/pwdb_compare.csv | tee docs/research/results/50_reservoir_bench.txt
   再当てはめの記録は `analysis/data/pwdb/50_refit.csv`（git には入れない）。途中で止めても同じコマンドで再開できる。
+- 追記143 の続き 2（同日・先生が Mac 1 で走らせた）: **節C が 4,374 名の当てはめに入ったところで何も印字せず、
+  止まったように見えた。**実際は走っていたが、私（Fable）の所要の見積もりが誤っていた。
+  この環境で実測すると **1 名あたり 5 型で 3.9 秒**（1 コア。畳み込みの 2 型は母数 10 個で重い）で、
+  4,374 名なら 1 コアで約 4.7 時間・`--jobs 8` で 35〜40 分である。私は「1 当てはめ 0.16 秒 → --jobs 8 で 10 分前後」と
+  書いたが、0.16 秒は起点 4 点・8 母数のときの値で、起点 8 点・max_nfev 4000 に直した後の値ではなかった。
+  **台本の docstring を実測値に差し替えた。**
+- 直したこと: 節C の当てはめを `ProcessPoolExecutor.map` から `submit` ＋ `as_completed` に変え、
+  **200 名ごとに「[n/N] 経過秒・残り約 X 秒」を印字**し、**400 名ごとに途中の記録（CSV）を書く**ようにした
+  （`PROGRESS_EVERY`・`CKPT_EVERY`）。途中で止めても同じコマンドで再開できる（既にその作りだったが、
+  これまでは最後まで走らないと 1 行も書かなかった）。数値の出し方は変えていない。
+- 検証: 自己検査 46 項目 ALL PASS・用語検査 exit 0。模擬 PWDB（48 名 × 2 型・jobs 2）で印字と再開（当てはめ直し 0 名・
+  記録の内容が同一）を確認した。
