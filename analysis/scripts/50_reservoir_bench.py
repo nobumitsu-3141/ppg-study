@@ -37,7 +37,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 -----------------------
 当てはめの型を並べ、真の反射波の到達を追えるかを測る（(5)(6) には Δμ の下限だけを凍結版の
 ままにした版 (5b)(6b)、(4) には Δμ の下限を 0.01 s に緩めた版 (4b) を足し、先頭に凍結版
-そのものを呼ぶ (0) を置いたので、表は 10 行になる）。
+そのものを呼ぶ (0) を置き、打ち切りの割合だけを変えた (6c)(6d) を足したので、表は
+12 行になる）。
 
   合成脈波   前進波（歪みガウス）＋ 反射波（歪みガウス）＋ 貯留槽（指数減衰）。反射波は
              早く到達するほど幅が広くなり歪みが消える（硬い血管の波形）。雑音は標準偏差
@@ -54,6 +55,16 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
              (5b) 同じ形の拘束で、Δμ の下限は凍結版のまま 0.08 s
              (6) 0.65T までで当てはめる ＋ Δμ の下限 0.01 s
              (6b) 同じ打ち切りで、Δμ の下限は凍結版のまま 0.08 s
+             (6c) 0.55T までで当てはめる（Δμ の下限は凍結版のまま 0.08 s。(6b) と
+                  割合だけが違う）
+             (6d) 0.75T までで当てはめる（同上）
+             **0.65T は事前に決めた割合である**（24番・lab_log 追記139 で、実データの
+             結果を見る前に固定した）。(6c)(6d) は**結論が割合の選び方に敏感でないことを
+             示す記述（感度の確認）のためだけ**にあり、**この 3 つの数値を見てから主の
+             割合を選び直さない**。0.55T や 0.75T のほうが良く出ても「0.65T でも同じ
+             向きの結果が出る」という記述に留め、主の割合は 0.65T と書く。割合を変える
+             なら新しい事前登録で決める（2026-09-15 に走らせる前に固定した。
+             lab_log 追記145）。
              (1) 以降は `scipy.optimize.least_squares`（trf）で当てはめるが、**起点の
              作り方と解の選び方は `fit_beat` と同じ**にしてある（起点 8 点〈特徴点から
              決める初期値 dmu0 ＝ 主ピーク後の −d²y/dt² 最小点 ＋0.02 s の 1 点・Δμ の
@@ -112,7 +123,7 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
   掃引       反射波の大きさ 7 通り（0.20・0.28・0.35・0.42・0.50・0.58・0.65）× 条件 2 つ。
              条件は**型1 相当**（反射波の到達 0.28 s。遅く分離する）と**型3 相当**
              （到達 0.10 s。収縮期に重なる）で、貯留槽の時定数は 0.35 s に固定する
-  当てはめ   節A と同じ 10 行。参考の特徴点法の RI は `dia_v / sys_v`
+  当てはめ   節A と同じ 12 行。参考の特徴点法の RI は `dia_v / sys_v`
   真値       2 つ出す。「真の RI」は振った母数 a_ref、「真の比」は合成した成分のピーク
              高さの比（当てはめの h2/h1 と同じ定義）。条件の中では前進波が変わらないので
              両者は比例し、**順位は同じ**である。ρ は母数に対して、|誤差| は比に対して出す
@@ -144,7 +155,8 @@ h2/h1 は**下がる**。
 既存の `data/pwdb/pwdb_compare.csv`（26番の出力・確認的解析を回した機械では 4,374 行）の
 **列だけを読む。新しい当てはめはしない**（数秒で終わる）。読む列は `age`・`klass_own`・
 `dt_v1_ms`（凍結版 ΔT）・`dt_lm_ms`（特徴点法 ΔT・Charlton 同梱）・`ok_v1`（26番の A 段）と、
-B4 で `ri_v1`（凍結版 RI）・`digital_ri`（特徴点法 RI・Charlton 同梱）。
+B4 で `ri_v1`（凍結版 RI）・`digital_ri`（特徴点法 RI・Charlton 同梱）、
+B6 で `PWV_a`（大動脈脈波伝播速度）・`pvr`（末梢血管抵抗）。
 
   B1  型（`klass_own`）ごとに、凍結版 ΔT と特徴点法 ΔT の分布（5・10・25・50・75・90・95
       パーセンタイルと最小・最大）
@@ -158,6 +170,11 @@ B4 で `ri_v1`（凍結版 RI）・`digital_ri`（特徴点法 RI・Charlton 同
   B4  型ごとに ρ(ri_v1, digital_ri) を**年齢層ごとに 1 行ずつ**並べる（節A-2 の所見を
       実データで見るため。規約は B3・48番 と同じ。A 段を主とし C 段を同じ行に並べる）。
       `ri_v1`・`digital_ri` の列が無い CSV では B4 と P4・P5 だけを飛ばす
+  B6  型 × 年齢層で、真値そのもののばらつき（`PWV_a`・`pvr` の中央値・四分位範囲と
+      その幅）を並べる。C 段（採否を無視した全例）で出す。真値の散らばりは被験者の
+      性質であって、当てはめの性質ではないからである。**2026-09-15 に、型1 の関連が
+      どの手法でも低いのを見たあとで足した記述の表であり、予測は立てていない。**
+      `PWV_a`・`pvr` の列が無い CSV では B6 だけを飛ばす
   B5  予測との照合（下記 P1〜P5）。**判定は付けない**（事後・記述）
 
 凍結版の列は 26番の A 段（`ok_v1 == 1`。その手法が自分で採用した例だけ）で計算し、C 段
@@ -202,8 +219,9 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              （`dt_lm_ms`・`digital_ri`）は 23番の `load` で読む（26番と同じ扱い）。
              波形の型 `klass_own` は 26番と同じ手順（`pda2.preprocess` →
              `find_landmarks`）で**この台本が自分で付ける**
-  当てはめ   `--variants`（既定 `fb,relax,conv,conv01,trunc,trunc08,decay`
-             ＝ (0)(2)(4)(4b)(6)(6b)(3)）。節A と同じ `fit_kind` を呼ぶ。(0) は
+  当てはめ   `--variants`（既定 `fb,relax,conv,conv01,trunc,trunc08,trunc055,
+             trunc075,decay` ＝ (0)(2)(4)(4b)(6)(6b)(6c)(6d)(3) の 9 型）。節A と同じ
+             `fit_kind` を呼ぶ。(0) は
              `src/pda.py` の `fit_beat` そのもので、26番の `dt_v1_ms`・`ri_v1`・`ok_v1` と
              一致するはずである（C0 で照合する）。
              **(6b) と (3) は 2026-09-15 の実データの結果を見てから足した**（lab_log
@@ -212,7 +230,12 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              実データでは Δμ の下限に 1 拍も張り付かない）。(3) 自由な減衰項は合成では
              効かなかったが、実データで効いているのは拡張期の下降の扱いなので、順位が
              変わりうる。どちらも「どの変更が効いたか」を分けて読むための行で、判定の
-             規準は動かさない（この台本はもともと事後の探索である）
+             規準は動かさない（この台本はもともと事後の探索である）。
+             **(6c) 0.55T・(6d) 0.75T も 2026-09-15 に足した**（lab_log 追記145）。
+             主とする割合は 0.65T のままで動かさない（24番・追記139 で実データを見る
+             前に決めた値である）。(6c)(6d) は**結論が割合の選び方に敏感でないことを
+             示す記述（感度の確認）のためだけ**にあり、**この 3 つの数値を見てから主の
+             割合を選び直さない**
   記録       `data/pwdb/50_refit.csv`（`--refit-csv` で変えられる。`--limit N` のときは
              `50_refit_limitN.csv`。26番の CSV と同じ規約で、限った実行が全例の記録を
              上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・残差・
@@ -263,11 +286,11 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
 起点 8 点。畳み込みの 2 型が母数 10 個で重い）。4,374 名では **1 コアで約 4.7 時間、
 `--jobs 8` で 35〜40 分**である。最初に書いた「10 分前後」は 1 当てはめ 0.16 秒という
 低い見積もりから出した誤りで、実測に置き換えた。
-既定の型を 7 つに増やしたので（(6b)(3) を足した。lab_log 追記144）、**1 名あたり
-約 5.5 秒・4,374 名で 1 コアで約 6.6 時間・`--jobs 8` で 50〜60 分**になる見込みである。
-これは実測 3.9 秒（5 型）を型の数で割って 7 倍した概算で、実測ではない。足した 2 型の
-うち (3) は母数 10 個で重く、(6b) は 8 母数で打ち切るぶん軽いので、型ごとの重さは
-同じではない。
+既定の型を 9 つに増やしたので（追記144 で (6b)(3)、追記145 で (6c)(6d) を足した）、
+**9 型で 1 名あたり 6〜7 秒・4,374 名で `--jobs 8` で 60〜80 分**になる見込みである。
+これは実測 3.9 秒（5 型）から型の数で割り戻した概算であって、**実測ではない**。
+型ごとの重さは同じではない（(3)(4)(4b) は母数 10 個で重く、打ち切りの (6)(6b)(6c)(6d)
+は 8 母数で残差の点数も少ないぶん軽い）ので、型の数に比例はしない。
 
 **進み具合を 200 名ごとに印字し、400 名ごとに途中の記録を書く**（`PROGRESS_EVERY`・
 `CKPT_EVERY`）。印字が無いと止まっているように見えるため 2026-09-15 に足した。
@@ -296,7 +319,9 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
 `--fast` は節A の掃引を 2 層 × 5 拍に
 減らす（自己検査と同じ掃引。本番の表ではない）。自己検査は合成だけで走る（CSV もネット
 ワークも要らない）。節A（3 層 × 10 拍）＋ 節A-2（2 条件 × 7 拍）の本番は、当てはめ 10 行で
-この環境では約 80 秒である（`--section A` を 3 回計った実測は 82・79・77 秒。CSV は要らない）。
+この環境では約 80 秒であった（`--section A` を 3 回計った実測は 82・79・77 秒。CSV は
+要らない）。2026-09-15 に (6c)(6d) を足して 12 行にしたので、そのぶん延びる
+（打ち切りの型は残差の点数が少なく軽いので、型の数には比例しない）。
 2026-09-15 に起点を 8 点・max_nfev を 4000 に上げた（凍結版と同じにした）ので、それまでの
 約 40 秒からおよそ倍になっている。
 結果は print するので、残すときは tee で `docs/research/results/50_reservoir_bench.txt` に
@@ -402,6 +427,14 @@ NOISE_SD = 0.002           # 雑音の標準偏差
 # 写した複製 (1) が本体と同じ振る舞いをすることの照合である。
 # (1) 以降の起点の作り方と解の選び方は `fit_beat` と同じにしてある（2026-09-15 に
 # そろえた。lab_log 追記143）。各行が凍結版から**狙った 1 つだけ**違うようにするため。
+#
+# (6c) 0.55T・(6d) 0.75T は 2026-09-15 に足した（lab_log 追記145）。**主とする打ち切りの
+# 割合は 0.65T で、これは事前に決めた値である**（24番・lab_log 追記139 で、実データの
+# 結果を見る前に固定した）。(6c)(6d) は**結論が割合の選び方に敏感でないことを示す記述
+# （感度の確認）のためだけ**にあり、**この 3 つの数値を見てから主の割合を選び直さない。**
+# 0.55T や 0.75T のほうが良く出ても「0.65T でも同じ向きの結果が出る」という記述に留め、
+# 主の割合は 0.65T と書く。割合を変えるなら新しい事前登録で決める。(6b)(6c)(6d) は Δμ の
+# 下限をどれも凍結版のまま 0.08 s にしてあり、**割合だけが違う 3 行**である。
 KINDS = [
     ("fb", "(0)", "凍結版本体",
      "凍結版そのもの（`src/pda.py` の `fit_beat` を既定の引数で呼ぶ。起点 8 点・"
@@ -417,6 +450,9 @@ KINDS = [
     ("tied08", "(5b)", "形を縛る", "同じ形の拘束で、Δμ の下限は凍結版のまま 0.08 s"),
     ("trunc", "(6)", "0.65T", "0.65T までで当てはめる ＋ Δμ の下限 0.01 s"),
     ("trunc08", "(6b)", "0.65T", "同じ打ち切りで、Δμ の下限は凍結版のまま 0.08 s"),
+    ("trunc055", "(6c)", "0.55T",
+     "0.55T までで当てはめる（Δμ の下限は凍結版のまま 0.08 s。(6b) と割合だけが違う）"),
+    ("trunc075", "(6d)", "0.75T", "0.75T までで当てはめる（同上）"),
 ]
 KIND_KEYS = [k for k, _no, _h, _l in KINDS]
 KIND_NO = {k: no for k, no, _h, _l in KINDS}
@@ -424,19 +460,25 @@ KIND_HEAD = {k: h for k, _no, h, _l in KINDS}
 KIND_LABEL = {k: l for k, _no, _h, l in KINDS}
 
 # 模型の形（母数の並び）と、当てはめに使う範囲。(5b) は (5) と、(6b) は (6) と、
-# (4b) は (4) と同じ形で、違うのは Δμ の下限だけである。(0) の形「fb」はこの台本の模型を
+# (4b) は (4) と同じ形で、違うのは Δμ の下限だけである。(6c)(6d) は (6b) と同じ形・同じ
+# Δμ の下限で、違うのは打ち切りの割合だけである。(0) の形「fb」はこの台本の模型を
 # 使わないという印で、`_bounds`・`_frozen_starts`・`_model` は (0) では呼ばない。
 KIND_SHAPE = {"fb": "fb", "frozen": "plain", "relax": "plain", "decay": "decay",
               "conv": "conv", "conv01": "conv",
-              "tied": "tied", "tied08": "tied", "trunc": "plain", "trunc08": "plain"}
-KIND_TRUNC = ("trunc", "trunc08")
+              "tied": "tied", "tied08": "tied", "trunc": "plain", "trunc08": "plain",
+              "trunc055": "plain", "trunc075": "plain"}
+# 打ち切る型と、その割合（拍長に対する割合）。**0.65 が事前に決めた主の値**で、0.55・0.75 は
+# 感度の確認のためだけに置いた割合である（上の KINDS の注記・lab_log 追記145）。
+TRUNC_FRAC_OF = {"trunc": 0.65, "trunc08": 0.65, "trunc055": 0.55, "trunc075": 0.75}
+KIND_TRUNC = tuple(TRUNC_FRAC_OF)
 
 # 当てはめの設定。凍結版と同じ探索範囲を使う型と、Δμ の下限を緩める型を分ける。
 DMU_LO_FROZEN = 0.08       # `src/pda.py` の dmu_bounds の下限 [s]
 DMU_LO_RELAX = 0.01
 # (0) の Δμ の下限も凍結版と同じ 0.08 s（`fit_beat` の既定）だが、下限は `fit_beat` の側に
 # あり、この台本の `_bounds` は (0) では使わない。(4b) は下限だけを DMU_LO_RELAX にする。
-KIND_DMU_FROZEN = ("fb", "frozen", "decay", "conv", "tied08", "trunc08")
+KIND_DMU_FROZEN = ("fb", "frozen", "decay", "conv", "tied08", "trunc08",
+                   "trunc055", "trunc075")
 N_STARTS = 8               # 起点の数（fit_beat と同じ）
 MAX_NFEV = 4000            # fit_beat と同じ
 SEED_STARTS = 0            # 起点の乱数の種（fit_beat の既定と同じ）
@@ -450,7 +492,11 @@ CHK_AMP = 0.02             # 成分のピーク高さがこれ未満なら「高
 CHK_RSS = 1.15             # 競合解と見なす RSS の比
 CHK_DMU = 0.03             # 競合解と見なす Δμ の差 [s]
 CHK_RI = 0.08              # 競合解の RI がこれ以上違えば「別解」
-TRUNC_FRAC = 0.65          # (6)(6b) が当てはめに使う範囲（拍長に対する割合）
+# 打ち切りの主の割合。**事前に決めた値である**（24番・lab_log 追記139 で、実データの
+# 結果を見る前に固定した）。(6)(6b) はこの値を使う。(6c) 0.55・(6d) 0.75 は感度の確認の
+# ためだけの割合で、**この 3 つを見てから主の割合を選び直さない**（lab_log 追記145）。
+# 型ごとの割合は TRUNC_FRAC_OF が持ち、`fit_kind` はそこから引く。
+TRUNC_FRAC = 0.65
 # 貯留槽項（(3)(4)(4b)）の母数の探索範囲と起点。凍結版には無い母数なので、凍結版の閾値では
 # ない。2026-09-15 までは τ ∈ [0.05, 1.50]・畳み込みの g ≤ 3.0（面積 τ の核）・減衰の d ≤ 1.0
 # だったが、診断で g が 3.0 に、τ が 1.50 に張り付く拍が系統的に出たので、核を単位面積にして
@@ -819,7 +865,9 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
     ys = _norm(y)
     lo, hi, _dmu_lo = _bounds(t, ys, kind)
     if kind in KIND_TRUNC:
-        keep = t <= t[0] + TRUNC_FRAC * (t[-1] - t[0])
+        # 打ち切るのは**残差だけ**である。起点・dmu0・成分のピークは拍の全長で決める
+        # （`_frozen_starts` には t・ys をそのまま渡し、ピークは下で t[0]〜t[-1] を見る）。
+        keep = t <= t[0] + TRUNC_FRAC_OF[kind] * (t[-1] - t[0])
         tfit, yfit = t[keep], ys[keep]
     else:
         tfit, yfit = t, ys
@@ -980,6 +1028,16 @@ def print_a_legend(taus, dts, seed: int) -> None:
     print("    凍結版の 0.08 s のままの版である（一度に 1 つだけ変えたときの効きを読むため）。")
     print("    (4b) は (2) と (4) を同時に適用した版、(0) は複製 (1) の照合で、"
           "いずれも 2026-09-15 に足した。")
+    print(f"    (6c) 0.55T・(6d) 0.75T は (6b) と**打ち切りの割合だけ**が違う"
+          f"（Δμ の下限はどれも {DMU_LO_FROZEN} s）。")
+    print(f"    **主とする割合は {TRUNC_FRAC:.2f}T で、これは事前に決めた値である**"
+          "（24番・lab_log 追記139。実データの結果を見る前に固定した）。")
+    print("    (6c)(6d) は結論が割合の選び方に敏感でないことを示す記述（感度の確認）の"
+          "ためだけにあり、")
+    print("    **この 3 つの数値を見てから主の割合を選び直さない**"
+          "（2026-09-15 に走らせる前に固定した。lab_log 追記145）。")
+    print("    打ち切る型は**残差だけ**を打ち切る（起点・Δμ の初期値・成分のピークは"
+          "拍の全長で決める）。")
     print("  (1) 以降の当てはめも least_squares（trf）だが、**起点の作り方と解の選び方は"
           " `fit_beat` と同じ**にしてある")
     print(f"  （起点 {N_STARTS} 点〈特徴点から決めた 1 点・Δμ の格子 5 点・乱数 2 点〉・"
@@ -1123,7 +1181,7 @@ def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
 
 
 def section_a(taus=TAUS_FULL, dts=DTS_FULL, seed: int = SEED_A) -> dict:
-    """節A: 当てはめの型を並べ、真の反射波の到達を追えるかを測る（合成・表は 10 行）。"""
+    """節A: 当てはめの型を並べ、真の反射波の到達を追えるかを測る（合成・表は 12 行）。"""
     print("\n" + "=" * 100)
     print("節A 合成脈波: 当てはめの型を変えると、真の反射波の到達を追えるか")
     print("=" * 100)
@@ -1213,7 +1271,7 @@ def summarise_a2(res: dict) -> dict:
 
 def print_a2_legend(ris, tau: float) -> None:
     print("\n" + "-" * 100)
-    print("A2-0. RI の掃引（当てはめの型は節A と同じ 10 行＋参考の特徴点法）")
+    print("A2-0. RI の掃引（当てはめの型は節A と同じ 12 行＋参考の特徴点法）")
     print("-" * 100)
     print(f"  反射波の大きさ（母数 a_ref）を {list(ris)} の "
           f"{len(list(ris))} 通りに振る。")
@@ -1309,8 +1367,13 @@ COL_LM = "dt_lm_ms"        # 特徴点法の ΔT（Charlton 同梱）
 COL_OK = "ok_v1"           # 26番の A 段（その手法が自分で採用した例）
 COL_RI_V1 = "ri_v1"        # 凍結版 2 カーネルの RI（26番の出力）
 COL_RI_LM = "digital_ri"   # 特徴点法の RI（Charlton 同梱）
+COL_PWV = "PWV_a"          # 大動脈脈波伝播速度（真値。B6 と節C が使う）
+COL_PVR = "pvr"            # 末梢血管抵抗（真値。同上）
 NEED_B = ("age", KLASS_COL, COL_V1, COL_LM)
 NEED_B4 = (COL_RI_V1, COL_RI_LM)   # B4（RI）に要る列。無ければ B4 だけを飛ばす
+NEED_B6 = (COL_PWV, COL_PVR)       # B6（真値のばらつき）に要る列。無ければ B6 だけを飛ばす
+B6_KLASSES = (1, 3, 4)     # B6 で並べる波形の型（型5 は波形が不正なので出さない）
+B6_RATIO = (1, 3)          # B6 で幅の比を取る型（型1 ÷ 型3）
 
 BIN_MS = 20.0              # B2 の区間の幅
 PCTS = (5, 10, 25, 50, 75, 90, 95)
@@ -1576,6 +1639,130 @@ def print_b4_ri(d: pd.DataFrame, klasses) -> dict:
     return out
 
 
+def _iqr_of(v: np.ndarray) -> dict:
+    """1 群ぶんの 人数・中央値・四分位（25・75）・四分位範囲の幅。有限な値だけを使う。"""
+    v = np.asarray(v, float)
+    v = v[np.isfinite(v)]
+    out = {"n": int(v.size), "med": float("nan"), "q1": float("nan"),
+           "q3": float("nan"), "iqr": float("nan")}
+    if v.size:
+        out["med"] = float(np.median(v))
+        out["q1"], out["q3"] = (float(q) for q in np.percentile(v, [25, 75]))
+        out["iqr"] = out["q3"] - out["q1"]
+    return out
+
+
+def print_b6(d: pd.DataFrame, klasses) -> dict:
+    """B6 型 × 年齢層で、真値（PWV_a・pvr）そのもののばらつきを並べる。
+
+    **2026-09-15 に、型1 の関連がどの手法でも低いのを見たあとで足した記述の表である。
+    予測は立てていない**（lab_log 追記145）。判定にも使わない。
+
+    C 段（採否を無視した全例）で出す。真値の散らばりはその層にどういう被験者がいるかの
+    性質であって、当てはめの性質ではないからである。`PWV_a`・`pvr` の列が無い CSV では
+    1 行だけ印字して飛ばす。
+    """
+    print("\n" + "-" * 100)
+    print(f"B6. 真値そのもののばらつき: 型 × 年齢層の {COL_PWV}・{COL_PVR}"
+          "（中央値・四分位範囲とその幅。C 段）")
+    print("-" * 100)
+    print("  **2026-09-15 に、型1 の弱さを見たあとで足した記述の表である。予測は立てて"
+          "いない。**")
+    print("  段は C 段（採否を無視した全例）だけである。真値の散らばりはその層にどういう")
+    print("  被験者がいるかの性質であって、当てはめの性質ではない（A 段に絞る意味がない）。")
+    miss = [c for c in NEED_B6 if c not in d.columns]
+    if miss:
+        print(f"  ★ 列が無い: {miss}。B6 は計算できない（真値の列が要る）。")
+        return {}
+    print(f"  層は `age` の相異なる値で、その型に {MIN_PER_AGE} 名以上いる層だけを出す。")
+    print("  中央値・四分位範囲は有限な値だけで計算する。")
+    ks = [k for k in klasses if k in B6_KLASSES]
+    out = {}
+    for k in ks:
+        g = subset(d, k)
+        print(f"\n  {KLASS_LABEL.get(k, f'型{k}')}  n = {len(g)} 名（C 段）")
+        if len(g) == 0 or "age" not in g.columns:
+            print("    該当なし")
+            out[k] = {"rows": [], "n": len(g), "n_ages": 0, "min_n": 0,
+                      "iqr_med": dict((c, float("nan")) for c in NEED_B6)}
+            continue
+        rows, short, lines = [], [], []
+        for age, gg in g.groupby("age", sort=True):
+            if len(gg) < MIN_PER_AGE:
+                short.append((float(age), len(gg)))
+                continue
+            rec = {"age": float(age), "n": int(len(gg))}
+            line = ("    " + _pad(f"{float(age):.0f}", 8, right=True)
+                    + _pad(len(gg), 7, right=True))
+            for c in NEED_B6:
+                s = _iqr_of(_colv(gg, c))
+                rec[c] = s
+                iqr = ("—" if not np.isfinite(s["q1"])
+                       else f"[{s['q1']:.3f}〜{s['q3']:.3f}]")
+                line += (_f(s["med"], 15, prec=3) + _pad(iqr, 24, right=True)
+                         + _f(s["iqr"], 12, prec=3))
+            rows.append(rec)
+            lines.append(line)
+        if rows:
+            print("    " + _pad("年齢層", 8, right=True) + _pad("n", 7, right=True)
+                  + "".join(_pad(f"{c} 中央値", 15, right=True)
+                            + _pad(f"{c} 四分位範囲", 24, right=True)
+                            + _pad(f"{c} 幅", 12, right=True) for c in NEED_B6))
+            for line in lines:
+                print(line)
+        else:
+            print(f"    {MIN_PER_AGE} 名以上の年齢層が無い")
+        med = dict((c, float(np.median([r[c]["iqr"] for r in rows
+                                        if np.isfinite(r[c]["iqr"])]))
+                    if any(np.isfinite(r[c]["iqr"]) for r in rows) else float("nan"))
+                   for c in NEED_B6)
+        n_ages = len(rows)
+        min_n = min((r["n"] for r in rows), default=0)
+        out[k] = {"rows": rows, "n": len(g), "n_ages": n_ages, "min_n": min_n,
+                  "iqr_med": med, "short": short}
+        print("    " + _pad("幅の中央値", 15) + "・".join(
+            f"{c} {_n(med[c], 3)}" for c in NEED_B6)
+            + f"（層をまたいだ中央値。{n_ages} 層）")
+        print(f"    {MIN_PER_AGE} 名以上の年齢層 {n_ages} / {N_AGES_FULL}"
+              f"・最小の層 n = {min_n if n_ages else '—'}"
+              + (f"（{MIN_PER_AGE} 名に満たない層: "
+                 + "・".join(f"{a:.0f}歳 {n} 名" for a, n in short) + "）" if short else ""))
+        n_part = [(r["age"], c, r[c]["n"], r["n"]) for r in rows for c in NEED_B6
+                  if r[c]["n"] < r["n"]]
+        if n_part:
+            print("    ★ 真値が欠測の行がある層: "
+                  + "・".join(f"{a:.0f}歳 {c} {nf}/{nt}" for a, c, nf, nt in n_part))
+
+    # まとめ（層をまたいだ 幅 の中央値と、型1 ÷ 型3 の比）
+    print("\n  まとめ（層をまたいだ 四分位範囲の幅 の中央値。C 段）")
+    print("    " + _pad("型", 20) + _pad("層", 5, right=True)
+          + _pad("最小の層 n", 12, right=True)
+          + "".join(_pad(f"{c} 幅の中央値", 20, right=True) for c in NEED_B6))
+    for k in ks:
+        s = out.get(k, {})
+        print("    " + _pad(KLASS_SHORT.get(k, f"型{k}"), 20)
+              + _pad(s.get("n_ages", 0), 5, right=True)
+              + _pad(s.get("min_n", 0) or "—", 12, right=True)
+              + "".join(_f(s.get("iqr_med", {}).get(c, float("nan")), 20, prec=3)
+                        for c in NEED_B6))
+    k1, k3 = B6_RATIO
+    ratio = {}
+    for c in NEED_B6:
+        a = out.get(k1, {}).get("iqr_med", {}).get(c, float("nan"))
+        b = out.get(k3, {}).get("iqr_med", {}).get(c, float("nan"))
+        ratio[c] = a / b if (np.isfinite(a) and np.isfinite(b) and b != 0) else float("nan")
+    print(f"    型{k1} ÷ 型{k3}: "
+          + "・".join(f"{c} {_n(ratio[c], 3)}" for c in NEED_B6)
+          + "（1 より小さいほど、型1 のほうが真値の動く範囲が狭い）")
+    print("  幅が狭いほど、その層の中で真値が動いていないので順位相関は小さく出る"
+          "（範囲の制限）。これは記述であって検定ではない。")
+    print("  「最小の層 n」が小さい型は、その層の ρ が少ない人数で決まる（人数の問題も"
+          "同じ表から読める）。")
+    print("  出典: この台本（50番）の節B が CSV の既存列から計算した値。"
+          "**新しい当てはめはしていない。**")
+    return {"types": out, "ratio": ratio}
+
+
 def print_b5(b2: dict, b3: dict, b4: dict) -> dict:
     """B5 予測との照合（P1〜P5）。**判定は付けない**（事後・記述）。"""
     print("\n" + "-" * 100)
@@ -1727,6 +1914,7 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
     out["b2"] = print_b2(d, klasses)
     out["b3"] = print_b3(d, klasses)
     out["b4"] = print_b4_ri(d, klasses)
+    out["b6"] = print_b6(d, klasses)
     out["b5"] = print_b5(out["b2"], out["b3"], out["b4"])
     return out
 
@@ -1735,22 +1923,27 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
 # 節A・節A-2 で候補になった当てはめの型を、**26番と同じ拍**（PWDB の指尖 PPG）に当て直し、
 # 26番の枠組み（波形の型・A 段と C 段・年齢層内 Spearman）でそのまま並べる。
 # **探索・事後であり、26番の事前規準による判定は動かさない。**
-# 既定の型は 7 つ。(6b) と (3) は 2026-09-15 の実データの結果を見て足した（lab_log 追記144）。
+# 既定の型は 9 つ。(6b) と (3) は 2026-09-15 の実データの結果を見て足した（lab_log 追記144）。
 # (6b) は**打ち切りと Δμ の緩和を分けて読む**ために要る。合成脈波では 2 つが同時に効いて
 # いたが（(6) は両方を変えてある）、実データでは Δμ の下限に 1 拍も張り付かないので、
 # 打ち切り単独の (6b) が (6) と同じ結果になるかどうかで、効き目の出どころが分かる。
 # (3) 自由な減衰項は合成では効かなかったが、実データで効いているのは拡張期の下降の扱い
 # なので、合成とは違う順位になりうる。**この 2 つを足したのは結果を見た後だが、どちらも
 # 「どの変更が効いたか」を分けて読むための行で、判定の規準は動かさない（事後の探索）。**
-VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "trunc", "trunc08", "decay")
+# (6c) 0.55T・(6d) 0.75T は 2026-09-15 に足した（lab_log 追記145）。**主とする割合は
+# 0.65T のまま動かさない**（24番・追記139 で実データを見る前に決めた値である）。この 2 行は
+# **結論が割合の選び方に敏感でないことを示す記述（感度の確認）のためだけ**にあり、
+# **この 3 つの数値を見てから主の割合を選び直さない。**(6b)(6c)(6d) は Δμ の下限が
+# どれも凍結版のまま 0.08 s で、割合だけが違う。
+VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "trunc", "trunc08",
+                    "trunc055", "trunc075", "decay")
 REFIT_NAME = "50_refit.csv"     # 再当てはめの記録（--refit-csv で変えられる）
 # 記録に残す診断の列の頭 → `fit_kind` が返す `checks` の鍵
 CHK_COLS = (("dmulo", "dmu_lo"), ("bnd", "boundary"), ("amp", "amp_zero"),
             ("amb", "ambiguous"), ("tauhi", "tau_hi"))
 CHK_HEAD = {"dmulo": "Δμ下限率", "bnd": "境界率", "amp": "高さ率", "amb": "別解率",
             "tauhi": "τ上限率"}
-COL_PWV = "PWV_a"          # 大動脈脈波伝播速度（真値）
-COL_PVR = "pvr"            # 末梢血管抵抗（真値）
+# 真値の列 COL_PWV（PWV_a）・COL_PVR（pvr）は節B の側で定めてある（B6 も読むため）。
 SIGN_DT = -1               # ΔT × 大動脈PWV の予測の向き（26番・48番と同じ）
 SIGN_RI = +1               # RI × 末梢血管抵抗 の予測の向き（同上）
 MIN_N_POOL = 20            # C4 の順位相関に要る人数（26番の MIN_N と同じ）
@@ -2593,6 +2786,15 @@ RI_LO_SYN, RI_HI_SYN = 0.20, 0.70      # 特徴点法 RI の範囲
 RI_JIT_SYN = 0.05                      # 当てはめの雑音
 RI_SLOPE_SYN = (0.6, 0.4, 0.2, 0.0, -0.3, -0.6)     # 型3 の傾き（25〜75 歳層）
 RI_SLOPE_FLAT = 1.0                    # 型1 の傾き（年齢層によらない）
+# 真値の仕込み（B6 を試すため。2026-09-15 に足した）。型1 は「同じ年齢層の中で血管が
+# 柔らかい側の部分集団」に見立て、PWV_a の散らばりを型3 より**わざと狭く**する。B6 の表が
+# その差を出せるかを見るための仕込みであって、PWDB の値を写したものではない。
+PWV_MID_SYN = (6.0, 6.8, 7.6, 8.6, 9.8, 11.2)   # 年齢層ごとの PWV_a の中心 [m/s]
+PWV_SD_K1, PWV_SD_K3 = 0.25, 1.20      # 型ごとの標準偏差（型1 を狭くする）
+PWV_SHIFT_K1 = 0.6                     # 型1 は中心も低い側に置く [m/s]
+PVR_MID_SYN = 1.00                     # pvr の中心
+PVR_SD_K1, PVR_SD_K3 = 0.10, 0.16      # 型ごとの標準偏差（型1 を狭くする）
+SEED_TRUTH_SYN = 101                   # 真値の乱数種の足し前（既存の列の乱数の並びを変えない）
 
 
 def synth_b(seed: int = 0) -> pd.DataFrame:
@@ -2601,8 +2803,12 @@ def synth_b(seed: int = 0) -> pd.DataFrame:
     ΔT: 型3 は下限（FLOOR_SYN_MS）で詰まり、型1 は詰まらない。
     RI: 型1 は特徴点法に載る（ρ ≈ +1・年齢層による差なし）。型3 は年齢層ごとに傾きを
         変え、高齢の層ほど逆向きにする（P4 の仕込み）。
+    真値: `PWV_a`・`pvr` を足す（B6 の仕込み）。型1 は型3 より散らばりを**狭く**して
+        ある。真値の列は別の乱数の流れ（種 seed + SEED_TRUTH_SYN）で作るので、足しても
+        ΔT・RI の列の値は変わらない（既存の検査の数値を動かさないため）。
     """
     rng = np.random.default_rng(seed)
+    rng_t = np.random.default_rng(seed + SEED_TRUTH_SYN)
     frames = []
     for k_age, age in enumerate(AGES_SYN):
         n = N_PER_AGE_SYN
@@ -2614,8 +2820,13 @@ def synth_b(seed: int = 0) -> pd.DataFrame:
         ri_jit = rng.normal(0.0, RI_JIT_SYN, n)
         slope = np.where(klass == 1.0, RI_SLOPE_FLAT, RI_SLOPE_SYN[k_age])
         ri_v1 = 0.30 + slope * (ri_lm - 0.45) + ri_jit
+        is1 = klass == 1.0
+        pwv = (PWV_MID_SYN[k_age] - np.where(is1, PWV_SHIFT_K1, 0.0)
+               + np.where(is1, PWV_SD_K1, PWV_SD_K3) * rng_t.standard_normal(n))
+        pvr = PVR_MID_SYN + np.where(is1, PVR_SD_K1, PVR_SD_K3) * rng_t.standard_normal(n)
         frames.append(pd.DataFrame({"age": age, KLASS_COL: klass, COL_LM: lm,
                                     COL_V1: v1, COL_RI_LM: ri_lm, COL_RI_V1: ri_v1,
+                                    COL_PWV: pwv, COL_PVR: pvr,
                                     COL_OK: 1}))
     return pd.concat(frames, ignore_index=True)
 
@@ -2732,22 +2943,52 @@ def selftest() -> int:
           + "。これが取り逃がしである。")
 
     # (0)(4b)(5b)(6b): 凍結版本体が先頭にあり、一度に 1 つだけ変える版が並んでいるか
-    rep("当てはめの型が 10 行あり、先頭が (0) 凍結版本体・(4b) は (2) と (4) の同時適用・"
-        "(5b)(6b) は Δμ の下限だけが (5)(6) と違う",
-        len(KIND_KEYS) == 10 and KIND_KEYS[0] == "fb"
+    rep("当てはめの型が 12 行あり、先頭が (0) 凍結版本体・(4b) は (2) と (4) の同時適用・"
+        "(5b)(6b) は Δμ の下限だけが (5)(6) と違い・(6c)(6d) は (6b) と割合だけが違う",
+        len(KIND_KEYS) == 12 and KIND_KEYS[0] == "fb"
         and KIND_NO["fb"] == "(0)" and KIND_NO["conv01"] == "(4b)"
         and KIND_SHAPE["conv01"] == "conv"
         and ("conv01" not in KIND_DMU_FROZEN) and ("fb" in KIND_DMU_FROZEN)
         and KIND_NO["tied08"] == "(5b)" and KIND_NO["trunc08"] == "(6b)"
+        and KIND_NO["trunc055"] == "(6c)" and KIND_NO["trunc075"] == "(6d)"
         and KIND_SHAPE["tied08"] == KIND_SHAPE["tied"]
         and KIND_SHAPE["trunc08"] == KIND_SHAPE["trunc"]
+        and KIND_SHAPE["trunc055"] == "plain" and KIND_SHAPE["trunc075"] == "plain"
         and ("tied08" in KIND_DMU_FROZEN) and ("trunc08" in KIND_DMU_FROZEN)
+        and ("trunc055" in KIND_DMU_FROZEN) and ("trunc075" in KIND_DMU_FROZEN)
         and ("tied" not in KIND_DMU_FROZEN) and ("trunc" not in KIND_DMU_FROZEN)
+        and TRUNC_FRAC_OF["trunc055"] == 0.55 and TRUNC_FRAC_OF["trunc08"] == 0.65
+        and TRUNC_FRAC_OF["trunc075"] == 0.75
         and all(np.isfinite(res[tau0]["got"][k]).all()
-                for k in ("fb", "conv01", "tied08", "trunc08")),
+                for k in ("fb", "conv01", "tied08", "trunc08",
+                          "trunc055", "trunc075")),
         "・".join(f"{_kind_no(k)} ρ {summ[(k, tau0)]['rho']:+.2f}"
-                  for k in ("fb", "frozen", "conv", "conv01",
-                            "tied", "tied08", "trunc", "trunc08")))
+                  for k in ("fb", "frozen", "conv", "conv01", "tied", "tied08",
+                            "trunc", "trunc08", "trunc055", "trunc075")))
+
+    # 打ち切りの割合が本当に配線されているか（2026-09-15 に足した。lab_log 追記145）。
+    # 3 つの割合は同じ拍に別々の ΔT を返さなければならない。返り値が同じなら、割合が
+    # `fit_kind` まで届いていない（TRUNC_FRAC_OF を引いていない）ということである。
+    tri = ("trunc055", "trunc08", "trunc075")
+    spread, n_tri = 0.0, 0
+    for rc in res.values():
+        vals = [np.asarray(rc["got"][k], float) for k in tri]
+        for i in range(len(rc["truth"])):
+            v = [float(x[i]) for x in vals]
+            if not all(np.isfinite(x) for x in v):
+                continue
+            pair = min(abs(v[0] - v[1]), abs(v[1] - v[2]), abs(v[0] - v[2]))
+            spread = max(spread, max(v) - min(v))
+            n_tri += int(pair > 1.0)
+    rep("打ち切りの割合 0.55・0.65・0.75 は同じ拍に別々の ΔT を返す（割合が配線されている）",
+        n_tri >= 1,
+        f"3 つが 1 ms を超えて違う拍が {n_tri} 拍・返り値の開きの最大 {spread:.1f} ms")
+    rep("主の割合は 0.65 のまま（(6) と (6b) が使う値。事前に決めた値を動かさない）",
+        TRUNC_FRAC == 0.65 and TRUNC_FRAC_OF["trunc"] == 0.65
+        and TRUNC_FRAC_OF["trunc08"] == 0.65
+        and set(KIND_TRUNC) == set(TRUNC_FRAC_OF),
+        f"TRUNC_FRAC {TRUNC_FRAC}・"
+        + "・".join(f"{_kind_no(k)} {TRUNC_FRAC_OF[k]:.2f}T" for k in KIND_TRUNC))
 
     # --- (b) 畳み込み貯留槽の ρ が凍結版より大きい
     pairs = [(tau, summ[("frozen", float(tau))]["rho"], summ[("conv", float(tau))]["rho"])
@@ -2904,6 +3145,38 @@ def selftest() -> int:
     rep("(c) 型3 も特徴点法に追随する表では P4 が「いいえ」になる（検査が効いている）",
         not _p4_of(synth_b_ri_flat(seed=0)),
         "型3 の傾きを型1 と同じにした合成データで照合した")
+
+    # --- (c) B6（真値そのもののばらつき。2026-09-15 に足した）
+    b6 = sb["b6"]["types"]
+    w1 = b6.get(1, {}).get("iqr_med", {}).get(COL_PWV, float("nan"))
+    w3 = b6.get(3, {}).get("iqr_med", {}).get(COL_PWV, float("nan"))
+    rep("(c) B6 が B4 の後・B5 の前に印字され、型 × 年齢層の表が出る",
+        "B6. 真値そのもののばらつき" in txt_b
+        and txt_b.index("B4. 型ごとの") < txt_b.index("B6. 真値そのもののばらつき")
+        < txt_b.index("B5. 予測との照合")
+        and b6.get(1, {}).get("n_ages") == len(AGES_SYN)
+        and b6.get(3, {}).get("n_ages") == len(AGES_SYN)
+        and "範囲の制限" in txt_b and "予測は立てて" in txt_b,
+        f"型1 の層 {b6.get(1, {}).get('n_ages')}・型3 の層 "
+        f"{b6.get(3, {}).get('n_ages')}・型1 の最小の層 n "
+        f"{b6.get(1, {}).get('min_n')}")
+    rep("(c) B6 で型1 の PWV_a の四分位範囲の幅が型3 より狭く出る（仕込みどおり）",
+        np.isfinite(w1) and np.isfinite(w3) and w1 < w3
+        and np.isfinite(sb["b6"]["ratio"][COL_PWV])
+        and sb["b6"]["ratio"][COL_PWV] < 1.0,
+        f"幅の中央値 型1 {w1:.3f}・型3 {w3:.3f}・比 "
+        f"{sb['b6']['ratio'][COL_PWV]:.3f}"
+        f"（仕込みの標準偏差 型1 {PWV_SD_K1}・型3 {PWV_SD_K3}）")
+    db_notruth = db.drop(columns=[COL_PWV, COL_PVR])
+    buf6 = io.StringIO()
+    with redirect_stdout(buf6):
+        sb6 = section_b(db_notruth, "合成データ（真値の列を抜いた）")
+    txt_b6 = buf6.getvalue()
+    rep("(c) PWV_a・pvr が無い表では B6 を飛ばし、そのことを 1 行で印字して先へ進む",
+        sb6["state"] == 0 and sb6["b6"] == {}
+        and "B6 は計算できない" in txt_b6 and COL_PWV in txt_b6
+        and "B5. 予測との照合" in txt_b6,
+        f"終了の状態 {sb6['state']}・B6 の返り値 {sb6['b6']}")
 
     # --- (d) 列が無い CSV
     d_miss = db.drop(columns=[COL_V1])
