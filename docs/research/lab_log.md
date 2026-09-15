@@ -8527,3 +8527,8 @@ ms 単位の分散分解を足す（Opus。既存の節の出力は変えない�
   ＝切痕の有無は特徴点法がすでに判定している量である。「ΔT が大きければ PDA」は言えない。(3) 表だけの解析（48番の類）は
   Mac 2 でも走る（`data/pwdb/pwdb_compare.csv` を Mac 1 から複製する。git 管理外）。実波形の図は PWs_Digital_PPG.csv・
   pwdb_haemod_params.csv・pwdb_pw_indices.csv も複製すれば描ける。確認的解析の値は Mac 1 のものを使う規則は変えない。
+- 49番 `analysis/scripts/49_pwdb_type3_figure.py`（Opus・719 行）ができた。20番の `load_pwdb`・`beat_of`、23番の `_to_ms`、25番の
+  `make_beat` を読み込んで使い、年齢層内で大動脈PWV が型の中央値に最も近い型1・型3 の被験者を 1 名ずつ選んで 2 枚組を描く
+  （`--subjects A,B` で明示可）。矢印が測るのは「第2成分のピーク − 拡張期側の特徴点（dia_t）」で、48番 節4 の
+  `dt_v1_ms − dt_lm_ms` とは厳密には別量（第1成分のピーク ≠ 収縮期ピーク）。自己検証 8 項目通過（合成脈波で型1 −6.8 ms・
+  型3 +58.7 ms、23番の模擬 PWDB で実データの道筋も通す）。用語検査 exit 0。実波形は Mac 1（`~/pwdb`）で描く。
