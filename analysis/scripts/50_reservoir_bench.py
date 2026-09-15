@@ -28,7 +28,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 
 節A（合成・既定で走る）
 -----------------------
-当てはめの型を 6 通り並べ、真の反射波の到達を追えるかを測る。
+当てはめの型を 6 通り並べ、真の反射波の到達を追えるかを測る（(5)(6) には Δμ の下限だけを
+凍結版のままにした版 (5b)(6b) を足したので、表は 8 行になる）。
 
   合成脈波   前進波（歪みガウス）＋ 反射波（歪みガウス）＋ 貯留槽（指数減衰）。反射波は
              早く到達するほど幅が広くなり歪みが消える（硬い血管の波形）。雑音は標準偏差
@@ -38,19 +39,37 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
              (3) 自由な指数減衰を足す（24番 の A1 と同じ形。d·exp(−(t−t0)/τ)）
              (4) 貯留槽を前進波の畳み込みで持つ（res(t) = g·∫g1(s)·e^{−(t−s)/τ}ds。母数は
                  g と τ の 2 つ）
-             (5) 第2成分の形を第1成分に縛る（σ2 = c·σ1・α2 = α1）
-             (6) 0.65T までで当てはめる
+             (5) 第2成分の形を第1成分に縛る（σ2 = c·σ1・α2 = α1）＋ Δμ の下限 0.01 s
+             (5b) 同じ形の拘束で、Δμ の下限は凍結版のまま 0.08 s
+             (6) 0.65T までで当てはめる ＋ Δμ の下限 0.01 s
+             (6b) 同じ打ち切りで、Δμ の下限は凍結版のまま 0.08 s
              いずれも `scipy.optimize.least_squares`（trf・起点 4 点・max_nfev 3000）で、
              **収束検算は課さない**（この節が見たいのは下限で詰まるかどうかで、採否ではない）
+
+             (5)(6) は試作と同じ設定で、形の拘束（打ち切り）と Δμ の下限の**2 つ**が凍結版
+             から変わっている。これでは効き目の出どころが読めないので、**一度に 1 つだけ
+             変えた** (5b)(6b) を 2026-09-15 に足した。(5)(6) の行は試作と数値が一致する
+             ことの記録なので消していない。
   掃引       貯留槽の時定数 3 通り（0.45・0.35・0.25 s）× 反射波の到達 10 通り（0.30〜0.08 s）。
              時定数を年齢層に見立て、層の中で到達だけを振る（26番の年齢層内 Spearman を模す）
-  出す表     型ごとに、時定数の層ごとの 順位相関 ρ・|誤差| の中央値・下限の詰まり、および
+  出す表     型ごとに、時定数の層ごとの 順位相関 ρ・|誤差| の中央値・全拍の最小・
+             下限の詰まり（新旧 2 つの規準。下記）、および
              1 拍ずつの表（真値・型・各当てはめの返り値と誤差・特徴点法）
 
-**下限の詰まりの規準（計算の前に決めた）**: 真値の小さいほうから 3 拍で、返り値の範囲が
-20 ms 未満なら「あり」と印字する。範囲は詰まりを取り逃がすことがあるので（返り値が下限の
-手前で折り返すと範囲は広く出る）、同じ表に**返り値の最小値**と**下位 3 拍の範囲**も並べる。
-真値の最小値と返り値の最小値の差が、追えなくなった大きさである。
+**下限の詰まりの規準（2026-09-15 に差し替えた）**: 真値の小さいほうから 3 拍で、
+**返り値の最小がその 3 拍の真値の最大より 30 ms 以上大きい**とき「あり」と印字する。
+
+最初に置いた規準は「その 3 拍の返り値の範囲が 20 ms 未満なら『あり』」であった。これは
+**凍結版を取り逃がす**。凍結版の返り値は真値 98 ms で 132 ms と最小になり、さらに短い
+真値（78・58 ms）では逆に 174 ms へ増えるので、下位 3 拍の範囲は 42 ms と広く出る。
+範囲は「返り値が下に行けないこと」を測っていない（名前どおりの量になっていない）ので、
+規準そのものを差し替えた。**結果を見て閾値を緩めたのではなく、測り方の誤りを直した。**
+差し替える前の規準も「（参考）下位 3 拍の範囲」として同じ表に残し、表の下に両方の定義を
+書く。あわせて**掃引の全拍を通した返り値の最小**も並べる（真値の最小との差が、追えなく
+なった大きさである）。
+
+**この節は探索・記述であり、26番の事前規準による判定には一切関与しない。**下限の詰まりの
+規準は、この節の表に印を付けるためだけのもので、成立・不成立の判定には使わない。
 
 参考として `pda2.preprocess` → `find_landmarks` の特徴点法（dia_t − sys_t）も同じ拍で出す。
 
@@ -108,7 +127,7 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 
 `--section A|B|AB`（既定 AB。CSV が無ければ A だけ）。`--fast` は節A の掃引を 2 層 × 5 拍に
 減らす（自己検査と同じ掃引。本番の表ではない）。自己検査は合成だけで走る（CSV もネット
-ワークも要らない）。節A の本番（3 層 × 10 拍 × 6 型）はこの環境で約 15 秒である。
+ワークも要らない）。節A の本番（3 層 × 10 拍 × 8 行）はこの環境で約 19 秒である。
 結果は print するので、残すときは tee で `docs/research/results/50_reservoir_bench.txt` に
 落とす。
 
@@ -420,11 +439,17 @@ def sweep(taus, dts, seed: int = SEED_A, kinds=None) -> dict:
 
 
 def floor_check(truth_ms, got_ms) -> dict:
-    """下限の詰まり（規準は計算の前に決めた。docstring 節A を参照）。
+    """下限の詰まり。真値の小さいほうから FLOOR_N 拍を取って 2 通りの規準で測る。
 
-    真値の小さいほうから FLOOR_N 拍を取り、返り値の範囲が FLOOR_RANGE_MS 未満なら
-    「あり」。範囲だけでは取り逃がすので、返り値の最小値（掃引の全拍）と、その 3 拍の
-    真値の範囲も返す。
+    いま使う規準（`flag_gap`。2026-09-15 に差し替えた）
+        その 3 拍の**返り値の最小**が、その 3 拍の**真値の最大**より FLOOR_GAP_MS 以上
+        大きいとき「あり」。返り値がどれだけ下に行けないかを直接測る。
+    差し替える前の規準（`flag_range`。参考として表に残す）
+        その 3 拍の返り値の範囲が FLOOR_RANGE_MS 未満なら「あり」。凍結版は返り値が
+        下限の手前で折り返すので（真値 98 ms で 132 ms、78・58 ms で 174 ms）、
+        範囲は広く出て取り逃がす。
+
+    `got_min` は掃引の全拍を通した返り値の最小で、真値の最小と並べて読む。
     """
     truth = np.asarray(truth_ms, float)
     got = np.asarray(got_ms, float)
@@ -434,15 +459,19 @@ def floor_check(truth_ms, got_ms) -> dict:
     fin = v[np.isfinite(v)]
     all_fin = got[np.isfinite(got)]
     out = {"n": int(fin.size), "lo": float("nan"), "hi": float("nan"),
-           "rng": float("nan"), "truth_rng": float(np.max(tv) - np.min(tv)),
-           "flag": False, "got_min": float("nan"),
+           "rng": float("nan"), "gap": float("nan"),
+           "truth_rng": float(np.max(tv) - np.min(tv)),
+           "truth_max": float(np.max(tv)), "flag_gap": False, "flag_range": False,
+           "got_min": float("nan"),
            "truth_min": float(np.min(truth)) if truth.size else float("nan")}
     if all_fin.size:
         out["got_min"] = float(np.min(all_fin))
     if fin.size >= 2:
         out["lo"], out["hi"] = float(np.min(fin)), float(np.max(fin))
         out["rng"] = out["hi"] - out["lo"]
-        out["flag"] = bool(out["rng"] < FLOOR_RANGE_MS)
+        out["gap"] = out["lo"] - out["truth_max"]
+        out["flag_gap"] = bool(out["gap"] >= FLOOR_GAP_MS)
+        out["flag_range"] = bool(out["rng"] < FLOOR_RANGE_MS)
     return out
 
 
@@ -482,7 +511,8 @@ def print_a_legend(taus, dts, seed: int) -> None:
           f"標本化 {FS:.0f} Hz・心拍数 {HR_SYN:.0f}/min。")
     print("  **真値は反射波のピーク − 前進波のピーク**（母数 μ の差ではない。幅と歪度が")
     print("  到達で変わるので両者は一致しない）。")
-    print(f"  掃引: 貯留槽の時定数 {list(taus)} s × 反射波の到達 {list(dts)} s。")
+    print(f"  掃引: 貯留槽の時定数 {list(taus)} s（{len(list(taus))} 層）")
+    print(f"        × 反射波の到達 {list(dts)} s（{len(list(dts))} 拍）。")
     print("  時定数を年齢層に見立て、層の中で到達だけを振る（26番の年齢層内 Spearman を模す）。")
     print("  時定数が小さいほど高齢に相当する（PWDB は加齢で末梢血管コンプライアンスを減らす）。")
     print("\n  当てはめの型（**波形の型 klass_own とは別のもの**。番号は括弧付きで書く）:")
@@ -490,6 +520,9 @@ def print_a_legend(taus, dts, seed: int) -> None:
         print("    " + _pad(_kind_no(k), 8) + _pad(KIND_HEAD[k], 11) + KIND_LABEL[k])
     print("    " + _pad("（参考）", 8) + _pad("特徴点法", 11)
           + "pda2.preprocess → find_landmarks の dia_t − sys_t")
+    print("    (5)(6) は形の拘束・打ち切りに加えて Δμ の下限も 0.01 s に緩めた版、"
+          "(5b)(6b) は")
+    print("    凍結版の 0.08 s のままの版である（一度に 1 つだけ変えたときの効きを読むため）。")
     print(f"  当てはめは least_squares（trf・起点 {N_STARTS} 点・max_nfev {MAX_NFEV}）。"
           "**収束検算は課さない。**")
 
@@ -510,8 +543,8 @@ def print_a_matrix(summ: dict, taus) -> None:
         for tau in taus:
             line += _f(summ[(k, float(tau))]["rho"], 15, prec=2, sign=True)
         print(line)
-    print("  ρ が 1.00 なら真値の順位を完全に追えている。1 層の拍数が少ないので、"
-          "0.71 と 0.89 の差は 1〜2 組の入れ替わりに当たる。")
+    print("  ρ が 1.00 なら真値の順位を完全に追えている。1 層の拍数が少ないので、")
+    print("  0.71 と 0.89 の差は 1〜2 組の入れ替わりに当たる。")
 
 
 def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
@@ -519,48 +552,59 @@ def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
     truth = np.asarray(rec["truth"], float)
     print(f"\n  --- 貯留槽の時定数 {tau:.2f} s（{truth.size} 拍・真値 "
           f"{np.min(truth):.0f}〜{np.max(truth):.0f} ms）---")
-    print("    " + _pad("当てはめの型", 16) + _pad("ρ", 9, right=True)
-          + _pad("|誤差|中央値", 14, right=True) + _pad("全拍の最小", 14, right=True)
-          + _pad("下位3拍の返り値", 18, right=True) + _pad("下限の詰まり", 14, right=True))
+    print("    " + _pad("当てはめの型", 18) + _pad("ρ", 8, right=True)
+          + _pad("|誤差|中央値", 13, right=True) + _pad("全拍の最小", 13, right=True)
+          + _pad("下限の詰まり", 15, right=True)
+          + _pad("（参考）下位3拍の範囲", 24, right=True))
     for k in KIND_KEYS + ["fid"]:
         s = summ[(k, tau)]
         fl = s["floor"]
         lab = (f"{_kind_no(k)} {KIND_HEAD[k]}" if k in KIND_HEAD else "（参考）特徴点法")
         rngs = ("—" if not np.isfinite(fl["rng"])
-                else f"{fl['lo']:.0f}〜{fl['hi']:.0f} ({fl['rng']:.0f})")
-        print("    " + _pad(lab, 16) + _f(s["rho"], 9, prec=2, sign=True)
-              + _pad(f"{s['mae']:.0f} ms" if np.isfinite(s["mae"]) else "—", 14, right=True)
+                else f"{fl['lo']:.0f}〜{fl['hi']:.0f}（{fl['rng']:.0f}）"
+                     f" {_ari(fl['flag_range'])}")
+        gaps = ("—" if not np.isfinite(fl["gap"])
+                else f"{_ari(fl['flag_gap'])}（{fl['gap']:+.0f}）")
+        print("    " + _pad(lab, 18) + _f(s["rho"], 8, prec=2, sign=True)
+              + _pad(f"{s['mae']:.0f} ms" if np.isfinite(s["mae"]) else "—", 13, right=True)
               + _pad(f"{fl['got_min']:.0f} ms" if np.isfinite(fl["got_min"]) else "—",
-                     14, right=True)
-              + _pad(rngs, 18, right=True)
-              + _pad(_ari(fl["flag"]), 14, right=True))
+                     13, right=True)
+              + _pad(gaps, 15, right=True)
+              + _pad(rngs, 24, right=True))
     f0 = summ[(KIND_KEYS[0], tau)]["floor"]
-    print(f"    「下限の詰まり」は真値の小さいほうから {FLOOR_N} 拍の返り値の範囲が "
-          f"{FLOOR_RANGE_MS:.0f} ms 未満のとき「あり」（規準は計算の前に決めた）。")
+    print(f"    「下限の詰まり」は、真値の小さいほうから {FLOOR_N} 拍の**返り値の最小**が、"
+          f"その {FLOOR_N} 拍の**真値の最大**（{f0['truth_max']:.0f} ms）より")
+    print(f"    {FLOOR_GAP_MS:.0f} ms 以上大きいとき「あり」（括弧内はその差）。"
+          "2026-09-15 に差し替えた規準である。")
+    print(f"    「（参考）下位3拍の範囲」は差し替える前の規準で、その {FLOOR_N} 拍の返り値の"
+          f"範囲が {FLOOR_RANGE_MS:.0f} ms 未満のとき「あり」。")
+    print("    凍結版は返り値が下限の手前で折り返すので範囲は広く出る。取り逃がすことが")
+    print("    分かったので、参考として残してある。")
     print(f"    その {FLOOR_N} 拍の真値の範囲は {f0['truth_rng']:.0f} ms、真値の最小は "
-          f"{f0['truth_min']:.0f} ms である。「全拍の最小」は掃引の 10 拍を通した返り値の"
-          "最小で、")
-    print("    これが真値の最小より大きいほど、短い側を追えていない（下限で詰まっている）。")
+          f"{f0['truth_min']:.0f} ms である。")
+    print("    「全拍の最小」は掃引の全拍を通した返り値の最小で、これが真値の最小より"
+          "大きいほど")
+    print("    短い側を追えていない（下限で詰まっている）。")
 
-    print("\n    1 拍ずつ（返り値 [ms] と、括弧内は 返り値 − 真値）")
+    print("\n    1 拍ずつ（返り値 [ms] と、括弧内は 返り値 − 真値。列の番号は上の表と同じ）")
     head = _pad("真値[ms]", 9, right=True) + _pad("波形の型", 9, right=True)
     for k in KIND_KEYS:
-        head += _pad(f"{_kind_no(k)}{KIND_HEAD[k]}", 12, right=True)
-    head += _pad("特徴点法", 12, right=True)
-    print("    " + head)
+        head += _pad(_kind_no(k), 10, right=True)
+    head += _pad("特徴点法", 10, right=True)
+    print("  " + head)
     for i, tv in enumerate(rec["truth"]):
         line = _pad(f"{tv:.0f}", 9, right=True) + _pad(str(rec["klass"][i]), 9, right=True)
         for k in KIND_KEYS + ["fid"]:
             v = rec["got"][k][i] if k in rec["got"] else rec["fid"][i]
-            line += (_pad("—", 12, right=True) if not np.isfinite(v)
-                     else f"{v:>6.0f}({v - tv:+4.0f})")
-        print("    " + line)
+            line += (_pad("—", 10, right=True) if not np.isfinite(v)
+                     else f"{v:>4.0f}({v - tv:+4.0f})")
+        print("  " + line)
     print("    「波形の型」は特徴点法（pda2.find_landmarks）が付けた klass_own である"
           "（1 = 極値あり、3 = 変曲点で代用）。")
 
 
 def section_a(taus=TAUS_FULL, dts=DTS_FULL, seed: int = SEED_A) -> dict:
-    """節A: 当てはめの型を 6 通り並べ、真の反射波の到達を追えるかを測る（合成）。"""
+    """節A: 当てはめの型を並べ、真の反射波の到達を追えるかを測る（合成・表は 8 行）。"""
     print("\n" + "=" * 100)
     print("節A 合成脈波: 当てはめの型を変えると、真の反射波の到達を追えるか")
     print("=" * 100)
@@ -573,8 +617,8 @@ def section_a(taus=TAUS_FULL, dts=DTS_FULL, seed: int = SEED_A) -> dict:
     print("-" * 100)
     for tau in taus:
         print_a_layer(res[float(tau)], summ, float(tau))
-    print(f"\n  出典: この台本（50番）の節A が合成脈波から計算した値"
-          f"（時定数 {len(list(taus))} 通り × 到達 {len(list(dts))} 通り × "
+    print("\n  出典: この台本（50番）の節A が合成脈波から計算した値")
+    print(f"        （時定数 {len(list(taus))} 通り × 到達 {len(list(dts))} 通り × "
           f"当てはめ {len(KIND_KEYS)} 型・乱数種 {seed}）。")
     return {"res": res, "summ": summ, "taus": tuple(float(v) for v in taus),
             "dts": tuple(dts), "seed": seed}
@@ -761,11 +805,11 @@ def print_b2(d: pd.DataFrame, klasses) -> dict:
                   + _pad(b["n"], 7, right=True) + _f(b["med"], 18, prec=1)
                   + _pad(iqr, 22, right=True) + _f(b["lm_med"], 20, prec=1))
         print(f"    凍結版 ΔT の最小 {_n(res['v1_min'], 1)} ms・下位 5% "
-              f"{_n(res['v1_p5'], 1)} ms。探索範囲の下限 Δμ {DMU_LO_FROZEN} s "
-              f"（＝ {DMU_LO_MS:.0f} ms）との差は "
+              f"{_n(res['v1_p5'], 1)} ms（特徴点法 ΔT の最小は "
+              f"{_n(res['lm_min'], 1)} ms）。")
+        print(f"    探索範囲の下限 Δμ {DMU_LO_FROZEN} s（＝ {DMU_LO_MS:.0f} ms）との差は "
               f"{_n(res['v1_min'] - DMU_LO_MS, 1, sign=True)} ms・"
               f"{_n(res['v1_p5'] - DMU_LO_MS, 1, sign=True)} ms。")
-        print(f"    特徴点法 ΔT の最小は {_n(res['lm_min'], 1)} ms である。")
     print("\n  Δμ は母数（μ2 − μ1）の下限で、ΔT は成分のピーク間隔である。歪みがあると")
     print("  ピークは μ からずれるので、ΔT が 80 ms を下回ることはありうる。80 ms は")
     print("  それでも目安になる（下限より下には母数を動かせない）。")
@@ -856,8 +900,8 @@ def print_b4(b2: dict, b3: dict) -> dict:
     ev = sum(1 for v in (ev1, np.isfinite(gap3), np.isfinite(gap1)) if v)
     print(f"\n  まとめ: 予測 3 条のうち照合できたのは {ev} 条、そのうち「はい」は {hit} 条。")
     if ev < 3:
-        print("  照合できなかった条は、人数が足りないか対応のある行が無いためである"
-              "（この CSV が抜粋なら、確認的解析の機械で走らせ直す）。")
+        print("  照合できなかった条は、人数が足りないか対応のある行が無いためである。")
+        print("  この CSV が抜粋なら、確認的解析の機械（4,374 行）で走らせ直す。")
     print("  **この節は事後の記述であり、判定（成立・不成立）は付けない。**"
           "26番の事前規準による判定は動かない。")
     return {"P1": p1, "P2": p2, "P3": p3, "hit": hit, "n_eval": ev,
@@ -880,7 +924,8 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
     seen = sorted(set(int(v) for v in kl[np.isfinite(kl)]))
     n_ok = int(np.sum(pd.to_numeric(d[COL_OK], errors="coerce") == 1)) \
         if COL_OK in d.columns else -1
-    print(f"  入力 {src}（26番の出力。**既存列だけを読み、新しい当てはめはしない**）")
+    print(f"  入力 {src}")
+    print("  （26番の出力。**既存列だけを読み、新しい当てはめはしない**）")
     print(f"  行数 {len(d)} 名（確認的解析を回した機械では 4,374 名）"
           f"・年齢層 {[int(a) for a in ages]}・型の値 {seen}")
     print(f"  A 段（{COL_OK} == 1）{n_ok} 名"
@@ -927,7 +972,9 @@ def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
              if "A" in section else "節A なし")
     b_txt = (f"節B {src}（{len(d)} 名・型の列 {KLASS_COL}・A 段 {COL_OK} == 1）"
              if ("B" in section and d is not None) else "節B なし")
-    print(f"  出典: analysis/scripts/50_reservoir_bench.py / {a_txt} / {b_txt}")
+    print("  出典: analysis/scripts/50_reservoir_bench.py")
+    print(f"        / {a_txt}")
+    print(f"        / {b_txt}")
     print("  年齢層内 Spearman の規約は 20番 `20_pwdb_validity.py` の `_spearman`・`_judge`")
     print(f"  をそのまま使う（1 層 {MIN_PER_AGE} 名以上・層は `age` の相異なる値）。")
     return out
@@ -986,17 +1033,18 @@ def selftest() -> int:
         and abs(tr["dt_s"] - 0.20) > 0.005,
         f"{t.size} 標本・真値 {1000 * tr['dt_s']:.0f} ms（設定 200 ms）")
 
-    # --- (a-1) 下限の詰まりの検出器そのもの
+    # --- (a-1) 下限の詰まりの検出器そのもの（いま使う規準と、差し替える前の規準）
     truth5 = np.array([250.0, 200.0, 150.0, 100.0, 50.0])
-    stuck = np.array([250.0, 200.0, 152.0, 151.0, 150.0])   # 下限 150 ms で止めた列
+    stuck = np.array([250.0, 200.0, 190.0, 187.0, 185.0])   # 下限 185 ms で止めた列
     prop = np.array([255.0, 205.0, 155.0, 105.0, 55.0])     # 真値に比例する列
     f_stuck, f_prop = floor_check(truth5, stuck), floor_check(truth5, prop)
-    rep("(a) 検出器: 人工的に下限で止めた列で「あり」",
-        f_stuck["flag"] and f_stuck["rng"] < FLOOR_RANGE_MS,
-        f"下位 {FLOOR_N} 拍の範囲 {f_stuck['rng']:.0f} ms・返り値の最小 "
-        f"{f_stuck['got_min']:.0f} ms")
-    rep("(a) 検出器: 真値に比例する列では「なし」",
-        (not f_prop["flag"]) and f_prop["rng"] >= FLOOR_RANGE_MS,
+    rep("(a) 検出器: 人工的に下限で止めた列で「あり」（新しい規準・差し替える前の規準とも）",
+        f_stuck["flag_gap"] and f_stuck["flag_range"],
+        f"返り値の最小 − 真値の最大 {f_stuck['gap']:+.0f} ms"
+        f"（要 {FLOOR_GAP_MS:.0f} 以上）・下位 {FLOOR_N} 拍の範囲 {f_stuck['rng']:.0f} ms")
+    rep("(a) 検出器: 真値に比例する列では「なし」（同上）",
+        (not f_prop["flag_gap"]) and (not f_prop["flag_range"]),
+        f"返り値の最小 − 真値の最大 {f_prop['gap']:+.0f} ms・"
         f"下位 {FLOOR_N} 拍の範囲 {f_prop['rng']:.0f} ms")
 
     # --- 節A を減らした掃引で 1 回走らせる（(a-2)・(b)・(e) で使い回す）
@@ -1017,18 +1065,43 @@ def selftest() -> int:
         got = np.asarray(rec["got"]["frozen"], float)
         order = np.argsort(truth)
         d2 = abs(got[order[0]] - got[order[1]])          # 真値が 20 ms 違う 2 拍
-        gap = summ[("frozen", float(tau))]["floor"]["got_min"] - float(np.min(truth))
-        det.append((tau, d2, gap, summ[("frozen", float(tau))]["floor"]["flag"]))
+        fl = summ[("frozen", float(tau))]["floor"]
+        det.append((tau, d2, fl["got_min"] - float(np.min(truth)), fl))
     rep("(a) 凍結版は短い側で下限に詰まる（真値が 20 ms 違う 2 拍で返り値の差 1 ms 未満）",
-        all(dd < 1.0 for _t, dd, _g, _f2 in det),
-        "・".join(f"時定数 {t_:.2f}s 差 {dd:.1f} ms" for t_, dd, _g, _f2 in det))
+        all(dd < 1.0 for _t, dd, _g, _fl in det),
+        "・".join(f"時定数 {t_:.2f}s 差 {dd:.1f} ms" for t_, dd, _g, _fl in det))
     rep("(a) 凍結版の返り値の最小は真値の最小より 60 ms 以上大きい（短い側を追えない）",
-        all(g >= 60.0 for _t, _d, g, _f2 in det),
-        "・".join(f"時定数 {t_:.2f}s +{g:.0f} ms" for t_, _d, g, _f2 in det))
-    print("    参考: 規準どおりの「下限の詰まり」の印字は "
-          + "・".join(f"時定数 {t_:.2f}s {_ari(f2)}" for t_, _d, _g, f2 in det)
-          + f"（真値の小さいほうから {FLOOR_N} 拍の返り値の範囲が "
-            f"{FLOOR_RANGE_MS:.0f} ms 未満か）。")
+        all(g >= 60.0 for _t, _d, g, _fl in det),
+        "・".join(f"時定数 {t_:.2f}s +{g:.0f} ms" for t_, _d, g, _fl in det))
+
+    # 新しい規準（2026-09-15 差し替え）の検算。時定数 0.45 s の層で、凍結版だけが「あり」
+    tau0 = float(TAUS_FAST[0])
+    fl_fz = summ[("frozen", tau0)]["floor"]
+    rep(f"(a) 新しい規準で凍結版が「あり」（時定数 {tau0:.2f} s の層）",
+        fl_fz["flag_gap"],
+        f"下位 {FLOOR_N} 拍の返り値の最小 {fl_fz['lo']:.0f} ms − 真値の最大 "
+        f"{fl_fz['truth_max']:.0f} ms = {fl_fz['gap']:+.0f} ms（要 {FLOOR_GAP_MS:.0f} 以上）")
+    none_keys = ("relax", "conv", "trunc")
+    rep(f"(a) 新しい規準で Δμ0.01・畳み込み・0.65T は「なし」（時定数 {tau0:.2f} s の層）",
+        all(not summ[(k, tau0)]["floor"]["flag_gap"] for k in none_keys),
+        "・".join(f"{_kind_no(k)}{KIND_HEAD[k]} {summ[(k, tau0)]['floor']['gap']:+.0f} ms"
+                  for k in none_keys))
+    print("    参考: 差し替える前の規準（下位 3 拍の返り値の範囲 < "
+          f"{FLOOR_RANGE_MS:.0f} ms）での凍結版の印字は "
+          + "・".join(f"時定数 {t_:.2f}s {_ari(fl['flag_range'])}"
+                      f"（範囲 {fl['rng']:.0f} ms）" for t_, _d, _g, fl in det)
+          + "。これが取り逃がしである。")
+
+    # (5b)(6b): 一度に 1 つだけ変える版が並んでいるか
+    rep("当てはめの型が 8 行あり、(5b)(6b) は Δμ の下限だけが (5)(6) と違う",
+        len(KIND_KEYS) == 8 and KIND_NO["tied08"] == "(5b)" and KIND_NO["trunc08"] == "(6b)"
+        and KIND_SHAPE["tied08"] == KIND_SHAPE["tied"]
+        and KIND_SHAPE["trunc08"] == KIND_SHAPE["trunc"]
+        and ("tied08" in KIND_DMU_FROZEN) and ("trunc08" in KIND_DMU_FROZEN)
+        and ("tied" not in KIND_DMU_FROZEN) and ("trunc" not in KIND_DMU_FROZEN)
+        and all(np.isfinite(res[tau0]["got"][k]).all() for k in ("tied08", "trunc08")),
+        "・".join(f"{_kind_no(k)} ρ {summ[(k, tau0)]['rho']:+.2f}"
+                  for k in ("tied", "tied08", "trunc", "trunc08")))
 
     # --- (b) 畳み込み貯留槽の ρ が凍結版より大きい
     pairs = [(tau, summ[("frozen", float(tau))]["rho"], summ[("conv", float(tau))]["rho"])
