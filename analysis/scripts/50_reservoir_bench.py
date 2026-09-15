@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""【探索・事後】論文2: 当てはめの型を変えると真の反射波の到達を追えるか（節A・合成）と、
-凍結版 ΔT が下限で詰まる性質は実データにも出るか（節B・PWDB）。
+"""【探索・事後】論文2: 当てはめの型を変えると真の反射波の到達と大きさを追えるか
+（節A・節A-2・合成）と、凍結版 ΔT・RI の崩れ方は実データにも出るか（節B・PWDB）。
 
 **これは事後の探索であり、論文2 の事前規準による判定（26番）は動かさない。**
 26番（`26_pwdb_compare.py`）で下した判定はそのまま有効で、この台本の出力はすべて
@@ -25,6 +25,11 @@
 緩めると 0.89／0.95、貯留槽を前進波の畳み込みで持つと 1.00／1.00、0.65T までで当てはめると
 0.95／0.99、参考の特徴点法 1.00／1.00 であった（監督者が合成脈波で実測した値。
 lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の流儀で作り直したものである）。
+
+この台本は 3 つの節を持つ。節A は反射波の**到達**（ΔT）、節A-2 は反射波の**大きさ**（RI）を
+同じ合成脈波で振る。節B は実データ（PWDB）の既存列だけで、合成から立てた予測を確かめる。
+**節A-2 のほうが所見は強い**: 反射波が収縮期に重なる条件（型3 相当）では、凍結版の RI は
+真の反射が大きいほど小さくなる（ρ −0.89。符号が反転する）。
 
 節A（合成・既定で走る）
 -----------------------
@@ -73,11 +78,45 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 
 参考として `pda2.preprocess` → `find_landmarks` の特徴点法（dia_t − sys_t）も同じ拍で出す。
 
+節A-2（合成・既定で走る）
+-------------------------
+同じ合成脈波で、振るものを反射波の**大きさ**（母数 a_ref）に変え、当てはめが返す RI
+（第2成分／第1成分のピーク高さの比 h2/h1）が順位を追うかを測る。
+
+  掃引       反射波の大きさ 7 通り（0.20・0.28・0.35・0.42・0.50・0.58・0.65）× 条件 2 つ。
+             条件は**型1 相当**（反射波の到達 0.28 s。遅く分離する）と**型3 相当**
+             （到達 0.10 s。収縮期に重なる）で、貯留槽の時定数は 0.35 s に固定する
+  当てはめ   節A と同じ 8 行。参考の特徴点法の RI は `dia_v / sys_v`
+  真値       2 つ出す。「真の RI」は振った母数 a_ref、「真の比」は合成した成分のピーク
+             高さの比（当てはめの h2/h1 と同じ定義）。条件の中では前進波が変わらないので
+             両者は比例し、**順位は同じ**である。ρ は母数に対して、|誤差| は比に対して出す
+  出す表     条件ごとに 順位相関 ρ・|誤差| の中央値・返り値の範囲・**符号の反転**、
+             および 1 拍ずつの表（真の RI・真の比・波形の型・各当てはめの返り値・特徴点法）
+
+**符号の反転の規準（2026-09-15 に、実装の前に決めた）**: ρ が −0.30 より小さいとき
+「反転」と印字する。大きさは 20番の `CRIT_RHO`（0.30）と同じで、符号を負にしたものである。
+**この印も探索・記述のためだけのもので、26番の事前規準による判定には関与しない。**
+
+監督者が試作で測った値（一致の目安。貯留槽 0.35 s）
+
+    型1 相当  凍結版・Δμ0.01・畳み込み・0.65T・特徴点法のすべてで ρ +1.00。凍結版の
+              返り値は真の RI 0.20〜0.65 に対し 0.382・0.442・0.496・0.551・0.614・
+              0.679・0.736
+    型3 相当  **凍結版 ρ −0.89**（返り値 0.266・0.278・0.268・0.262・0.252・0.239・0.226
+              と、真の反射波が大きくなるほど小さくなる）。Δμ0.01 +1.00（0.351〜0.564）、
+              畳み込み +1.00（0.151〜0.277）、0.65T +1.00（0.396〜0.714）、
+              特徴点法 +1.00（0.304〜0.441）
+
+機構: 型3 相当では反射波が前進波に融合するので、真の反射が大きいほど**第1成分が高く
+なる**。一方、第2成分は貯留槽の下降の上に固定されて高さが変わらない。したがって比
+h2/h1 は**下がる**。
+
 節B（実データ・`--csv` があれば走る）
 -------------------------------------
 既存の `data/pwdb/pwdb_compare.csv`（26番の出力・確認的解析を回した機械では 4,374 行）の
 **列だけを読む。新しい当てはめはしない**（数秒で終わる）。読む列は `age`・`klass_own`・
-`dt_v1_ms`（凍結版 ΔT）・`dt_lm_ms`（特徴点法 ΔT・Charlton 同梱）・`ok_v1`（26番の A 段）。
+`dt_v1_ms`（凍結版 ΔT）・`dt_lm_ms`（特徴点法 ΔT・Charlton 同梱）・`ok_v1`（26番の A 段）と、
+B4 で `ri_v1`（凍結版 RI）・`digital_ri`（特徴点法 RI・Charlton 同梱）。
 
   B1  型（`klass_own`）ごとに、凍結版 ΔT と特徴点法 ΔT の分布（5・10・25・50・75・90・95
       パーセンタイルと最小・最大）
@@ -88,7 +127,10 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
   B3  型ごとに ρ(dt_v1_ms, dt_lm_ms)（年齢層内 Spearman の中央値。**符号つき**。同じ量を
       測っているなら正になるはずで、|ρ| では順位が壊れて負に振れたときに見えなくなる）と、
       特徴点法 ΔT が短い側の半数・長い側の半数に分けたときのそれぞれの ρ
-  B4  予測との照合（下記 P1〜P3）。**判定は付けない**（事後・記述）
+  B4  型ごとに ρ(ri_v1, digital_ri) を**年齢層ごとに 1 行ずつ**並べる（節A-2 の所見を
+      実データで見るため。規約は B3・48番 と同じ。A 段を主とし C 段を同じ行に並べる）。
+      `ri_v1`・`digital_ri` の列が無い CSV では B4 と P4・P5 だけを飛ばす
+  B5  予測との照合（下記 P1〜P5）。**判定は付けない**（事後・記述）
 
 凍結版の列は 26番の A 段（`ok_v1 == 1`。その手法が自分で採用した例だけ）で計算し、C 段
 （採否を無視した全例）は参考として添える。48番 節4 の +36.9 ms・+98.5 ms が A 段の値だから
@@ -105,9 +147,21 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 (P2) 型3 では、特徴点法 ΔT が短い側の半数の ρ(dt_v1_ms, dt_lm_ms) が、長い側の半数より
      0.15 以上小さい。根拠: 下限で詰まるのは短い側だけなので、順位が壊れるのも短い側である。
 (P3) 型1 では (P2) の差が 0.15 未満。根拠: 型1 は真の到達が長く、下限で詰まる範囲に入らない。
+(P4) 型3 では、年齢層内の ρ(ri_v1, digital_ri) の中央値が 0.30 未満で、かつ高齢の層ほど
+     小さい（75 歳層で 0.20 未満）。根拠: 節A-2 で、型3 相当の条件では凍結版の RI が
+     真の反射の大きさと逆に動いた（ρ −0.89）。加齢で切痕が消えるほど型3 の波形に近づく。
+(P5) 型1 ではその ρ の中央値が 0.60 以上で、年齢層による傾きがない。根拠: 節A-2 の
+     型1 相当では凍結版・特徴点法とも ρ +1.00 で、両者は同じ順位を返した。
 
-予測の本文と数値の規準（140 ms・0.15・下から 2 区間）は 2026-09-15 に固定したものから変えて
-いない。語だけは用語の決まり（`docs/research/terminology.md`）に従い「下限で詰まる」と書く。
+P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-2 の合成の結果だけを見て
+立てた予測である）。P5 の「年齢層による傾きがない」は、**最も若い層と最も高齢の層の ρ の
+差が 0.15 未満**と読む（P2・P3 と同じ 0.15 を使う）。P4 の「高齢の層ほど小さい」は括弧の
+とおり **75 歳層の ρ が 0.20 未満**で判定し、年齢と層ごとの ρ の順位相関は記述として
+添えるだけにする（規準には使わない）。
+
+予測の本文と数値の規準（140 ms・0.15・下から 2 区間・0.30・0.20・0.60）は 2026-09-15 に
+固定したものから変えていない。語だけは用語の決まり（`docs/research/terminology.md`）に
+従い「下限で詰まる」と書く。
 
 前提と限界
 ----------
@@ -127,7 +181,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 
 `--section A|B|AB`（既定 AB。CSV が無ければ A だけ）。`--fast` は節A の掃引を 2 層 × 5 拍に
 減らす（自己検査と同じ掃引。本番の表ではない）。自己検査は合成だけで走る（CSV もネット
-ワークも要らない）。節A の本番（3 層 × 10 拍 × 8 行）はこの環境で約 19 秒である。
+ワークも要らない）。節A（3 層 × 10 拍）＋ 節A-2（2 条件 × 7 拍）の本番は、当てはめ 8 行で
+この環境では約 30 秒である。
 結果は print するので、残すときは tee で `docs/research/results/50_reservoir_bench.txt` に
 落とす。
 
@@ -271,28 +326,34 @@ FLOOR_GAP_MS = 30.0
 FLOOR_RANGE_MS = 20.0
 
 
-def synth_beat(dt_true: float, tau: float, seed: int = SEED_A, hr: float = HR_SYN):
+def synth_beat(dt_true: float, tau: float, seed: int = SEED_A, hr: float = HR_SYN,
+               a_ref: float = A_REF):
     """前進波（歪みガウス）＋ 反射波（歪みガウス）＋ 貯留槽（指数減衰）の 1 拍を作る。
 
     反射波は早く到達するほど幅が広くなり歪みが消える（硬い血管の波形）。
-    真値は**反射波のピーク − 前進波のピーク**で、母数（μ）の差ではない。幅と歪度が
-    到達によって変わるので、両者は一致しない。
+    ΔT の真値は**反射波のピーク − 前進波のピーク**で、母数（μ）の差ではない。幅と歪度が
+    到達によって変わるので、両者は一致しない。`a_ref` は反射波の大きさの母数で、節A-2 が
+    これを振る（既定は A_REF で、節A の掃引はこれまでと同じ波形になる）。RI の真値として
+    成分のピーク高さの比 `ri_peak` も返す（当てはめが返す h2/h1 と同じ定義）。
     """
     T = 60.0 / hr
     t = np.arange(0.0, T, 1.0 / FS)
     w_ref = W_REF_A + W_REF_B * dt_true
     al_ref = AL_REF if dt_true > DT_SKEW else 0.0
     fwd = skew_gaussian(t, A_FWD, TP_F - 0.02, SIG_FWD, AL_FWD)
-    ref = skew_gaussian(t, A_REF, TP_F + dt_true - 0.02, w_ref, al_ref)
+    ref = skew_gaussian(t, a_ref, TP_F + dt_true - 0.02, w_ref, al_ref)
     t_a = min(RES_MAX_FRAC * T, TP_F + dt_true + RES_PEAK_LAG)
     rise = np.clip(t / max(t_a, 1e-6), 0.0, 1.0) ** 2
     res = D_RES * rise * np.exp(-np.maximum(t - t_a, 0.0) / tau)
     y = fwd + ref + res
     y = y + NOISE_SD * np.random.default_rng(seed).standard_normal(y.size)
-    t_ref = float(t[int(np.argmax(ref))])
-    t_fwd = float(t[int(np.argmax(fwd))])
+    i_ref, i_fwd = int(np.argmax(ref)), int(np.argmax(fwd))
+    t_ref, t_fwd = float(t[i_ref]), float(t[i_fwd])
+    h_ref, h_fwd = float(ref[i_ref]), float(fwd[i_fwd])
     return t, y, {"dt_s": t_ref - t_fwd, "t_ref": t_ref, "t_fwd": t_fwd,
-                  "tau": tau, "dt_set": dt_true}
+                  "tau": tau, "dt_set": dt_true, "a_ref": a_ref,
+                  "h_ref": h_ref, "h_fwd": h_fwd,
+                  "ri_peak": h_ref / max(h_fwd, 1e-12)}
 
 
 def _norm(y: np.ndarray) -> np.ndarray:
@@ -624,6 +685,149 @@ def section_a(taus=TAUS_FULL, dts=DTS_FULL, seed: int = SEED_A) -> dict:
             "dts": tuple(dts), "seed": seed}
 
 
+# ============================================================== 節A-2（合成・RI）
+# 反射波の大きさ a_ref を振り、当てはめが返す RI（h2/h1）が順位を追うかを見る。
+# 条件は 2 つ。反射波が遅く分離する拍（型1 相当）と、収縮期に重なる拍（型3 相当）。
+RIS_FULL = (0.20, 0.28, 0.35, 0.42, 0.50, 0.58, 0.65)
+RIS_FAST = (0.20, 0.35, 0.50, 0.65)      # 自己検査の掃引
+RI_TAU = 0.35                            # 貯留槽の時定数は固定する
+RI_CONDS = ((0.28, "型1 相当", "反射波が遅く分離する（到達 280 ms）"),
+            (0.10, "型3 相当", "反射波が収縮期に重なる（到達 100 ms）"))
+# 符号の反転の規準（2026-09-15 に、実装の前に決めた）: ρ がこれより小さいとき「反転」。
+# 大きさは 20番の CRIT_RHO（0.30）と同じで、符号を負にしたものである。
+RHO_FLIP = -0.30
+
+
+def sweep_ri(conds=RI_CONDS, ris=RIS_FULL, tau: float = RI_TAU, seed: int = SEED_A,
+             kinds=None) -> dict:
+    """条件 × 反射波の大きさの掃引。返り値は条件ごとの真値・返り値・波形の型。
+
+    真値は 2 つ返す。`truth` は振った母数 a_ref、`ri_peak` は成分のピーク高さの比
+    （当てはめが返す h2/h1 と同じ定義）である。条件の中では前進波が変わらないので
+    両者は比例し、**順位は同じ**である。ρ は母数（試作と同じ）、|誤差| は比に対して出す。
+    """
+    kinds = list(KIND_KEYS) if kinds is None else list(kinds)
+    out = {}
+    for dt, lab, note in conds:
+        rec = {"dt": float(dt), "label": lab, "note": note, "tau": float(tau),
+               "truth": [], "ri_peak": [], "klass": [], "fid": [],
+               "got": dict((k, []) for k in kinds)}
+        for ri in ris:
+            t, y, tr = synth_beat(dt, tau, seed=seed, a_ref=ri)
+            rec["truth"].append(float(ri))
+            rec["ri_peak"].append(tr["ri_peak"])
+            for k in kinds:
+                rec["got"][k].append(fit_kind(t, y, k)["ri"])
+            f = fiducial_dt(t, y)
+            rec["fid"].append(f["ri"])
+            rec["klass"].append(f["klass"])
+        out[lab] = rec
+    return out
+
+
+def summarise_a2(res: dict) -> dict:
+    """型 × 条件の (ρ, |誤差| 中央値, 符号の反転)。ρ は 20番の `_spearman`。"""
+    out = {}
+    for lab, rec in res.items():
+        truth = np.asarray(rec["truth"], float)
+        peak = np.asarray(rec["ri_peak"], float)
+        series = [(k, np.asarray(rec["got"][k], float)) for k in rec["got"]]
+        series.append(("fid", np.asarray(rec["fid"], float)))
+        for key, got in series:
+            rho, n = M._spearman(truth, got, min_n=MIN_BEATS_A)
+            err = got - peak
+            fin = got[np.isfinite(got)]
+            out[(key, lab)] = {
+                "rho": rho, "n": int(n),
+                "mae": float(np.nanmedian(np.abs(err))) if np.any(np.isfinite(err))
+                else float("nan"),
+                "lo": float(np.min(fin)) if fin.size else float("nan"),
+                "hi": float(np.max(fin)) if fin.size else float("nan"),
+                "flip": bool(np.isfinite(rho) and rho < RHO_FLIP)}
+    return out
+
+
+def print_a2_legend(ris, tau: float) -> None:
+    print("\n" + "-" * 100)
+    print("A2-0. RI の掃引（当てはめの型は節A と同じ 8 行＋参考の特徴点法）")
+    print("-" * 100)
+    print(f"  反射波の大きさ（母数 a_ref）を {list(ris)} の "
+          f"{len(list(ris))} 通りに振る。")
+    print(f"  条件は 2 つ。貯留槽の時定数は {tau} s に固定し、反射波の到達だけを変える。")
+    for dt, lab, note in RI_CONDS:
+        print(f"    {lab}  {note}")
+    print("  当てはめが返す RI は第2成分／第1成分の**ピーク高さの比** h2/h1、特徴点法の RI は")
+    print("  `dia_v / sys_v` である。真値は 2 つ出す。「真の RI」は振った母数 a_ref、")
+    print("  「真の比」は合成した成分のピーク高さの比で、当てはめの h2/h1 と同じ定義である。")
+    print("  条件の中では前進波が変わらないので両者は比例し、順位は同じになる。")
+    print(f"  **符号の反転**は ρ < {RHO_FLIP:+.2f} のとき「反転」と印字する"
+          "（2026-09-15 に実装の前に決めた規準）。")
+
+
+def print_a2_cond(rec: dict, summ: dict, lab: str) -> None:
+    truth = np.asarray(rec["truth"], float)
+    print(f"\n  --- {lab}: {rec['note']}・貯留槽の時定数 {rec['tau']:.2f} s"
+          f"（{truth.size} 拍・真の RI {np.min(truth):.2f}〜{np.max(truth):.2f}）---")
+    print("    " + _pad("当てはめの型", 18) + _pad("ρ", 8, right=True)
+          + _pad("|誤差|中央値", 13, right=True) + _pad("返り値の範囲", 18, right=True)
+          + _pad("符号の反転", 12, right=True))
+    for k in KIND_KEYS + ["fid"]:
+        s = summ[(k, lab)]
+        name = (f"{_kind_no(k)} {KIND_HEAD[k]}" if k in KIND_HEAD else "（参考）特徴点法")
+        rng = ("—" if not np.isfinite(s["lo"])
+               else f"{s['lo']:.3f}〜{s['hi']:.3f}")
+        print("    " + _pad(name, 18) + _f(s["rho"], 8, prec=2, sign=True)
+              + _f(s["mae"], 13, prec=3)
+              + _pad(rng, 18, right=True)
+              + _pad("反転" if s["flip"] else "—", 12, right=True))
+    print(f"    「|誤差|中央値」は**真の比**（成分のピーク高さの比）に対する差の中央値。")
+    print(f"    「符号の反転」は ρ < {RHO_FLIP:+.2f} のとき印字する"
+          "（2026-09-15 に実装の前に決めた規準）。")
+
+    print("\n    1 拍ずつ（当てはめが返した RI。列の番号は上の表と同じ）")
+    head = (_pad("真のRI", 8, right=True) + _pad("真の比", 8, right=True)
+            + _pad("波形の型", 9, right=True))
+    for k in KIND_KEYS:
+        head += _pad(_kind_no(k), 9, right=True)
+    head += _pad("特徴点法", 9, right=True)
+    print("  " + head)
+    for i, tv in enumerate(rec["truth"]):
+        line = (_pad(f"{tv:.2f}", 8, right=True)
+                + _pad(f"{rec['ri_peak'][i]:.3f}", 8, right=True)
+                + _pad(str(rec["klass"][i]), 9, right=True))
+        for k in KIND_KEYS + ["fid"]:
+            v = rec["got"][k][i] if k in rec["got"] else rec["fid"][i]
+            line += (_pad("—", 9, right=True) if not np.isfinite(v)
+                     else f"{v:>9.3f}")
+        print("  " + line)
+    print("    「波形の型」は特徴点法（pda2.find_landmarks）が付けた klass_own である。")
+
+
+def section_a2(conds=RI_CONDS, ris=RIS_FULL, tau: float = RI_TAU,
+               seed: int = SEED_A) -> dict:
+    """節A-2: 反射波の大きさを振り、返り値の RI が順位を追うかを測る（合成）。"""
+    print("\n" + "=" * 100)
+    print("節A-2 合成脈波: 反射波の大きさを振ると、返り値の RI は順位を追うか")
+    print("=" * 100)
+    print("  節A と同じ合成脈波で、振るものだけを反射波の大きさに変える。")
+    print("  型3 相当で何が起きるか（機構）: 反射波が前進波に融合するので、真の反射が")
+    print("  大きいほど**第1成分が高くなる**。一方、第2成分は貯留槽の下降の上に固定されて")
+    print("  高さが変わらない。したがって比 h2/h1 は**下がる**。")
+    print_a2_legend(ris, tau)
+    res = sweep_ri(conds, ris, tau=tau, seed=seed)
+    summ = summarise_a2(res)
+    print("\n" + "-" * 100)
+    print("A2-1. 条件ごとの表")
+    print("-" * 100)
+    for _dt, lab, _note in conds:
+        print_a2_cond(res[lab], summ, lab)
+    print("\n  出典: この台本（50番）の節A-2 が合成脈波から計算した値")
+    print(f"        （条件 {len(list(conds))} 通り × 反射波の大きさ {len(list(ris))} 通り × "
+          f"当てはめ {len(KIND_KEYS)} 型・乱数種 {seed}）。")
+    return {"res": res, "summ": summ, "ris": tuple(ris), "tau": float(tau),
+            "conds": tuple(lab for _d, lab, _n in conds)}
+
+
 # ================================================================ 節B（実データ）
 KLASS_COL = "klass_own"
 KLASSES = (1, 3, 4, 5)
@@ -638,7 +842,10 @@ KLASS_SHORT = {1: "型1 極値あり", 3: "型3 変曲点で代用", 4: "型4 �
 COL_V1 = "dt_v1_ms"        # 凍結版 2 カーネルの ΔT（26番の出力）
 COL_LM = "dt_lm_ms"        # 特徴点法の ΔT（Charlton 同梱）
 COL_OK = "ok_v1"           # 26番の A 段（その手法が自分で採用した例）
+COL_RI_V1 = "ri_v1"        # 凍結版 2 カーネルの RI（26番の出力）
+COL_RI_LM = "digital_ri"   # 特徴点法の RI（Charlton 同梱）
 NEED_B = ("age", KLASS_COL, COL_V1, COL_LM)
+NEED_B4 = (COL_RI_V1, COL_RI_LM)   # B4（RI）に要る列。無ければ B4 だけを飛ばす
 
 BIN_MS = 20.0              # B2 の区間の幅
 PCTS = (5, 10, 25, 50, 75, 90, 95)
@@ -648,6 +855,12 @@ DMU_LO_MS = 1000.0 * DMU_LO_FROZEN   # 凍結版の探索範囲の下限 Δμ 0.
 PRED_P1_FLOOR_MS = 140.0   # P1 型3: 下から 2 区間でも凍結版 ΔT の中央値がこれを下回らない
 PRED_P1_N_BINS = 2         # P1 で見る区間の数（下から）
 PRED_RHO_GAP = 0.15        # P2 型3: 短い側の ρ が長い側より これ以上小さい／P3 型1: 未満
+# P4・P5（RI。2026-09-15 に、実データを見る前に固定した）
+PRED_P4_MED = 0.30         # P4 型3: ρ(ri_v1, digital_ri) の中央値がこれ未満
+PRED_P4_OLD = 0.20         # P4 型3: 最も高齢の層（75 歳）の ρ がこれ未満
+PRED_P5_MED = 0.60         # P5 型1: ρ の中央値がこれ以上
+PRED_P5_SLOPE = 0.15       # P5 型1: 最も若い層と最も高齢の層の ρ の差がこれ未満（傾きがない）
+AGE_OLD = 75.0             # PWDB の最も高齢の層
 
 
 def _colv(d: pd.DataFrame, c: str) -> np.ndarray:
@@ -711,18 +924,18 @@ def floor_bins(d: pd.DataFrame) -> dict:
     return out
 
 
-def rho_rows(d: pd.DataFrame, half=None) -> list:
-    """年齢層ごとの (年齢, ρ(dt_v1_ms, dt_lm_ms), n)。
+def rho_rows(d: pd.DataFrame, half=None, xcol: str = COL_V1, ycol: str = COL_LM) -> list:
+    """年齢層ごとの (年齢, ρ(xcol, ycol), n)。既定は ΔT（dt_v1_ms・dt_lm_ms）。
 
-    `half` が "short"／"long" のときは、**その年齢層の** `dt_lm_ms` の中央値で二分した
+    `half` が "short"／"long" のときは、**その年齢層の** `ycol` の中央値で二分した
     片側だけを使う（層をまたいだ中央値で切ると年齢と混ざる）。ρ は 20番の `_spearman`
-    （対応のある行だけ・1 層 MIN_PER_AGE 名以上）。
+    （対応のある行だけ・1 層 MIN_PER_AGE 名以上）。B4 は xcol・ycol に RI の列を渡す。
     """
     out = []
     if "age" not in d.columns or len(d) == 0:
         return out
     for age, g in d.groupby("age", sort=True):
-        x, y = _colv(g, COL_V1), _colv(g, COL_LM)
+        x, y = _colv(g, xcol), _colv(g, ycol)
         keep = np.isfinite(x) & np.isfinite(y)
         if half is not None and int(keep.sum()) >= 2:
             thr = float(np.median(y[keep]))
@@ -853,16 +1066,66 @@ def print_b3(d: pd.DataFrame, klasses) -> dict:
     return out
 
 
-def print_b4(b2: dict, b3: dict) -> dict:
-    """B4 予測との照合（P1〜P3）。**判定は付けない**（事後・記述）。"""
+def print_b4_ri(d: pd.DataFrame, klasses) -> dict:
+    """B4 型ごとの ρ(ri_v1, digital_ri) を年齢層ごとに 1 行ずつ。
+
+    規約は 48番・B3 と同じ（20番の `_spearman`・1 層 MIN_PER_AGE 名以上・層は `age` の
+    相異なる値）。凍結版の RI は A 段（ok_v1 == 1）を主とし、C 段（採否を無視した全例）を
+    同じ行に並べる。**新しい当てはめはしない**（既存列を読むだけ）。
+    """
     print("\n" + "-" * 100)
-    print("B4. 予測との照合（予測は 2026-09-15 に、実データを見る前に固定した。docstring と同文）")
+    print("B4. 型ごとの ρ(ri_v1, digital_ri)（年齢層ごとに 1 行。符号つき）")
+    print("-" * 100)
+    miss = [c for c in NEED_B4 if c not in d.columns]
+    if miss:
+        print(f"  ★ 列が無い: {miss}。B4 と予測 P4・P5 は計算できない。")
+        return {}
+    print(f"  層は `age` の相異なる値、1 層 {MIN_PER_AGE} 名以上。A 段は ok_v1 == 1、")
+    print("  C 段は採否を無視した全例。対応のある行（両方が有限）だけを使う。")
+    out = {}
+    for k in klasses:
+        g = subset(d, k)
+        rows_a = rho_rows(stage_a(g), xcol=COL_RI_V1, ycol=COL_RI_LM)
+        rows_c = rho_rows(g, xcol=COL_RI_V1, ycol=COL_RI_LM)
+        s_a, s_c = strat(rows_a), strat(rows_c)
+        out[k] = {"A": s_a, "C": s_c}
+        print(f"\n  {KLASS_LABEL.get(k, f'型{k}')}  n = {len(g)} 名（A 段 {len(stage_a(g))} 名）")
+        if not rows_c:
+            print("    該当なし")
+            continue
+        print("    " + _pad("年齢層", 10, right=True) + _pad("A段 n", 10, right=True)
+              + _pad("A段 ρ", 12, right=True) + _pad("C段 n", 10, right=True)
+              + _pad("C段 ρ", 12, right=True))
+        d_a = dict((a, (r, n)) for a, r, n in rows_a)
+        for age, r_c, n_c in rows_c:
+            r_a, n_a = d_a.get(age, (float("nan"), 0))
+            print("    " + _pad(f"{age:.0f}", 10, right=True)
+                  + _pad(n_a or "—", 10, right=True) + _f(r_a, 12, prec=3, sign=True)
+                  + _pad(n_c or "—", 10, right=True) + _f(r_c, 12, prec=3, sign=True))
+        print("    " + _pad("中央値", 10, right=True) + _pad("", 10)
+              + _f(s_a["med"], 12, prec=3, sign=True) + _pad("", 10)
+              + _f(s_c["med"], 12, prec=3, sign=True)
+              + f"  （評価できた層 A {s_a['n_ages']}・C {s_c['n_ages']}）")
+    print("\n  出典: この台本（50番）の節B が CSV の既存列から計算した値。"
+          "**新しい当てはめはしていない。**")
+    return out
+
+
+def print_b5(b2: dict, b3: dict, b4: dict) -> dict:
+    """B5 予測との照合（P1〜P5）。**判定は付けない**（事後・記述）。"""
+    print("\n" + "-" * 100)
+    print("B5. 予測との照合（予測は 2026-09-15 に、実データを見る前に固定した。docstring と同文）")
     print("-" * 100)
     print("  (P1) 型3 で、特徴点法 ΔT が最も短い区間（下から 2 区間）でも凍結版 ΔT の")
     print(f"       中央値は {PRED_P1_FLOOR_MS:.0f} ms を下回らない。")
     print(f"  (P2) 型3 では、特徴点法 ΔT が短い側の半数の ρ が長い側の半数より "
           f"{PRED_RHO_GAP:.2f} 以上小さい。")
     print(f"  (P3) 型1 では (P2) の差が {PRED_RHO_GAP:.2f} 未満。")
+    print(f"  (P4) 型3 では、年齢層内の ρ(ri_v1, digital_ri) の中央値が "
+          f"{PRED_P4_MED:.2f} 未満で、かつ高齢の層ほど")
+    print(f"       小さい（{AGE_OLD:.0f} 歳層で {PRED_P4_OLD:.2f} 未満）。")
+    print(f"  (P5) 型1 ではその ρ の中央値が {PRED_P5_MED:.2f} 以上で、年齢層による傾きが")
+    print(f"       ない（最も若い層と最も高齢の層の差が {PRED_P5_SLOPE:.2f} 未満）。")
 
     res3 = b2.get(3, {"bins": [], "n": 0})
     low = res3["bins"][:PRED_P1_N_BINS]
@@ -896,16 +1159,72 @@ def print_b4(b2: dict, b3: dict) -> dict:
     print(f"     → 差が {PRED_RHO_GAP:.2f} 未満: "
           + (_yn(p3) if np.isfinite(gap1) else "照合できない（層の人数が足りない）"))
 
-    hit = sum(1 for v in (p1, p2, p3) if v)
-    ev = sum(1 for v in (ev1, np.isfinite(gap3), np.isfinite(gap1)) if v)
-    print(f"\n  まとめ: 予測 3 条のうち照合できたのは {ev} 条、そのうち「はい」は {hit} 条。")
-    if ev < 3:
-        print("  照合できなかった条は、人数が足りないか対応のある行が無いためである。")
+    r4 = _ri_stats(b4, 3)
+    r5 = _ri_stats(b4, 1)
+    p4 = bool(np.isfinite(r4["med"]) and np.isfinite(r4["old"])
+              and r4["med"] < PRED_P4_MED and r4["old"] < PRED_P4_OLD)
+    p5 = bool(np.isfinite(r5["med"]) and np.isfinite(r5["span"])
+              and r5["med"] >= PRED_P5_MED and r5["span"] < PRED_P5_SLOPE)
+    print(f"\n  P4 型3（A 段）  ρ(ri_v1, digital_ri) の中央値 {_n(r4['med'], 3, sign=True)}"
+          f"・{AGE_OLD:.0f} 歳層 {_n(r4['old'], 3, sign=True)}"
+          f"（評価できた層 {r4['n_ages']}）")
+    print(f"     層ごと: {r4['line']}")
+    print(f"     → 中央値が {PRED_P4_MED:.2f} 未満、かつ {AGE_OLD:.0f} 歳層が "
+          f"{PRED_P4_OLD:.2f} 未満: "
+          + (_yn(p4) if np.isfinite(r4["med"]) and np.isfinite(r4["old"])
+             else "照合できない（層の人数が足りない）"))
+    print(f"     参考: 年齢と層ごとの ρ の順位相関 {_n(r4['trend'], 2, sign=True)}"
+          "（負なら高齢の層ほど小さい。記述のみで、規準には使わない）")
+    print(f"\n  P5 型1（A 段）  ρ(ri_v1, digital_ri) の中央値 {_n(r5['med'], 3, sign=True)}"
+          f"・最も若い層 {_n(r5['young'], 3, sign=True)}"
+          f"・最も高齢の層 {_n(r5['old'], 3, sign=True)}"
+          f"・差 {_n(r5['span'], 3)}")
+    print(f"     層ごと: {r5['line']}")
+    print(f"     → 中央値が {PRED_P5_MED:.2f} 以上、かつ層による差が "
+          f"{PRED_P5_SLOPE:.2f} 未満: "
+          + (_yn(p5) if np.isfinite(r5["med"]) and np.isfinite(r5["span"])
+             else "照合できない（層の人数が足りない）"))
+
+    ev4 = bool(np.isfinite(r4["med"]) and np.isfinite(r4["old"]))
+    ev5 = bool(np.isfinite(r5["med"]) and np.isfinite(r5["span"]))
+    hit = sum(1 for v in (p1, p2, p3, p4, p5) if v)
+    ev = sum(1 for v in (ev1, np.isfinite(gap3), np.isfinite(gap1), ev4, ev5) if v)
+    print(f"\n  まとめ: 予測 5 条のうち照合できたのは {ev} 条、そのうち「はい」は {hit} 条。")
+    if ev < 5:
+        print("  照合できなかった条は、人数が足りないか対応のある行・列が無いためである。")
         print("  この CSV が抜粋なら、確認的解析の機械（4,374 行）で走らせ直す。")
     print("  **この節は事後の記述であり、判定（成立・不成立）は付けない。**"
           "26番の事前規準による判定は動かない。")
-    return {"P1": p1, "P2": p2, "P3": p3, "hit": hit, "n_eval": ev,
-            "p1_bins": low, "gap3": gap3, "gap1": gap1}
+    return {"P1": p1, "P2": p2, "P3": p3, "P4": p4, "P5": p5, "hit": hit, "n_eval": ev,
+            "p1_bins": low, "gap3": gap3, "gap1": gap1, "ri3": r4, "ri1": r5}
+
+
+def _ri_stats(b4: dict, klass: int) -> dict:
+    """B4 の A 段から、P4・P5 に要る値を取り出す（中央値・最若層・最高齢層・傾き）。
+
+    「年齢層による傾き」は記述として年齢と ρ の順位相関も出すが、**規準に使うのは
+    最も若い層と最も高齢の層の差**（P5）と、最も高齢の層の値（P4）である。
+    """
+    s = b4.get(klass, {}).get("A", {})
+    rows = [(a, r) for a, r, _n in s.get("rows", []) if np.isfinite(r)]
+    out = {"med": s.get("med", float("nan")), "n_ages": s.get("n_ages", 0),
+           "young": float("nan"), "old": float("nan"), "span": float("nan"),
+           "trend": float("nan"), "line": "—"}
+    if not rows:
+        return out
+    rows.sort()
+    out["young"], out["old"] = rows[0][1], rows[-1][1]
+    out["span"] = abs(out["old"] - out["young"])
+    if len(rows) >= MIN_BEATS_A:
+        out["trend"] = M._spearman(np.array([a for a, _r in rows], float),
+                                   np.array([r for _a, r in rows], float),
+                                   min_n=MIN_BEATS_A)[0]
+    out["line"] = "・".join(f"{a:.0f}歳 {r:+.3f}" for a, r in rows)
+    # P4 は「75 歳層」を見る。その層が評価できていなければ最も高齢の層で代える
+    for a, r in rows:
+        if abs(a - AGE_OLD) < 1e-9:
+            out["old"] = r
+    return out
 
 
 def section_b(d: pd.DataFrame, src: str) -> dict:
@@ -942,14 +1261,15 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
     out["b1"] = print_b1(d, klasses)
     out["b2"] = print_b2(d, klasses)
     out["b3"] = print_b3(d, klasses)
-    out["b4"] = print_b4(out["b2"], out["b3"])
+    out["b4"] = print_b4_ri(d, klasses)
+    out["b5"] = print_b5(out["b2"], out["b3"], out["b4"])
     return out
 
 
 # ---------------------------------------------------------------- まとめ
 def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
-           seed: int = SEED_A) -> dict:
-    """節A・節B を印字する。返り値は計算した値と終了コード。"""
+           ris=RIS_FULL, seed: int = SEED_A) -> dict:
+    """節A（ΔT）・節A-2（RI）・節B を印字する。返り値は計算した値と終了コード。"""
     print("\n" + "=" * 100)
     print("50番 探索的（事後）: 当てはめの型と、凍結版 ΔT が下限で詰まること")
     print("=" * 100)
@@ -958,6 +1278,7 @@ def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
     out = {"code": 0}
     if "A" in section:
         out["A"] = section_a(taus, dts, seed=seed)
+        out["A2"] = section_a2(RI_CONDS, ris, seed=seed)
     if "B" in section:
         if d is None:
             print("\n  節B は CSV が無いので走らせない（--csv で 26番の出力を渡す）。")
@@ -967,13 +1288,17 @@ def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
             if out["B"]["state"] != 0:
                 out["code"] = 2
     print("\n" + "-" * 100)
-    a_txt = (f"節A 合成脈波（時定数 {len(list(taus))} 通り × 到達 {len(list(dts))} 通り × "
-             f"当てはめ {len(KIND_KEYS)} 型・雑音 SD {NOISE_SD}・乱数種 {seed}）"
-             if "A" in section else "節A なし")
+    a_txt = (f"節A 合成脈波（時定数 {len(list(taus))} 通り × 到達 {len(list(dts))} 通り）"
+             f"＋ 節A-2（条件 {len(RI_CONDS)} 通り × 大きさ {len(list(ris))} 通り）"
+             if "A" in section else "節A・節A-2 なし")
+    a_txt2 = (f"当てはめ {len(KIND_KEYS)} 型・雑音 SD {NOISE_SD}・乱数種 {seed}"
+              if "A" in section else "")
     b_txt = (f"節B {src}（{len(d)} 名・型の列 {KLASS_COL}・A 段 {COL_OK} == 1）"
              if ("B" in section and d is not None) else "節B なし")
     print("  出典: analysis/scripts/50_reservoir_bench.py")
     print(f"        / {a_txt}")
+    if a_txt2:
+        print(f"          （{a_txt2}）")
     print(f"        / {b_txt}")
     print("  年齢層内 Spearman の規約は 20番 `20_pwdb_validity.py` の `_spearman`・`_judge`")
     print(f"  をそのまま使う（1 層 {MIN_PER_AGE} 名以上・層は `age` の相異なる値）。")
@@ -989,20 +1314,36 @@ LM_LO_SYN, LM_HI_SYN = 60.0, 260.0     # 特徴点法 ΔT の範囲 [ms]
 FLOOR_SYN_MS = 150.0                   # 型3 に仕込む下限 [ms]
 JIT_SYN_MS = 4.0                       # 当てはめの雑音 [ms]
 P_KLASS1_SYN = 0.35
+# RI の仕込み（B4・P4・P5 の部品を試すため）。型1 は特徴点法に載せ、型3 は年齢層ごとに
+# 関係の強さを変えて、高齢の層ほど逆向きにする。
+RI_LO_SYN, RI_HI_SYN = 0.20, 0.70      # 特徴点法 RI の範囲
+RI_JIT_SYN = 0.05                      # 当てはめの雑音
+RI_SLOPE_SYN = (0.6, 0.4, 0.2, 0.0, -0.3, -0.6)     # 型3 の傾き（25〜75 歳層）
+RI_SLOPE_FLAT = 1.0                    # 型1 の傾き（年齢層によらない）
 
 
 def synth_b(seed: int = 0) -> pd.DataFrame:
-    """節B の部品を試す合成データ（型3 は下限で詰まり、型1 は詰まらない）。"""
+    """節B の部品を試す合成データ。
+
+    ΔT: 型3 は下限（FLOOR_SYN_MS）で詰まり、型1 は詰まらない。
+    RI: 型1 は特徴点法に載る（ρ ≈ +1・年齢層による差なし）。型3 は年齢層ごとに傾きを
+        変え、高齢の層ほど逆向きにする（P4 の仕込み）。
+    """
     rng = np.random.default_rng(seed)
     frames = []
-    for age in AGES_SYN:
+    for k_age, age in enumerate(AGES_SYN):
         n = N_PER_AGE_SYN
         lm = rng.uniform(LM_LO_SYN, LM_HI_SYN, n)
         klass = np.where(rng.random(n) < P_KLASS1_SYN, 1.0, 3.0)
         jit = rng.normal(0.0, JIT_SYN_MS, n)
         v1 = np.where(klass == 1.0, lm + jit, np.maximum(lm, FLOOR_SYN_MS) + jit)
+        ri_lm = rng.uniform(RI_LO_SYN, RI_HI_SYN, n)
+        ri_jit = rng.normal(0.0, RI_JIT_SYN, n)
+        slope = np.where(klass == 1.0, RI_SLOPE_FLAT, RI_SLOPE_SYN[k_age])
+        ri_v1 = 0.30 + slope * (ri_lm - 0.45) + ri_jit
         frames.append(pd.DataFrame({"age": age, KLASS_COL: klass, COL_LM: lm,
-                                    COL_V1: v1, COL_OK: 1}))
+                                    COL_V1: v1, COL_RI_LM: ri_lm, COL_RI_V1: ri_v1,
+                                    COL_OK: 1}))
     return pd.concat(frames, ignore_index=True)
 
 
@@ -1019,6 +1360,8 @@ def selftest() -> int:
     print("50番 自己検査（合成だけで走る。CSV もネットワークも要らない）")
     print(f"  節A の掃引は {len(TAUS_FAST)} 層 × {len(DTS_FAST)} 拍に減らす"
           f"（本番は {len(TAUS_FULL)} 層 × {len(DTS_FULL)} 拍）。")
+    print(f"  節A-2 は {len(RI_CONDS)} 条件 × {len(RIS_FAST)} 拍に減らす"
+          f"（本番は {len(RI_CONDS)} 条件 × {len(RIS_FULL)} 拍）。")
 
     import inspect
     rep("順位相関の規約を 20番と共有している（_spearman・_judge・層の人数）",
@@ -1111,6 +1454,34 @@ def selftest() -> int:
         "・".join(f"時定数 {t_:.2f}s 凍結版 {a:+.2f} → 畳み込み {b:+.2f}"
                   for t_, a, b in pairs))
 
+    # --- 節A-2（RI）を減らした掃引で走らせる
+    bufr = io.StringIO()
+    with redirect_stdout(bufr):
+        a2 = section_a2(RI_CONDS, RIS_FAST, seed=SEED_A)
+    txt_a2 = bufr.getvalue()
+    s2 = a2["summ"]
+    rep("節A-2 が減らした掃引で最後まで印字される",
+        "A2-1. 条件ごとの表" in txt_a2 and len(txt_a2) > 1000,
+        f"{len(txt_a2)} 文字・条件 {len(RI_CONDS)} 通り × 大きさ {len(RIS_FAST)} 通り")
+    rho_fz3 = s2[("frozen", "型3 相当")]["rho"]
+    rho_rx3 = s2[("relax", "型3 相当")]["rho"]
+    rho_fz1 = s2[("frozen", "型1 相当")]["rho"]
+    rep("(a2) 型3 相当で凍結版の RI の ρ が負（符号の反転）",
+        s2[("frozen", "型3 相当")]["flip"] and rho_fz3 < RHO_FLIP,
+        f"ρ {rho_fz3:+.2f}（規準 {RHO_FLIP:+.2f} より小さいとき反転）")
+    rep("(a2) 同じ条件で Δμ0.01 は正（下限を緩めると反転が消える）",
+        np.isfinite(rho_rx3) and rho_rx3 > 0
+        and not s2[("relax", "型3 相当")]["flip"],
+        f"Δμ0.01 ρ {rho_rx3:+.2f}・凍結版 ρ {rho_fz3:+.2f}")
+    rep("(a2) 型1 相当では凍結版も反転しない",
+        np.isfinite(rho_fz1) and rho_fz1 > 0 and not s2[("frozen", "型1 相当")]["flip"],
+        f"ρ {rho_fz1:+.2f}")
+    rep("(a2) RI の真値は 2 通りとも順位が同じ（母数 a_ref と成分のピーク高さの比）",
+        all(np.array_equal(np.argsort(np.asarray(r["truth"], float)),
+                           np.argsort(np.asarray(r["ri_peak"], float)))
+            for r in a2["res"].values()),
+        "母数で計算した ρ と比で計算した ρ は同じ順位になる")
+
     # --- (c) 節B の計算部品を、下限で詰まる列を人工的に作った表で確かめる
     db = synth_b(seed=0)
     bufb = io.StringIO()
@@ -1118,24 +1489,41 @@ def selftest() -> int:
         sb = section_b(db, "合成データ（自己検査）")
     txt_b = bufb.getvalue()
     rep("(c) 節B が合成の表で最後まで印字される",
-        sb["state"] == 0 and "B4. 予測との照合" in txt_b,
+        sb["state"] == 0 and "B5. 予測との照合" in txt_b,
         f"{len(db)} 行・{len(txt_b)} 文字")
-    b2, b4 = sb["b2"], sb["b4"]
+    b2, bp = sb["b2"], sb["b5"]
     low3 = b2[3]["bins"][:PRED_P1_N_BINS]
     rep("(c) P1: 型3 は下から 2 区間でも凍結版 ΔT の中央値が下がらない",
-        b4["P1"] and all(abs(b["med"] - FLOOR_SYN_MS) < 3.0 for b in low3),
+        bp["P1"] and all(abs(b["med"] - FLOOR_SYN_MS) < 3.0 for b in low3),
         "・".join(f"[{b['lo']:.0f},{b['hi']:.0f}) 中央値 {b['med']:.1f} ms" for b in low3)
         + f"（仕込んだ下限 {FLOOR_SYN_MS:.0f} ms）")
     rep("(c) P2: 型3 は短い側の ρ が長い側より 0.15 以上小さい",
-        b4["P2"], f"差 {_n(b4['gap3'], 3, sign=True)}")
+        bp["P2"], f"差 {_n(bp['gap3'], 3, sign=True)}")
     rep("(c) P3: 型1（下限を仕込んでいない）は差が 0.15 未満",
-        b4["P3"], f"差 {_n(b4['gap1'], 3, sign=True)}")
+        bp["P3"], f"差 {_n(bp['gap1'], 3, sign=True)}")
     rep("(c) 型1 の凍結版 ΔT の最小は特徴点法に追随する（下限を仕込んでいない）",
         b2[1]["v1_min"] < FLOOR_SYN_MS - 40.0,
         f"型1 の最小 {b2[1]['v1_min']:.1f} ms・型3 の最小 {b2[3]['v1_min']:.1f} ms")
     rep("(c) 下限を仕込まない表では P1 が「いいえ」になる（検査が効いている）",
         not _p1_of(synth_b_nofloor(seed=0)),
         "型3 にも下限を仕込まない合成データで照合した")
+    b4 = sb["b4"]
+    r3, r1 = bp["ri3"], bp["ri1"]
+    rep("(c) P4: 型3 の ρ(ri_v1, digital_ri) は中央値 0.30 未満・75 歳層 0.20 未満",
+        bp["P4"],
+        f"中央値 {_n(r3['med'], 3, sign=True)}・75 歳層 {_n(r3['old'], 3, sign=True)}"
+        f"・年齢との順位相関 {_n(r3['trend'], 2, sign=True)}")
+    rep("(c) P5: 型1 は中央値 0.60 以上で年齢層による差が 0.15 未満",
+        bp["P5"],
+        f"中央値 {_n(r1['med'], 3, sign=True)}・最若層 {_n(r1['young'], 3, sign=True)}"
+        f"・最高齢層 {_n(r1['old'], 3, sign=True)}・差 {_n(r1['span'], 3)}")
+    rep("(c) B4 の表が型ごと・年齢層ごとに並ぶ（A 段と C 段）",
+        set(b4.keys()) >= {1, 3} and b4[3]["A"]["n_ages"] == len(AGES_SYN)
+        and b4[1]["C"]["n_ages"] == len(AGES_SYN),
+        f"型3 の層 {b4[3]['A']['n_ages']}・型1 の層 {b4[1]['A']['n_ages']}")
+    rep("(c) 型3 も特徴点法に追随する表では P4 が「いいえ」になる（検査が効いている）",
+        not _p4_of(synth_b_ri_flat(seed=0)),
+        "型3 の傾きを型1 と同じにした合成データで照合した")
 
     # --- (d) 列が無い CSV
     d_miss = db.drop(columns=[COL_V1])
@@ -1167,7 +1555,7 @@ def selftest() -> int:
             out_r = report("B", d_real, str(DEFAULT_CSV))
         txt_r = bufr.getvalue()
         rep("既定の CSV で節B が例外なく最後まで印字される",
-            out_r["code"] == 0 and "B4. 予測との照合" in txt_r,
+            out_r["code"] == 0 and "B5. 予測との照合" in txt_r,
             f"{len(d_real)} 行・終了コード {out_r['code']}・{len(txt_r)} 文字")
         if len(d_real) < 100:
             rows = out_r["B"]["b3"].get((3, "A"), {}).get("all", {})
@@ -1200,6 +1588,27 @@ def _p1_of(d: pd.DataFrame) -> bool:
         np.isfinite(x["med"]) and x["med"] >= PRED_P1_FLOOR_MS for x in low)
 
 
+def synth_b_ri_flat(seed: int = 0) -> pd.DataFrame:
+    """(c) の対照。型3 の RI も型1 と同じ傾きにする（P4 が「いいえ」になるはず）。"""
+    d = synth_b(seed=seed)
+    rng = np.random.default_rng(seed + 2)
+    d[COL_RI_V1] = (0.30 + RI_SLOPE_FLAT * (_colv(d, COL_RI_LM) - 0.45)
+                    + rng.normal(0.0, RI_JIT_SYN, len(d)))
+    return d
+
+
+def _p4_of(d: pd.DataFrame) -> bool:
+    """P4 だけを静かに計算する（自己検査の対照用）。"""
+    s = strat(rho_rows(stage_a(subset(d, 3)), xcol=COL_RI_V1, ycol=COL_RI_LM))
+    rows = [(a, r) for a, r, _n in s["rows"] if np.isfinite(r)]
+    if not rows:
+        return False
+    old = [r for a, r in rows if abs(a - AGE_OLD) < 1e-9]
+    old_v = old[0] if old else sorted(rows)[-1][1]
+    return bool(np.isfinite(s["med"]) and s["med"] < PRED_P4_MED
+                and old_v < PRED_P4_OLD)
+
+
 # ---------------------------------------------------------------- 入口
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
@@ -1209,8 +1618,9 @@ def main() -> None:
     ap.add_argument("--section", type=str, default="AB", choices=("A", "B", "AB"),
                     help="走らせる節（既定 AB。CSV が無ければ A だけ）")
     ap.add_argument("--fast", action="store_true",
-                    help="節A の掃引を 2 層 × 5 拍に減らす（自己検査と同じ。本番の表ではない）")
-    ap.add_argument("--seed", type=int, default=SEED_A, help="節A の雑音の乱数種")
+                    help="節A・節A-2 の掃引を減らす（自己検査と同じ。本番の表ではない）")
+    ap.add_argument("--seed", type=int, default=SEED_A,
+                    help="節A・節A-2 の雑音の乱数種")
     ap.add_argument("--selftest", action="store_true",
                     help="合成だけで計算の筋道を検算する（CSV もネットワークも要らない）")
     args = ap.parse_args()
@@ -1237,9 +1647,10 @@ def main() -> None:
 
     taus = TAUS_FAST if args.fast else TAUS_FULL
     dts = DTS_FAST if args.fast else DTS_FULL
+    ris = RIS_FAST if args.fast else RIS_FULL
     if args.fast:
-        print("\n  ★ --fast: 節A の掃引を減らしている。**本番の表ではない。**")
-    out = report(args.section, d, src, taus=taus, dts=dts, seed=args.seed)
+        print("\n  ★ --fast: 節A・節A-2 の掃引を減らしている。**本番の表ではない。**")
+    out = report(args.section, d, src, taus=taus, dts=dts, ris=ris, seed=args.seed)
     sys.exit(out["code"])
 
 
