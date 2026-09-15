@@ -45,31 +45,42 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
              (1) 凍結版 2 カーネル（`src/pda.py` の探索範囲と同じ。Δμ の下限 0.08 s）
              (2) Δμ の下限を 0.01 s に緩める
              (3) 自由な指数減衰を足す（24番 の A1 と同じ形。d·exp(−(t−t0)/τ)）
-             (4) 貯留槽を前進波の畳み込みで持つ（res(t) = g·∫g1(s)·e^{−(t−s)/τ}ds。母数は
-                 g と τ の 2 つ）
+             (4) 貯留槽を前進波の畳み込みで持つ（res(t) = g·∫g1(s)·e^{−(t−s)/τ}ds/τ。核は
+                 単位面積。母数は g と τ の 2 つ）
              (4b) 同じ畳み込みで Δμ の下限を 0.01 s に緩める（(2) と (4) の同時適用）
              (5) 第2成分の形を第1成分に縛る（σ2 = c·σ1・α2 = α1）＋ Δμ の下限 0.01 s
              (5b) 同じ形の拘束で、Δμ の下限は凍結版のまま 0.08 s
              (6) 0.65T までで当てはめる ＋ Δμ の下限 0.01 s
              (6b) 同じ打ち切りで、Δμ の下限は凍結版のまま 0.08 s
-             (1) 以降は `scipy.optimize.least_squares`（trf・起点 4 点・max_nfev 3000）で、
-             **収束検算は課さない**（この節が見たいのは下限で詰まるかどうかで、採否ではない）。
-             (0) は `fit_beat` そのものなので収束検算を計算するが、**採否には使わず**、
-             通過した拍数を表の下に印字するだけである
+             (1) 以降は `scipy.optimize.least_squares`（trf）で当てはめるが、**起点の
+             作り方と解の選び方は `fit_beat` と同じ**にしてある（起点 8 点〈特徴点から
+             決める初期値 dmu0 ＝ 主ピーク後の −d²y/dt² 最小点 ＋0.02 s の 1 点・Δμ の
+             格子 0.12・0.18・0.26・0.36・0.48 s の 5 点・乱数で振った 2 点〉、
+             max_nfev 4000、|Δμ − dmu0| ≤ 0.06 s の解が RSS 最小の 1.10 倍以内なら
+             それを採る規則）。こうしてあるので、各行は凍結版から**狙った 1 つだけ**が
+             違う（2026-09-15 に凍結版とそろえた。lab_log 追記143）。
+             **収束検算は採否に課さない**（この節が見たいのは下限で詰まるかどうかで、
+             採否ではない）。ただし凍結版と同じ規則を**診断として**当て、拍数を表に
+             出す。(0) は `fit_beat` そのものなので、その検算の結果をそのまま使う
 
-             (5)(6) は試作と同じ設定で、形の拘束（打ち切り）と Δμ の下限の**2 つ**が凍結版
-             から変わっている。これでは効き目の出どころが読めないので、**一度に 1 つだけ
-             変えた** (5b)(6b) を 2026-09-15 に足した。(5)(6) の行は試作と数値が一致する
-             ことの記録なので消していない。
+             (5)(6) は形の拘束（打ち切り）と Δμ の下限の**2 つ**が凍結版から変わって
+             いる。これでは効き目の出どころが読めないので、**一度に 1 つだけ変えた**
+             (5b)(6b) を 2026-09-15 に足した。(5)(6) はもともと試作と同じ設定で、試作の
+             数値と一致することの記録でもあったが、2026-09-15 に実データを回す前に起点と
+             解の選び方を凍結版と同じにしたので（lab_log 追記143）、**設定はもう試作と
+             同じではなく、数値が一致することも保証されない**。行を残しているのは
+             **2 つ同時に変えた版**としての意味があるからで、試作との一致のためではない。
 
              (4b) と (0) も 2026-09-15 に足した。(4b) は「Δμ を緩める・貯留槽を畳み込みで
              持つ、の 2 つをそれぞれと同時に適用したときの結果を出すのか」に答えるための行
-             である（(2) と (4) の同時適用）。(0) は凍結版そのものを呼ぶ行で、起点 4 点で
-             写した複製 (1) が本体と同じ振る舞いをすることの照合である。
+             である（(2) と (4) の同時適用）。(0) は凍結版そのものを呼ぶ行で、写した複製
+             (1) が本体と同じ振る舞いをすることの照合である。
   掃引       貯留槽の時定数 3 通り（0.45・0.35・0.25 s）× 反射波の到達 10 通り（0.30〜0.08 s）。
              時定数を年齢層に見立て、層の中で到達だけを振る（26番の年齢層内 Spearman を模す）
   出す表     型ごとに、時定数の層ごとの 順位相関 ρ・|誤差| の中央値・全拍の最小・
-             下限の詰まり（新旧 2 つの規準。下記）、および
+             下限の詰まり（新旧 2 つの規準。下記）、
+             診断の表（凍結版と同じ収束検算の規則を当てた 通過・Δμ が探索範囲の下限に
+             張り付いた拍数・境界・高さ・別解の拍数。**採否には使わない**）、および
              1 拍ずつの表（真値・型・各当てはめの返り値と誤差・特徴点法）
 
 **下限の詰まりの規準（2026-09-15 に差し替えた）**: 真値の小さいほうから 3 拍で、
@@ -102,7 +113,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
              高さの比（当てはめの h2/h1 と同じ定義）。条件の中では前進波が変わらないので
              両者は比例し、**順位は同じ**である。ρ は母数に対して、|誤差| は比に対して出す
   出す表     条件ごとに 順位相関 ρ・|誤差| の中央値・返り値の範囲・**符号の反転**、
-             および 1 拍ずつの表（真の RI・真の比・波形の型・各当てはめの返り値・特徴点法）
+             診断の表（節A と同じ）、および
+             1 拍ずつの表（真の RI・真の比・波形の型・各当てはめの返り値・特徴点法）
 
 **符号の反転の規準（2026-09-15 に、実装の前に決めた）**: ρ が −0.30 より小さいとき
 「反転」と印字する。大きさは 20番の `CRIT_RHO`（0.30）と同じで、符号を負にしたものである。
@@ -115,7 +127,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
               0.679・0.736
     型3 相当  **凍結版 ρ −0.89**（返り値 0.266・0.278・0.268・0.262・0.252・0.239・0.226
               と、真の反射波が大きくなるほど小さくなる）。Δμ0.01 +1.00（0.351〜0.564）、
-              畳み込み +1.00（0.151〜0.277）、0.65T +1.00（0.396〜0.714）、
+              畳み込み +1.00（0.151〜0.277。起点を凍結版と同じにし、核を単位面積にした
+              後の出力は別の値になる。lab_log 追記143）、0.65T +1.00（0.396〜0.714）、
               特徴点法 +1.00（0.304〜0.441）
 
 機構: 型3 相当では反射波が前進波に融合するので、真の反射が大きいほど**第1成分が高く
@@ -193,7 +206,9 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
 `--section A|B|AB`（既定 AB。CSV が無ければ A だけ）。`--fast` は節A の掃引を 2 層 × 5 拍に
 減らす（自己検査と同じ掃引。本番の表ではない）。自己検査は合成だけで走る（CSV もネット
 ワークも要らない）。節A（3 層 × 10 拍）＋ 節A-2（2 条件 × 7 拍）の本番は、当てはめ 10 行で
-この環境では約 40 秒である（`--section A` を 3 回計った実測は 42・44・38 秒。CSV は要らない）。
+この環境では約 80 秒である（`--section A` を 3 回計った実測は 82・79・77 秒。CSV は要らない）。
+2026-09-15 に起点を 8 点・max_nfev を 4000 に上げた（凍結版と同じにした）ので、それまでの
+約 40 秒からおよそ倍になっている。
 結果は print するので、残すときは tee で `docs/research/results/50_reservoir_bench.txt` に
 落とす。
 
@@ -286,23 +301,25 @@ RES_MAX_FRAC = 0.55        # ただし拍長のこの割合を超えない
 NOISE_SD = 0.002           # 雑音の標準偏差
 
 # 当てはめの型。(鍵, 番号, 表の見出し, 説明)
-# 番号は波形の型（klass_own）と混ざらないよう括弧付きで書く。(5)(6) は試作と同じ設定で、
-# 形の拘束・打ち切りに加えて Δμ の下限も 0.01 s に緩めてある（2 つ変わっている）。
+# 番号は波形の型（klass_own）と混ざらないよう括弧付きで書く。(5)(6) は形の拘束・
+# 打ち切りに加えて Δμ の下限も 0.01 s に緩めてある（2 つ変わっている）。
 # (5b)(6b) は同じ拘束・打ち切りで Δμ の下限を凍結版のまま 0.08 s にした版で、
 # **一度に 1 つだけ変えたときの効き**を読むために 2026-09-15 に足した。
 # (4b) と (0) も 2026-09-15 に足した。(4b) は「Δμ を緩める・貯留槽を畳み込みで持つ、の
 # 2 つをそれぞれと同時に適用したときの結果を出すのか」に答えるための行で、(2) と (4) を
 # 同時に適用したものである。(0) は `src/pda.py` の `fit_beat` をそのまま呼ぶ行で、
-# 起点 4 点で写した複製 (1) が本体と同じ振る舞いをすることの照合である。
+# 写した複製 (1) が本体と同じ振る舞いをすることの照合である。
+# (1) 以降の起点の作り方と解の選び方は `fit_beat` と同じにしてある（2026-09-15 に
+# そろえた。lab_log 追記143）。各行が凍結版から**狙った 1 つだけ**違うようにするため。
 KINDS = [
     ("fb", "(0)", "凍結版本体",
      "凍結版そのもの（`src/pda.py` の `fit_beat` を既定の引数で呼ぶ。起点 8 点・"
-     "特徴点近傍の解を優先する規則・max_nfev 4000）。(1) はこれを起点 4 点で写した複製で、"
+     "特徴点近傍の解を優先する規則・max_nfev 4000）。(1) はこれを写した複製で、"
      "(0) は複製が本体と同じ振る舞いをすることの照合（2026-09-15 に足した）"),
     ("frozen", "(1)", "凍結版", "凍結版 2 カーネル（src/pda.py と同じ探索範囲・Δμ の下限 0.08 s）"),
     ("relax", "(2)", "Δμ0.01", "Δμ の下限を 0.01 s に緩める（ほかは凍結版のまま）"),
     ("decay", "(3)", "減衰項", "自由な指数減衰を足す（24番 A1 と同じ形・d·exp(−(t−t0)/τ)）"),
-    ("conv", "(4)", "畳み込み", "貯留槽を前進波の畳み込みで持つ（res = g·∫g1(s)·e^{−(t−s)/τ}ds）"),
+    ("conv", "(4)", "畳み込み", "貯留槽を前進波の畳み込みで持つ（res = g·∫g1(s)·e^{−(t−s)/τ}ds/τ・核は単位面積）"),
     ("conv01", "(4b)", "畳み込み",
      "同じ畳み込みで Δμ の下限を 0.01 s に緩める（(2) と (4) の同時適用。2026-09-15 に足した）"),
     ("tied", "(5)", "形を縛る", "第2成分の形を第1成分に縛る（σ2 = c·σ1・α2 = α1）＋ Δμ の下限 0.01 s"),
@@ -317,7 +334,7 @@ KIND_LABEL = {k: l for k, _no, _h, l in KINDS}
 
 # 模型の形（母数の並び）と、当てはめに使う範囲。(5b) は (5) と、(6b) は (6) と、
 # (4b) は (4) と同じ形で、違うのは Δμ の下限だけである。(0) の形「fb」はこの台本の模型を
-# 使わないという印で、`_bounds`・`_starts`・`_model` は (0) では呼ばない。
+# 使わないという印で、`_bounds`・`_frozen_starts`・`_model` は (0) では呼ばない。
 KIND_SHAPE = {"fb": "fb", "frozen": "plain", "relax": "plain", "decay": "decay",
               "conv": "conv", "conv01": "conv",
               "tied": "tied", "tied08": "tied", "trunc": "plain", "trunc08": "plain"}
@@ -329,9 +346,30 @@ DMU_LO_RELAX = 0.01
 # (0) の Δμ の下限も凍結版と同じ 0.08 s（`fit_beat` の既定）だが、下限は `fit_beat` の側に
 # あり、この台本の `_bounds` は (0) では使わない。(4b) は下限だけを DMU_LO_RELAX にする。
 KIND_DMU_FROZEN = ("fb", "frozen", "decay", "conv", "tied08", "trunc08")
-N_STARTS = 4               # 起点の数（試作と同じ）
-MAX_NFEV = 3000
+N_STARTS = 8               # 起点の数（fit_beat と同じ）
+MAX_NFEV = 4000            # fit_beat と同じ
+SEED_STARTS = 0            # 起点の乱数の種（fit_beat の既定と同じ）
+# 解の選択（fit_beat と同じ）: RSS 最小を基本に、特徴点近傍（|Δμ − dmu0| ≤ NEAR_DMU）の
+# 解が RSS 最小の NEAR_RSS 倍以内にあればそちらを採る。
+NEAR_DMU = 0.06
+NEAR_RSS = 1.10
+# 収束検算の規準（fit_beat と同じ値）。**この節では採否に使わず、診断として数えるだけ。**
+CHK_TOL = 1e-3             # 境界に張り付いたと見なす幅
+CHK_AMP = 0.02             # 成分のピーク高さがこれ未満なら「高さ<0.02」（正規化した尺度）
+CHK_RSS = 1.15             # 競合解と見なす RSS の比
+CHK_DMU = 0.03             # 競合解と見なす Δμ の差 [s]
+CHK_RI = 0.08              # 競合解の RI がこれ以上違えば「別解」
 TRUNC_FRAC = 0.65          # (6)(6b) が当てはめに使う範囲（拍長に対する割合）
+# 貯留槽項（(3)(4)(4b)）の母数の探索範囲と起点。凍結版には無い母数なので、凍結版の閾値では
+# ない。2026-09-15 までは τ ∈ [0.05, 1.50]・畳み込みの g ≤ 3.0（面積 τ の核）・減衰の d ≤ 1.0
+# だったが、診断で g が 3.0 に、τ が 1.50 に張り付く拍が系統的に出たので、核を単位面積にして
+# g の上限を 10、τ の上限を 3.0 s に広げた（実データを見る前の変更。lab_log 追記143）。
+# τ が上限に張り付くのは合成脈波の貯留槽が反射波の後で立ち上がる形（synth_beat）に
+# 畳み込みが合わないためで、その拍は診断の「境界」に数えられる。
+RES_TAU_LO, RES_TAU_HI = 0.05, 3.0
+RES_G_HI = 10.0            # 畳み込みの倍率 g の上限（単位面積の核に対して）
+RES_D_HI = 1.0             # 減衰項の大きさ d の上限（正規化した拍の尺度）
+RES_G0, RES_TAU0 = 1.0, 0.35   # 起点（g は単位面積の核に合わせて 1.0）
 
 # 掃引
 TAUS_FULL = (0.45, 0.35, 0.25)
@@ -389,20 +427,27 @@ def _norm(y: np.ndarray) -> np.ndarray:
     return y / max(float(np.max(y)), 1e-12)
 
 
-def _peak_on(comp, t: np.ndarray):
-    """成分のピーク時刻と高さ（歪みがあるので μ とは違う。拍の標本の上で探す）。"""
-    g = skew_gaussian(t, *comp)
-    i = int(np.argmax(g))
-    return float(t[i]), float(g[i])
-
-
 def _reject_fb(kind: str) -> None:
     """(0) は `src/pda.py` の `fit_beat` をそのまま呼ぶ型なので、この台本の探索範囲・
     起点・模型は使わない。取り違えたときに黙って別の当てはめにならないよう、ここで止める。
     """
     if kind == "fb":
         raise ValueError("型 fb（(0) 凍結版本体）は src/pda.py の fit_beat を直接呼ぶ。"
-                         "_bounds・_starts・_model は使えない")
+                         "_bounds・_frozen_starts・_model は使えない")
+
+
+def _bounds8(t: np.ndarray, ys: np.ndarray, dmu_lo: float):
+    """8 母数 (a1, mu1, sigma1, alpha1, a2, Δμ, sigma2, alpha2) の探索範囲。
+
+    式は `src/pda.py` の `fit_beat` と同じで、Δμ の下限だけを型に応じて渡す
+    （凍結版のままなら 0.08 s、緩める型は 0.01 s）。
+    """
+    T = float(t[-1] - t[0])
+    t_pk = float(t[int(np.argmax(ys))])
+    lo = [0.05, 0.02, 0.015, 0.0, 0.02, dmu_lo, 0.015, 0.0]
+    hi = [2.50, max(0.60 * T, t_pk + 0.05), 0.30, 8.0,
+          2.00, min(0.60, 0.85 * T), 0.35, 8.0]
+    return lo, hi
 
 
 def _bounds(t: np.ndarray, ys: np.ndarray, kind: str):
@@ -413,19 +458,15 @@ def _bounds(t: np.ndarray, ys: np.ndarray, kind: str):
     使わないので、呼ばれたら ValueError で止める。
     """
     _reject_fb(kind)
-    T = float(t[-1] - t[0])
-    t_pk = float(t[int(np.argmax(ys))])
     shape = KIND_SHAPE[kind]
     dmu_lo = DMU_LO_FROZEN if kind in KIND_DMU_FROZEN else DMU_LO_RELAX
-    lo = [0.05, 0.02, 0.015, 0.0, 0.02, dmu_lo, 0.015, 0.0]
-    hi = [2.50, max(0.60 * T, t_pk + 0.05), 0.30, 8.0,
-          2.00, min(0.60, 0.85 * T), 0.35, 8.0]
+    lo, hi = _bounds8(t, ys, dmu_lo)
     if shape == "tied":
         lo, hi = lo[:6] + [0.5], hi[:6] + [4.0]
     elif shape == "decay":
-        lo, hi = lo + [0.0, 0.05], hi + [1.0, 1.50]
+        lo, hi = lo + [0.0, RES_TAU_LO], hi + [RES_D_HI, RES_TAU_HI]
     elif shape == "conv":
-        lo, hi = lo + [0.0, 0.05], hi + [3.0, 1.50]
+        lo, hi = lo + [0.0, RES_TAU_LO], hi + [RES_G_HI, RES_TAU_HI]
     return lo, hi, dmu_lo
 
 
@@ -447,77 +488,203 @@ def _model(p, tt: np.ndarray, kind: str) -> np.ndarray:
     if shape == "decay":
         out = out + p[8] * np.exp(-(tt - tt[0]) / max(p[9], 1e-3))
     elif shape == "conv":
+        # 核は単位面積（∫e^{−s/τ}ds/τ = 1）にする。g は「前進波を時定数 τ で平滑した
+        # 波形」に掛ける倍率で、τ が変わっても g の意味が変わらない。
+        # 2026-09-15 までは面積 τ の核で g ≤ 3 としていたが、診断で g が上限に張り付いた
+        # ので単位面積に直し、上限も広げた（lab_log 追記143）。
         g1 = skew_gaussian(tt, *c1)
         dt = float(tt[1] - tt[0])
-        kern = np.exp(-(tt - tt[0]) / max(p[9], 1e-3)) * dt
+        tau_r = max(p[9], 1e-3)
+        kern = np.exp(-(tt - tt[0]) / tau_r) * (dt / tau_r)
         out = out + p[8] * np.convolve(g1, kern)[:tt.size]
     return out
 
 
-def _starts(kind: str, dmu_lo: float, lo, hi):
-    """起点 4 点（試作と同じ。Δμ を 0.05 s ずつずらして別の解も探す）。
+def _frozen_starts(t: np.ndarray, ys: np.ndarray, lo, hi, kind: str,
+                   seed: int = SEED_STARTS):
+    """起点を `src/pda.py` の `fit_beat` と同じ手順で作る。返り値は (起点の並び, dmu0)。
 
-    (0) は `fit_beat` が自分で起点 8 点を作るので、ここには来ない。
+    `fit_beat` は Δμ の初期値 dmu0 を特徴点から決める（主ピーク後の −d²y/dt² 最小点に
+    0.02 s を足した時刻。探索範囲の内側に収める）。そこから
+
+        base0（特徴点から決めた 1 点）
+        ＋ Δμ の格子 5 点（0.12・0.18・0.26・0.36・0.48 s）
+        ＋ 乱数で振った 2 点（乱数の種は `fit_beat` の既定と同じ）
+
+    の N_STARTS 点を作る。dmu0 は解を選ぶときにも使うので一緒に返す。
+
+    8 母数（a1, mu1, sigma1, alpha1, a2, Δμ, sigma2, alpha2）まではどの型でも同じ手順で
+    作り、型ごとの母数（減衰・畳み込みの g と τ、形を縛る型の σ の比 c）は**そのあとで**
+    足す。先に足すと乱数の並びが型によってずれ、同じ拍でも起点が変わってしまう。型ごとの
+    母数は乱数で振らない。
+
+    (0) は `fit_beat` が自分で起点を作るので、ここには来ない。
     """
     _reject_fb(kind)
-    out = []
     shape = KIND_SHAPE[kind]
-    for s in range(N_STARTS):
-        x0 = [0.9, 0.10 + 0.01 * s, 0.05, 2.0, 0.4,
-              max(dmu_lo, 0.10 + 0.05 * s), 0.08, 1.0]
+    lo8, hi8 = _bounds8(t, ys, float(lo[5]))
+    lo8, hi8 = np.asarray(lo8, float), np.asarray(hi8, float)
+    i_pk = int(np.argmax(ys))
+    t_pk = float(t[i_pk])
+
+    # 反射波の位置の初期値: 主ピーク後の −d²y/dt² 最小点（`fit_beat` と同じ式）
+    d2 = np.gradient(np.gradient(ys))
+    j0 = i_pk + max(int(0.06 * len(t)), 3)
+    j1 = int(0.85 * len(t))
+    dmu0 = 0.22
+    if j0 < j1:
+        j = j0 + int(np.argmin(d2[j0:j1]))
+        dmu0 = float(np.clip(t[j] - t_pk + 0.02, lo8[5] + 0.01, hi8[5] - 0.01))
+
+    rng = np.random.default_rng(seed)
+    base0 = np.array([1.0, max(t_pk - 0.02, 0.05), 0.06, 2.0, 0.45, dmu0, 0.09, 1.0])
+    base0 = np.clip(base0, lo8 + 1e-6, hi8 - 1e-6)
+    base = [base0]
+    for dg in (0.12, 0.18, 0.26, 0.36, 0.48):
+        b = base0.copy()
+        b[5] = np.clip(dg, lo8[5] + 1e-6, hi8[5] - 1e-6)
+        base.append(b)
+    while len(base) < max(N_STARTS, 6):
+        base.append(np.clip(
+            base0 * rng.uniform(0.7, 1.3, size=8)
+            + np.array([0, 0.02, 0, 0.5, 0, 0.05, 0, 0.5]) * rng.standard_normal(8),
+            lo8 + 1e-6, hi8 - 1e-6))
+
+    def _inside(v: float, i: int) -> float:
+        """型ごとの母数を、その母数の探索範囲の内側に収める。"""
+        return float(np.clip(v, lo[i] + 1e-6, hi[i] - 1e-6))
+
+    out = []
+    for b in base:
         if shape == "tied":
-            x0 = x0[:6] + [1.6]
+            x0 = list(b[:6]) + [_inside(1.6, 6)]                    # σ の比 c
         elif shape in ("decay", "conv"):
-            x0 = x0 + [0.3, 0.35]
-        out.append([min(max(v, l), h) for v, l, h in zip(x0, lo, hi)])
-    return out
+            x0 = list(b) + [_inside(RES_G0, 8), _inside(RES_TAU0, 9)]   # 貯留槽の g と τ
+        else:
+            x0 = list(b)
+        out.append(x0)
+    return out, dmu0
+
+
+def _ri_of(x, kind: str, t0: float, t1: float) -> float:
+    """解 1 つぶんの RI（第2成分／第1成分のピーク高さの比）。
+
+    ピークは凍結版と同じ `pda.component_peak`（4,000 点の格子）で探す。
+    """
+    c1, c2 = _components(x, kind)
+    _tp1, h1 = pda.component_peak(c1, t0, t1)
+    _tp2, h2 = pda.component_peak(c2, t0, t1)
+    return h2 / max(h1, 1e-9)
+
+
+def _checks_fail() -> dict:
+    """当てはめそのものが成らなかった拍の診断（通過しなかったとだけ記録する）。"""
+    return {"dmu_lo": False, "boundary": False, "amp_zero": False,
+            "ambiguous": False, "ok": False}
+
+
+def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
+              t0: float, t1: float) -> dict:
+    """凍結版 `fit_beat` の収束検算と同じ規則を解に当てる。**記録するだけで採否に使わない。**
+
+    返す印は次の 5 つ。
+
+        dmu_lo     Δμ が探索範囲の下限に張り付いた（2 成分の縮退の目安。`fit_beat` には
+                   無い印で、この台本が下限の詰まりを数えるために足した）
+        boundary   母数が探索範囲の端から CHK_TOL 以内にある（`fit_beat` の
+                   boundary_stick）。歪度 α の下限（＝ 0・対称ガウス）は正当な解なので
+                   除く。減衰・畳み込みの型では貯留槽の大きさ g の下限（＝ 0・貯留槽
+                   なし）も正当な解なので除く（τ と σ の比 c の端は見る）
+        amp_zero   成分のピーク高さの小さいほうが CHK_AMP 未満（`fit_beat` の amp_zero）
+        ambiguous  RSS が CHK_RSS 倍以内で Δμ が CHK_DMU 以上離れ、RI も CHK_RI 以上
+                   違う解がある（`fit_beat` の reproducible の否定）
+        ok         boundary・amp_zero・ambiguous のいずれでもない（`fit_beat` の ok）
+    """
+    p = np.asarray(best.x, float)
+    lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
+    skip_lo = {3}                            # α1 の下限（対称ガウスは正当な解）
+    if KIND_SHAPE[kind] != "tied":
+        skip_lo.add(7)                       # α2 の下限（同上。形を縛る型に α2 は無い）
+    if KIND_SHAPE[kind] in ("decay", "conv"):
+        skip_lo.add(8)                       # g の下限（g = 0 は「貯留槽なし」の解）
+    lo_hit = np.abs(p - lo_a) < CHK_TOL
+    for i in skip_lo:
+        lo_hit[i] = False
+    boundary = bool(np.any(lo_hit) or np.any(np.abs(p - hi_a) < CHK_TOL))
+    ri_best = h2 / max(h1, 1e-9)
+    ambiguous = any(abs(_ri_of(r.x, kind, t0, t1) - ri_best) > CHK_RI for r in sols
+                    if r.cost <= best.cost * CHK_RSS
+                    and abs(r.x[5] - p[5]) > CHK_DMU)
+    amp_zero = bool(min(h1, h2) < CHK_AMP)
+    return {"dmu_lo": bool(p[5] - lo_a[5] < CHK_TOL),
+            "boundary": boundary, "amp_zero": amp_zero, "ambiguous": bool(ambiguous),
+            "ok": bool((not boundary) and (not amp_zero) and (not ambiguous))}
 
 
 def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
-    """1 拍を型 `kind` で当てはめ、ΔT [s]・RI・残差を返す。
+    """1 拍を型 `kind` で当てはめ、ΔT [s]・RI・残差・診断を返す。
 
-    **収束検算（境界張り付き・別解の有無）は課さない。**この節が見たいのは真値の順位を
-    追えるかどうかで、採否ではない（凍結版の採否は 26番の A 段が決めている）。
+    **収束検算（境界張り付き・別解の有無）は採否に課さない。**この節が見たいのは真値の
+    順位を追えるかどうかで、採否ではない（凍結版の採否は 26番の A 段が決めている）。
+    ただし凍結版と同じ規則を診断として当て、`checks` に入れて返す（`_diagnose`）。
+
+    起点の作り方（`_frozen_starts`）・解の選び方・max_nfev・成分のピークの求め方
+    （`pda.component_peak`）は `fit_beat` と同じにしてある。各行が凍結版から**狙った
+    1 つだけ**違うようにするためである。
 
     型 `fb`（(0) 凍結版本体）だけは `src/pda.py` の `fit_beat` を既定の引数でそのまま
-    呼ぶ（起点 8 点・特徴点近傍の解を優先する規則・max_nfev 4000）。正規化は `fit_beat`
-    が中で行うので生の y を渡す（`_norm` と同じ扱いである）。`fit_beat` が返す収束検算の
-    結果は `ok` に入れて記録するが、**この節では採否に使わない。**
+    呼ぶ。正規化は `fit_beat` が中で行うので生の y を渡す（`_norm` と同じ扱いである）。
+    `fit_beat` が返す収束検算の結果はそのまま `checks` に写す。
     """
     if kind == "fb":
         try:
             r = pda.fit_beat(t, y)
             c1, c2 = r["components"][0], r["components"][1]
+            ck = r["checks"]
             return {"dt_s": float(c2["t_peak"] - c1["t_peak"]),
                     "ri": float(c2["height"]) / max(float(c1["height"]), 1e-9),
-                    "ok": bool(r["ok"]), "cost": float(r["rss"]) / 2.0}
+                    "ok": bool(r["ok"]), "cost": float(r["rss"]) / 2.0,
+                    "checks": {
+                        "dmu_lo": bool(float(r["params"][5]) - DMU_LO_FROZEN < CHK_TOL),
+                        "boundary": bool(ck["boundary_stick"]),
+                        "amp_zero": bool(ck["amp_zero"]),
+                        "ambiguous": bool(not ck["reproducible"]),
+                        "ok": bool(r["ok"])}}
         except Exception:
             return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
-                    "cost": float("nan")}
+                    "cost": float("nan"), "checks": _checks_fail()}
     ys = _norm(y)
-    lo, hi, dmu_lo = _bounds(t, ys, kind)
+    lo, hi, _dmu_lo = _bounds(t, ys, kind)
     if kind in KIND_TRUNC:
         keep = t <= t[0] + TRUNC_FRAC * (t[-1] - t[0])
         tfit, yfit = t[keep], ys[keep]
     else:
         tfit, yfit = t, ys
-    best = None
-    for x0 in _starts(kind, dmu_lo, lo, hi):
+    starts, dmu0 = _frozen_starts(t, ys, lo, hi, kind, SEED_STARTS)
+    sols = []
+    for x0 in starts:
         try:
             r = least_squares(lambda p: _model(p, tfit, kind) - yfit, x0,
                               bounds=(lo, hi), method="trf", max_nfev=MAX_NFEV)
         except Exception:
             continue
-        if best is None or r.cost < best.cost:
-            best = r
-    if best is None:
+        sols.append(r)
+    if not sols:
         return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
-                "cost": float("nan")}
+                "cost": float("nan"), "checks": _checks_fail()}
+    # 解の選択も `fit_beat` と同じ: RSS 最小を基本に、特徴点近傍（|Δμ − dmu0| ≤ NEAR_DMU）
+    # の解が RSS 最小の NEAR_RSS 倍以内にあればそちらを採る。
+    gmin = min(sols, key=lambda r: r.cost)
+    near = [r for r in sols
+            if abs(r.x[5] - dmu0) <= NEAR_DMU and r.cost <= gmin.cost * NEAR_RSS]
+    best = min(near, key=lambda r: r.cost) if near else gmin
+    t0f, t1f = float(t[0]), float(t[-1])
     c1, c2 = _components(best.x, kind)
-    t1, h1 = _peak_on(c1, t)
-    t2, h2 = _peak_on(c2, t)
-    return {"dt_s": t2 - t1, "ri": h2 / max(h1, 1e-9), "ok": True,
-            "cost": float(best.cost)}
+    tp1, h1 = pda.component_peak(c1, t0f, t1f)
+    tp2, h2 = pda.component_peak(c2, t0f, t1f)
+    return {"dt_s": tp2 - tp1, "ri": h2 / max(h1, 1e-9), "ok": True,
+            "cost": float(best.cost),
+            "checks": _diagnose(sols, best, kind, lo, hi, h1, h2, t0f, t1f)}
 
 
 def fiducial_dt(t: np.ndarray, y: np.ndarray) -> dict:
@@ -536,22 +703,23 @@ def fiducial_dt(t: np.ndarray, y: np.ndarray) -> dict:
 def sweep(taus, dts, seed: int = SEED_A, kinds=None) -> dict:
     """時定数 × 到達の掃引。返り値は時定数ごとの真値・返り値・型（すべて ms）。
 
-    `ok_fb` は (0) 凍結版本体の収束検算（`fit_beat` の `ok`）を拍ごとに並べたもので、
-    記録するだけである（この節は採否を課さない）。
+    `checks` は当てはめの型ごとに、凍結版と同じ収束検算の規則を当てた結果（`fit_kind` の
+    `checks`）を拍ごとに並べたものである。**記録するだけで採否には使わない**（(0) は
+    `fit_beat` 自身の検算）。
     """
     kinds = list(KIND_KEYS) if kinds is None else list(kinds)
     out = {}
     for tau in taus:
         rec = {"tau": float(tau), "dt_set": [], "truth": [], "klass": [], "fid": [],
-               "ok_fb": [], "got": dict((k, []) for k in kinds)}
+               "checks": dict((k, []) for k in kinds),
+               "got": dict((k, []) for k in kinds)}
         for dt in dts:
             t, y, tr = synth_beat(dt, tau, seed=seed)
             rec["dt_set"].append(1000.0 * dt)
             rec["truth"].append(1000.0 * tr["dt_s"])
             for k in kinds:
                 r = fit_kind(t, y, k)
-                if k == "fb":
-                    rec["ok_fb"].append(bool(r["ok"]))
+                rec["checks"][k].append(r["checks"])
                 rec["got"][k].append(1000.0 * r["dt_s"] if np.isfinite(r["dt_s"])
                                      else float("nan"))
             f = fiducial_dt(t, y)
@@ -649,11 +817,16 @@ def print_a_legend(taus, dts, seed: int) -> None:
     print("    凍結版の 0.08 s のままの版である（一度に 1 つだけ変えたときの効きを読むため）。")
     print("    (4b) は (2) と (4) を同時に適用した版、(0) は複製 (1) の照合で、"
           "いずれも 2026-09-15 に足した。")
-    print(f"  (1) 以降の当てはめは least_squares（trf・起点 {N_STARTS} 点・"
-          f"max_nfev {MAX_NFEV}）。**収束検算は課さない。**")
-    print("  (0) は `src/pda.py` の `fit_beat` そのもの（起点 8 点・max_nfev 4000）で、"
-          "収束検算は計算するが")
-    print("  採否には使わず、通過した拍数を層ごとの表の下に印字するだけである。")
+    print("  (1) 以降の当てはめも least_squares（trf）だが、**起点の作り方と解の選び方は"
+          " `fit_beat` と同じ**にしてある")
+    print(f"  （起点 {N_STARTS} 点〈特徴点から決めた 1 点・Δμ の格子 5 点・乱数 2 点〉・"
+          f"max_nfev {MAX_NFEV}・|Δμ − dmu0| ≤ {NEAR_DMU} s の解が")
+    print(f"  RSS 最小の {NEAR_RSS:.2f} 倍以内ならそれを採る規則）。"
+          "こうしてあるので各行は凍結版から**狙った 1 つだけ**が違う。")
+    print("  (0) は `src/pda.py` の `fit_beat` そのものである。"
+          "**収束検算は採否に課さない**が、凍結版と")
+    print("  同じ規則を診断として当て、通過した拍数などを層ごとの表の下に印字する"
+          "（(0) は `fit_beat` 自身の検算）。")
 
 
 def print_a_matrix(summ: dict, taus) -> None:
@@ -674,6 +847,37 @@ def print_a_matrix(summ: dict, taus) -> None:
         print(line)
     print("  ρ が 1.00 なら真値の順位を完全に追えている。1 層の拍数が少ないので、")
     print("  0.71 と 0.89 の差は 1〜2 組の入れ替わりに当たる。")
+
+
+def print_checks(rec: dict) -> None:
+    """診断の表（凍結版と同じ収束検算の規則を当てた拍数）。**採否には使わない。**
+
+    節A（時定数の層）でも節A-2（条件）でも同じ形で出す。数え方は `_diagnose` を見ること。
+    """
+    chk = rec.get("checks", {})
+    keys = [k for k in KIND_KEYS if chk.get(k)]
+    if not keys:
+        return
+
+    def _cnt(rows, key):
+        return sum(1 for c in rows if c.get(key))
+
+    print("\n    診断: 凍結版の採否規則（境界張り付き・高さ 0.02・競合解の RI 差 0.08）を")
+    print("    診断として当てた数。**採否には使わない**（表の値は全拍のもの）。")
+    print("    「Δμ下限」は Δμ が探索範囲の下限に張り付いた拍数で、2 成分の縮退の"
+          "目安である。")
+    print("    (0) は fit_beat 自身の検算。")
+    print("    " + _pad("当てはめの型", 18) + _pad("通過", 9, right=True)
+          + _pad("Δμ下限", 10, right=True) + _pad("境界", 8, right=True)
+          + _pad("高さ<0.02", 12, right=True) + _pad("別解", 8, right=True))
+    for k in keys:
+        rows = chk[k]
+        print("    " + _pad(f"{_kind_no(k)} {KIND_HEAD[k]}", 18)
+              + _pad(f"{_cnt(rows, 'ok')}/{len(rows)}", 9, right=True)
+              + _pad(_cnt(rows, "dmu_lo"), 10, right=True)
+              + _pad(_cnt(rows, "boundary"), 8, right=True)
+              + _pad(_cnt(rows, "amp_zero"), 12, right=True)
+              + _pad(_cnt(rows, "ambiguous"), 8, right=True))
 
 
 def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
@@ -714,11 +918,7 @@ def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
     print("    「全拍の最小」は掃引の全拍を通した返り値の最小で、これが真値の最小より"
           "大きいほど")
     print("    短い側を追えていない（下限で詰まっている）。")
-    ok_fb = list(rec.get("ok_fb", []))
-    if ok_fb:
-        n_ok, n = int(sum(1 for v in ok_fb if v)), len(ok_fb)
-        print(f"    (0) の収束検算（境界張り付き・高さ・別解）の通過は {n_ok}/{n} 拍。"
-              "この節は採否を課さないので表の値は全拍のものである。")
+    print_checks(rec)
 
     print("\n    1 拍ずつ（返り値 [ms] と、括弧内は 返り値 − 真値。列の番号は上の表と同じ）")
     head = _pad("真値[ms]", 9, right=True) + _pad("波形の型", 9, right=True)
@@ -778,14 +978,16 @@ def sweep_ri(conds=RI_CONDS, ris=RIS_FULL, tau: float = RI_TAU, seed: int = SEED
     真値は 2 つ返す。`truth` は振った母数 a_ref、`ri_peak` は成分のピーク高さの比
     （当てはめが返す h2/h1 と同じ定義）である。条件の中では前進波が変わらないので
     両者は比例し、**順位は同じ**である。ρ は母数（試作と同じ）、|誤差| は比に対して出す。
-    `ok_fb` は (0) 凍結版本体の収束検算（`fit_beat` の `ok`）を拍ごとに並べたもので、
-    記録するだけである（この節は採否を課さない）。
+    `checks` は当てはめの型ごとに、凍結版と同じ収束検算の規則を当てた結果（`fit_kind` の
+    `checks`）を拍ごとに並べたものである。**記録するだけで採否には使わない**（(0) は
+    `fit_beat` 自身の検算）。
     """
     kinds = list(KIND_KEYS) if kinds is None else list(kinds)
     out = {}
     for dt, lab, note in conds:
         rec = {"dt": float(dt), "label": lab, "note": note, "tau": float(tau),
-               "truth": [], "ri_peak": [], "klass": [], "fid": [], "ok_fb": [],
+               "truth": [], "ri_peak": [], "klass": [], "fid": [],
+               "checks": dict((k, []) for k in kinds),
                "got": dict((k, []) for k in kinds)}
         for ri in ris:
             t, y, tr = synth_beat(dt, tau, seed=seed, a_ref=ri)
@@ -793,8 +995,7 @@ def sweep_ri(conds=RI_CONDS, ris=RIS_FULL, tau: float = RI_TAU, seed: int = SEED
             rec["ri_peak"].append(tr["ri_peak"])
             for k in kinds:
                 r = fit_kind(t, y, k)
-                if k == "fb":
-                    rec["ok_fb"].append(bool(r["ok"]))
+                rec["checks"][k].append(r["checks"])
                 rec["got"][k].append(r["ri"])
             f = fiducial_dt(t, y)
             rec["fid"].append(f["ri"])
@@ -861,11 +1062,7 @@ def print_a2_cond(rec: dict, summ: dict, lab: str) -> None:
     print(f"    「|誤差|中央値」は**真の比**（成分のピーク高さの比）に対する差の中央値。")
     print(f"    「符号の反転」は ρ < {RHO_FLIP:+.2f} のとき印字する"
           "（2026-09-15 に実装の前に決めた規準）。")
-    ok_fb = list(rec.get("ok_fb", []))
-    if ok_fb:
-        n_ok, n = int(sum(1 for v in ok_fb if v)), len(ok_fb)
-        print(f"    (0) の収束検算（境界張り付き・高さ・別解）の通過は {n_ok}/{n} 拍。"
-              "この節は採否を課さないので表の値は全拍のものである。")
+    print_checks(rec)
 
     print("\n    1 拍ずつ（当てはめが返した RI。列の番号は上の表と同じ）")
     head = (_pad("真のRI", 8, right=True) + _pad("真の比", 8, right=True)
@@ -1491,14 +1688,21 @@ def selftest() -> int:
         got = np.asarray(rec["got"]["frozen"], float)
         order = np.argsort(truth)
         d2 = abs(got[order[0]] - got[order[1]])          # 真値が 20 ms 違う 2 拍
+        td = abs(truth[order[0]] - truth[order[1]])      # その 2 拍の真値の差
         fl = summ[("frozen", float(tau))]["floor"]
-        det.append((tau, d2, fl["got_min"] - float(np.min(truth)), fl))
-    rep("(a) 凍結版は短い側で下限に詰まる（真値が 20 ms 違う 2 拍で返り値の差 1 ms 未満）",
-        all(dd < 1.0 for _t, dd, _g, _fl in det),
-        "・".join(f"時定数 {t_:.2f}s 差 {dd:.1f} ms" for t_, dd, _g, _fl in det))
+        det.append((tau, d2, fl["got_min"] - float(np.min(truth)), fl, td))
+    # 規準は「返り値の差が真値の差の 1/4 未満」（順位の尺度が 4 倍以上に縮んでいる）。
+    # 2026-09-15 までは「差 1 ms 未満」だったが、それは汎用の起点 4 点の複製が 2 拍で
+    # 同じ値を返していたことに合わせた文言で、凍結版本体は 173・175 ms（差 1.7 ms）を
+    # 返す。起点を凍結版と同じにしたときに実態に合わせて直した（lab_log 追記143）。
+    rep("(a) 凍結版は短い側で下限に詰まる（真値が 20 ms 違う 2 拍で返り値の差が真値の差の"
+        " 1/4 未満）",
+        all(dd < 0.25 * td for _t, dd, _g, _fl, td in det),
+        "・".join(f"時定数 {t_:.2f}s 返り値の差 {dd:.1f} ms（真値の差 {td:.0f} ms）"
+                  for t_, dd, _g, _fl, td in det))
     rep("(a) 凍結版の返り値の最小は真値の最小より 60 ms 以上大きい（短い側を追えない）",
-        all(g >= 60.0 for _t, _d, g, _fl in det),
-        "・".join(f"時定数 {t_:.2f}s +{g:.0f} ms" for t_, _d, g, _fl in det))
+        all(g >= 60.0 for _t, _d, g, _fl, _td in det),
+        "・".join(f"時定数 {t_:.2f}s +{g:.0f} ms" for t_, _d, g, _fl, _td in det))
 
     # 新しい規準（2026-09-15 差し替え）の検算。時定数 0.45 s の層で、凍結版だけが「あり」
     tau0 = float(TAUS_FAST[0])
@@ -1531,7 +1735,7 @@ def selftest() -> int:
     print("    参考: 差し替える前の規準（下位 3 拍の返り値の範囲 < "
           f"{FLOOR_RANGE_MS:.0f} ms）での凍結版の印字は "
           + "・".join(f"時定数 {t_:.2f}s {_ari(fl['flag_range'])}"
-                      f"（範囲 {fl['rng']:.0f} ms）" for t_, _d, _g, fl in det)
+                      f"（範囲 {fl['rng']:.0f} ms）" for t_, _d, _g, fl, _td in det)
           + "。これが取り逃がしである。")
 
     # (0)(4b)(5b)(6b): 凍結版本体が先頭にあり、一度に 1 つだけ変える版が並んでいるか
@@ -1597,6 +1801,47 @@ def selftest() -> int:
                            np.argsort(np.asarray(r["ri_peak"], float)))
             for r in a2["res"].values()),
         "母数で計算した ρ と比で計算した ρ は同じ順位になる")
+
+    # --- (f) 再実装 (1) と凍結版本体 (0) の照合（2026-09-15 に足した）。
+    # 起点の作り方・解の選び方・成分のピークの求め方を凍結版と同じにしたので、(1) は
+    # (0) と同じ解に行き着くはずである。節A（2 層 × 5 拍）と節A-2（2 条件 × 4 拍）の
+    # 全拍で照合する。ここが落ちたら、写した複製が本体と別の当てはめになっている。
+    d_dt = 0.0
+    for rc in res.values():
+        d_dt = max(d_dt, float(np.max(np.abs(
+            np.asarray(rc["got"]["frozen"], float)
+            - np.asarray(rc["got"]["fb"], float)))))
+    d_ri = 0.0
+    for rc in a2["res"].values():
+        d_ri = max(d_ri, float(np.max(np.abs(
+            np.asarray(rc["got"]["frozen"], float)
+            - np.asarray(rc["got"]["fb"], float)))))
+    rep("(1) は (0) と同じ値を返す（再実装の照合）",
+        d_dt <= 1e-6 and d_ri <= 1e-9,
+        f"ΔT の差の最大 {d_dt:.3e} ms（要 1e-06 以下）・"
+        f"RI の差の最大 {d_ri:.3e}（要 1e-09 以下）")
+
+    n_chk, n_dif = 0, 0
+    for rc in list(res.values()) + list(a2["res"].values()):
+        for c_fb, c_fz in zip(rc["checks"]["fb"], rc["checks"]["frozen"]):
+            n_chk += 1
+            if any(bool(c_fb[q]) != bool(c_fz[q])
+                   for q in ("ok", "boundary", "amp_zero", "ambiguous")):
+                n_dif += 1
+    rep("(1) の診断は (0) の検算と一致する", n_dif == 0,
+        f"{n_chk} 拍で 通過・境界・高さ・別解 の 4 つを照合し、食い違い {n_dif} 拍")
+
+    n_bad = 0
+    for rc in list(res.values()) + list(a2["res"].values()):
+        for k in KIND_KEYS:
+            rows = rc["checks"][k]
+            n_ok = sum(1 for c in rows if c["ok"])
+            if len(rows) != len(rc["truth"]) or not 0 <= n_ok <= len(rows):
+                n_bad += 1
+    rep("診断の表が印字され、通過数は拍数を超えない",
+        n_bad == 0 and "Δμ下限" in txt_a0 and "Δμ下限" in txt_a2,
+        f"節A {len(TAUS_FAST)} 層・節A-2 {len(RI_CONDS)} 条件 × 当てはめ "
+        f"{len(KIND_KEYS)} 型で数を照合し、食い違い {n_bad} 件")
 
     # --- (c) 節B の計算部品を、下限で詰まる列を人工的に作った表で確かめる
     db = synth_b(seed=0)
