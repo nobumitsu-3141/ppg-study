@@ -60,7 +60,7 @@ LEGEND = [
 
 SOURCE_LINE = ("docs/research/analysis_catalog.md ／ "
                "数値は結果ファイル・原稿の表・lab_log の追記から引用")
-FOOT_NOTE = "全表（45 行）と出典は analysis_catalog.md と閲覧ページにある"
+FOOT_NOTE = "全表と出典は analysis_catalog.md と閲覧ページにある"
 
 # 列の幅（論文1 は葉が多いので広くとる）
 COL_WIDTH = ("41.5%", "31.0%", "27.5%")
@@ -82,6 +82,26 @@ FS = dict(
     legend=6.6,
     note=6.3,
 )
+
+# 葉と枝の間隔（mm）。文字の大きさと一緒に縮める
+LEAF_GAP = 1.95
+BR_GAP = 2.8
+
+_BASE_FS = dict(FS)
+_BASE_GAPS = (LEAF_GAP, BR_GAP)
+
+
+def set_scale(k: float) -> None:
+    """文字の大きさと間隔を一律 k 倍にする（行が増えて 1 枚に収まらないときだけ縮める）。
+
+    A4 1 枚という制約は体裁ではなく要求なので、行が増えたら人手で数値を触るのではなく
+    ここで縮める。縮めすぎないよう、呼ぶ側が 1.00 から順に試して最初に収まった値を使う。
+    """
+    global LEAF_GAP, BR_GAP
+    FS.clear()
+    FS.update({key: round(v * k, 2) for key, v in _BASE_FS.items()})
+    LEAF_GAP = round(_BASE_GAPS[0] * k, 3)
+    BR_GAP = round(_BASE_GAPS[1] * k, 3)
 
 
 # ---------------------------------------------------------------- データの読み込み
@@ -314,13 +334,13 @@ h1 {{ margin: 0; font-size: {FS['title']}pt; font-weight: 700; letter-spacing: .
 .pname {{ font-size: {FS['paper']}pt; font-weight: 700; letter-spacing: .03em; }}
 .psub {{ font-size: {FS['paper_sub']}pt; line-height: 1.34; color: #6B6862; margin-top: .5mm; }}
 
-.brh {{ display: flex; align-items: center; gap: 1.6mm; margin: 2.8mm 0 1.3mm; }}
+.brh {{ display: flex; align-items: center; gap: 1.6mm; margin: {BR_GAP}mm 0 1.3mm; }}
 .brh:first-of-type {{ margin-top: 1.4mm; }}
 .brl {{ font-size: {FS['branch']}pt; letter-spacing: .12em; white-space: nowrap; }}
 .brr {{ flex: 1 1 auto; height: .9pt; opacity: .55; }}
 
 .leaf {{
-  font-size: {FS['leaf']}pt; line-height: 1.32; margin-bottom: 1.95mm;
+  font-size: {FS['leaf']}pt; line-height: 1.32; margin-bottom: {LEAF_GAP}mm;
   padding-left: 3.4mm; text-indent: -3.4mm; color: #17181A;
 }}
 .chip {{
@@ -544,18 +564,29 @@ def main() -> int:
         return selftest()
 
     bc = load_source()
-    HTML_OUT.write_text(build_html(bc), encoding="utf-8")
-    print(f"HTML  {HTML_OUT}")
-
-    probe = run_probe(bc)
-    print("PROBE " + json.dumps(probe, ensure_ascii=False))
     tol = 1  # mm を px にしたときの丸め（279mm = 1054.49px）で 1 px ずれる
-    fits = (probe["docScrollW"] <= PAGE_W_PX and probe["docScrollH"] <= PAGE_H_PX
-            and probe["pageScrollH"] <= probe["pageClientH"] + tol
-            and probe["pageScrollW"] <= probe["pageClientW"] + tol
-            and probe["footBottom"] <= probe["pageBottom"]
-            and all(c["contentH"] <= c["boxH"] for c in probe["cols"])
-            and all(c["scrollW"] <= c["clientW"] + tol for c in probe["cols"]))
+
+    def measure():
+        HTML_OUT.write_text(build_html(bc), encoding="utf-8")
+        pr = run_probe(bc)
+        ok = (pr["docScrollW"] <= PAGE_W_PX and pr["docScrollH"] <= PAGE_H_PX
+              and pr["pageScrollH"] <= pr["pageClientH"] + tol
+              and pr["pageScrollW"] <= pr["pageClientW"] + tol
+              and pr["footBottom"] <= pr["pageBottom"]
+              and all(c["contentH"] <= c["boxH"] for c in pr["cols"])
+              and all(c["scrollW"] <= c["clientW"] + tol for c in pr["cols"]))
+        return pr, ok
+
+    scale = 1.0
+    for k in (1.00, 0.97, 0.94, 0.91, 0.88, 0.85, 0.82):
+        set_scale(k)
+        probe, fits = measure()
+        scale = k
+        if fits:
+            break
+    print(f"HTML  {HTML_OUT}")
+    print("PROBE " + json.dumps(probe, ensure_ascii=False))
+    print(f"SCALE 文字と間隔の倍率 {scale:.2f}（1.00 から下げて最初に収まった値。葉 {FS['leaf']}pt）")
     print("FIT   " + ("OK" if fits else "OVERFLOW")
           + "  列の中身の高さ/入れ物 " + " ".join(f"{c['contentH']}/{c['boxH']}"
                                                   for c in probe["cols"]))
