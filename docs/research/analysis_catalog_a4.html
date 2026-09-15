@@ -28,10 +28,10 @@ body {
 .head { display: flex; align-items: flex-end; gap: 6mm; padding-bottom: 1.5mm; }
 .head-l { flex: 1 1 auto; min-width: 0; }
 .h1row { display: flex; align-items: baseline; gap: 3.2mm; }
-h1 { margin: 0; font-size: 15.51pt; font-weight: 700; letter-spacing: .06em; }
-.date { font-size: 7.52pt; color: #5E5C57; font-variant-numeric: tabular-nums; }
-.q { margin-top: 1.1mm; font-size: 8.08pt; line-height: 1.3; color: #2C2E31; }
-.head-r { flex: 0 0 auto; text-align: right; font-size: 5.92pt;
+h1 { margin: 0; font-size: 14.52pt; font-weight: 700; letter-spacing: .06em; }
+.date { font-size: 7.04pt; color: #5E5C57; font-variant-numeric: tabular-nums; }
+.q { margin-top: 1.1mm; font-size: 7.57pt; line-height: 1.3; color: #2C2E31; }
+.head-r { flex: 0 0 auto; text-align: right; font-size: 5.54pt;
   line-height: 1.45; color: #6B6862; max-width: 72mm; }
 .rule { height: 0; border-top: .5pt solid #2C2E31; }
 
@@ -47,21 +47,21 @@ h1 { margin: 0; font-size: 15.51pt; font-weight: 700; letter-spacing: .06em; }
 .gextra { margin-top: auto; }
 
 .phead { margin-bottom: 2.0mm; }
-.pname { font-size: 9.4pt; font-weight: 700; letter-spacing: .03em; }
-.psub { font-size: 6.39pt; line-height: 1.34; color: #6B6862; margin-top: .5mm; }
+.pname { font-size: 8.8pt; font-weight: 700; letter-spacing: .03em; }
+.psub { font-size: 5.98pt; line-height: 1.34; color: #6B6862; margin-top: .5mm; }
 
-.brh { display: flex; align-items: center; gap: 1.6mm; margin: 2.632mm 0 1.3mm; }
+.brh { display: flex; align-items: center; gap: 1.6mm; margin: 2.464mm 0 1.3mm; }
 .brh:first-of-type { margin-top: 1.4mm; }
-.brl { font-size: 6.58pt; letter-spacing: .12em; white-space: nowrap; }
+.brl { font-size: 6.16pt; letter-spacing: .12em; white-space: nowrap; }
 .brr { flex: 1 1 auto; height: .9pt; opacity: .55; }
 
 .leaf {
-  font-size: 7.14pt; line-height: 1.32; margin-bottom: 1.833mm;
+  font-size: 6.69pt; line-height: 1.32; margin-bottom: 1.716mm;
   padding-left: 3.4mm; text-indent: -3.4mm; color: #17181A;
 }
 .chip {
   font-family: "DejaVu Sans Mono", "Noto Sans JP", monospace;
-  font-size: 6.58pt; color: #24262A;
+  font-size: 6.16pt; color: #24262A;
   background: #ECE9E2; border-radius: 1pt; padding: .15mm .7mm;
   margin-right: 1.1mm; white-space: nowrap;
 }
@@ -76,16 +76,16 @@ h1 { margin: 0; font-size: 15.51pt; font-weight: 700; letter-spacing: .06em; }
 .answers { display: flex; gap: 3.4mm; }
 .abox { flex: 1 1 0; min-width: 0; border-left: 1.4pt solid #888; padding-left: 2.0mm; }
 .aline { display: flex; align-items: baseline; gap: 1.6mm; }
-.aname { font-size: 6.96pt; font-weight: 700; white-space: nowrap;
+.aname { font-size: 6.51pt; font-weight: 700; white-space: nowrap;
   letter-spacing: .04em; }
-.ahead { font-size: 7.33pt; font-weight: 700; }
-.abody { font-size: 6.39pt; line-height: 1.32; color: #4A4843; margin-top: .8mm; }
+.ahead { font-size: 6.86pt; font-weight: 700; }
+.abody { font-size: 5.98pt; line-height: 1.32; color: #4A4843; margin-top: .8mm; }
 .legend { display: flex; align-items: baseline; justify-content: space-between;
   gap: 4mm; margin-top: 2.4mm; }
-.lgs { display: flex; gap: 3.4mm; flex-wrap: wrap; font-size: 6.2pt; color: #4A4843; }
+.lgs { display: flex; gap: 3.4mm; flex-wrap: wrap; font-size: 5.81pt; color: #4A4843; }
 .lg { display: inline-flex; align-items: center; gap: 1.1mm; white-space: nowrap; }
 .lgd { width: 4.6mm; height: 1.1pt; display: inline-block; }
-.note { font-size: 5.92pt; color: #6B6862; white-space: nowrap; }
+.note { font-size: 5.54pt; color: #6B6862; white-space: nowrap; }
 #probe-json { display: none; }
 </style>
 </head>
@@ -143,6 +143,7 @@ h1 { margin: 0; font-size: 15.51pt; font-weight: 700; letter-spacing: .06em; }
 <div class="leaf"><span class="chip">45番</span><span class="ltxt">RI を心拍数で調整しても改善しない ― 割ると 0.207→0.293（6/6 層）まで上がるが、末梢血管抵抗の分母 HR を共有するだけ</span></div>
 <div class="leaf"><span class="chip">46番</span><span class="ltxt">成分の入れ替わりは 2.9%・除いても向上せず。同梱 PTT 0.571 は周期の取り違え 22.2% が原因 ― 補正後 0.986</span></div>
 <div class="leaf"><span class="chip">48番</span><span class="ltxt">型ごとに分けると 特徴点 ΔT は型1 0.34・型3 0.43（全例 0.71 は型の混合）、凍結版 ΔT は型1 でも 0.22、分解由来の RI は型1 では 0.55（6/6）で追う</span></div>
+<div class="leaf"><span class="chip">50番</span><span class="ltxt">合成で機構を特定 ― 凍結版 ΔT は真値 150 ms 未満で Δμ の下限 0.08 s に詰まり、型3 相当では RI の符号が反転（−0.89）。直すのは畳み込み貯留槽と Δμ 緩和だけ。実データの節B は Mac 1 で未実行</span></div>
 <div class="brh" style="color:#777777"><span class="brl">道具</span><span class="brr" style="background:#777777"></span></div>
 <div class="leaf"><span class="chip">22番</span><span class="ltxt">PWDB の巨大 zip から 3 ファイルだけを取り出す</span></div>
 <div class="leaf"><span class="chip">49番</span><span class="ltxt">型1 と型3 の実波形で、第2成分が拡張期側の特徴点に載るかを描く（48番 節4 の図。実波形は Mac 1 で）</span></div></div>
