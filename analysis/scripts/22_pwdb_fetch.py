@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""研究0: PWDB の巨大 zip から、必要な3ファイルだけを HTTP Range で取り出す。
+"""研究0: PWDB の巨大 zip から、必要なファイルだけを HTTP Range で取り出す。
 
 Zenodo の配布物は数十 GB の zip だが、本研究に要るのは
   pwdb_haemod_params.csv / pwdb_model_configs.csv / PWs_Digital_PPG.csv
-の3本だけで、合計しても数十 MB である。zip は末尾の「中央ディレクトリ」に
+  PWs_Digital_P.csv / PWs_Digital_U.csv / PWs_Digital_A.csv（51番の波の分離に使う）
+だけで、合計しても数十 MB である。zip は末尾の「中央ディレクトリ」に
 全メンバーの位置が書かれているので、Range リクエストで末尾だけ読み、
 必要なメンバーの区間だけを取れば、全体を落とす必要がない。
 
@@ -12,7 +13,8 @@ Zenodo の配布物は数十 GB の zip だが、本研究に要るのは
     python scripts/22_pwdb_fetch.py --list "https://zenodo.org/records/3275625/files/<zip名>?download=1"
         中身の一覧（フォルダ別の件数と、取り出す対象）だけ表示する
     python scripts/22_pwdb_fetch.py --out ~/pwdb "https://zenodo.org/records/3275625/files/<zip名>?download=1"
-        3ファイルを ~/pwdb に取り出す。そのあと 20_pwdb_validity.py --pwdb ~/pwdb
+        対象のファイルを ~/pwdb に取り出す。そのあと 20_pwdb_validity.py --pwdb ~/pwdb
+        （指尖の圧・流速は 51_pwdb_wave_separation.py --pwdb ~/pwdb が使う）
     python scripts/22_pwdb_fetch.py --selftest
         ローカルの模擬サーバで動作を確認する（ネットワーク不要）
 
@@ -33,7 +35,19 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 
-PATTERNS = ["*haemod*param*.csv", "*model*config*.csv", "*digital*ppg*.csv"]
+# 取り出す対象。実配布版（Zenodo 2019-07-07 の CSV 形式）で合うメンバーは
+#   pwdb_haemod_params.csv / pwdb_model_configs.csv          血行動態の真値・モデル入力
+#   exported_data/PWs/csv/PWs_Digital_PPG.csv                指尖 PPG（20番・26番）
+#   exported_data/PWs/csv/PWs_Digital_P.csv                  指尖の圧   （51番。W2・W3）
+#   exported_data/PWs/csv/PWs_Digital_U.csv                  指尖の流速 （51番。W2・W3）
+#   exported_data/PWs/csv/PWs_Digital_A.csv                  指尖の内腔断面積（あれば）
+# である。`*digital*_p.csv` は `pws_digital_ppg.csv` に**合わない**（末尾が `_ppg.csv` で
+# あって `_p.csv` ではない）ので、PPG の行を圧として取り違えることはない。逆に
+# `*digital*ppg*.csv` は `pws_digital_p.csv` に合わない（`ppg` を含まない）。
+# `_wanted` はメンバーごとに「どれか 1 つのパターンに合うか」を見るだけなので、
+# この重なりの無さがそのまま「各ファイルは 1 度だけ選ばれる」ことになる。
+PATTERNS = ["*haemod*param*.csv", "*model*config*.csv", "*digital*ppg*.csv",
+            "*digital*_p.csv", "*digital*_u.csv", "*digital*_a.csv"]
 CHUNK = 4 << 20          # 1回の Range で最低これだけ先読みする（要求回数を減らす）
 UA = "ppg-study-pwdb-fetch/1.0"
 
@@ -160,7 +174,12 @@ def fetch(url: str, out: Path | None, patterns: list[str] = PATTERNS,
 
 # ---------------------------------------------------------------- 自己検証
 def selftest() -> int:
-    """Range 対応の模擬サーバに巨大ダミー入りの zip を置き、必要3本だけが取れることを確かめる。"""
+    """Range 対応の模擬サーバに巨大ダミー入りの zip を置き、対象のファイルだけが取れることを確かめる。
+
+    指尖の圧 `PWs_Digital_P.csv`・流速 `PWs_Digital_U.csv` も模擬 zip に入れ、
+    (a) それらが取り出されること、(b) `PWs_Digital_PPG.csv` が圧のパターンに巻き込まれず
+    1 度だけ選ばれること、(c) 別部位の `PWs_Radial_P.csv` は取り出されないことを見る。
+    """
     import http.server
     import os
     import tempfile
@@ -176,6 +195,8 @@ def selftest() -> int:
             zf.writestr("exported_data/pwdb_haemod_params.csv", "Subject Number, age [y]\n1, 55\n2, 65\n")
             zf.writestr("exported_data/pwdb_model_configs.csv", "Subject Number, age [y]\n1, 55\n2, 65\n")
             zf.writestr("exported_data/PWs/csv/PWs_Digital_PPG.csv", "Subject Number, pt1\n1, 0.1\n2, 0.2\n")
+            zf.writestr("exported_data/PWs/csv/PWs_Digital_P.csv", "Subject Number, pt1\n1, 80\n2, 81\n")
+            zf.writestr("exported_data/PWs/csv/PWs_Digital_U.csv", "Subject Number, pt1\n1, 0.01\n2, 0.02\n")
             zf.writestr("exported_data/PWs/csv/PWs_Radial_P.csv", "x\n" * 1000)
         total = zpath.stat().st_size
 
@@ -214,15 +235,30 @@ def selftest() -> int:
             out = td / "out"
             r = fetch(url, out)
             got = sorted(q.name for q in out.iterdir())
-            want = ["PWs_Digital_PPG.csv", "pwdb_haemod_params.csv", "pwdb_model_configs.csv"]
+            want = ["PWs_Digital_P.csv", "PWs_Digital_PPG.csv", "PWs_Digital_U.csv",
+                    "pwdb_haemod_params.csv", "pwdb_model_configs.csv"]
             c1 = got == want
             c2 = (out / "PWs_Digital_PPG.csv").read_text().startswith("Subject Number, pt1")
             c3 = r["fetched"] < 0.5 * total
-            ok = c1 and c2 and c3
-            print(f"  必要3本だけ取り出せた  {'PASS' if c1 else 'FAIL'}  {got}")
+            # 圧・流速が取れて、PPG が圧のパターンに巻き込まれていないこと。
+            # `_wanted` はメンバーごとに 1 度しか返さないので、名前の重複が無いことも同時に見る
+            c4 = ((out / "PWs_Digital_P.csv").read_text().startswith("Subject Number, pt1")
+                  and (out / "PWs_Digital_U.csv").read_text().startswith("Subject Number, pt1")
+                  and len(r["want"]) == len(set(r["want"])) == len(want)
+                  and not any(n.endswith("PWs_Radial_P.csv") for n in r["want"]))
+            # パターンの重なりが無いことを名前の上でも確かめる（配布物が無くても効く検査）
+            c5 = (_wanted(["PWs_Digital_PPG.csv"], ["*digital*_p.csv"]) == []
+                  and _wanted(["PWs_Digital_P.csv"], ["*digital*ppg*.csv"]) == []
+                  and _wanted(["PWs_Digital_A.csv"], PATTERNS) == ["PWs_Digital_A.csv"])
+            ok = c1 and c2 and c3 and c4 and c5
+            print(f"  対象のファイルだけ取り出せた  {'PASS' if c1 else 'FAIL'}  {got}")
             print(f"  中身が正しい          {'PASS' if c2 else 'FAIL'}")
             print(f"  全体の半分未満の読み取りで済んだ  {'PASS' if c3 else 'FAIL'}"
                   f"  ({r['fetched'] / 1e6:.1f} MB / {total / 1e6:.1f} MB)")
+            print(f"  指尖の圧・流速も取れ、各ファイルが 1 度だけ選ばれた  "
+                  f"{'PASS' if c4 else 'FAIL'}  {r['want']}")
+            print(f"  圧のパターンが PPG を、PPG のパターンが圧を拾わない  "
+                  f"{'PASS' if c5 else 'FAIL'}")
         finally:
             srv.shutdown()
     print("ALL PASS" if ok else "FAILED")
