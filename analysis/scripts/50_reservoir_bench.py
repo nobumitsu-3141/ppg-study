@@ -38,7 +38,8 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
 当てはめの型を並べ、真の反射波の到達を追えるかを測る（(5)(6) には Δμ の下限だけを凍結版の
 ままにした版 (5b)(6b)、(4) には Δμ の下限を 0.01 s に緩めた版 (4b) と貯留槽の時定数 τ の
 下限だけを 0.15 s にした版 (4c) を足し、先頭に凍結版そのものを呼ぶ (0) を置き、打ち切りの
-割合だけを変えた (6c)(6d) を足したので、表は 13 行になる）。
+割合だけを変えた (6c)(6d)、切る時刻を絶対時間にした (6e) を足し、模型の作りそのものを
+変えた (7)(8)(9) を足したので、表は 17 行になる）。
 
   合成脈波   前進波（歪みガウス）＋ 反射波（歪みガウス）＋ 貯留槽（指数減衰）。反射波は
              早く到達するほど幅が広くなり歪みが消える（硬い血管の波形）。雑音は標準偏差
@@ -71,13 +72,39 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
              (6c) 0.55T までで当てはめる（Δμ の下限は凍結版のまま 0.08 s。(6b) と
                   割合だけが違う）
              (6d) 0.75T までで当てはめる（同上）
+             (6e) 0.45 s までで当てはめる（拍長の 0.90 倍を超えるときはその値。Δμ の
+                  下限は凍結版のまま 0.08 s で、(6b) とは切る位置の決め方だけが違う）
+             (7) 出力側の畳み込み。y(t) = ∫(1/τ)e^{−(t−s)/τ}·[g1(s)+g2(s)]ds。母数は
+                 8 ＋ τ の 9 個で、**貯留槽の大きさ g を持たない**（核は単位面積なので
+                 高さは a1・a2 が担う）。**ΔT・RI は畳み込む前の g1・g2 のピークから
+                 出す。**(4) は貯留槽を前進波だけに掛けて**足した**ので τ → 0 で第1
+                 成分の複製に縮退したが、(7) は和の全体に掛けて**置き換える**ので
+                 **τ → 0 が凍結版そのもの**になる（入れ子。縮退する向きが無い）
+             (8) 2 段階。拍の後ろ 30%（t ≥ t0 + 0.70T）に A·e^{−(t−t0)/τ}+C を当てて τ を
+                 推定し、y = h_τ ⊛ x の逆 x(t) = y(t) + τ·y′(t) で戻してから、その x に
+                 **凍結版をそのまま**当てる。微分は雑音を大きくするので、雑音の無い
+                 PWDB では使えるが実波形では注意が要る
+             (9) 1 次微分の領域で当てはめる。残差を d/dt(g1+g2) と y′ の差で取る
+                 （母数・探索範囲・起点・解の選び方は凍結版と同じ。追記139 の候補 (3) の
+                 後半で、打ち切りの側だけを試して微分の側は試していなかった）
              **0.65T は事前に決めた割合である**（24番・lab_log 追記139 で、実データの
              結果を見る前に固定した）。(6c)(6d) は**結論が割合の選び方に敏感でないことを
              示す記述（感度の確認）のためだけ**にあり、**この 3 つの数値を見てから主の
              割合を選び直さない**。0.55T や 0.75T のほうが良く出ても「0.65T でも同じ
              向きの結果が出る」という記述に留め、主の割合は 0.65T と書く。割合を変える
              なら新しい事前登録で決める（2026-09-15 に走らせる前に固定した。
-             lab_log 追記145）。
+             lab_log 追記145）。**(6e) は割合ではなく絶対時間で切る版**で、割合で切ると
+             切る時刻そのものが心拍数の関数になることの確認である（W1。2026-09-16 に
+             走らせる前に設計を固定した。lab_log 追記149）。**(6e) を見て主の切り方を
+             選び直すこともしない。**
+             (7)(8)(9) は 2026-09-16 に足した（同じく走らせる前に設計を固定した）。
+             凍結版が劣る理由をいまの時点で最も正確に言うと、**PPG という量（末梢
+             Windkessel の容積・Charlton 2019 式 A1）に対して、圧に似た波の和の模型を
+             当てている**ことである。模型には長い指数の裾を受け持つ要素が無く、それを
+             吸収できる自由度を持つのは第2成分だけなので、第2成分が拡張期側へ引かれる
+             （型3 で +98.5 ms）。**留保**: PWDB の指尖 PPG はまさに (7) の形で作られて
+             いるので、in silico では (7) に有利に働く。実波形での検証が済むまで
+             「PWDB で良かった」以上のことは書かない。
              (1) 以降は `scipy.optimize.least_squares`（trf）で当てはめるが、**起点の
              作り方と解の選び方は `fit_beat` と同じ**にしてある（起点 8 点〈特徴点から
              決める初期値 dmu0 ＝ 主ピーク後の −d²y/dt² 最小点 ＋0.02 s の 1 点・Δμ の
@@ -136,7 +163,7 @@ lab_log 2026-09-15 追記141。この台本の節A はこの実測を台本の�
   掃引       反射波の大きさ 7 通り（0.20・0.28・0.35・0.42・0.50・0.58・0.65）× 条件 2 つ。
              条件は**型1 相当**（反射波の到達 0.28 s。遅く分離する）と**型3 相当**
              （到達 0.10 s。収縮期に重なる）で、貯留槽の時定数は 0.35 s に固定する
-  当てはめ   節A と同じ 13 行。参考の特徴点法の RI は `dia_v / sys_v`
+  当てはめ   節A と同じ 17 行。参考の特徴点法の RI は `dia_v / sys_v`
   真値       2 つ出す。「真の RI」は振った母数 a_ref、「真の比」は合成した成分のピーク
              高さの比（当てはめの h2/h1 と同じ定義）。条件の中では前進波が変わらないので
              両者は比例し、**順位は同じ**である。ρ は母数に対して、|誤差| は比に対して出す
@@ -233,7 +260,8 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              波形の型 `klass_own` は 26番と同じ手順（`pda2.preprocess` →
              `find_landmarks`）で**この台本が自分で付ける**
   当てはめ   `--variants`（既定 `fb,relax,conv,conv01,conv15,trunc,trunc08,trunc055,
-             trunc075,decay` ＝ (0)(2)(4)(4b)(4c)(6)(6b)(6c)(6d)(3) の 10 型）。節A と
+             trunc075,truncabs,decay,convout,deconv2,deriv` ＝ (0)(2)(4)(4b)(4c)(6)(6b)
+             (6c)(6d)(6e)(3)(7)(8)(9) の 14 型）。節A と
              同じ `fit_kind` を呼ぶ。(0) は
              `src/pda.py` の `fit_beat` そのもので、26番の `dt_v1_ms`・`ri_v1`・`ok_v1` と
              一致するはずである（C0 で照合する）。
@@ -258,17 +286,27 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              外した版を 1 行足した。(4) と τ の下限だけが違う（(4)(4b) は 0.05 s の
              まま）。縮退を塞いでも効かないなら、「貯留槽の項を足す案は縮退のせいで
              失敗したのではない」と書ける
+             **(6e) 絶対時間 0.45 s の打ち切り・(7) 出力側の畳み込み・(8) 2 段階・
+             (9) 微分領域 は 2026-09-16 に足した**（走らせる前に設計を固定した。
+             lab_log 追記149）。同じ日に診断の列 `taulo_{型}`（τ が探索範囲の下限に
+             付いたか）を足したので、**それより前に書いた記録はどの型も当てはめ直される**
+             （列の欠けた記録を使い回さない規約。`pin_{型}` を足した 2026-09-15 と同じ）
   記録       `data/pwdb/50_refit.csv`（`--refit-csv` で変えられる。`--limit N` のときは
              `50_refit_limitN.csv`。26番の CSV と同じ規約で、限った実行が全例の記録を
-             上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・残差・
+             上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・
+             **τ下限**（`taulo_{型}`。2026-09-16 に足した）・残差・
              **境界の内訳**（`pin_{型}`。端に付いた母数を「s2:hi;al2:hi」のように並べる。
-             どれも付かなければ「-」）と、
+             どれも付かなければ「-」）・打ち切る型だけ**切った時刻**
+             （`cut_{型}_s` [s]。(6e) で拍長の 0.90 倍の頭打ちが効いた拍を後から
+             数えるため。再開の可否には使わない）と、
              `subj_no`・`fs`・`n_samp`・`klass_own`・`sys_own_ms`・`dia_own_ms`・
              `why`（失敗の理由。no_beat／preprocess_none／EXC:…）・版（python・numpy・scipy）
   再開       既定で再開する。記録にある被験者のうち、頼まれた型の列が**すべて**入って
              いるものは飛ばし、足りない型だけを当てて記録を書き直す（`--no-resume` で
              全部やり直す）。**2026-09-15 より前に書いた記録は `pin_{型}` の列が無いので、
-             その型は当てはめ直される**（境界の内訳が無いと C1b が出せないため）
+             その型は当てはめ直される**（境界の内訳が無いと C1b が出せないため）。
+             **2026-09-16 に `taulo_{型}` を足したので、それより前の記録はどの型も
+             当てはめ直される**（同じ規約。列の欠けた記録を黙って使うと表が空になる）
   並べ方     `--limit N` は 26番と同じ**等間隔**の取り方（先頭 N 名ではない。年齢層内で
              読むので全層が要る）。`--jobs J` は 26番と同じ ProcessPoolExecutor
 
@@ -279,15 +317,25 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
   C1b 境界の内訳。C1 の「境界率」がどの母数のものかを、型 × 当てはめごとに多い順で
       並べる（`s2:hi 0.71・al2:hi 0.33` のように、上位 5 個と解が出た拍に対する割合）。
       1 拍が複数の母数で端に付くことがあるので、割合の合計は 1 にならない
-  C2  ΔT × 大動脈脈波伝播速度（`PWV_a`・向き 負）。型 × 当てはめ × 段（A・C）の表。
+  C2  ΔT × 大動脈脈波伝播速度（`PWV_a`・向き 負）。型 × 当てはめ × 段（A・B・C）の表。
       ます目は |ρ| の中央値（向きの合った層数／評価できた層数）と 20番 `_judge` の規準
   C3  RI × 末梢血管抵抗（`pvr`・向き 正）。同じ表に加え、型3・A 段の年齢層別 ρ
-  C4  同梱の特徴点 ΔT との一致（差の中央値と、年齢層で分けない順位相関）
+  C4  同梱の特徴点 ΔT との一致（差の中央値と、年齢層で分けない順位相関）。**A 段と
+      C 段だけ**（当てはめごとの一致を見る指標で、手法どうしを同じ被験者の上で比べる
+      表ではないので、B 段に絞る意味がない）
   C5  予測との照合（下記 P6〜P10）。**判定は付けない**（事後・記述）
 
 年齢層内 Spearman の規約は 26番・48番と共有する（20番の `_by_age`・`_judge`。層は `age` の
 相異なる値、1 層 8 名以上）。A 段はその当てはめが自分で採用した例だけ（`ok_{型} == 1`）、
-C 段は採否を無視した全例である。参考として 26番の凍結版の列と同梱の特徴点を同じ表に並べる。
+**B 段はその実行で並べる型が全部そろって採用した共通例**、C 段は採否を無視した全例である。
+参考として 26番の凍結版の列と同梱の特徴点を同じ表に並べる。
+
+**B 段は 2026-09-16 に足した**（lab_log 追記149 の問1）。打ち切りの RI は型3 で A 段
+0.530・C 段 0.107 と食い違っていて、A 段の良さが**当てはめの良さ**なのか**採用の仕方**
+（形が探索範囲の端に飛んだ拍を捨てたこと）なのかを A と C からは分けられない。B 段は
+**分母を完全にそろえる**ので、同じ被験者の上で全手法を比べられる。B 段は型の数だけ採用の
+条件を重ねるので**小さくなりうる**（1 層 8 名に満たない層は ρ を計算しないので、人数が
+減ると「—」になる。その「—」は関連が無いことではなく評価できなかったことである）。
 
 予測（2026-09-15、実装の前・実データを見る前に固定した。lab_log 追記143）
 ------------------------------------------------------------------------
@@ -317,6 +365,13 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
 あって見込みではない。**同じ実行の中に 16.4 秒/名 の区間があったのだから、実際は何倍にも
 なりうる。型ごとの重さも同じではない（(4c) は母数 10 個で重く、打ち切りの (6c)(6d) は
 8 母数で残差の点数も少ないぶん軽い）ので、型の数にも比例しない。
+
+**2026-09-16 の追加（(6e)(7)(8)(9) と `taulo_{型}`）から先は、記録があっても
+すべての型を当て直すことになる**（上の「再開」のとおり、列の欠けた記録は使わない）。
+したがって次の 4,374 名の実行は 14 型 × 4,374 名の当てはめであって、10 型ぶんの
+再利用は効かない。**この所要は上の実測からは見込めない**（1 型あたりの重さが型で
+違い、同じ実行の中でも速さが 25 倍動いたため）。時間の見込みを書く代わりに、
+**進み具合の印字（200 名ごと）と途中の記録（400 名ごと）で追うこと。**
 
 **進み具合を 200 名ごとに印字し、400 名ごとに途中の記録を書く**（`PROGRESS_EVERY`・
 `CKPT_EVERY`）。印字が無いと止まっているように見えるため 2026-09-15 に足した。
@@ -349,7 +404,8 @@ C 段は採否を無視した全例である。参考として 26番の凍結版
 要らない）。2026-09-15 に (6c)(6d)、2026-09-16 に (4c) を足して 13 行にしたので、その
 ぶん延びる（打ち切りの型は残差の点数が少なく軽く、(4c) は母数 10 個で重いので、型の数
 には比例しない）。13 行にしたあとの実測は、この環境で 1 回計って 109 秒であった
-（2026-09-16）。
+（2026-09-16）。同じ日に (6e)(7)(8)(9) を足して 17 行にしたあとの実測は、この環境で
+1 回計って 145 秒であった（(7) は母数 9 個に畳み込みが入るので 1 拍あたりが重い）。
 2026-09-15 に起点を 8 点・max_nfev を 4000 に上げた（凍結版と同じにした）ので、それまでの
 約 40 秒からおよそ倍になっている。
 結果は print するので、残すときは tee で `docs/research/results/50_reservoir_bench.txt` に
@@ -468,6 +524,26 @@ NOISE_SD = 0.002           # 雑音の標準偏差
 # 探索範囲の下限だけ**（0.05 s → 0.15 s）で、g の上限・τ の上限・起点・Δμ の下限・解の
 # 選び方は (4) と同じである。理由は `RES_TAU_LO_OF` の注記に書いた縮退で、**(4)(4b) は
 # 下限 0.05 s のまま**にしてあるから、(4) と (4c) は一度に 1 つだけ違う。
+#
+# (6e)(7)(8)(9) は 2026-09-16 に足した（**走らせる前に設計を固定した**。lab_log 追記149）。
+# 凍結版は PPG(t) = g1(t) + g2(t)（圧に似た 2 つの波の和）を仮定するが、PWDB の指尖 PPG は
+# **末梢 Windkessel の容積**（Charlton 2019 式 A1）であり、波の和を低域通過させて長い指数の
+# 裾を付けた量である。模型にはその裾を受け持つ要素が無いので、第2成分が裾に引かれる
+# （型3 で +98.5 ms）。(4) はその裾を**前進波だけの畳み込みを足す**形で入れたが、核が単位
+# 面積なので τ → 0 で核が δ 関数に近づき、第1成分の定数倍の複製に縮退した。(7)(8)(9) は
+# 同じ問題に、縮退する向きを持たない 3 通りの当て方で向かう。
+#   (7) 和の全体に畳み込みを掛けて**置き換える**（足さない）。**τ → 0 は凍結版そのもの**
+#       なので入れ子であり、縮退する向きが無い。倍率 g を持たない（核が単位面積なので
+#       高さは a1・a2 が担う）。**ΔT・RI は畳み込む前の g1・g2 のピークから出す。**
+#   (8) 当てはめの型は変えず、**当てる前に波形を戻す**。拡張期の後ろ 30% から τ を推定し、
+#       y = h_τ ⊛ x の逆 x(t) = y(t) + τ·y′(t) で戻してから凍結版をそのまま当てる。
+#   (9) 残差を 1 次微分の領域で取る（追記139 の候補 (3) の後半。打ち切りの側だけを試して
+#       微分の側は試していなかった）。裾は微分すると小さくなるので第2成分が引かれにくい。
+#   (6e) 打ち切る位置を割合ではなく**絶対時間**で決める（W1 の検査）。0.65T のような割合で
+#       切ると**切る時刻そのものが心拍数の関数になる**ので、心拍数に依らない切り方でも
+#       同じ向きの結果が出るかを見る。**主の切り方は 0.65T のままで動かさない。**
+# **留保**: PWDB の指尖 PPG はまさに (7) の形で作られているので、in silico では (7) に
+# 有利に働く。実波形での検証が済むまで「PWDB で良かった」以上のことは書かない。
 KINDS = [
     ("fb", "(0)", "凍結版本体",
      "凍結版そのもの（`src/pda.py` の `fit_beat` を既定の引数で呼ぶ。起点 8 点・"
@@ -490,6 +566,18 @@ KINDS = [
     ("trunc055", "(6c)", "0.55T",
      "0.55T までで当てはめる（Δμ の下限は凍結版のまま 0.08 s。(6b) と割合だけが違う）"),
     ("trunc075", "(6d)", "0.75T", "0.75T までで当てはめる（同上）"),
+    ("truncabs", "(6e)", "0.45s",
+     "0.45 s までで当てはめる（拍長の 0.90 倍を超えるときはその値。Δμ の下限は凍結版の"
+     "まま 0.08 s で、(6b) とは**切る位置の決め方だけ**が違う）"),
+    ("convout", "(7)", "出力側畳込",
+     "出力側の畳み込み y(t) = ∫(1/τ)e^{−(t−s)/τ}·[g1(s)+g2(s)]ds（核は単位面積。倍率 g を"
+     "持たず、母数は 8 ＋ τ の 9 個。**ΔT・RI は畳み込む前の g1・g2 のピークから出す**）"),
+    ("deconv2", "(8)", "2段階",
+     "拡張期から τ を推定して逆畳み込みしてから凍結版を当てる（2 段階。当てはめの型を"
+     "変えるのではなく、当てる前に波形を戻す）"),
+    ("deriv", "(9)", "微分領域",
+     "1 次微分の領域で当てはめる（残差を d/dt(g1+g2) と y′ の差で取る。母数・探索範囲・"
+     "起点・解の選び方は凍結版と同じ）"),
 ]
 KIND_KEYS = [k for k, _no, _h, _l in KINDS]
 KIND_NO = {k: no for k, no, _h, _l in KINDS}
@@ -502,14 +590,30 @@ KIND_LABEL = {k: l for k, _no, _h, l in KINDS}
 # (6b) と同じ形・同じ Δμ の下限で、違うのは打ち切りの割合だけである。(0) の形「fb」は
 # この台本の模型を使わないという印で、`_bounds`・`_frozen_starts`・`_model` は (0) では
 # 呼ばない。
+# (6e) は (6b) と同じ形（8 母数・Δμ の下限も凍結版のまま）で、違うのは切る位置の決め方
+# だけである。(9) も**母数の並びは凍結版と同じ**なので形は "plain" で、違うのは残差を
+# 微分の領域で取ることだけである（`fit_kind` が型の名前で見分ける。形では見分けない）。
+# (7) は 8 母数 ＋ τ の 9 母数で、形 "convout" を持つ。(8) は当てはめそのものは凍結版
+# （8 母数）だが、**当てる前に波形を戻す** 2 段階の手順なので、形 "deconv2" で見分ける。
 KIND_SHAPE = {"fb": "fb", "frozen": "plain", "relax": "plain", "decay": "decay",
               "conv": "conv", "conv01": "conv", "conv15": "conv",
               "tied": "tied", "tied08": "tied", "trunc": "plain", "trunc08": "plain",
-              "trunc055": "plain", "trunc075": "plain"}
+              "trunc055": "plain", "trunc075": "plain", "truncabs": "plain",
+              "convout": "convout", "deconv2": "deconv2", "deriv": "plain"}
 # 打ち切る型と、その割合（拍長に対する割合）。**0.65 が事前に決めた主の値**で、0.55・0.75 は
 # 感度の確認のためだけに置いた割合である（上の KINDS の注記・lab_log 追記145）。
 TRUNC_FRAC_OF = {"trunc": 0.65, "trunc08": 0.65, "trunc055": 0.55, "trunc075": 0.75}
-KIND_TRUNC = tuple(TRUNC_FRAC_OF)
+# **絶対時間で切る型**（(6e)。2026-09-16 に足した。lab_log 追記149）。上の割合で切ると、
+# **切る時刻そのものが心拍数の関数になる**（拍が短い被験者ほど早く切る）。心拍数に依らない
+# 切り方でも同じ向きの結果が出るかを見るための行である（W1 の検査）。ただし拍が短いときに
+# 拍の末尾を越えて切ることはできないので、拍長の TRUNC_ABS_MAXFRAC 倍で頭打ちにする。
+# **主の切り方は 0.65T のままで、この行を見て主の切り方を選び直さない。**
+TRUNC_ABS_S = 0.45
+TRUNC_ABS_MAXFRAC = 0.90
+TRUNC_ABS_OF = {"truncabs": TRUNC_ABS_S}
+# 打ち切る型は 2 通りの決め方（割合・絶対時間）を合わせたもの。`fit_kind` は型がどちらの
+# 対応表にあるかで切る時刻を決め、使った時刻を `cut_s` に入れて返す。
+KIND_TRUNC = tuple(TRUNC_FRAC_OF) + tuple(TRUNC_ABS_OF)
 
 # 当てはめの設定。凍結版と同じ探索範囲を使う型と、Δμ の下限を緩める型を分ける。
 DMU_LO_FROZEN = 0.08       # `src/pda.py` の dmu_bounds の下限 [s]
@@ -517,8 +621,10 @@ DMU_LO_RELAX = 0.01
 # (0) の Δμ の下限も凍結版と同じ 0.08 s（`fit_beat` の既定）だが、下限は `fit_beat` の側に
 # あり、この台本の `_bounds` は (0) では使わない。(4b) は下限だけを DMU_LO_RELAX にする。
 # **(4c) の Δμ の下限は (4) と同じ凍結版のまま 0.08 s である**（変えたのは τ の下限だけ）。
+# **(6e)(7)(8)(9) の Δμ の下限もどれも凍結版のまま 0.08 s である**（4 つとも Δμ は
+# 緩めていない。変えたのは切る位置の決め方・模型の形・波形の戻し方・残差の領域だけ）。
 KIND_DMU_FROZEN = ("fb", "frozen", "decay", "conv", "conv15", "tied08", "trunc08",
-                   "trunc055", "trunc075")
+                   "trunc055", "trunc075", "truncabs", "convout", "deconv2", "deriv")
 N_STARTS = 8               # 起点の数（fit_beat と同じ）
 MAX_NFEV = 4000            # fit_beat と同じ
 SEED_STARTS = 0            # 起点の乱数の種（fit_beat の既定と同じ）
@@ -560,6 +666,20 @@ RES_TAU_LO_OF = {"decay": 0.05, "conv": 0.05, "conv01": 0.05, "conv15": 0.15}
 # （対応表に無い型が来たときも `_bounds` はこの値を使う）。
 RES_TAU_LO = 0.05
 RES_G_HI = 10.0            # 畳み込みの倍率 g の上限（単位面積の核に対して。(4)(4b)(4c) 共通）
+# (7) 出力側の畳み込みの時定数 τ の探索範囲（2026-09-16。lab_log 追記149）。**(4) の
+# `RES_TAU_LO_OF` とは別に持つ。**(7) は和の全体に掛けて置き換える形なので、τ → 0 は
+# 第1成分の複製ではなく**凍結版そのもの**であり（入れ子）、下限は縮退した領域ではなく
+# 正当な解である。だから下限を 0.01 s まで下げてよい。下限に張り付いた拍は「境界」では
+# なく別の印 tau_lo で数える（(3)(4) の倍率 g の下限と同じ扱い。`_pins_of`）。
+CONVOUT_TAU_LO, CONVOUT_TAU_HI = 0.01, 3.0
+# (8) 2 段階の第1段（拡張期から時定数を推定する）の設定。拍の後ろ 30% に
+# A·e^{−(t−t0)/τ}+C を当てる（t0 は拍の先頭）。τ の探索範囲は貯留槽の型と同じ広さにし、
+# 起点を 2 点試して残差の小さいほうを採る。
+DECONV_TAIL_FRAC = 0.70         # この割合より後ろの標本だけを使う
+DECONV_TAU_LO, DECONV_TAU_HI = 0.05, 3.0
+DECONV_TAU0 = (0.2, 0.6)        # 第1段の起点（τ [s]）
+DECONV_MAX_NFEV = 2000          # 第1段の当てはめの上限（3 母数なので本体より小さくてよい）
+DECONV_MIN_TAIL = 5             # 第1段に要る標本数（これ未満なら当てはめを失敗とする）
 RES_D_HI = 1.0             # 減衰項の大きさ d の上限（正規化した拍の尺度）
 # 起点（g は単位面積の核に合わせて 1.0）。τ の起点 0.35 s は (4c) の下限 0.15 s より大きい
 # ので、下限を上げてもどの型でも探索範囲の内側にある（起点は (4) と同じである）。
@@ -653,6 +773,13 @@ def _bounds(t: np.ndarray, ys: np.ndarray, kind: str):
 
     貯留槽の時定数 τ の**下限だけは型ごとに `RES_TAU_LO_OF` から引く**（(4c) は 0.15 s、
     (3)(4)(4b) は 0.05 s のまま）。上限・g の上限・起点は型で変えない。
+
+    (7) `convout` は 8 母数の末尾に τ を 1 つだけ足す（9 母数。倍率 g を持たない）。その
+    探索範囲は `CONVOUT_TAU_LO`・`CONVOUT_TAU_HI` で、**(4) の τ とは別の対応表から引く**
+    （(7) の τ → 0 は縮退ではなく凍結版そのものなので、下限を下げてよい）。
+    (8) `deconv2` と (9) `deriv` と (6e) `truncabs` は 8 母数で、探索範囲は凍結版と同じ
+    である（(8) は当てる前に波形を戻し、(9) は残差を微分の領域で取り、(6e) は残差を切る
+    時刻の決め方だけが違う。どれも母数と探索範囲は変えていない）。
     """
     _reject_fb(kind)
     shape = KIND_SHAPE[kind]
@@ -665,6 +792,8 @@ def _bounds(t: np.ndarray, ys: np.ndarray, kind: str):
         lo, hi = lo + [0.0, tau_lo], hi + [RES_D_HI, RES_TAU_HI]
     elif shape == "conv":
         lo, hi = lo + [0.0, tau_lo], hi + [RES_G_HI, RES_TAU_HI]
+    elif shape == "convout":
+        lo, hi = lo + [CONVOUT_TAU_LO], hi + [CONVOUT_TAU_HI]
     return lo, hi, dmu_lo
 
 
@@ -676,6 +805,32 @@ def _components(p, kind: str):
     else:
         c2 = (p[4], p[1] + p[5], p[6], p[7])
     return c1, c2
+
+
+def _res_kernel(tt: np.ndarray, tau: float) -> np.ndarray:
+    """単位面積の指数核（(7) 出力側の畳み込みが使う）。`np.convolve` に渡す並びで返す。
+
+    形は (4) と同じ「exp(−(t−t0)/τ) × 定数」で、`np.convolve(…)[:tt.size]` で掛ける
+    ところも同じである。**違うのは定数の取り方と先頭 1 点の重みだけ**で、(4) の
+    (dt/τ) の代わりに**離散核の面積がちょうど 1 になる値**を使い、先頭 1 点を半分の
+    重みにする（台形則）。理由は 2 つあり、どちらも (7)(8) の設計そのものから来る。
+
+      (a) **τ → 0 で核が [1, 0, 0, …] になり、畳み込みが恒等写像**＝凍結版そのものに
+          戻る。これが (7) が入れ子であることの数値の裏づけである。(4) の定数 (dt/τ)
+          は τ → 0 で発散するので、そのままでは入れ子にならない。
+      (b) 台形則は連続の畳み込みを 2 次で近似するので、(8) が使う閉じた形の逆
+          x = y + τ·y′ と食い違わない。(4) の定数だと半標本ぶん遅れ、同じ拍を戻すと
+          ピークの 2.8% の誤差が残る（台形則なら 0.16%。自己検査で測る）。
+
+    **(3)(4)(4b)(4c) の核は `_model` の中にそのまま残してあり、この関数は (7) だけが
+    使う。**既存の型の返り値は 1 ビットも動かない。
+    """
+    dt = float(tt[1] - tt[0])
+    tau_r = max(float(tau), 1e-12)
+    a = float(np.exp(-dt / tau_r))
+    kern = np.exp(-(tt - tt[0]) / tau_r) / (0.5 + a / max(1.0 - a, 1e-300))
+    kern[0] *= 0.5
+    return kern
 
 
 def _model(p, tt: np.ndarray, kind: str) -> np.ndarray:
@@ -695,6 +850,15 @@ def _model(p, tt: np.ndarray, kind: str) -> np.ndarray:
         tau_r = max(p[9], 1e-3)
         kern = np.exp(-(tt - tt[0]) / tau_r) * (dt / tau_r)
         out = out + p[8] * np.convolve(g1, kern)[:tt.size]
+    elif shape == "convout":
+        # (7) 出力側の畳み込み。**和の全体に掛けて置き換える**（(4) のように足さない）。
+        # 核は単位面積なので倍率 g を持たず、高さは a1・a2 が担う。**τ → 0 では核が
+        # [1, 0, 0, …] になり、この行は out = g1 + g2、すなわち凍結版そのものに戻る**
+        # （入れ子。これが (4) との決定的な違いで、縮退する向きが無い）。
+        # **ΔT・RI は畳み込む前の g1・g2 のピークから出す**（`fit_kind` が
+        # `_components` → `pda.component_peak` で求める。ほかの型とまったく同じ道を
+        # 通る）。この関数が返すのは残差を測るための波形だけである。
+        out = np.convolve(out, _res_kernel(tt, p[8]))[:tt.size]
     return out
 
 
@@ -758,6 +922,8 @@ def _frozen_starts(t: np.ndarray, ys: np.ndarray, lo, hi, kind: str,
             x0 = list(b[:6]) + [_inside(1.6, 6)]                    # σ の比 c
         elif shape in ("decay", "conv"):
             x0 = list(b) + [_inside(RES_G0, 8), _inside(RES_TAU0, 9)]   # 貯留槽の g と τ
+        elif shape == "convout":
+            x0 = list(b) + [_inside(RES_TAU0, 8)]       # 出力側の畳み込みの τ（倍率は無い）
         else:
             x0 = list(b)
         out.append(x0)
@@ -797,6 +963,8 @@ def _pin_names(kind: str) -> tuple:
         return PIN_NAMES8[:6] + ("c",)
     if shape in ("decay", "conv"):
         return PIN_NAMES8 + ("g", "tau")
+    if shape == "convout":
+        return PIN_NAMES8 + ("tau",)      # (7) は倍率 g を持たないので 9 母数
     return PIN_NAMES8
 
 
@@ -806,9 +974,17 @@ def _pins_of(p, lo, hi, kind: str):
     数えない母数は `boundary` と同じである（歪度 α の下限・貯留槽の g の下限・τ の
     上限）。τ の上限は別の印 tau_hi で数えるので、この内訳には入れない。
 
-    返り値は (内訳, 下限に付いた印, 上限に付いた印, τ が上限か) で、`boundary` は
-    呼ぶ側が今までどおり 2 つの印から作る。こうしておけば内訳と `boundary` が
-    食い違わない（内訳が空でないことと `boundary` が真であることは同値になる）。
+    **(7) `convout` の τ は下限も数えない**（2026-09-16。lab_log 追記149）。(7) は
+    τ → 0 で凍結版そのものに戻る入れ子の模型なので、**τ が下限にあることは「当てはめが
+    探索範囲に押し付けられた」ではなく「凍結版で足りる」という正当な解**である。
+    (3)(4) の倍率 g の下限（＝ 貯留槽なし）を数えないのと同じ扱いで、数えないぶんは
+    別の印 tau_lo に残す。**(3)(4)(4b)(4c) の τ の下限は今までどおり境界に数える**
+    （そちらは縮退した領域なので、押し付けられたことの印である）。
+
+    返り値は (内訳, 下限に付いた印, 上限に付いた印, τ が上限か, τ が下限か) で、
+    `boundary` は呼ぶ側が今までどおり 2 つの印から作る。こうしておけば内訳と
+    `boundary` が食い違わない（内訳が空でないことと `boundary` が真であることは
+    同値になる）。
     """
     p = np.asarray(p, float)
     lo_a, hi_a = np.asarray(lo, float), np.asarray(hi, float)
@@ -820,26 +996,33 @@ def _pins_of(p, lo, hi, kind: str):
     if shape in ("decay", "conv"):
         skip_lo.add(8)                       # g の下限（g = 0 は「貯留槽なし」の解）
     lo_hit = np.abs(p - lo_a) < CHK_TOL
-    for i in skip_lo:
-        lo_hit[i] = False
     hi_hit = np.abs(p - hi_a) < CHK_TOL
-    tau_hi = False
+    tau_hi, tau_lo = False, False
     if shape in ("decay", "conv"):
+        tau_lo = bool(lo_hit[9])             # τ の下限は**今までどおり境界にも数える**
         tau_hi = bool(hi_hit[9])             # τ の上限は境界に数えず、別の印にする
         hi_hit[9] = False
+    elif shape == "convout":
+        tau_lo = bool(lo_hit[8])             # (7) の τ の下限は凍結版そのもの（入れ子）
+        tau_hi = bool(hi_hit[8])
+        lo_hit[8] = False                    # なので**境界には数えない**（印だけ残す）
+        hi_hit[8] = False
+    for i in skip_lo:
+        lo_hit[i] = False
     pins = []
     for i, nm in enumerate(names):
         if lo_hit[i]:
             pins.append(f"{nm}:lo")
         if hi_hit[i]:
             pins.append(f"{nm}:hi")
-    return pins, lo_hit, hi_hit, tau_hi
+    return pins, lo_hit, hi_hit, tau_hi, tau_lo
 
 
 def _checks_fail() -> dict:
     """当てはめそのものが成らなかった拍の診断（通過しなかったとだけ記録する）。"""
     return {"dmu_lo": False, "boundary": False, "amp_zero": False,
-            "ambiguous": False, "tau_hi": False, "ok": False, "pins": []}
+            "ambiguous": False, "tau_hi": False, "tau_lo": False, "ok": False,
+            "pins": []}
 
 
 def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
@@ -858,6 +1041,10 @@ def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
                    （2026-09-15・実データを見る前に決めた。lab_log 追記143）。
                    τ の下限・σ の比 c の両端・g の上限は見る
         tau_hi     減衰・畳み込みの型で τ が探索範囲の上限に張り付いた（記述のみ）
+        tau_lo     同じ型で τ が探索範囲の下限に張り付いた（記述のみ。2026-09-16 に
+                   足した）。**(7) ではこれが「凍結版で足りる」という正当な解**なので
+                   境界に数えず、この印だけを立てる。(3)(4)(4b)(4c) では縮退した領域に
+                   押し付けられた印なので、今までどおり境界にも数える（印は両方立つ）
         amp_zero   成分のピーク高さの小さいほうが CHK_AMP 未満（`fit_beat` の amp_zero）
         ambiguous  RSS が CHK_RSS 倍以内で Δμ が CHK_DMU 以上離れ、RI も CHK_RI 以上
                    違う解がある（`fit_beat` の reproducible の否定）
@@ -868,7 +1055,7 @@ def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
     """
     p = np.asarray(best.x, float)
     lo_a = np.asarray(lo, float)
-    pins, lo_hit, hi_hit, tau_hi = _pins_of(p, lo, hi, kind)
+    pins, lo_hit, hi_hit, tau_hi, tau_lo = _pins_of(p, lo, hi, kind)
     boundary = bool(np.any(lo_hit) or np.any(hi_hit))
     ri_best = h2 / max(h1, 1e-9)
     ambiguous = any(abs(_ri_of(r.x, kind, t0, t1) - ri_best) > CHK_RI for r in sols
@@ -877,9 +1064,53 @@ def _diagnose(sols, best, kind: str, lo, hi, h1: float, h2: float,
     amp_zero = bool(min(h1, h2) < CHK_AMP)
     return {"dmu_lo": bool(p[5] - lo_a[5] < CHK_TOL),
             "boundary": boundary, "amp_zero": amp_zero, "ambiguous": bool(ambiguous),
-            "tau_hi": tau_hi,
+            "tau_hi": tau_hi, "tau_lo": tau_lo,
             "ok": bool((not boundary) and (not amp_zero) and (not ambiguous)),
             "pins": pins}
+
+
+def _tail_tau(t: np.ndarray, ys: np.ndarray) -> float:
+    """(8) の第1段: 拍の後ろ 30% に A·e^{−(t−t0)/τ}+C を当て、時定数 τ [s] を返す。
+
+    t0 は拍の先頭（t[0]）で、使う標本は `t ≥ t0 + DECONV_TAIL_FRAC·T` である。母数は
+    (A, τ, C) の 3 つ、A ≥ 0・τ ∈ [DECONV_TAU_LO, DECONV_TAU_HI]・C は縛らない。起点の
+    τ を 2 通り（`DECONV_TAU0`）試し、残差の小さいほうを採る。**貯留槽の文献が拡張期の
+    後期から時定数を推定するやり方に対応する。**
+
+    当てはめが成らない・標本が足りない・τ が有限でないときは NaN を返し、呼ぶ側は
+    その拍を当てはめの失敗として扱う（値を作らない）。
+    """
+    t = np.asarray(t, float)
+    ys = np.asarray(ys, float)
+    t0 = float(t[0])
+    keep = t >= t0 + DECONV_TAIL_FRAC * (float(t[-1]) - t0)
+    tt, yy = t[keep], ys[keep]
+    if tt.size < DECONV_MIN_TAIL:
+        return float("nan")
+    lo = [0.0, DECONV_TAU_LO, -np.inf]
+    hi = [np.inf, DECONV_TAU_HI, np.inf]
+    drop = max(float(yy[0] - yy[-1]), 1e-6)
+    c0 = float(yy[-1])
+    best = None
+    for tau0 in DECONV_TAU0:
+        tz = float(np.clip(tau0, DECONV_TAU_LO + 1e-6, DECONV_TAU_HI - 1e-6))
+        # 起点の A は「この τ なら拡張期の落差を説明できる大きさ」に置く（指数は拍の
+        # 先頭を起点に測るので、後ろ 30% ではすでに小さくなっている）。
+        a0 = float(np.clip(drop / max(np.exp(-(float(tt[0]) - t0) / tz), 1e-12),
+                           1e-6, 1e12))
+        try:
+            r = least_squares(
+                lambda p: p[0] * np.exp(-(tt - t0) / max(p[1], 1e-6)) + p[2] - yy,
+                [a0, tz, c0], bounds=(lo, hi), method="trf",
+                max_nfev=DECONV_MAX_NFEV)
+        except Exception:                     # noqa: BLE001
+            continue
+        if best is None or r.cost < best.cost:
+            best = r
+    if best is None:
+        return float("nan")
+    tau = float(best.x[1])
+    return tau if np.isfinite(tau) else float("nan")
 
 
 def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
@@ -893,10 +1124,21 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
     （`pda.component_peak`）は `fit_beat` と同じにしてある。各行が凍結版から**狙った
     1 つだけ**違うようにするためである。
 
-    返り値には `tau_fit`（貯留槽の型 (3)(4)(4b)(4c) で当てはめが選んだ時定数 τ [s]。
-    ほかの型と当てはめが成らなかった拍は NaN）を入れてある。**診断と自己検査のための
-    値で、採否にも表にも使わない**（(4c) の τ の下限 0.15 s が効いているかを自己検査が
-    読む。2026-09-16 に足した）。
+    返り値には `tau_fit`（時定数 τ [s]。(3)(4)(4b)(4c) と (7) は当てはめが選んだ値、
+    (8) は第1段が拡張期から推定した値。ほかの型と当てはめが成らなかった拍は NaN）を
+    入れてある。**診断と自己検査のための値で、採否にも表にも使わない**（(4c) の τ の
+    下限 0.15 s が効いているかを自己検査が読む。2026-09-16 に足した）。
+    `cut_s` は打ち切る型が実際に切った時刻 [s]（拍の先頭からの長さ）で、(6e) で拍長の
+    0.90 倍の頭打ちが効いた拍を後から数えられるようにしてある。切らない型は NaN。
+
+    型ごとに凍結版から変える点は次のとおりで、**どの型も一度に 1 つだけ違う**。
+      (6)(6b)(6c)(6d)(6e) 残差を途中で切る（切る時刻の決め方だけが違う）
+      (7) `convout`  残差を測る波形を `_model` の中で畳み込む。**ΔT・RI は畳み込む前の
+          g1・g2 のピークから出す**ので、ここから下の道はほかの型とまったく同じである
+      (8) `deconv2`  当てはめの前に τ を推定し、x = y + τ·y′ で波形を戻してから
+          **凍結版をそのまま**当てる（模型も探索範囲も凍結版のまま）。微分は雑音を
+          大きくするので、雑音の無い PWDB では使えるが**実波形では注意が要る**
+      (9) `deriv`  残差だけを 1 次微分の領域で取る（模型・探索範囲・起点は凍結版のまま）
 
     型 `fb`（(0) 凍結版本体）だけは `src/pda.py` の `fit_beat` を既定の引数でそのまま
     呼ぶ。正規化は `fit_beat` が中で行うので生の y を渡す（`_norm` と同じ扱いである）。
@@ -918,9 +1160,10 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
                     "ri": float(c2["height"]) / max(float(c1["height"]), 1e-9),
                     "ok": bool(r["ok"]), "cost": float(r["rss"]) / 2.0,
                     "tau_fit": float("nan"),      # (0) の模型に貯留槽の τ は無い
+                    "cut_s": float("nan"),        # (0) は残差を切らない
                     "checks": {
                         "dmu_lo": bool(float(r["params"][5]) - DMU_LO_FROZEN < CHK_TOL),
-                        "tau_hi": False,
+                        "tau_hi": False, "tau_lo": False,
                         "boundary": bool(ck["boundary_stick"]),
                         "amp_zero": bool(ck["amp_zero"]),
                         "ambiguous": bool(not ck["reproducible"]),
@@ -929,29 +1172,63 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
         except Exception:
             return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
                     "cost": float("nan"), "tau_fit": float("nan"),
-                    "checks": _checks_fail()}
+                    "cut_s": float("nan"), "checks": _checks_fail()}
     ys = _norm(y)
-    lo, hi, _dmu_lo = _bounds(t, ys, kind)
+    tau_fit = float("nan")
+    if kind == "deconv2":
+        # (8) 第1段: 拡張期の後ろ 30% から時定数 τ を推定する。
+        tau_fit = _tail_tau(t, ys)
+        if not np.isfinite(tau_fit):
+            return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
+                    "cost": float("nan"), "tau_fit": float("nan"),
+                    "cut_s": float("nan"), "checks": _checks_fail()}
+        # 第2段: 核が (1/τ)e^{−u/τ} のとき y = h ⊛ x の逆は **x(t) = y(t) + τ·y′(t)** で
+        # 閉じた形になる。微分は `np.gradient`（中心差分）で取り、戻した x を凍結版と
+        # 同じやり方で 0〜1 に直してから当てる（`_norm`）。**微分は雑音を大きくするので、
+        # 雑音の無い PWDB では使えるが実波形では注意が要る。**
+        ys_fit = _norm(ys + tau_fit * np.gradient(ys, t))
+    else:
+        ys_fit = ys
+    lo, hi, _dmu_lo = _bounds(t, ys_fit, kind)
+    cut_s = float("nan")
     if kind in KIND_TRUNC:
         # 打ち切るのは**残差だけ**である。起点・dmu0・成分のピークは拍の全長で決める
         # （`_frozen_starts` には t・ys をそのまま渡し、ピークは下で t[0]〜t[-1] を見る）。
-        keep = t <= t[0] + TRUNC_FRAC_OF[kind] * (t[-1] - t[0])
-        tfit, yfit = t[keep], ys[keep]
+        # 切る時刻は割合（TRUNC_FRAC_OF）か絶対時間（TRUNC_ABS_OF）のどちらかで決まる。
+        # (6e) は絶対時間だが、拍が短いときは拍長の TRUNC_ABS_MAXFRAC 倍で頭打ちにする。
+        if kind in TRUNC_ABS_OF:
+            cut_s = float(min(TRUNC_ABS_OF[kind],
+                              TRUNC_ABS_MAXFRAC * (t[-1] - t[0])))
+        else:
+            cut_s = float(TRUNC_FRAC_OF[kind] * (t[-1] - t[0]))
+        keep = t <= t[0] + cut_s
+        tfit, yfit = t[keep], ys_fit[keep]
     else:
-        tfit, yfit = t, ys
-    starts, dmu0 = _frozen_starts(t, ys, lo, hi, kind, SEED_STARTS)
+        tfit, yfit = t, ys_fit
+    starts, dmu0 = _frozen_starts(t, ys_fit, lo, hi, kind, SEED_STARTS)
+    if kind == "deriv":
+        # (9) 残差を 1 次微分の領域で取る。模型の側も拍の側も同じ格子で `np.gradient`
+        # （中心差分）を当て、その差を最小にする。**母数・探索範囲・起点・解の選び方は
+        # 凍結版のまま**で、変えたのは残差を測る領域だけである。
+        dy_fit = np.gradient(yfit, tfit)
+
+        def _resid(p):
+            return np.gradient(_model(p, tfit, kind), tfit) - dy_fit
+    else:
+        def _resid(p):
+            return _model(p, tfit, kind) - yfit
     sols = []
     for x0 in starts:
         try:
-            r = least_squares(lambda p: _model(p, tfit, kind) - yfit, x0,
+            r = least_squares(_resid, x0,
                               bounds=(lo, hi), method="trf", max_nfev=MAX_NFEV)
         except Exception:
             continue
         sols.append(r)
     if not sols:
         return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
-                "cost": float("nan"), "tau_fit": float("nan"),
-                "checks": _checks_fail()}
+                "cost": float("nan"), "tau_fit": tau_fit,
+                "cut_s": cut_s, "checks": _checks_fail()}
     # 解の選択も `fit_beat` と同じ: RSS 最小を基本に、特徴点近傍（|Δμ − dmu0| ≤ NEAR_DMU）
     # の解が RSS 最小の NEAR_RSS 倍以内にあればそちらを採る。
     gmin = min(sols, key=lambda r: r.cost)
@@ -962,10 +1239,12 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
     c1, c2 = _components(best.x, kind)
     tp1, h1 = pda.component_peak(c1, t0f, t1f)
     tp2, h2 = pda.component_peak(c2, t0f, t1f)
+    if KIND_SHAPE[kind] in ("decay", "conv"):
+        tau_fit = float(best.x[9])
+    elif KIND_SHAPE[kind] == "convout":
+        tau_fit = float(best.x[8])            # (7) は倍率 g を持たないので τ は 9 番目
     return {"dt_s": tp2 - tp1, "ri": h2 / max(h1, 1e-9), "ok": True,
-            "cost": float(best.cost),
-            "tau_fit": (float(best.x[9]) if KIND_SHAPE[kind] in ("decay", "conv")
-                        else float("nan")),
+            "cost": float(best.cost), "tau_fit": tau_fit, "cut_s": cut_s,
             "checks": _diagnose(sols, best, kind, lo, hi, h1, h2, t0f, t1f)}
 
 
@@ -1113,6 +1392,31 @@ def print_a_legend(taus, dts, seed: int) -> None:
           "上げた（2026-09-16 に足した。lab_log 追記146）。")
     print(f"    (6c) 0.55T・(6d) 0.75T は (6b) と**打ち切りの割合だけ**が違う"
           f"（Δμ の下限はどれも {DMU_LO_FROZEN} s）。")
+    print(f"    (6e) は割合ではなく**絶対時間** {TRUNC_ABS_S:.2f} s で切る"
+          f"（拍長の {TRUNC_ABS_MAXFRAC:.2f} 倍を超えるときはその値）。")
+    print("    割合で切ると**切る時刻そのものが心拍数の関数になる**ので、"
+          "心拍数に依らない切り方でも同じ向きの")
+    print("    結果が出るかを見る（2026-09-16 に足した。lab_log 追記149）。"
+          "**主の切り方は 0.65T のままである。**")
+    print("    (7)(8)(9) は模型の作りそのものを変えた 3 行である"
+          "（2026-09-16 に、走らせる前に設計を固定した。追記149）。")
+    print("    凍結版は PPG を「圧に似た 2 つの波の和」と見るが、PWDB の指尖 PPG は"
+          "**末梢 Windkessel の容積**")
+    print("    （Charlton 2019 式 A1）で、波の和を低域通過させて長い指数の裾を付けた量で"
+          "ある。模型にその裾を受け持つ")
+    print("    要素が無いので、第2成分が裾に引かれる（型3 で +98.5 ms）。")
+    print(f"    (7) は和の全体に単位面積の指数核を掛けて**置き換える**"
+          f"（τ ∈ [{CONVOUT_TAU_LO:.2f}, {CONVOUT_TAU_HI:.2f}] s・倍率 g は持たない）。")
+    print("    **τ → 0 が凍結版そのもの**なので入れ子であり、(4) のような縮退する向きが"
+          "無い。**ΔT・RI は畳み込む前の**")
+    print("    **g1・g2 のピークから出す**（ほかの型とまったく同じ道を通る）。")
+    print(f"    (8) は拍の後ろ {100 * (1 - DECONV_TAIL_FRAC):.0f}% に "
+          f"A·e^{{−(t−t0)/τ}}+C を当てて τ を推定し、x = y + τ·y′ で戻してから"
+          "**凍結版をそのまま**当てる。")
+    print("    (9) は残差だけを 1 次微分の領域で取る（母数・探索範囲・起点・解の選び方は"
+          "凍結版のまま）。")
+    print("    **留保**: PWDB の指尖 PPG はまさに (7) の形で作られているので、"
+          "in silico では (7) に有利に働く。")
     print(f"    **主とする割合は {TRUNC_FRAC:.2f}T で、これは事前に決めた値である**"
           "（24番・lab_log 追記139。実データの結果を見る前に固定した）。")
     print("    (6c)(6d) は結論が割合の選び方に敏感でないことを示す記述（感度の確認）の"
@@ -1172,11 +1476,16 @@ def print_checks(rec: dict) -> None:
           "目安である。")
     print("    「τ上限」は減衰・畳み込みの型で τ が探索範囲の上限に張り付いた拍数（拍の中で"
           "減衰しない貯留槽。")
-    print("    境界には数えない）。(0) は fit_beat 自身の検算。")
+    print("    境界には数えない）。「τ下限」は同じ型で τ が下限に張り付いた拍数で、"
+          "**(7) ではこれが**")
+    print("    **「凍結版で足りる」という正当な解**なので境界に数えない"
+          "（(3)(4)(4b)(4c) では縮退した領域に")
+    print("    押し付けられた印なので、今までどおり境界にも数える）。"
+          "(0) は fit_beat 自身の検算。")
     print("    " + _pad("当てはめの型", 18) + _pad("通過", 9, right=True)
           + _pad("Δμ下限", 10, right=True) + _pad("境界", 8, right=True)
           + _pad("高さ<0.02", 12, right=True) + _pad("別解", 8, right=True)
-          + _pad("τ上限", 8, right=True))
+          + _pad("τ上限", 8, right=True) + _pad("τ下限", 8, right=True))
     for k in keys:
         rows = chk[k]
         print("    " + _pad(f"{_kind_no(k)} {KIND_HEAD[k]}", 18)
@@ -1185,7 +1494,8 @@ def print_checks(rec: dict) -> None:
               + _pad(_cnt(rows, "boundary"), 8, right=True)
               + _pad(_cnt(rows, "amp_zero"), 12, right=True)
               + _pad(_cnt(rows, "ambiguous"), 8, right=True)
-              + _pad(_cnt(rows, "tau_hi"), 8, right=True))
+              + _pad(_cnt(rows, "tau_hi"), 8, right=True)
+              + _pad(_cnt(rows, "tau_lo"), 8, right=True))
 
     # 境界の内訳（どの母数が端に付いたか）。掃引は 7〜10 拍しかないので、割合ではなく
     # 拍数で出す。境界に 1 拍も付かなかった型は行を出さない。
@@ -1264,7 +1574,7 @@ def print_a_layer(rec: dict, summ: dict, tau: float) -> None:
 
 
 def section_a(taus=TAUS_FULL, dts=DTS_FULL, seed: int = SEED_A) -> dict:
-    """節A: 当てはめの型を並べ、真の反射波の到達を追えるかを測る（合成・表は 13 行）。"""
+    """節A: 当てはめの型を並べ、真の反射波の到達を追えるかを測る（合成・表は 17 行）。"""
     print("\n" + "=" * 100)
     print("節A 合成脈波: 当てはめの型を変えると、真の反射波の到達を追えるか")
     print("=" * 100)
@@ -1354,7 +1664,7 @@ def summarise_a2(res: dict) -> dict:
 
 def print_a2_legend(ris, tau: float) -> None:
     print("\n" + "-" * 100)
-    print("A2-0. RI の掃引（当てはめの型は節A と同じ 13 行＋参考の特徴点法）")
+    print("A2-0. RI の掃引（当てはめの型は節A と同じ 17 行＋参考の特徴点法）")
     print("-" * 100)
     print(f"  反射波の大きさ（母数 a_ref）を {list(ris)} の "
           f"{len(list(ris))} 通りに振る。")
@@ -2024,14 +2334,28 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
 # （**候補の作りの問題であってデータの性質ではない**）。(4) と τ の下限だけが違う 1 行に
 # してあり、**(4)(4b) は 0.05 s のまま**なので一度に 1 つだけ変えた比較になる。記録があれば
 # 再開するので、既存の 7 型は当てはめ直さず、新しい 3 型 (4c)(6c)(6d) だけを当てる。
+# (6e)(7)(8)(9) は 2026-09-16 に足した（**走らせる前に設計を固定した**。lab_log 追記149）。
+# 凍結版が劣る理由をいまの時点で最も正確に言うと、**PPG という量（末梢 Windkessel の
+# 容積）に対して圧に似た波の和の模型を当てている**ことである。(7) は和の全体に単位面積の
+# 指数核を掛けて置き換え（τ → 0 が凍結版そのものなので入れ子）、(8) は当てる前に波形を
+# 戻し、(9) は残差を微分の領域で取る。(6e) は打ち切る位置を絶対時間にした版で、割合で
+# 切ると切る時刻が心拍数の関数になることの確認である（W1）。
+# **同じ 2026-09-16 に診断の列 `taulo_{型}` を足したので、それより前に書いた記録は
+# どの型も当てはめ直される**（列の欠けた記録を使い回さない規約。`_has_variant`）。
 VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "conv15", "trunc", "trunc08",
-                    "trunc055", "trunc075", "decay")
+                    "trunc055", "trunc075", "truncabs", "decay", "convout", "deconv2",
+                    "deriv")
 REFIT_NAME = "50_refit.csv"     # 再当てはめの記録（--refit-csv で変えられる）
-# 記録に残す診断の列の頭 → `fit_kind` が返す `checks` の鍵
+# 記録に残す診断の列の頭 → `fit_kind` が返す `checks` の鍵。
+# **`taulo` は 2026-09-16 に足した**（(7) の τ が下限＝凍結版そのものに張り付いた拍を
+# 数えるため。lab_log 追記149）。列が 1 つ増えるので、**それより前に書いた記録は
+# 「その型が入っている」と見なされず、再開のときに当てはめ直される**（`_has_variant`）。
+# `pin_{型}` を足した 2026-09-15 と同じ扱いで、列の欠けた記録を黙って使うと表が空の
+# ままになるからである。
 CHK_COLS = (("dmulo", "dmu_lo"), ("bnd", "boundary"), ("amp", "amp_zero"),
-            ("amb", "ambiguous"), ("tauhi", "tau_hi"))
+            ("amb", "ambiguous"), ("tauhi", "tau_hi"), ("taulo", "tau_lo"))
 CHK_HEAD = {"dmulo": "Δμ下限率", "bnd": "境界率", "amp": "高さ率", "amb": "別解率",
-            "tauhi": "τ上限率"}
+            "tauhi": "τ上限率", "taulo": "τ下限率"}
 # 真値の列 COL_PWV（PWV_a）・COL_PVR（pvr）は節B の側で定めてある（B6 も読むため）。
 SIGN_DT = -1               # ΔT × 大動脈PWV の予測の向き（26番・48番と同じ）
 SIGN_RI = +1               # RI × 末梢血管抵抗 の予測の向き（同上）
@@ -2092,6 +2416,12 @@ def refit_subject(args_tuple):
             out[f"{tag}_{k}"] = float("nan")
         out[f"cost_{k}"] = float("nan")
         out[f"pin_{k}"] = ""              # 境界の内訳（空＝当てはめが成らなかった拍）
+        if k in KIND_TRUNC:
+            # 打ち切る型が実際に切った時刻 [s]。(6e) で拍長の 0.90 倍の頭打ちが効いた
+            # 拍を後から数えられるようにしてある（**再開の可否には使わない**。切らない
+            # 型では欠測になるので、`_has_variant` の必須の列に入れると毎回当てはめ
+            # 直すことになる）。
+            out[f"cut_{k}_s"] = float("nan")
     why = []
     try:
         y, fs = M.beat_of(row, hr)
@@ -2123,6 +2453,8 @@ def refit_subject(args_tuple):
                 for tag, q in CHK_COLS:
                     out[f"{tag}_{k}"] = int(bool(ck[q]))
                 out[f"cost_{k}"] = float(r["cost"])
+                if k in KIND_TRUNC:
+                    out[f"cut_{k}_s"] = float(r.get("cut_s", float("nan")))
                 # 境界の内訳。どの母数も端に付かなかった拍は PIN_NONE を書く
                 # （空欄のままだと CSV から読み直したときに欠測と区別できない）。
                 out[f"pin_{k}"] = (";".join(ck.get("pins", [])) or PIN_NONE)[:PIN_MAX]
@@ -2172,6 +2504,9 @@ def _has_variant(rec: dict, k: str) -> bool:
     埋まっているときだけ「入っている」と見なし、1 つでも欠けていれば当てはめ直す。
     2026-09-15 までは `ok_{型}` だけを見ていたが、それでは `pin_`（境界の内訳）を
     足す前に書いた記録をそのまま使ってしまい、C1b が空のままになる（lab_log 追記144）。
+    **2026-09-16 に診断の列 `taulo_{型}` を足したので、それより前の記録はこの規則で
+    すべて当てはめ直される**（lab_log 追記149）。打ち切った時刻 `cut_{型}_s` は切る型に
+    しか無い列なので、ここでは見ない（見ると切らない型が毎回やり直しになる）。
     当てはめが成らなかった拍（`dt_` が欠測）も、この規則では毎回やり直すことになる。
     拍を作れない被験者は `beat_of` の段で即座に戻るので、費用は小さい。
     """
@@ -2201,7 +2536,8 @@ def _order_cols(df: pd.DataFrame, variants) -> pd.DataFrame:
     for k in variants:
         per += ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}"]
                 + [f"{tag}_{k}" for tag, _q in CHK_COLS]
-                + [f"cost_{k}", f"pin_{k}"])
+                + [f"cost_{k}", f"pin_{k}"]
+                + ([f"cut_{k}_s"] if k in KIND_TRUNC else []))
     tail = ["why", "python_version", "numpy_version", "scipy_version"]
     order = [c for c in head + per + tail if c in df.columns]
     rest = [c for c in df.columns if c not in order]
@@ -2295,16 +2631,72 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
 
 
 # ---------------------------------------------------------------- 節C の計算の部品
-def stage_of(d: pd.DataFrame, ok_col) -> pd.DataFrame:
-    """A 段（その型が自分で採用した例だけ）に絞る。`ok_col` が None なら C 段のまま。
+STAGE_B_COL = "_stage_b"   # B 段（比べるすべての型が採用した共通例）の印。表の中だけで使う
 
-    48番の `_stage` と同じ扱いにする（列が無ければ空にする。黙って C 段にしない）。
+
+def b_stage_mask(d: pd.DataFrame, variants) -> np.ndarray:
+    """B 段の印。**その実行で並べる型が全部そろって採用した被験者**だけ真にする。
+
+    A 段は型ごとに分母が違うので、A 段どうしを比べると「どの拍を捨てたか」の差が値に
+    混ざる。B 段は分母を完全にそろえるので、A 段の良さが**当てはめの良さ**なのか
+    **採用の仕方**なのかを分けられる（2026-09-16 に足した。lab_log 追記149 の問1。
+    打ち切りの RI は型3・A 段で 0.530、C 段で 0.107 と食い違っていて、いまのままでは
+    どちらか決められない）。
+
+    `ok_{型}` の列が 1 つでも無ければ、黙って C 段にせず**全部を偽**にする
+    （48番の `_stage` と同じ扱い。段を取り違えた表を出さないため）。
     """
+    m = np.ones(len(d), dtype=bool)
+    for k in variants:
+        col = f"ok_{k}"
+        if col not in d.columns:
+            return np.zeros(len(d), dtype=bool)
+        m &= (pd.to_numeric(d[col], errors="coerce") == 1).to_numpy(dtype=bool)
+    return m
+
+
+def stage_of(d: pd.DataFrame, ok_col, stage: str = "A") -> pd.DataFrame:
+    """段で絞る。A 段はその型が自分で採用した例だけ、B 段は比べるすべての型が採用した
+    共通例、C 段は採否を無視した全例である。
+
+    B 段の印は `section_c` が表を出す前に 1 回だけ数えて `STAGE_B_COL` の列に入れて
+    おく（表ごとに数え直さない）。列が無ければ空にする。A 段は `ok_col` で絞り、
+    `ok_col` が None で B 段でもなければ C 段（そのまま返す）。48番の `_stage` と同じ
+    扱いにする（列が無ければ空にする。黙って C 段にしない）。
+    """
+    if stage == "B":
+        if STAGE_B_COL not in d.columns:
+            return d.iloc[0:0]
+        return d[d[STAGE_B_COL].astype(bool)]
     if ok_col is None:
         return d
     if ok_col not in d.columns:
         return d.iloc[0:0]
     return d[pd.to_numeric(d[ok_col], errors="coerce") == 1]
+
+
+def print_stage_head(d: pd.DataFrame, variants) -> None:
+    """A・B・C 段の 1 行の定義と、B 段の人数を**表の直前に毎回**出す。
+
+    段の定義は読み手が忘れるものなので、段を使う表の直前に必ず置く（この作業場の
+    決まり。2026-09-15）。B 段は型の数だけ採用の条件を重ねるので小さくなりうる。
+    """
+    print("  段 A = その手法が自分で採用した例だけ（ok_{型} == 1）、"
+          "段 B = 比べるすべての手法が採用した共通例、")
+    print(f"  段 C = 採否を無視した全例。**B 段は {len(list(variants))} 型すべてが"
+          "採用した被験者だけなので、分母が完全にそろう。**")
+    if STAGE_B_COL not in d.columns:
+        print("  ★ B 段の印が無い（ok_{型} の列が足りない）ので、B 段の行は空になる。")
+        return
+    txt = []
+    for kt, nm in _ktypes():
+        g = _sub_k(d, kt)
+        txt.append(f"{nm} {int(g[STAGE_B_COL].astype(bool).sum())}/{len(g)} 名")
+    print("  B 段の人数（波形の型ごと・分母はその型の全例）: " + "・".join(txt))
+    print("  ★ **B 段は小さくなりうる。**1 層 "
+          f"{MIN_PER_AGE} 名に満たない年齢層は ρ を計算しないので、人数が減ると")
+    print("  B 段の行が「—」になる。その「—」は関連が無いことではなく、"
+          "**評価できなかった**ことである。")
 
 
 def judge_c(d: pd.DataFrame, x: str, y: str, sign: int):
@@ -2515,11 +2907,16 @@ def _rows_for(d: pd.DataFrame, variants, pre: str, suf: str, ref_col: str, ref_l
     for k in variants:
         col = f"{pre}{k}{suf}"
         rows.append((_kind_lab(k), col, f"ok_{k}", "A"))
+        rows.append((_kind_lab(k), col, None, "B"))
         rows.append((_kind_lab(k), col, None, "C"))
     if ref_col in d.columns:
         rows.append((ref_lab, ref_col, COL_OK, "A"))
+        rows.append((ref_lab, ref_col, None, "B"))
         rows.append((ref_lab, ref_col, None, "C"))
     if lm_col in d.columns:
+        # 同梱の特徴点は採否を持たないので A 段が無い。B 段（共通例）は**同じ被験者の
+        # 上で比べるため**に出す（段は被験者の絞り方であって、手法の性質ではない）。
+        rows.append((lm_lab, lm_col, None, "B"))
         rows.append((lm_lab, lm_col, None, "C"))
     return rows
 
@@ -2533,7 +2930,7 @@ def print_c_matrix(d: pd.DataFrame, rows: list, tgt: str, sign: int) -> dict:
     for lab, col, ok_col, stg in rows:
         line = "  " + _pad(f"{lab} {stg}", 22)
         for kt, _nm in types:
-            g = stage_of(_sub_k(d, kt), ok_col)
+            g = stage_of(_sub_k(d, kt), ok_col, stg)
             j, ages = judge_c(g, col, tgt, sign)
             out[(col, stg, kt)] = {"j": j, "rows": ages, "n": len(g)}
             line += _pad(_cell(j), 19, right=True)
@@ -2547,7 +2944,11 @@ def print_c2(d: pd.DataFrame, variants) -> dict:
     print(f"C2. ΔT × 大動脈脈波伝播速度 {COL_PWV}（予測の向き 負。年齢層内 Spearman）")
     print("-" * 100)
     print(f"  層は `age` の相異なる値、1 層 {MIN_PER_AGE} 名以上（20番の `_by_age`・`_judge`）。")
-    print("  段 A はその当てはめが自分で採用した例だけ（ok_{型} == 1）、段 C は採否を無視した全例。")
+    print_stage_head(d, variants)
+    print("  行は当てはめごとに A・B・C の 3 段を並べる。**A 段だけが良くて C 段が悪い"
+          "とき、それが**")
+    print("  **当てはめの良さなのか採用の仕方なのかは A と C からは分けられない。"
+          "分けるのが B 段である。**")
     print("  ます目は **|ρ| の中央値（予測の向きに合った層数／評価できた層数）** と、")
     print(f"  20番 `_judge` の規準（|中央値| ≥ {M.CRIT_RHO:.2f} かつ全層で向きが合う）に対する")
     print("  **規準 成立／不成立**。**この印は事後の記述であり、26番の判定は動かない。**")
@@ -2566,6 +2967,11 @@ def print_c3(d: pd.DataFrame, variants) -> dict:
     print("-" * 100)
     print("  読み方は C2 と同じ。節A-2 で凍結版の RI は型3 相当の条件で符号が反転したので、")
     print("  型3 の列と、その 75 歳層の ρ を見る。")
+    print_stage_head(d, variants)
+    print("  **この表の B 段が、打ち切りの RI をいちばん強く問う。**型3 の A 段（0.530）と"
+          " C 段（0.107）の食い違いが")
+    print("  当てはめの良さなら B 段でも保たれ、採用の仕方なら B 段で落ちる"
+          "（lab_log 追記149 の問1）。")
     rows = _rows_for(d, variants, "ri_", "", COL_RI_V1, "（参考）凍結版 26番",
                      COL_RI_LM, "（参考）同梱の特徴点")
     out = print_c_matrix(d, rows, COL_PVR, SIGN_RI)
@@ -2588,6 +2994,11 @@ def print_c4(d: pd.DataFrame, variants) -> dict:
     print("-" * 100)
     print("  差の中央値は（当てはめの ΔT − 同梱の特徴点 ΔT）[ms]、ρ は年齢層で分けずに")
     print(f"  まとめた Spearman（20番の `_spearman`・{MIN_N_POOL} 名以上）。対応のある行だけ。")
+    print("  段 A = その手法が自分で採用した例だけ（ok_{型} == 1）、"
+          "段 C = 採否を無視した全例。")
+    print("  **C4 は A 段と C 段だけである**（当てはめごとに同梱の特徴点とどれだけ"
+          "一致するかを見る指標で、")
+    print("  手法どうしを同じ被験者の上で比べる表ではないので、B 段に絞る意味がない）。")
     out = {}
     rows = [(_kind_lab(k), f"dt_{k}_ms", f"ok_{k}", "A") for k in variants]
     rows += [(_kind_lab(k), f"dt_{k}_ms", None, "C") for k in variants]
@@ -2602,7 +3013,7 @@ def print_c4(d: pd.DataFrame, variants) -> dict:
               + _pad("n", 8, right=True) + _pad("差の中央値[ms]", 16, right=True)
               + _pad("|差|の中央値[ms]", 18, right=True) + _pad("ρ", 10, right=True))
         for name, col, ok_col, stg in rows:
-            g = stage_of(g0, ok_col)
+            g = stage_of(g0, ok_col, stg)
             a, b = _colv(g, col), _colv(g, COL_LM)
             ok = np.isfinite(a) & np.isfinite(b)
             n = int(ok.sum())
@@ -2783,7 +3194,16 @@ def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
         print(f"  ★ この実行は {len(d)} 名の抜粋である（1 層 "
               f"{len(d) // max(len(ages), 1)} 名）。**ここから出る数値は読んではいけない。**")
 
-    out = {"state": 0, "n": len(d), "path": str(path), "info": info,
+    # B 段（比べるすべての型が採用した共通例）の印を**表を出す前に 1 回だけ**数え、
+    # 列にして持ち回る（表ごとに数え直さない）。A 段は型ごとに分母が違うので、A 段
+    # どうしの比較には「どの拍を捨てたか」の差が混ざる。B 段は分母をそろえる。
+    d[STAGE_B_COL] = b_stage_mask(d, variants)
+    n_b = int(np.sum(d[STAGE_B_COL].to_numpy(dtype=bool)))
+    print(f"  B 段（比べるすべての手法が採用した共通例・{len(variants)} 型すべてで "
+          f"ok_{{型}} == 1）{n_b} 名 / {len(d)} 名")
+    if n_b == 0:
+        print("  ★ B 段が 0 名である。C2・C3 の B 段の行はすべて「—」になる。")
+    out = {"state": 0, "n": len(d), "n_b": n_b, "path": str(path), "info": info,
            "variants": variants}
     out["c0"] = print_c0(d, variants)
     out["c1"] = print_c1(d, variants)
@@ -3044,10 +3464,11 @@ def selftest() -> int:
           + "。これが取り逃がしである。")
 
     # (0)(4b)(4c)(5b)(6b): 凍結版本体が先頭にあり、一度に 1 つだけ変える版が並んでいるか
-    rep("当てはめの型が 13 行あり、先頭が (0) 凍結版本体・(4b) は (2) と (4) の同時適用・"
+    rep("当てはめの型が 17 行あり、先頭が (0) 凍結版本体・(4b) は (2) と (4) の同時適用・"
         "(4c) は (4) と τ の下限だけが違い・"
-        "(5b)(6b) は Δμ の下限だけが (5)(6) と違い・(6c)(6d) は (6b) と割合だけが違う",
-        len(KIND_KEYS) == 13 and KIND_KEYS[0] == "fb"
+        "(5b)(6b) は Δμ の下限だけが (5)(6) と違い・(6c)(6d) は (6b) と割合だけが違い・"
+        "(6e) は切る位置の決め方だけが違い・(7)(8)(9) は末尾にあって Δμ は緩めていない",
+        len(KIND_KEYS) == 17 and KIND_KEYS[0] == "fb"
         and KIND_NO["fb"] == "(0)" and KIND_NO["conv01"] == "(4b)"
         and KIND_SHAPE["conv01"] == "conv"
         and KIND_NO["conv15"] == "(4c)" and KIND_SHAPE["conv15"] == "conv"
@@ -3065,12 +3486,23 @@ def selftest() -> int:
         and ("tied" not in KIND_DMU_FROZEN) and ("trunc" not in KIND_DMU_FROZEN)
         and TRUNC_FRAC_OF["trunc055"] == 0.55 and TRUNC_FRAC_OF["trunc08"] == 0.65
         and TRUNC_FRAC_OF["trunc075"] == 0.75
+        # 2026-09-16 に足した 4 行（lab_log 追記149）。番号・形・Δμ の下限を照合する。
+        and KIND_NO["truncabs"] == "(6e)" and KIND_SHAPE["truncabs"] == "plain"
+        and TRUNC_ABS_OF["truncabs"] == 0.45 and TRUNC_ABS_MAXFRAC == 0.90
+        and KIND_NO["convout"] == "(7)" and KIND_SHAPE["convout"] == "convout"
+        and KIND_NO["deconv2"] == "(8)" and KIND_SHAPE["deconv2"] == "deconv2"
+        and KIND_NO["deriv"] == "(9)" and KIND_SHAPE["deriv"] == "plain"
+        and list(KIND_KEYS[-3:]) == ["convout", "deconv2", "deriv"]
+        and KIND_KEYS.index("truncabs") == KIND_KEYS.index("trunc075") + 1
+        and all(k in KIND_DMU_FROZEN
+                for k in ("truncabs", "convout", "deconv2", "deriv"))
         and all(np.isfinite(res[tau0]["got"][k]).all()
                 for k in ("fb", "conv01", "conv15", "tied08", "trunc08",
-                          "trunc055", "trunc075")),
+                          "trunc055", "trunc075", "truncabs", "convout", "deriv")),
         "・".join(f"{_kind_no(k)} ρ {summ[(k, tau0)]['rho']:+.2f}"
                   for k in ("fb", "frozen", "conv", "conv01", "conv15", "tied",
-                            "tied08", "trunc", "trunc08", "trunc055", "trunc075")))
+                            "tied08", "trunc", "trunc08", "trunc055", "trunc075",
+                            "truncabs", "convout", "deconv2", "deriv")))
 
     # (4c) の τ の下限が効いているか（2026-09-16 に足した。lab_log 追記146）。減らした
     # 掃引の全拍で、(4c) が選んだ τ は下限 0.15 s を下回らないはずである。あわせて (4) が
@@ -3129,12 +3561,102 @@ def selftest() -> int:
     rep("打ち切りの割合 0.55・0.65・0.75 は同じ拍に別々の ΔT を返す（割合が配線されている）",
         n_tri >= 1,
         f"3 つが 1 ms を超えて違う拍が {n_tri} 拍・返り値の開きの最大 {spread:.1f} ms")
+    # KIND_TRUNC は割合で切る型と絶対時間で切る型の両方を覆う（(6e) を足した
+    # 2026-09-16 に広げた。**主の割合 0.65 は動かしていない**）。
     rep("主の割合は 0.65 のまま（(6) と (6b) が使う値。事前に決めた値を動かさない）",
         TRUNC_FRAC == 0.65 and TRUNC_FRAC_OF["trunc"] == 0.65
         and TRUNC_FRAC_OF["trunc08"] == 0.65
-        and set(KIND_TRUNC) == set(TRUNC_FRAC_OF),
+        and set(KIND_TRUNC) == set(TRUNC_FRAC_OF) | set(TRUNC_ABS_OF)
+        and set(TRUNC_FRAC_OF) & set(TRUNC_ABS_OF) == set(),
         f"TRUNC_FRAC {TRUNC_FRAC}・"
-        + "・".join(f"{_kind_no(k)} {TRUNC_FRAC_OF[k]:.2f}T" for k in KIND_TRUNC))
+        + "・".join(f"{_kind_no(k)} {TRUNC_FRAC_OF[k]:.2f}T" for k in TRUNC_FRAC_OF)
+        + "・" + "・".join(f"{_kind_no(k)} {TRUNC_ABS_OF[k]:.2f}s（上限 "
+                          f"{TRUNC_ABS_MAXFRAC:.2f}T）" for k in TRUNC_ABS_OF))
+
+    # ============================================================ (6e)(7)(8)(9)
+    # 2026-09-16 に足した 4 行の検算（lab_log 追記149。**走らせる前に設計を固定した**）。
+
+    # (7) は τ → 0 で凍結版そのものに戻るか（入れ子。**(4) に無かった性質**）。
+    # 核は単位面積で、τ → 0 では [1, 0, 0, …] になるので畳み込みは恒等写像になる。
+    p_c7 = [1.0, 0.10, 0.045, 2.5, 0.45, 0.20, 0.087, 1.2, 1e-6]
+    g1_c7, g2_c7 = _components(p_c7, "convout")
+    base_c7 = skew_gaussian(t, *g1_c7) + skew_gaussian(t, *g2_c7)
+    d_c7 = float(np.max(np.abs(_model(p_c7, t, "convout") - base_c7)))
+    pk_c7 = float(np.max(base_c7))
+    k_c7 = _res_kernel(t, 1e-6)
+    rep("(7) は τ → 0 で凍結版に一致する（入れ子なので縮退する向きが無い）",
+        d_c7 <= 1e-6 * pk_c7 and abs(float(k_c7[0]) - 1.0) < 1e-12
+        and float(np.max(np.abs(k_c7[1:]))) == 0.0,
+        f"τ = 1e-6 で 模型 − (g1+g2) の最大 {d_c7:.3e}"
+        f"（要 ピーク {pk_c7:.3f} の 1e-06 倍 = {1e-6 * pk_c7:.3e} 以下）・"
+        f"核の先頭 {float(k_c7[0]):.6f}・残りの最大 {float(np.max(np.abs(k_c7[1:]))):.1e}")
+
+    # (8) の逆畳み込みが正しいか。既知の x を既知の τ で畳み込み、x = y + τ·y′ で戻す。
+    # 端は因果的な畳み込みの立ち上がりが残るので、中央 80% で測る（規準は実装の前に
+    # 決めた「ピークの 2%」）。
+    tau_d8 = 0.3
+    x_d8 = (skew_gaussian(t, A_FWD, TP_F - 0.02, SIG_FWD, AL_FWD)
+            + skew_gaussian(t, A_REF, TP_F + 0.20 - 0.02,
+                            W_REF_A + W_REF_B * 0.20, AL_REF))
+    y_d8 = np.convolve(x_d8, _res_kernel(t, tau_d8))[:t.size]
+    xh_d8 = y_d8 + tau_d8 * np.gradient(y_d8, t)
+    i0_d8, i1_d8 = int(0.10 * t.size), int(0.90 * t.size)
+    e_d8 = float(np.max(np.abs(xh_d8[i0_d8:i1_d8] - x_d8[i0_d8:i1_d8])))
+    pk_d8 = float(np.max(x_d8))
+    rep("(8) の逆畳み込み x = y + τ·y′ が元の波を戻す（中央 80%・ピークの 2% 以内）",
+        e_d8 <= 0.02 * pk_d8,
+        f"最大の差 {e_d8:.5f} = ピーク {pk_d8:.3f} の {100 * e_d8 / pk_d8:.2f}%"
+        f"（要 2% 以下・τ {tau_d8:.2f} s・{i1_d8 - i0_d8} 標本）")
+
+    # (9) が本当に微分の残差を使っているか。母数・探索範囲・起点・解の選び方は凍結版と
+    # 同じなので、**残差の領域を変えていなければ (1) と 1 ビットも違わない値になる。**
+    n_dv, gap_dv = 0, 0.0
+    for rc in res.values():
+        a_dv = np.asarray(rc["got"]["deriv"], float)
+        b_dv = np.asarray(rc["got"]["frozen"], float)
+        ok_dv = np.isfinite(a_dv) & np.isfinite(b_dv)
+        if ok_dv.any():
+            n_dv += int(np.sum(np.abs(a_dv[ok_dv] - b_dv[ok_dv]) > 1e-9))
+            gap_dv = max(gap_dv, float(np.max(np.abs(a_dv[ok_dv] - b_dv[ok_dv]))))
+    rep("(9) は微分の残差を使っている（(1) と同じ設定なのに別の解になる）",
+        n_dv >= 1,
+        f"(1) と ΔT が 1e-9 ms を超えて違う拍 {n_dv} 拍・差の最大 {gap_dv:.1f} ms")
+
+    # (6e) が切る時刻。心拍数 70 の拍では 0.45 s、心拍数 140 の短い拍では 0.90 × 拍長。
+    r_ab70 = fit_kind(t, y, "truncabs")
+    t_ab, y_ab, _tr_ab = synth_beat(0.10, 0.45, hr=2.0 * HR_SYN)
+    r_ab140 = fit_kind(t_ab, y_ab, "truncabs")
+    T_ab = float(t_ab[-1] - t_ab[0])
+    ord_tr = list(_order_cols(pd.DataFrame([{"subj_no": 1, "pin_trunc08": "-",
+                                             "cut_trunc08_s": 0.5}]),
+                              ("trunc08",)).columns)
+    rep("(6e) は 0.45 s で切り、拍が短いときは 0.90 × 拍長で切る（切った時刻を記録する）",
+        abs(r_ab70["cut_s"] - TRUNC_ABS_S) <= 1e-12
+        and abs(r_ab140["cut_s"] - TRUNC_ABS_MAXFRAC * T_ab) <= 1e-12
+        and r_ab140["cut_s"] < TRUNC_ABS_S
+        and not np.isfinite(fit_kind(t, y, "frozen")["cut_s"])
+        and ord_tr == ["subj_no", "pin_trunc08", "cut_trunc08_s"],
+        f"心拍数 {HR_SYN:.0f}（拍長 {float(t[-1] - t[0]):.4f} s）で "
+        f"{r_ab70['cut_s']:.4f} s・心拍数 {2 * HR_SYN:.0f}（拍長 {T_ab:.4f} s）で "
+        f"{r_ab140['cut_s']:.4f} s ＝ {TRUNC_ABS_MAXFRAC:.2f} × 拍長 "
+        f"{TRUNC_ABS_MAXFRAC * T_ab:.4f} s・切らない型は欠測")
+
+    # (7) の τ が下限にあるとき、「境界」に数えず tau_lo にだけ数えるか。
+    lo_c7, hi_c7, _dmu_c7 = _bounds(t, _norm(y), "convout")
+    p_mid = [0.5 * (a_ + b_) for a_, b_ in zip(lo_c7, hi_c7)]
+    p_mid[8] = lo_c7[8]
+    pins_c7, _lh, _hh, thi_c7, tlo_c7 = _pins_of(p_mid, lo_c7, hi_c7, "convout")
+    n_tlo = sum(1 for rc in res.values()
+                for c in rc["checks"]["convout"] if c.get("tau_lo"))
+    n_bnd_tlo = sum(1 for rc in res.values() for c in rc["checks"]["convout"]
+                    if c.get("tau_lo") and c.get("boundary"))
+    rep("(7) の τ の下限は「境界」に数えず、別の印 tau_lo に数える",
+        tlo_c7 and (not thi_c7) and (not pins_c7)
+        and lo_c7[8] == CONVOUT_TAU_LO and hi_c7[8] == CONVOUT_TAU_HI
+        and "τ下限" in txt_a0,
+        f"τ = 下限 {lo_c7[8]:.2f} s だけが端にある解で tau_lo {tlo_c7}・"
+        f"境界の内訳 {pins_c7 or '（無し）'}・掃引で τ が下限だった拍 {n_tlo}"
+        f"（うち境界の印も立った拍 {n_bnd_tlo}）")
 
     # --- (b) 畳み込み貯留槽の ρ が凍結版より大きい
     pairs = [(tau, summ[("frozen", float(tau))]["rho"], summ[("conv", float(tau))]["rho"])
@@ -3467,6 +3989,36 @@ def selftest() -> int:
             f"{c1b[(None, 'fb')]['n']} ・内訳 "
             + (("・".join(f"{nm} {c}" for nm, c in c1b[(None, 'fb')]["rows"][:PIN_TOP]))
                or "どの母数も端に付かない"))
+
+        # B 段（比べるすべての手法が採用した共通例。2026-09-16 に足した。追記149）。
+        # 定義から **B 段はどの型の A 段の部分集合**であり、いちばん小さい A 段より
+        # 大きくならない。C2 の表の人数（段ごとの分母）でも同じ順序が成り立つ。
+        got_b = pd.read_csv(refit_p)
+        bm = b_stage_mask(got_b, vars_c)
+        am = dict((k, (pd.to_numeric(got_b[f"ok_{k}"], errors="coerce") == 1)
+                   .to_numpy(dtype=bool)) for k in vars_c)
+        sub_ok = all(bool(np.all(a_[bm])) for a_ in am.values())
+        n_bad_b = 0
+        for k in vars_c:
+            for kt, _nm in _ktypes():
+                n_a = c1["c2"][(f"dt_{k}_ms", "A", kt)]["n"]
+                n_b = c1["c2"][(f"dt_{k}_ms", "B", kt)]["n"]
+                n_c = c1["c2"][(f"dt_{k}_ms", "C", kt)]["n"]
+                n_bad_b += int(not (n_b <= n_a <= n_c))
+        rep("(g) B 段はどの型の A 段の部分集合でもあり、いちばん小さい A 段を超えない",
+            sub_ok and int(bm.sum()) <= min(int(a_.sum()) for a_ in am.values())
+            and n_bad_b == 0
+            and "段 B = 比べるすべての手法が採用した共通例" in txt_c1
+            and "B 段の人数（波形の型ごと" in txt_c1
+            and "**C4 は A 段と C 段だけである**" in txt_c1,
+            f"B 段 {int(bm.sum())} 名・A 段 "
+            + "・".join(f"{_kind_no(k)} {int(am[k].sum())} 名" for k in vars_c)
+            + f"・C2 の段の人数（B ≤ A ≤ C）の食い違い {n_bad_b} 件")
+        rep("(g) 節C は B 段の人数を表を出す前に 1 回だけ数え、返り値に入れる",
+            0 <= c1["n_b"] <= c1["n"] and c1["n_b"] <= int(bm.sum()),
+            f"節C の返り値 {c1['n_b']} 名 / 突き合わせ {c1['n']} 名"
+            f"（記録から数えた共通例 {int(bm.sum())} 名。真値の表と突き合わせる段で"
+            "減ることはある）")
 
     # --- (g) --pwdb が無いまま節C を頼まれたら、落ちずに終了コード 2
     bufp = io.StringIO()
