@@ -292,21 +292,37 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
              付いたか）を足したので、**それより前に書いた記録はどの型も当てはめ直される**
              （列の欠けた記録を使い回さない規約。`pin_{型}` を足した 2026-09-15 と同じ）
   記録       `data/pwdb/50_refit.csv`（`--refit-csv` で変えられる。`--limit N` のときは
-             `50_refit_limitN.csv`。26番の CSV と同じ規約で、限った実行が全例の記録を
-             上書きしない）。列は 型ごとに ΔT・RI・採否・Δμ下限・境界・高さ・別解・τ上限・
+             `50_refit_limitN.csv`、`--noise SD` のときは `50_refit_noiseSD.csv`
+             （両方なら `50_refit_noiseSD_limitN.csv`）。26番の CSV と同じ規約で、
+             限った実行・雑音を足した実行が全例の記録を上書きしない）。列は 型ごとに
+             ΔT・**第1成分のピーク時刻**（`t1_{型}_ms` [ms]。拍の先頭を 0 とする。
+             2026-09-17 に足した。第2成分は t1 + ΔT で出せるので列にしない）・
+             RI・採否・Δμ下限・境界・高さ・別解・τ上限・
              **τ下限**（`taulo_{型}`。2026-09-16 に足した）・残差・
              **境界の内訳**（`pin_{型}`。端に付いた母数を「s2:hi;al2:hi」のように並べる。
              どれも付かなければ「-」）・打ち切る型だけ**切った時刻**
              （`cut_{型}_s` [s]。(6e) で拍長の 0.90 倍の頭打ちが効いた拍を後から
              数えるため。再開の可否には使わない）と、
              `subj_no`・`fs`・`n_samp`・`klass_own`・`sys_own_ms`・`dia_own_ms`・
+             `noise_sd`（その行を当てたときの雑音の大きさ）・
              `why`（失敗の理由。no_beat／preprocess_none／EXC:…）・版（python・numpy・scipy）
   再開       既定で再開する。記録にある被験者のうち、頼まれた型の列が**すべて**入って
              いるものは飛ばし、足りない型だけを当てて記録を書き直す（`--no-resume` で
-             全部やり直す）。**2026-09-15 より前に書いた記録は `pin_{型}` の列が無いので、
+             全部やり直す。**その前に既存の記録を `50_refit.csv.bak-日時` へ退避して
+             から書く**。14 型 × 4,374 名の記録は 15 時間かかっているので、
+             取り消しのきかない上書きにしない。2026-09-17 に足した）。
+             **2026-09-15 より前に書いた記録は `pin_{型}` の列が無いので、
              その型は当てはめ直される**（境界の内訳が無いと C1b が出せないため）。
              **2026-09-16 に `taulo_{型}` を足したので、それより前の記録はどの型も
-             当てはめ直される**（同じ規約。列の欠けた記録を黙って使うと表が空になる）
+             当てはめ直される**（同じ規約。列の欠けた記録を黙って使うと表が空になる）。
+             **2026-09-17 に `t1_{型}_ms` を足したので、`--variants` に指定した型は
+             当て直される。**14 型全部を指定すると Mac 1 で約 15 時間かかる
+             （lab_log 追記152 の実測 53,632 秒）ので、**次の実行は
+             `--variants fb,trunc08,deriv` にする。**指定しなかった型の列は記録の中に
+             そのまま残る（`_absorb` は古い行に新しい値を重ねるだけで、`_order_cols` は
+             知らない列を末尾に残す）ので、14 型ぶんの記録が消えることはない。
+             再開のときは記録の `noise_sd` と `--noise` を照合し、違えば止める
+             （雑音の違う行を混ぜない）
   並べ方     `--limit N` は 26番と同じ**等間隔**の取り方（先頭 N 名ではない。年齢層内で
              読むので全層が要る）。`--jobs J` は 26番と同じ ProcessPoolExecutor
 
@@ -324,18 +340,58 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
       C 段だけ**（当てはめごとの一致を見る指標で、手法どうしを同じ被験者の上で比べる
       表ではないので、B 段に絞る意味がない）
   C5  予測との照合（下記 P6〜P10）。**判定は付けない**（事後・記述）
+  C6  採否の偏り（W4）。型 × 当てはめで、**C 段だけ**（採否そのものを見る表なので段で
+      絞らない）。通過率・年齢層内 Spearman ρ(ok_{型}, `PWV_a`)・ρ(ok_{型}, `pvr`) の
+      中央値（符号つき）と、年齢層ごとに `PWV_a` を三分位に分けたときの通過率 3 つ。
+      **ρ が負なら硬い（PWV が高い）被験者ほど不採用で、A 段は柔らかい側に偏っている。**
+      A 段の ρ（C2・C3）はその偏りの上で読む。同梱の特徴点は採否が無いので行に入れず、
+      凍結版 26番（`ok_v1`）だけを参考行に置く
+  C7  第1成分の位置（W5）。型 × 当てはめ × 段（A・C）で、`t1`（第1成分のピーク時刻
+      [ms]・拍の先頭が 0）の中央値、`t1 − sys_own_ms`（この台本が付けた収縮期ピーク）の
+      中央値、年齢層内 Spearman ρ(`t1`, `PWV_a`) の中央値（**向きの予測は設けない**。
+      `_judge` は当てない）。51番の記録 `data/pwdb/51_wave_sep.csv` があれば、
+      `t1 − pf_peak_ms`（線形分離の前進波のピーク）の中央値とまとめた ρ も出す
+      （無ければその 2 列は「—」。51番を走らせると出る）。**時間の原点は 50番と 51番で
+      同じである**（どちらも 20番の `beat_of` が作る拍の先頭が 0）。ΔT の誤差が
+      第2成分だけの話なのか、第1成分の側からも来ているのかを見る
+  C8  因子ごとの主効果（W1b。原稿の表2 と同じ形）。型（全例・型3）× 当てはめ × 段
+      （A・C）で、ΔT と RI について 6 因子（大動脈径・心拍数・駆出時間・平均血圧・
+      脈波伝播速度・1回拍出量）の主効果 [%] と順位相関。**20番の `_factor_effects` を
+      そのまま呼ぶ**（この台本では計算し直さない）。PWDB の `pwdb_model_variations.csv`
+      が読めないときは表を飛ばして案内を出す
 
 年齢層内 Spearman の規約は 26番・48番と共有する（20番の `_by_age`・`_judge`。層は `age` の
 相異なる値、1 層 8 名以上）。A 段はその当てはめが自分で採用した例だけ（`ok_{型} == 1`）、
-**B 段はその実行で並べる型が全部そろって採用した共通例**、C 段は採否を無視した全例である。
-参考として 26番の凍結版の列と同梱の特徴点を同じ表に並べる。
+**B 段は `--b-stage` に挙げた型が全部そろって採用した共通例**、C 段は採否を無視した全例で
+ある。参考として 26番の凍結版の列と同梱の特徴点を同じ表に並べる。
 
 **B 段は 2026-09-16 に足した**（lab_log 追記149 の問1）。打ち切りの RI は型3 で A 段
 0.530・C 段 0.107 と食い違っていて、A 段の良さが**当てはめの良さ**なのか**採用の仕方**
 （形が探索範囲の端に飛んだ拍を捨てたこと）なのかを A と C からは分けられない。B 段は
-**分母を完全にそろえる**ので、同じ被験者の上で全手法を比べられる。B 段は型の数だけ採用の
-条件を重ねるので**小さくなりうる**（1 層 8 名に満たない層は ρ を計算しないので、人数が
-減ると「—」になる。その「—」は関連が無いことではなく評価できなかったことである）。
+**分母を完全にそろえる**ので、同じ被験者の上で全手法を比べられる。B 段は挙げた型の数だけ
+採用の条件を重ねるので**小さくなりうる**（1 層 8 名に満たない層は ρ を計算しないので、
+人数が減ると「—」になる。その「—」は関連が無いことではなく評価できなかったことである）。
+
+**そろえる型は 2026-09-17 に `--b-stage` で選べるようにした**（既定 `fb,trunc08,deriv`）。
+それまでは「その実行で並べる型すべて」で、14 型の実行では (8) deconv2 の通過率が 8% な
+ために積集合が空になり、**B 段が 0 名になった**（lab_log 追記152 の 1(f)）。C2・C3 の行は
+いままでどおり全型に A・B・C を出す（**B 段の被験者の選び方だけが変わる**）。`--b-stage` の
+型が `--variants` に無い・`ok_{型}` の列が無いときは、黙って C 段にせず B 段を全部偽に
+して ★ で印字する。
+
+**雑音（W6・`--noise SD`）は 2026-09-17 に足した。**拍の峰から谷までの振幅（`np.ptp(y)`）に
+対する比の標準偏差で白色ガウス雑音を足し、その拍に当てはめる。乱数は被験者ごとに固定する
+（`SEED_NOISE + subj_no`）ので、同じ被験者は何度走らせても同じ雑音になる。**波形の型
+`klass_own`・`sys_own_ms`・`dia_own_ms` は雑音を足す前の拍から付ける**ので、層別は雑音なしの
+実行とまったく同じである。PWDB の指尖 PPG は雑音を含まないので、(8) 2 段階・(9) 微分領域の
+ように微分を取る候補が**雑音の無いデータでだけ効いている**のかどうかは、これでしか見られない。
+記録は別のファイルに書き（`50_refit_noiseSD.csv`）、記録の `noise_sd` と引数が違えば止める。
+雑音ありの実行では **C0 の照合は「一致しなくて当然」**なので、差を出すだけにして判定はせず、
+P10 も「雑音ありなので照合しない」と印字する。
+
+**C6・C7・C8 と `--b-stage`・`--noise` には、事前に登録した予測が無い。**すべて探索・事後で
+あり、**26番（`26_pwdb_compare.py`）の事前規準による判定は動かさない。**この台本はもともと
+成立・不成立の判定を出さない（P6〜P10 の照合も記述であって判定ではない）。
 
 予測（2026-09-15、実装の前・実データを見る前に固定した。lab_log 追記143）
 ------------------------------------------------------------------------
@@ -372,11 +428,17 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
 再利用は効かない。**この所要は上の実測からは見込めない**（1 型あたりの重さが型で
 違い、同じ実行の中でも速さが 25 倍動いたため）。時間の見込みを書く代わりに、
 **進み具合の印字（200 名ごと）と途中の記録（400 名ごと）で追うこと。**
+その 14 型の実行は実測 **53,632 秒（14 時間 54 分。`--jobs 8`）**であった
+（lab_log 追記152）。**2026-09-17 に `t1_{型}_ms` を足したので、同じ規約で
+`--variants` に指定した型は当て直される。**14 型で 15 時間かかるので、
+**次の実行は `--variants fb,trunc08,deriv` の 3 型にする**（追記152 で ΔT・RI が
+成立した候補と凍結版）。指定しなかった 11 型の列は記録の中にそのまま残る。
 
 **進み具合を 200 名ごとに印字し、400 名ごとに途中の記録を書く**（`PROGRESS_EVERY`・
 `CKPT_EVERY`）。印字が無いと止まっているように見えるため 2026-09-15 に足した。
 記録があれば再開するので、途中で止めてもやり直しにはならない。
-**節C が書き込むのは自分の記録（50_refit[_limitN].csv）だけである。**
+**節C が書き込むのは自分の記録（50_refit[_noiseSD][_limitN].csv と、`--no-resume` の
+ときの退避 .bak-日時）だけである。**
 
 前提と限界
 ----------
@@ -394,9 +456,12 @@ P4・P5 も 2026-09-15 に、**実データを見る前に**固定した（節A-
     python3 scripts/50_reservoir_bench.py --csv data/pwdb/pwdb_compare.csv
     python3 scripts/50_reservoir_bench.py --section B --csv data/pwdb/pwdb_compare.csv
     python3 scripts/50_reservoir_bench.py --section ABC --pwdb ~/pwdb --jobs 8 --csv data/pwdb/pwdb_compare.csv
+    python3 scripts/50_reservoir_bench.py --section C --pwdb ~/pwdb --jobs 8 --variants fb,trunc08,deriv
+    python3 scripts/50_reservoir_bench.py --section C --pwdb ~/pwdb --jobs 8 --variants fb,trunc08,deriv --noise 0.02
 
 `--section A|B|C|AB|AC|BC|ABC`（既定 AB。CSV が無ければ A だけ。C は `--pwdb` が要る）。
-節C の細かい指定は `--limit`・`--jobs`・`--variants`・`--refit-csv`・`--no-resume`。
+節C の細かい指定は `--limit`・`--jobs`・`--variants`・`--b-stage`・`--noise`・
+`--refit-csv`・`--no-resume`。
 `--fast` は節A の掃引を 2 層 × 5 拍に
 減らす（自己検査と同じ掃引。本番の表ではない）。自己検査は合成だけで走る（CSV もネット
 ワークも要らない）。節A（3 層 × 10 拍）＋ 節A-2（2 条件 × 7 拍）の本番は、当てはめ 10 行で
@@ -444,6 +509,47 @@ def _load(stem: str, name: str):
     sys.modules[name] = m
     spec.loader.exec_module(m)
     return m
+
+
+HEAD_REL = "analysis/scripts/50_reservoir_bench.py"   # git の中でのこの台本の位置
+
+
+def _head_module(td):
+    """`git show HEAD:<この台本>` を一時の場所に出し、別名で読み込む（自己検査の照合用）。
+
+    返り値は (読み込んだ版, 理由の文字)。git が無い・HEAD にこの台本が無い・読み込めない
+    ときは (None, 理由) を返す（**git の無い機械でも自己検査は走る**）。
+    2026-09-16 に (7)(8)(9) を足したときは同じことを手でやったが（lab_log 追記151）、
+    自己検査に入れていなかったので 2026-09-17 に移した。
+
+    HEAD の版は自分の置き場所を基準に 20番を読むので、同じ場所に 20番を写しておく。
+    """
+    import shutil
+    import subprocess
+    try:
+        r = subprocess.run(["git", "show", f"HEAD:{HEAD_REL}"],
+                           cwd=str(ROOT.parent), capture_output=True, timeout=120)
+    except Exception as e:                # noqa: BLE001
+        return None, f"git を呼べない（{e}）"
+    if r.returncode != 0:
+        return None, "HEAD にこの台本が無い（git show が失敗した）"
+    sdir = Path(td) / "head_scripts"
+    sdir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "scripts" / "20_pwdb_validity.py", sdir / "20_pwdb_validity.py")
+    p = sdir / "50_head.py"
+    p.write_bytes(r.stdout)
+    keep_path = list(sys.path)
+    try:
+        spec = importlib.util.spec_from_file_location("m50_head", p)
+        m = importlib.util.module_from_spec(spec)
+        sys.modules["m50_head"] = m
+        spec.loader.exec_module(m)
+    except Exception as e:                # noqa: BLE001
+        return None, f"HEAD の版を読み込めない（{e}）"
+    finally:
+        # HEAD の版は自分の親（一時の場所）を sys.path に入れるので、元に戻す
+        sys.path[:] = keep_path
+    return m, "HEAD を読み込んだ"
 
 
 # 順位相関の規約は 20番のものをそのまま使う（自前で書き直さない。26番・45番・48番と同じ）
@@ -1131,6 +1237,11 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
     `cut_s` は打ち切る型が実際に切った時刻 [s]（拍の先頭からの長さ）で、(6e) で拍長の
     0.90 倍の頭打ちが効いた拍を後から数えられるようにしてある。切らない型は NaN。
 
+    `t1_s`・`t2_s` は**第1成分・第2成分のピーク時刻**（拍の先頭 `t[0]` を 0 とした秒）で、
+    `dt_s` = `t2_s` − `t1_s` である。当てはめが成らなかった拍は NaN。2026-09-17 に足した
+    （節C の C7 が「ΔT の誤差が第1成分の位置から来ていないか」を見るため。**返り値に鍵を
+    足しただけで、当てはめの数値の筋道は 1 ビットも変えていない**）。
+
     型ごとに凍結版から変える点は次のとおりで、**どの型も一度に 1 つだけ違う**。
       (6)(6b)(6c)(6d)(6e) 残差を途中で切る（切る時刻の決め方だけが違う）
       (7) `convout`  残差を測る波形を `_model` の中で畳み込む。**ΔT・RI は畳み込む前の
@@ -1161,6 +1272,8 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
                     "ok": bool(r["ok"]), "cost": float(r["rss"]) / 2.0,
                     "tau_fit": float("nan"),      # (0) の模型に貯留槽の τ は無い
                     "cut_s": float("nan"),        # (0) は残差を切らない
+                    "t1_s": float(c1["t_peak"]) - float(t[0]),
+                    "t2_s": float(c2["t_peak"]) - float(t[0]),
                     "checks": {
                         "dmu_lo": bool(float(r["params"][5]) - DMU_LO_FROZEN < CHK_TOL),
                         "tau_hi": False, "tau_lo": False,
@@ -1172,7 +1285,8 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
         except Exception:
             return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
                     "cost": float("nan"), "tau_fit": float("nan"),
-                    "cut_s": float("nan"), "checks": _checks_fail()}
+                    "cut_s": float("nan"), "t1_s": float("nan"),
+                    "t2_s": float("nan"), "checks": _checks_fail()}
     ys = _norm(y)
     tau_fit = float("nan")
     if kind == "deconv2":
@@ -1181,7 +1295,8 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
         if not np.isfinite(tau_fit):
             return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
                     "cost": float("nan"), "tau_fit": float("nan"),
-                    "cut_s": float("nan"), "checks": _checks_fail()}
+                    "cut_s": float("nan"), "t1_s": float("nan"),
+                    "t2_s": float("nan"), "checks": _checks_fail()}
         # 第2段: 核が (1/τ)e^{−u/τ} のとき y = h ⊛ x の逆は **x(t) = y(t) + τ·y′(t)** で
         # 閉じた形になる。微分は `np.gradient`（中心差分）で取り、戻した x を凍結版と
         # 同じやり方で 0〜1 に直してから当てる（`_norm`）。**微分は雑音を大きくするので、
@@ -1228,7 +1343,8 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
     if not sols:
         return {"dt_s": float("nan"), "ri": float("nan"), "ok": False,
                 "cost": float("nan"), "tau_fit": tau_fit,
-                "cut_s": cut_s, "checks": _checks_fail()}
+                "cut_s": cut_s, "t1_s": float("nan"), "t2_s": float("nan"),
+                "checks": _checks_fail()}
     # 解の選択も `fit_beat` と同じ: RSS 最小を基本に、特徴点近傍（|Δμ − dmu0| ≤ NEAR_DMU）
     # の解が RSS 最小の NEAR_RSS 倍以内にあればそちらを採る。
     gmin = min(sols, key=lambda r: r.cost)
@@ -1245,6 +1361,7 @@ def fit_kind(t: np.ndarray, y: np.ndarray, kind: str) -> dict:
         tau_fit = float(best.x[8])            # (7) は倍率 g を持たないので τ は 9 番目
     return {"dt_s": tp2 - tp1, "ri": h2 / max(h1, 1e-9), "ok": True,
             "cost": float(best.cost), "tau_fit": tau_fit, "cut_s": cut_s,
+            "t1_s": tp1 - t0f, "t2_s": tp2 - t0f,
             "checks": _diagnose(sols, best, kind, lo, hi, h1, h2, t0f, t1f)}
 
 
@@ -2342,10 +2459,23 @@ def section_b(d: pd.DataFrame, src: str) -> dict:
 # 切ると切る時刻が心拍数の関数になることの確認である（W1）。
 # **同じ 2026-09-16 に診断の列 `taulo_{型}` を足したので、それより前に書いた記録は
 # どの型も当てはめ直される**（列の欠けた記録を使い回さない規約。`_has_variant`）。
+# **2026-09-17 に第1成分のピーク時刻 `t1_{型}_ms` を足したので、指定した型は当て直される**
+# （同じ規約。C7 がこの列を読む）。14 型全部を指定すると Mac 1 で約 15 時間かかるので
+# （lab_log 追記152 の実測 53,632 秒）、**次の実行は `--variants fb,trunc08,deriv` にする。**
+# 指定しなかった型の列は記録の中に残る（`_absorb` が古い行に上書きし、`_order_cols` が
+# 残りの列を末尾に置く）ので、14 型の記録を消してしまうことはない。
 VARIANTS_DEFAULT = ("fb", "relax", "conv", "conv01", "conv15", "trunc", "trunc08",
                     "trunc055", "trunc075", "truncabs", "decay", "convout", "deconv2",
                     "deriv")
+# B 段（分母をそろえる段）に使う型。**14 型すべてを要求すると (8) deconv2 の通過率が
+# 8% なので積集合が空になり、前回の実行では B 段が 0 名だった**（lab_log 追記152 の 1(f)）。
+# B 段は「比べたい少数の型で分母をそろえる」ためのものなので、既定を 3 型にする
+# （凍結版・打ち切り 0.65T・微分領域。追記152 で ΔT・RI が成立した候補）。
+B_STAGE_DEFAULT = ("fb", "trunc08", "deriv")
 REFIT_NAME = "50_refit.csv"     # 再当てはめの記録（--refit-csv で変えられる）
+# W6（雑音）の乱数の種の足し前。被験者ごとに `SEED_NOISE + subj_no` を使うので、
+# 同じ被験者は何度走らせても同じ雑音になる（再現できる）。
+SEED_NOISE = 20260917
 # 記録に残す診断の列の頭 → `fit_kind` が返す `checks` の鍵。
 # **`taulo` は 2026-09-16 に足した**（(7) の τ が下限＝凍結版そのものに張り付いた拍を
 # 数えるため。lab_log 追記149）。列が 1 つ増えるので、**それより前に書いた記録は
@@ -2405,11 +2535,19 @@ def refit_subject(args_tuple):
     拍の作り方・型の付け方は 26番と同一である（`M.beat_of`・`pda2.preprocess` →
     `find_landmarks`）。採否 `ok_{型}` は `fit_kind` の `checks["ok"]`、すなわち凍結版
     `fit_beat` と同じ収束検算の規則である。
+
+    `noise_sd`（既定 0.0）は W6 の検査で拍に足す白色ガウス雑音の標準偏差で、拍の峰から
+    谷までの振幅 `np.ptp(y)` に対する比で与える。乱数は `SEED_NOISE + subj_no` で被験者
+    ごとに固定するので、同じ被験者は何度走らせても同じ雑音になる。**波形の型 `klass_own`・
+    `sys_own_ms`・`dia_own_ms` は雑音を足す前の拍から付ける**（層別を雑音なしの実行と
+    同じにするため）。当てはめ（`fit_kind`）だけが雑音を足した拍に当たる。
     """
-    subj, row, hr, variants = args_tuple
-    out = {"subj_no": int(subj)}
+    subj, row, hr, variants, noise_sd = args_tuple
+    noise_sd = float(noise_sd)
+    out = {"subj_no": int(subj), "noise_sd": noise_sd}
     for k in variants:                    # 先に空で埋める（当てはめが成らなければこのまま）
         out[f"dt_{k}_ms"] = float("nan")
+        out[f"t1_{k}_ms"] = float("nan")
         out[f"ri_{k}"] = float("nan")
         out[f"ok_{k}"] = 0
         for tag, _q in CHK_COLS:
@@ -2442,12 +2580,20 @@ def refit_subject(args_tuple):
                 out["dia_own_ms"] = float(lm["dia_t"]) * 1000.0
         except Exception as e:            # noqa: BLE001
             why.append(("EXC:" + str(e))[:40])
+        # --- W6 の雑音（--noise）。**型を付けたあとで足す**ので、層別は雑音なしの実行と
+        # 同じままである。振幅は拍の峰から谷まで（`np.ptp`）に対する比で与える。
+        y_fit = y
+        if noise_sd > 0.0:
+            rng_n = np.random.default_rng(SEED_NOISE + int(subj))
+            y_fit = y + (noise_sd * float(np.ptp(y))) * rng_n.standard_normal(y.size)
         for k in variants:                # --- 候補の当てはめ（節A と同じ `fit_kind`）
             try:
-                r = fit_kind(t, y, k)
+                r = fit_kind(t, y_fit, k)
                 ck = r["checks"]
                 out[f"dt_{k}_ms"] = (1000.0 * float(r["dt_s"])
                                      if np.isfinite(r["dt_s"]) else float("nan"))
+                out[f"t1_{k}_ms"] = (1000.0 * float(r["t1_s"])
+                                     if np.isfinite(r["t1_s"]) else float("nan"))
                 out[f"ri_{k}"] = float(r["ri"])
                 out[f"ok_{k}"] = int(bool(ck["ok"]))
                 for tag, q in CHK_COLS:
@@ -2467,11 +2613,21 @@ def refit_subject(args_tuple):
     return out
 
 
-def _refit_path(refit_csv, limit: int) -> Path:
-    """再当てはめの記録の置き場。--limit のときは別名にする（26番の CSV と同じ規約）。"""
+def _refit_path(refit_csv, limit: int, noise_sd: float = 0.0) -> Path:
+    """再当てはめの記録の置き場。--limit・--noise のときは別名にする（26番の CSV と同じ規約）。
+
+    雑音を足した実行（`--noise`）は**別のファイル**に書く。雑音なしの記録と混ざると、
+    どの行がどの条件のものか分からなくなるからである（記録の中にも `noise_sd` の列を
+    書き、再開のときに引数と照合する）。2026-09-17 に足した。
+    """
     if refit_csv:
         return Path(refit_csv).expanduser()
-    return DATA / "pwdb" / (f"50_refit_limit{limit}.csv" if limit else REFIT_NAME)
+    sd = float(noise_sd)
+    tag = f"_noise{sd:g}" if sd > 0 else ""
+    lim = f"_limit{limit}" if limit else ""
+    if not tag and not lim:
+        return DATA / "pwdb" / REFIT_NAME
+    return DATA / "pwdb" / f"50_refit{tag}{lim}.csv"
 
 
 def _cached_rows(path: Path) -> dict:
@@ -2500,19 +2656,21 @@ def _cached_rows(path: Path) -> dict:
 def _has_variant(rec: dict, k: str) -> bool:
     """記録にその型の結果が入っているか。
 
-    その型が書く列（`dt_`・`ri_`・`ok_`・診断の印・`cost_`・`pin_`）が**すべて**
+    その型が書く列（`dt_`・`t1_`・`ri_`・`ok_`・診断の印・`cost_`・`pin_`）が**すべて**
     埋まっているときだけ「入っている」と見なし、1 つでも欠けていれば当てはめ直す。
     2026-09-15 までは `ok_{型}` だけを見ていたが、それでは `pin_`（境界の内訳）を
     足す前に書いた記録をそのまま使ってしまい、C1b が空のままになる（lab_log 追記144）。
     **2026-09-16 に診断の列 `taulo_{型}` を足したので、それより前の記録はこの規則で
-    すべて当てはめ直される**（lab_log 追記149）。打ち切った時刻 `cut_{型}_s` は切る型に
-    しか無い列なので、ここでは見ない（見ると切らない型が毎回やり直しになる）。
+    すべて当てはめ直される**（lab_log 追記149）。**2026-09-17 に第1成分のピーク時刻
+    `t1_{型}_ms` を足したので、同じ規約でまた当てはめ直される**（C7 が読む列である）。
+    打ち切った時刻 `cut_{型}_s` は切る型にしか無い列なので、ここでは見ない
+    （見ると切らない型が毎回やり直しになる）。
     当てはめが成らなかった拍（`dt_` が欠測）も、この規則では毎回やり直すことになる。
     拍を作れない被験者は `beat_of` の段で即座に戻るので、費用は小さい。
     """
     if not rec:
         return False
-    num = ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}"]
+    num = ([f"dt_{k}_ms", f"t1_{k}_ms", f"ri_{k}", f"ok_{k}"]
            + [f"{tag}_{k}" for tag, _q in CHK_COLS] + [f"cost_{k}"])
     for c in num:
         v = rec.get(c)
@@ -2531,10 +2689,10 @@ def _has_variant(rec: dict, k: str) -> bool:
 
 def _order_cols(df: pd.DataFrame, variants) -> pd.DataFrame:
     """記録の列を決まった順に並べる（再開して書き直しても同じ CSV になる）。"""
-    head = ["subj_no", "fs", "n_samp", "klass_own", "sys_own_ms", "dia_own_ms"]
+    head = ["subj_no", "fs", "n_samp", "klass_own", "sys_own_ms", "dia_own_ms", "noise_sd"]
     per = []
     for k in variants:
-        per += ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}"]
+        per += ([f"dt_{k}_ms", f"t1_{k}_ms", f"ri_{k}", f"ok_{k}"]
                 + [f"{tag}_{k}" for tag, _q in CHK_COLS]
                 + [f"cost_{k}", f"pin_{k}"]
                 + ([f"cut_{k}_s"] if k in KIND_TRUNC else []))
@@ -2544,8 +2702,48 @@ def _order_cols(df: pd.DataFrame, variants) -> pd.DataFrame:
     return df[order + rest]
 
 
+def _check_noise_col(have: dict, noise_sd: float, path: Path) -> None:
+    """記録の `noise_sd` が引数と違えば止める（別の雑音の記録を混ぜない）。
+
+    記録にこの列が無い行は雑音なし（0.0）と見なす（2026-09-17 より前の記録）。
+    `--refit-csv` で場所を指定すると雑音ありと無しが同じ名前になりうるので、名前だけに
+    頼らずに中身でも照合する。
+    """
+    got = set()
+    for rec in have.values():
+        v = rec.get("noise_sd", 0.0)
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            v = 0.0
+        got.add(0.0 if not np.isfinite(v) else round(v, 12))
+    bad = sorted(v for v in got if abs(v - float(noise_sd)) > 1e-12)
+    if bad:
+        raise ValueError(
+            f"記録 {path} の noise_sd が {bad} で、この実行の --noise {noise_sd:g} と違う。"
+            "雑音の違う記録を混ぜると、どの行がどの条件のものか分からなくなる。"
+            "別の記録（--refit-csv）を指すか、その記録を消してから走らせること。")
+
+
+def _backup_refit(path: Path) -> None:
+    """`--no-resume` で上書きする前に、既存の記録を退避する（消してしまわないため）。
+
+    14 型 × 4,374 名の記録は 15 時間かかっている（lab_log 追記152）。`--no-resume` は
+    その記録を丸ごと捨てて書き直すので、**捨てる前に日時付きの名前で残す**。
+    2026-09-17 に足した。
+    """
+    if not path.exists():
+        return
+    import shutil
+    import time
+    dst = path.with_name(path.name + "." + f"bak-{time.strftime('%Y%m%d-%H%M%S')}")
+    shutil.copy2(path, dst)
+    print(f"  --no-resume: 既存の記録を退避した（{dst}）。この実行は最初から当てはめる。",
+          flush=True)
+
+
 def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
-                refit_csv=None, resume: bool = True):
+                refit_csv=None, resume: bool = True, noise_sd: float = 0.0):
     """PWDB の拍に候補の当てはめを当て、記録（CSV）を書き直して表を返す。
 
     返り値は (この実行で使う表, 記録の場所, 内訳)。表は今回の被験者だけに絞るが、記録には
@@ -2553,7 +2751,8 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
     """
     root = Path(root).expanduser()
     variants = tuple(variants)
-    path = _refit_path(refit_csv, limit)
+    noise_sd = float(noise_sd)
+    path = _refit_path(refit_csv, limit, noise_sd)
     hae, _cfg, ppg, _extras = M.load_pwdb(root)
     if limit and limit < len(ppg):
         ppg = c_stride(ppg, limit)
@@ -2563,6 +2762,9 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
     have = _cached_rows(path) if resume else {}
     if have:
         print(f"  記録を読んだ: {path}（{len(have)} 名）", flush=True)
+        _check_noise_col(have, noise_sd, path)
+    if not resume:
+        _backup_refit(path)
 
     subjects, work, n_cache = [], [], 0
     for i in range(len(ppg)):
@@ -2572,7 +2774,8 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
         if not need:
             n_cache += 1
             continue
-        work.append((subj, ppg.iloc[i].to_numpy(float), hr_by.get(subj, np.nan), need))
+        work.append((subj, ppg.iloc[i].to_numpy(float), hr_by.get(subj, np.nan), need,
+                     noise_sd))
     print(f"\n  {len(subjects)} 名中 {len(work)} 名に当てはめる"
           f"（記録から {n_cache} 名を再利用）・型 {list(variants)} / jobs={jobs}", flush=True)
 
@@ -2581,7 +2784,8 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
     import time
     import scipy
     meta = {"python_version": platform.python_version(),
-            "numpy_version": np.__version__, "scipy_version": scipy.__version__}
+            "numpy_version": np.__version__, "scipy_version": scipy.__version__,
+            "noise_sd": noise_sd}
     path.parent.mkdir(parents=True, exist_ok=True)
 
     def _absorb(r: dict) -> None:
@@ -2631,11 +2835,11 @@ def build_refit(root: Path, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEF
 
 
 # ---------------------------------------------------------------- 節C の計算の部品
-STAGE_B_COL = "_stage_b"   # B 段（比べるすべての型が採用した共通例）の印。表の中だけで使う
+STAGE_B_COL = "_stage_b"   # B 段（--b-stage の型が全部採用した共通例）の印。表の中だけで使う
 
 
-def b_stage_mask(d: pd.DataFrame, variants) -> np.ndarray:
-    """B 段の印。**その実行で並べる型が全部そろって採用した被験者**だけ真にする。
+def b_stage_mask(d: pd.DataFrame, b_variants) -> np.ndarray:
+    """B 段の印。**`--b-stage` に挙げた型が全部そろって採用した被験者**だけ真にする。
 
     A 段は型ごとに分母が違うので、A 段どうしを比べると「どの拍を捨てたか」の差が値に
     混ざる。B 段は分母を完全にそろえるので、A 段の良さが**当てはめの良さ**なのか
@@ -2643,11 +2847,17 @@ def b_stage_mask(d: pd.DataFrame, variants) -> np.ndarray:
     打ち切りの RI は型3・A 段で 0.530、C 段で 0.107 と食い違っていて、いまのままでは
     どちらか決められない）。
 
+    **2026-09-17 に、そろえる型を `--b-stage` で選べるようにした。**それまでは「その実行で
+    並べる型すべて」だったが、14 型で回した実行では (8) deconv2 の通過率が 8% なので
+    積集合が空になり、**B 段が 0 名になった**（lab_log 追記152 の 1(f)）。B 段の目的は
+    比べたい手法の分母をそろえることなので、そろえる相手を指定する形に変える。
+    表の行はいままでどおり全型に A・B・C を出す（B 段の**被験者の選び方**だけが変わる）。
+
     `ok_{型}` の列が 1 つでも無ければ、黙って C 段にせず**全部を偽**にする
     （48番の `_stage` と同じ扱い。段を取り違えた表を出さないため）。
     """
     m = np.ones(len(d), dtype=bool)
-    for k in variants:
+    for k in b_variants:
         col = f"ok_{k}"
         if col not in d.columns:
             return np.zeros(len(d), dtype=bool)
@@ -2655,9 +2865,19 @@ def b_stage_mask(d: pd.DataFrame, variants) -> np.ndarray:
     return m
 
 
+def b_stage_missing(d: pd.DataFrame, variants, b_variants) -> list:
+    """B 段に使えない型を返す（`--variants` に無い・`ok_{型}` の列が無い）。
+
+    1 つでもあれば `section_c` は B 段を全部偽にして ★ で印字する。黙って C 段にしない
+    （段を取り違えた表を出さないため。48番の `_stage`・`b_stage_mask` と同じ流儀）。
+    """
+    return [k for k in b_variants
+            if k not in tuple(variants) or f"ok_{k}" not in d.columns]
+
+
 def stage_of(d: pd.DataFrame, ok_col, stage: str = "A") -> pd.DataFrame:
-    """段で絞る。A 段はその型が自分で採用した例だけ、B 段は比べるすべての型が採用した
-    共通例、C 段は採否を無視した全例である。
+    """段で絞る。A 段はその型が自分で採用した例だけ、B 段は `--b-stage` に挙げた型が
+    全部そろって採用した共通例、C 段は採否を無視した全例である。
 
     B 段の印は `section_c` が表を出す前に 1 回だけ数えて `STAGE_B_COL` の列に入れて
     おく（表ごとに数え直さない）。列が無ければ空にする。A 段は `ok_col` で絞り、
@@ -2675,16 +2895,18 @@ def stage_of(d: pd.DataFrame, ok_col, stage: str = "A") -> pd.DataFrame:
     return d[pd.to_numeric(d[ok_col], errors="coerce") == 1]
 
 
-def print_stage_head(d: pd.DataFrame, variants) -> None:
+def print_stage_head(d: pd.DataFrame, b_variants) -> None:
     """A・B・C 段の 1 行の定義と、B 段の人数を**表の直前に毎回**出す。
 
     段の定義は読み手が忘れるものなので、段を使う表の直前に必ず置く（この作業場の
-    決まり。2026-09-15）。B 段は型の数だけ採用の条件を重ねるので小さくなりうる。
+    決まり。2026-09-15）。B 段は挙げた型の数だけ採用の条件を重ねるので小さくなりうる。
     """
+    b_list = list(b_variants)
     print("  段 A = その手法が自分で採用した例だけ（ok_{型} == 1）、"
-          "段 B = 比べるすべての手法が採用した共通例、")
-    print(f"  段 C = 採否を無視した全例。**B 段は {len(list(variants))} 型すべてが"
-          "採用した被験者だけなので、分母が完全にそろう。**")
+          "段 B = `--b-stage` の "
+          + "・".join(_kind_lab(k) for k in b_list) + " が")
+    print(f"  すべて採用した共通例（{len(b_list)} 型）、段 C = 採否を無視した全例。"
+          "**B 段はこの 3 段のうち分母が完全にそろう唯一の段である。**")
     if STAGE_B_COL not in d.columns:
         print("  ★ B 段の印が無い（ok_{型} の列が足りない）ので、B 段の行は空になる。")
         return
@@ -2744,15 +2966,27 @@ def _sub_k(d: pd.DataFrame, k):
 
 
 # ---------------------------------------------------------------- C0
-def print_c0(d: pd.DataFrame, variants) -> dict:
-    """C0 (0) 凍結版本体の再当てはめが 26番の列と同じ値かを照合する。"""
+def print_c0(d: pd.DataFrame, variants, noise_sd: float = 0.0) -> dict:
+    """C0 (0) 凍結版本体の再当てはめが 26番の列と同じ値かを照合する。
+
+    `--noise` を付けた実行では**一致しなくて当然である**（26番は雑音を足していない拍に
+    当てた値だから）。そのときは「雑音あり」と明記したうえで差を出すだけにし、照合の
+    判定（`match`・`match_p10`）は立てない。P10 もその旨を印字して照合しない。
+    """
+    noise_sd = float(noise_sd)
     print("\n" + "-" * 100)
     print("C0. 照合: (0) 凍結版本体の再当てはめは 26番の列（dt_v1_ms・ri_v1・ok_v1・"
           "klass_own）と同じか")
     print("-" * 100)
     out = {"state": "照合できない", "n": 0, "dt": float("nan"), "ri": float("nan"),
            "n_ok_diff": -1, "n_klass_diff": -1, "n_klass": 0,
-           "match": False, "match_p10": False}
+           "match": False, "match_p10": False, "noise_sd": noise_sd}
+    if noise_sd > 0:
+        print(f"  ★ **この実行は拍に雑音を足している（--noise {noise_sd:g}"
+              "・峰から谷までの振幅に対する標準偏差）。**")
+        print("  26番の列は雑音を足していない拍の値なので、**一致しなくて当然である。**")
+        print("  ここでは差を出すだけにし、一致・不一致の判定はしない"
+              "（型 klass_own は雑音を足す前の拍から付けるので、そちらは一致するはずである）。")
     if "fb" not in variants:
         print("  (0) 凍結版本体を当てていないので照合できない（--variants に fb を入れる）。")
         return out
@@ -2789,6 +3023,11 @@ def print_c0(d: pd.DataFrame, variants) -> dict:
     if not ev:
         out["state"] = "照合できない"
         print("  → 照合できない（対応のある行が無い。26番の CSV がこの被験者を含まない）")
+        return out
+    if noise_sd > 0:
+        out["state"] = "雑音あり（照合しない）"
+        print(f"  → {out['state']}。上の差は「雑音 SD {noise_sd:g} で ΔT・RI がどれだけ"
+              "動いたか」を表す量であって、検算ではない。")
         return out
     out["match_p10"] = bool(out["dt"] <= PRED_C0_DT_MS and out["ri"] <= PRED_C0_RI
                             and out["n_ok_diff"] == 0)
@@ -2938,13 +3177,13 @@ def print_c_matrix(d: pd.DataFrame, rows: list, tgt: str, sign: int) -> dict:
     return out
 
 
-def print_c2(d: pd.DataFrame, variants) -> dict:
+def print_c2(d: pd.DataFrame, variants, b_variants) -> dict:
     """C2 ΔT × 大動脈脈波伝播速度（予測の向き 負）。"""
     print("\n" + "-" * 100)
     print(f"C2. ΔT × 大動脈脈波伝播速度 {COL_PWV}（予測の向き 負。年齢層内 Spearman）")
     print("-" * 100)
     print(f"  層は `age` の相異なる値、1 層 {MIN_PER_AGE} 名以上（20番の `_by_age`・`_judge`）。")
-    print_stage_head(d, variants)
+    print_stage_head(d, b_variants)
     print("  行は当てはめごとに A・B・C の 3 段を並べる。**A 段だけが良くて C 段が悪い"
           "とき、それが**")
     print("  **当てはめの良さなのか採用の仕方なのかは A と C からは分けられない。"
@@ -2960,14 +3199,14 @@ def print_c2(d: pd.DataFrame, variants) -> dict:
     return out
 
 
-def print_c3(d: pd.DataFrame, variants) -> dict:
+def print_c3(d: pd.DataFrame, variants, b_variants) -> dict:
     """C3 RI × 末梢血管抵抗（予測の向き 正）。型3・A 段は年齢層別の ρ も並べる。"""
     print("\n" + "-" * 100)
     print(f"C3. RI × 末梢血管抵抗 {COL_PVR}（予測の向き 正。年齢層内 Spearman）")
     print("-" * 100)
     print("  読み方は C2 と同じ。節A-2 で凍結版の RI は型3 相当の条件で符号が反転したので、")
     print("  型3 の列と、その 75 歳層の ρ を見る。")
-    print_stage_head(d, variants)
+    print_stage_head(d, b_variants)
     print("  **この表の B 段が、打ち切りの RI をいちばん強く問う。**型3 の A 段（0.530）と"
           " C 段（0.107）の食い違いが")
     print("  当てはめの良さなら B 段でも保たれ、採用の仕方なら B 段で落ちる"
@@ -3037,8 +3276,13 @@ def _pass_of(cells: dict, col: str, stg: str, kt) -> tuple:
     return (j is not None), bool(j and j["pass"]), _cell(j), rec.get("rows", [])
 
 
-def print_c5(c0: dict, c1: dict, c2: dict, c3: dict, variants) -> dict:
-    """C5 予測との照合（P6〜P10）。**判定は付けない**（事後・記述）。"""
+def print_c5(c0: dict, c1: dict, c2: dict, c3: dict, variants,
+             noise_sd: float = 0.0) -> dict:
+    """C5 予測との照合（P6〜P10）。**判定は付けない**（事後・記述）。
+
+    `--noise` を付けた実行では P10（26番の列との検算）を**照合しない**。26番は雑音を
+    足していない拍の値なので、食い違って当然だからである（C0 と同じ扱い）。
+    """
     print("\n" + "-" * 100)
     print("C5. 予測との照合（予測は 2026-09-15 に、実データを見る前に固定した。docstring と同文）")
     print("-" * 100)
@@ -3109,11 +3353,15 @@ def print_c5(c0: dict, c1: dict, c2: dict, c3: dict, variants) -> dict:
     for kt in (1, 3):
         j = c2.get((COL_LM, "C", kt), {}).get("j")
         lm[kt] = j["med_abs"] if j else float("nan")
-    ev10 = bool(c0.get("state") != "照合できない"
+    ev10 = bool(c0.get("state") not in ("照合できない", "雑音あり（照合しない）")
                 and all(np.isfinite(lm[kt]) for kt in (1, 3)))
     hit10 = bool(ev10 and c0.get("match_p10")
                  and all(round(lm[kt], PRED_P10_PREC) == PRED_P10_LM[kt] for kt in (1, 3)))
-    if c0.get("state") == "照合できない":
+    if float(noise_sd) > 0:
+        print(f"\n  P10 検算  **雑音ありなので照合しない**（--noise {float(noise_sd):g}）。"
+              "26番の列は雑音を足していない拍の値で、")
+        print("      (0) の ΔT・RI が食い違うのは当然である。C0 に差だけを出してある。")
+    elif c0.get("state") == "照合できない":
         print("\n  P10 検算  (0) と 26番の列: 照合できない（26番の CSV が無いか、"
               "対応のある行が無い）")
     else:
@@ -3140,16 +3388,331 @@ def print_c5(c0: dict, c1: dict, c2: dict, c3: dict, variants) -> dict:
     return res
 
 
+# ---------------------------------------------------------------- C6・C7・C8 の部品
+# 2026-09-17 に足した 3 つの表（lab_log 追記152 の弱点の第2陣。W4・W5・W1b）。
+# **事前に登録した予測は無い。すべて探索・事後であり、26番の判定は動かさない。**
+WAVE_SEP_NAME = "51_wave_sep.csv"   # 51番の記録（C7 が前進波のピークを読む）
+COL_PF = "pf_peak_ms"               # 51番の前進波 P_f のピーク時刻 [ms]
+COL_T1_SYS = "sys_own_ms"           # この台本が付けた収縮期ピークの時刻 [ms]
+C6_TERT = ("低", "中", "高")         # C6 の三分位の名前（年齢層ごとに分ける）
+
+
+def _by_age_med(d: pd.DataFrame, x: str, y: str):
+    """年齢層内 Spearman の**符号つき**中央値と、評価できた層の数。
+
+    向きを決めた予測が無い表（C6・C7）で使うので、`_judge` は当てない（|ρ| に直すと
+    符号が読めなくなる）。層の規約は C2・C3 と同じ（20番の `_by_age`・1 層
+    `MIN_PER_AGE` 名以上）。層の中で x が全部同じ値なら `_spearman` は NaN を返すので、
+    その層は数に入らない。
+    """
+    if len(d) == 0 or x not in d.columns or y not in d.columns or "age" not in d.columns:
+        return float("nan"), 0
+    rows = M._by_age(d, x, y, min_n=MIN_PER_AGE)
+    rs = [float(r) for _a, r, _n in rows if np.isfinite(r)]
+    return (float(np.median(rs)) if rs else float("nan")), len(rs)
+
+
+def _tertile_in_age(d: pd.DataFrame, col: str) -> np.ndarray:
+    """年齢層ごとに `col` を三分位に分ける（0 低・1 中・2 高。分けられない行は −1）。
+
+    **層をまたいだ三分位で切ると年齢と混ざる**ので、層ごとに切る（節B の B3 で短い側・
+    長い側を層ごとに分けているのと同じ理由）。
+    """
+    lab = np.full(len(d), -1, dtype=int)
+    if col not in d.columns or "age" not in d.columns:
+        return lab
+    v, age = _colv(d, col), _colv(d, "age")
+    for a in np.unique(age[np.isfinite(age)]):
+        sel = np.where((age == a) & np.isfinite(v))[0]
+        if sel.size < len(C6_TERT):
+            continue
+        q1, q2 = np.percentile(v[sel], [100.0 / 3.0, 200.0 / 3.0])
+        lab[sel] = np.where(v[sel] <= q1, 0, np.where(v[sel] <= q2, 1, 2))
+    return lab
+
+
+# ---------------------------------------------------------------- C6
+def print_c6(d: pd.DataFrame, variants) -> dict:
+    """C6 採否の偏り（W4）。**C 段だけ**で出す（採否そのものを見る表だから）。"""
+    print("\n" + "-" * 100)
+    print("C6. 採否の偏り（W4）: 不採用になる被験者は硬い側・抵抗の高い側に偏っていないか")
+    print("-" * 100)
+    print("  **この表は C 段だけである。**採否そのものを見る表なので、採否で被験者を"
+          "絞ると問いが消える。")
+    print(f"  ρ は年齢層内 Spearman の**符号つき**中央値（20番の `_by_age`・1 層 "
+          f"{MIN_PER_AGE} 名以上）。層の中で")
+    print("  採否が全員同じ層は ρ を計算できないので数に入らない（「層」の欄がその数）。")
+    print("  三分位の通過率は、**年齢層ごとに** PWV_a を低・中・高の 3 つに分けたときの"
+          "通過率である")
+    print("  （層をまたいで切ると年齢と混ざる）。三分位は**全例の中で**切り、型ごとの行は"
+          "その印をそのまま使う")
+    print("  （型ごとに切り直さない。切り方が行ごとに変わると行どうしを比べられない）。")
+    print("  読み方: **ρ が負なら硬い（PWV が高い）被験者ほど不採用で、A 段は柔らかい側に"
+          "偏っている。**")
+    print("  A 段の ρ（C2・C3）はその偏りの上で読むこと。")
+    print("  同梱の特徴点は採否を持たないので行に入れない。凍結版 26番（ok_v1）は参考行"
+          "として入れる。")
+    tert = _tertile_in_age(d, COL_PWV)
+    rows = [(_kind_lab(k), f"ok_{k}") for k in variants]
+    if COL_OK in d.columns:
+        rows.append(("（参考）凍結版 26番", COL_OK))
+    out = {}
+    for kt, _nm in _ktypes():
+        idx = np.where(_colv(d, KLASS_COL) == float(kt))[0] if kt is not None \
+            else np.arange(len(d))
+        g = d.iloc[idx]
+        tg = tert[idx]
+        lab = KLASS_LABEL.get(kt, "全例（型を分けない）")
+        print(f"\n  {lab}  n = {len(g)} 名")
+        print("    " + _pad("当てはめの型", 22) + _pad("n", 7, right=True)
+              + _pad("通過率", 9, right=True)
+              + _pad(f"ρ(採否,{COL_PWV})", 17, right=True) + _pad("層", 5, right=True)
+              + _pad(f"ρ(採否,{COL_PVR})", 17, right=True) + _pad("層", 5, right=True)
+              + "".join(_pad(f"通過率 {q}", 12, right=True) for q in C6_TERT))
+        for name, col in rows:
+            ok = _colv(g, col)
+            n = int(np.isfinite(ok).sum())
+            rate = float(np.nanmean(ok)) if n else float("nan")
+            r_pwv, n_pwv = _by_age_med(g, col, COL_PWV)
+            r_pvr, n_pvr = _by_age_med(g, col, COL_PVR)
+            ter = []
+            for q in range(len(C6_TERT)):
+                v = ok[tg == q]
+                v = v[np.isfinite(v)]
+                ter.append(float(np.mean(v)) if v.size else float("nan"))
+            out[(kt, col)] = {"n": n, "ok": rate, "rho_pwv": r_pwv, "n_pwv": n_pwv,
+                              "rho_pvr": r_pvr, "n_pvr": n_pvr, "tertile": ter}
+            print("    " + _pad(name, 22) + _pad(n, 7, right=True) + _f(rate, 9)
+                  + _f(r_pwv, 17, sign=True) + _pad(n_pwv, 5, right=True)
+                  + _f(r_pvr, 17, sign=True) + _pad(n_pvr, 5, right=True)
+                  + "".join(_f(x, 12) for x in ter))
+    print("\n  出典: この台本（50番）の節C が PWDB の拍に当てはめ直して数えた値"
+          "（参考の行は 26番の既存列）。")
+    return out
+
+
+# ---------------------------------------------------------------- C7
+def _wave_sep_path(limit: int = 0, wave_csv=None) -> Path:
+    """51番の記録の場所（`--limit` の記録があればそちらを先に見る）。無ければ None。
+
+    `wave_csv` を渡すとその場所だけを見る（自己検査が模擬の被験者に実データの記録を
+    結合してしまわないようにするため。既定の探し方は変えない）。
+    """
+    if wave_csv is not None:
+        q = Path(wave_csv).expanduser()
+        return q if q.exists() else None
+    base = DATA / "pwdb"
+    cand = ([base / f"51_wave_sep_limit{limit}.csv"] if limit else []) \
+        + [base / WAVE_SEP_NAME]
+    for p in cand:
+        if p.exists():
+            return p
+    return None
+
+
+def merge_wave_sep(d: pd.DataFrame, limit: int = 0, wave_csv=None):
+    """51番の記録から前進波のピーク `pf_peak_ms` を `subj_no` で結合する（あれば）。
+
+    **時間の原点は 50番と同じである。**51番も 20番の `M.beat_of` で拍を作り、
+    `t = np.arange(n) / fs` を当ててから `pf_peak_ms = t[argmax(P_f)] × 1000` を書いて
+    いるので、どちらも**その被験者の拍の先頭が 0** である（51番 `wave_sep_subject` の
+    `tp = np.arange(m) / fs_p`）。したがって揃え直しは要らない。ただし 51番の P_f は
+    **指尖の圧波形**から作った量で、50番の t1 は**指尖 PPG** に当てた第1成分なので、
+    量そのものは別である（原点だけが共通）。
+    """
+    p = _wave_sep_path(limit, wave_csv)
+    if p is None:
+        print(f"  51番の記録（{DATA / 'pwdb' / WAVE_SEP_NAME}）が無いので、C7 の前進波の列は"
+              "「—」になる。")
+        print("  出すには先に 51番を走らせる: "
+              "python3 scripts/51_pwdb_wave_separation.py --pwdb ~/pwdb --jobs 8")
+        return d, None
+    try:
+        w = pd.read_csv(p, float_precision="round_trip")
+    except Exception as e:                # noqa: BLE001
+        print(f"  51番の記録 {p} を読めない（{e}）。C7 の前進波の列は「—」になる。")
+        return d, None
+    if "subj_no" not in w.columns or COL_PF not in w.columns:
+        print(f"  51番の記録 {p} に subj_no か {COL_PF} の列が無い。C7 の前進波の列は"
+              "「—」になる。")
+        return d, None
+    d = d.merge(w[["subj_no", COL_PF]], on="subj_no", how="left")
+    n = int(np.isfinite(_colv(d, COL_PF)).sum())
+    print(f"  51番の記録を結合した（{p}・{COL_PF} が入った {n} 名）。C7 が読む。"
+          "時間の原点は 50番と同じ（どちらも `beat_of` の拍の先頭が 0）。")
+    return d, p
+
+
+def print_c7(d: pd.DataFrame, variants) -> dict:
+    """C7 第1成分の位置（W5）。ΔT の誤差が t1 の側から来ていないかを見る。"""
+    print("\n" + "-" * 100)
+    print("C7. 第1成分のピーク時刻 t1（W5）: ΔT の誤差は第2成分の側だけの話か")
+    print("-" * 100)
+    print("  段 A = その手法が自分で採用した例だけ（ok_{型} == 1）、"
+          "段 C = 採否を無視した全例。")
+    print("  **C7 は A 段と C 段だけである**（1 つの当てはめの中の量を見る表で、"
+          "手法どうしを同じ")
+    print("  被験者の上で比べる表ではないので、B 段に絞る意味がない）。")
+    print("  t1 は当てはめの第1成分のピーク時刻 [ms]（**拍の先頭を 0 とする**）で、"
+          "ΔT = t2 − t1 である。")
+    print(f"  `{COL_T1_SYS}` はこの台本が `find_landmarks` で付けた PPG の収縮期ピークの"
+          "時刻、")
+    print(f"  `{COL_PF}` は 51番が指尖の圧波形を線形分離して得た前進波 P_f のピークの時刻"
+          "である。")
+    print(f"  ρ は年齢層内 Spearman の**符号つき**中央値（1 層 {MIN_PER_AGE} 名以上）、"
+          f"ρ(t1,{COL_PF}) は")
+    print(f"  年齢層で分けずにまとめた Spearman（20番の `_spearman`・{MIN_N_POOL} 名以上）"
+          "である。")
+    print("  **向きの予測は設けない**（`_judge` は当てない）。ΔT の誤差が t1 の側から"
+          "来ていないかを見るだけの表である。")
+    has_pf = COL_PF in d.columns
+    out = {}
+    for kt, _nm in _ktypes():
+        g0 = _sub_k(d, kt)
+        lab = KLASS_LABEL.get(kt, "全例（型を分けない）")
+        print(f"\n  {lab}  n = {len(g0)} 名")
+        print("    " + _pad("当てはめの型", 22) + _pad("段", 4, right=True)
+              + _pad("n", 7, right=True) + _pad("t1 中央値[ms]", 15, right=True)
+              + _pad("t1−収縮期[ms]", 15, right=True)
+              + _pad(f"ρ(t1,{COL_PWV})", 16, right=True) + _pad("層", 5, right=True)
+              + _pad("t1−前進波[ms]", 15, right=True)
+              + _pad("ρ(t1,前進波)", 15, right=True))
+        for k in variants:
+            col = f"t1_{k}_ms"
+            for stg, ok_col in (("A", f"ok_{k}"), ("C", None)):
+                g = stage_of(g0, ok_col, stg)
+                v = _colv(g, col)
+                n = int(np.isfinite(v).sum())
+                med = float(np.median(v[np.isfinite(v)])) if n else float("nan")
+                sy = _colv(g, COL_T1_SYS)
+                ok_sy = np.isfinite(v) & np.isfinite(sy)
+                d_sy = (float(np.median(v[ok_sy] - sy[ok_sy]))
+                        if ok_sy.any() else float("nan"))
+                rho, n_age = _by_age_med(g, col, COL_PWV)
+                d_pf, rho_pf = float("nan"), float("nan")
+                if has_pf:
+                    pf = _colv(g, COL_PF)
+                    ok_pf = np.isfinite(v) & np.isfinite(pf)
+                    if ok_pf.any():
+                        d_pf = float(np.median(v[ok_pf] - pf[ok_pf]))
+                    rho_pf = M._spearman(v, pf, min_n=MIN_N_POOL)[0]
+                out[(kt, k, stg)] = {"n": n, "t1": med, "d_sys": d_sy, "rho": rho,
+                                     "n_ages": n_age, "d_pf": d_pf, "rho_pf": rho_pf}
+                print("    " + _pad(_kind_lab(k), 22) + _pad(stg, 4, right=True)
+                      + _pad(n, 7, right=True) + _f(med, 15, prec=1)
+                      + _f(d_sy, 15, prec=1, sign=True) + _f(rho, 16, sign=True)
+                      + _pad(n_age, 5, right=True)
+                      + (_f(d_pf, 15, prec=1, sign=True) if has_pf
+                         else _pad("—", 15, right=True))
+                      + (_f(rho_pf, 15, sign=True) if has_pf
+                         else _pad("—", 15, right=True)))
+    print("\n  出典: この台本（50番）の節C が PWDB の拍に当てはめ直して計算した値"
+          + ("（前進波の 2 列は 51番の記録）。" if has_pf else "。"))
+    return out
+
+
+# ---------------------------------------------------------------- C8
+def _factor_call(d: pd.DataFrame, col: str):
+    """20番の `_factor_effects` をそのまま呼ぶ（この台本では計算し直さない）。
+
+    採用が少ない部分集合では列が全層で欠測になり `np.nanmean` が警告を出す（値は NaN の
+    ままで、表示だけの問題）ので、20番の中と同じように警告だけを止める。
+    """
+    import warnings
+    if len(d) == 0 or col not in d.columns:
+        return (np.full(len(M.FACTORS), np.nan), np.full(len(M.FACTORS), np.nan))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        return M._factor_effects(d, col)
+
+
+def has_factors(d: pd.DataFrame) -> bool:
+    """C8 に要る `var_{因子}` の列がそろっているか。"""
+    return all(f"var_{f}" in d.columns for f in M.FACTORS)
+
+
+C8_KLASSES = (None, 3)     # C8 で出す型（全例と型3）
+
+
+def print_c8(d: pd.DataFrame, variants) -> dict:
+    """C8 因子ごとの主効果（W1b。原稿の表2 と同じ形）。20番の `_factor_effects` を使う。"""
+    print("\n" + "-" * 100)
+    print("C8. 振った因子ごとの主効果（W1b）: 候補の当てはめは何で動いているか"
+          "（原稿の表2 と同じ形）")
+    print("-" * 100)
+    if not has_factors(d):
+        print("  PWDB の `pwdb_model_variations.csv`（どの因子を振ったか）が読めないので"
+              "C8 は計算できない。")
+        print("  要る列は " + "・".join(f"var_{f}" for f in M.FACTORS)
+              + " で、配布物にこの表があれば 23番の `load` が結合する。")
+        print("  この表を飛ばして先へ進む。")
+        return {}
+    print("  主効果 [%] は 20番の `_factor_effects` そのもの（年齢層内で +1 の平均 − −1 の"
+          "平均を層平均で割る。")
+    print("  年齢層の中央値）。ρ はその層内の Spearman の中央値である。"
+          "**20番の関数をそのまま呼んでいて、この台本では計算し直さない。**")
+    print("  段 A = その手法が自分で採用した例だけ（ok_{型} == 1）、"
+          "段 C = 採否を無視した全例。")
+    print("  **C8 は A 段と C 段だけである**（1 つの当てはめが何で動くかを見る表で、"
+          "手法どうしを同じ")
+    print("  被験者の上で比べる表ではないので、B 段に絞る意味がない）。ます目は"
+          " **主効果 [%]（ρ）** である。")
+    print("  読み方: ΔT が主に脈波伝播速度で動き、RI が主に平均血圧で動けば概念どおり"
+          "（20番の表3 と同じ読み）。")
+    print("  **この表に事前の予測は無い。探索・事後の記述である。**")
+    out = {}
+    for kt in C8_KLASSES:
+        g0 = _sub_k(d, kt)
+        lab = KLASS_LABEL.get(kt, "全例（型を分けない）")
+        for idx_lab, pre, suf, ref_col, ref_lab, lm_col, lm_lab in (
+                ("ΔT", "dt_", "_ms", COL_V1, "（参考）凍結版 26番",
+                 COL_LM, "（参考）同梱の特徴点"),
+                ("RI", "ri_", "", COL_RI_V1, "（参考）凍結版 26番",
+                 COL_RI_LM, "（参考）同梱の特徴点")):
+            print(f"\n  {lab}  n = {len(g0)} 名 ／ 指標 {idx_lab}")
+            print("    " + _pad("当てはめの型（段）", 26)
+                  + "".join(_pad(M.FACTOR_LABEL[f], 15, right=True) for f in M.FACTORS))
+            rows = []
+            for k in variants:
+                rows.append((_kind_lab(k), f"{pre}{k}{suf}", f"ok_{k}", "A"))
+                rows.append((_kind_lab(k), f"{pre}{k}{suf}", None, "C"))
+            if ref_col in d.columns:
+                rows.append((ref_lab, ref_col, COL_OK, "A"))
+                rows.append((ref_lab, ref_col, None, "C"))
+            if lm_col in d.columns:
+                # 同梱の特徴点は採否を持たないので C 段だけ
+                rows.append((lm_lab, lm_col, None, "C"))
+            for name, col, ok_col, stg in rows:
+                g = stage_of(g0, ok_col, stg)
+                eff, rho = _factor_call(g, col)
+                out[(kt, col, stg)] = {"n": len(g), "eff": eff, "rho": rho}
+                line = "    " + _pad(f"{name} {stg}", 26)
+                for j in range(len(M.FACTORS)):
+                    e_, r_ = float(eff[j]), float(rho[j])
+                    line += _pad("—" if not np.isfinite(e_)
+                                 else f"{e_:+.1f}（{_n(r_, 2, sign=True)}）",
+                                 15, right=True)
+                print(line)
+    print("\n  出典: この台本（50番）の節C が PWDB の拍に当てはめ直した値に、"
+          "20番 `20_pwdb_validity.py` の")
+    print("  `_factor_effects` をそのまま当てた（参考の行は 26番の既存列と Charlton 同梱"
+          "の特徴点）。")
+    return out
+
+
 # ---------------------------------------------------------------- 節C の入口
 def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
-              refit_csv=None, resume: bool = True, d26=None, src26: str = "") -> dict:
+              refit_csv=None, resume: bool = True, d26=None, src26: str = "",
+              b_variants=B_STAGE_DEFAULT, noise_sd: float = 0.0, wave_csv=None) -> dict:
     """節C: 候補の当てはめを PWDB の同じ拍に当て、26番の枠組みで並べる（探索・事後）。"""
     print("\n" + "=" * 100)
     print("節C 実データ（PWDB）: 候補の当てはめを同じ拍に当てる"
           "（探索・事後。26番の判定は動かない）")
     print("=" * 100)
     variants = tuple(variants)
-    bad = [k for k in variants if k not in KIND_KEYS]
+    b_variants = tuple(b_variants)
+    noise_sd = float(noise_sd)
+    bad = [k for k in tuple(variants) + b_variants if k not in KIND_KEYS]
     if bad:
         raise ValueError(f"知らない当てはめの型: {bad}（使えるのは {list(KIND_KEYS)}）")
     root = Path(root).expanduser()
@@ -3157,9 +3720,16 @@ def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
     print("  拍の作り方は 26番と同じ（20番の `load_pwdb`・`beat_of`）。型 klass_own も")
     print("  26番と同じ手順（`pda2.preprocess` → `find_landmarks`）で自分で付ける。")
     print("  当てはめ: " + "・".join(_kind_lab(k) for k in variants))
+    if noise_sd > 0:
+        print(f"  ★ **雑音あり（--noise {noise_sd:g}）。**拍の峰から谷までの振幅の"
+              f"{noise_sd:g} 倍を標準偏差とする")
+        print("  白色ガウス雑音を足した拍に当てはめる（乱数は被験者ごとに固定）。"
+              "**波形の型・収縮期ピーク・拡張期の点は**")
+        print("  **雑音を足す前の拍から付ける**ので、層別は雑音なしの実行と同じである。"
+              "26番の列とは一致しない（C0 を見ること）。")
 
     ref, path, info = build_refit(root, limit=limit, jobs=jobs, variants=variants,
-                                  refit_csv=refit_csv, resume=resume)
+                                  refit_csv=refit_csv, resume=resume, noise_sd=noise_sd)
     L = _landmarks_module()
     d = L.load(root, pda_dir=root / "__no_pda__")
     d = d.drop(columns=[c for c in ("dt_pda_ms", "ri_pda", "ok2") if c in d.columns])
@@ -3175,6 +3745,20 @@ def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
         print(f"  26番の列を結合した（{src26}・{n26} 名ぶん）。C0 と C2・C3 の参考行に使う。")
     else:
         print("  26番の CSV が無いので C0 の照合と参考行は飛ばす（--csv で渡せる）。")
+    if not has_factors(d):
+        # C8 に要る `var_{因子}`。23番の `load` は配布物に変動表があれば結合するが、
+        # 無い・列が欠けているときはここで結合し直す（20番 `report` と同じやり方で、
+        # `load_pwdb` が中で呼ぶ `load_extras` と同じ表である。指尖 PPG の大きな CSV を
+        # もう一度読まないよう `load_extras` を直接呼ぶ）。
+        try:
+            ex = M.load_extras(root)
+        except Exception as e:            # noqa: BLE001
+            ex, _ = {}, print(f"  変動表（variations）を読めない（{e}）。C8 は飛ばす。")
+        if "variations" in ex:
+            d = d.drop(columns=[c for c in d.columns if c.startswith("var_")])
+            add = ex["variations"].drop(columns=["var_age"], errors="ignore")
+            d = d.merge(add, on="subj_no", how="left")
+            print(f"  変動表 var_{{因子}} を結合した（{len(add)} 名ぶん）。C8 が読む。")
     for c in (COL_PWV, COL_PVR, COL_LM, COL_RI_LM, "age", KLASS_COL, KLASS_COL + "_26"):
         if c in d.columns:
             d[c] = pd.to_numeric(d[c], errors="coerce")
@@ -3194,24 +3778,40 @@ def section_c(root, limit: int = 0, jobs: int = 1, variants=VARIANTS_DEFAULT,
         print(f"  ★ この実行は {len(d)} 名の抜粋である（1 層 "
               f"{len(d) // max(len(ages), 1)} 名）。**ここから出る数値は読んではいけない。**")
 
-    # B 段（比べるすべての型が採用した共通例）の印を**表を出す前に 1 回だけ**数え、
-    # 列にして持ち回る（表ごとに数え直さない）。A 段は型ごとに分母が違うので、A 段
-    # どうしの比較には「どの拍を捨てたか」の差が混ざる。B 段は分母をそろえる。
-    d[STAGE_B_COL] = b_stage_mask(d, variants)
+    d, wave_p = merge_wave_sep(d, limit=limit, wave_csv=wave_csv)
+
+    # B 段（--b-stage の型が全部そろって採用した共通例）の印を**表を出す前に 1 回だけ**
+    # 数え、列にして持ち回る（表ごとに数え直さない）。A 段は型ごとに分母が違うので、
+    # A 段どうしの比較には「どの拍を捨てたか」の差が混ざる。B 段は分母をそろえる。
+    miss_b = b_stage_missing(d, variants, b_variants)
+    if miss_b:
+        d[STAGE_B_COL] = np.zeros(len(d), dtype=bool)
+        print(f"  ★ **B 段に使えない型がある: {miss_b}**（--variants に無いか "
+              "ok_{型} の列が無い）。")
+        print("  ★ B 段は全部偽にする（黙って C 段にはしない）。C2・C3 の B 段の行は"
+              "すべて「—」になる。")
+    else:
+        d[STAGE_B_COL] = b_stage_mask(d, b_variants)
     n_b = int(np.sum(d[STAGE_B_COL].to_numpy(dtype=bool)))
-    print(f"  B 段（比べるすべての手法が採用した共通例・{len(variants)} 型すべてで "
-          f"ok_{{型}} == 1）{n_b} 名 / {len(d)} 名")
+    print(f"  B 段（`--b-stage` の {len(b_variants)} 型 "
+          + "・".join(_kind_lab(k) for k in b_variants)
+          + f" がすべて採用した共通例）{n_b} 名 / {len(d)} 名")
     if n_b == 0:
         print("  ★ B 段が 0 名である。C2・C3 の B 段の行はすべて「—」になる。")
     out = {"state": 0, "n": len(d), "n_b": n_b, "path": str(path), "info": info,
-           "variants": variants}
-    out["c0"] = print_c0(d, variants)
+           "variants": variants, "b_variants": b_variants, "noise_sd": noise_sd,
+           "wave_sep": (str(wave_p) if wave_p else "")}
+    out["c0"] = print_c0(d, variants, noise_sd=noise_sd)
     out["c1"] = print_c1(d, variants)
     out["c1b"] = print_c1b(d, variants)
-    out["c2"] = print_c2(d, variants)
-    out["c3"] = print_c3(d, variants)
+    out["c2"] = print_c2(d, variants, b_variants)
+    out["c3"] = print_c3(d, variants, b_variants)
     out["c4"] = print_c4(d, variants)
-    out["c5"] = print_c5(out["c0"], out["c1"], out["c2"], out["c3"], variants)
+    out["c5"] = print_c5(out["c0"], out["c1"], out["c2"], out["c3"], variants,
+                         noise_sd=noise_sd)
+    out["c6"] = print_c6(d, variants)
+    out["c7"] = print_c7(d, variants)
+    out["c8"] = print_c8(d, variants)
     return out
 
 
@@ -3226,7 +3826,8 @@ def print_no_pwdb() -> None:
 
 def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
            ris=RIS_FULL, seed: int = SEED_A, pwdb=None, limit: int = 0, jobs: int = 1,
-           variants=VARIANTS_DEFAULT, refit_csv=None, resume: bool = True) -> dict:
+           variants=VARIANTS_DEFAULT, refit_csv=None, resume: bool = True,
+           b_variants=B_STAGE_DEFAULT, noise_sd: float = 0.0) -> dict:
     """節A（ΔT）・節A-2（RI）・節B・節C を印字する。返り値は計算した値と終了コード。"""
     print("\n" + "=" * 100)
     print("50番 探索的（事後）: 当てはめの型と、凍結版 ΔT が下限で詰まること")
@@ -3253,7 +3854,8 @@ def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
             try:
                 out["C"] = section_c(Path(pwdb), limit=limit, jobs=jobs,
                                      variants=variants, refit_csv=refit_csv,
-                                     resume=resume, d26=d, src26=src)
+                                     resume=resume, d26=d, src26=src,
+                                     b_variants=b_variants, noise_sd=noise_sd)
             except (FileNotFoundError, OSError) as e:
                 print(f"\n  ★ PWDB を読めない: {e}")
                 print_no_pwdb()
@@ -3268,6 +3870,7 @@ def report(section: str, d=None, src: str = "", taus=TAUS_FULL, dts=DTS_FULL,
              if ("B" in section and d is not None) else "節B なし")
     c = out.get("C")
     c_txt = (f"節C {pwdb}（{c['n']} 名・当てはめ {list(c['variants'])}・"
+             f"B 段 {list(c['b_variants'])}・雑音 SD {c['noise_sd']:g}・"
              f"記録 {c['path']}）" if c else "節C なし")
     print("  出典: analysis/scripts/50_reservoir_bench.py")
     print(f"        / {a_txt}")
@@ -3543,6 +4146,69 @@ def selftest() -> int:
         f"Δμ の下限（{dmu_cv:.2f} s）は同じ・ΔT の差の最大 {d_cv_dt:.3e} ms"
         f"（要 {CONV_REF_TOL_MS:.0e} 以下）・RI の差の最大 {d_cv_ri:.3e}"
         f"（要 {CONV_REF_TOL_RI:.0e} 以下）")
+
+    # ============================================================ HEAD との照合
+    # **既存の当てはめを 1 ビットも動かしていないこと**の検査（2026-09-17 に自己検査へ
+    # 移した。それまでは型を足すたびに手で同じことをしていた。lab_log 追記151）。
+    # `git show HEAD:<この台本>` を一時の場所に出し、別名で読み込んで、同じ 3 拍 ×
+    # 全 17 型の ΔT・RI・残差・診断の印・境界の内訳を突き合わせる。
+    import tempfile as _tf
+    import time as _tm
+    t_hd = _tm.time()
+    with _tf.TemporaryDirectory() as td_h:
+        head_m, why_head = _head_module(Path(td_h))
+        if head_m is None:
+            rep("既存 17 型の当てはめは HEAD と同じ（**git が使えないので照合しない**）",
+                True, why_head + "。git のある機械で走らせること")
+        else:
+            beats_h = [synth_beat(0.20, 0.45), synth_beat(0.10, 0.35),
+                       synth_beat(0.28, 0.25, hr=90.0)]
+            keys_h = ("ok", "boundary", "amp_zero", "ambiguous", "dmu_lo",
+                      "tau_hi", "tau_lo")
+            d_dt_h, d_ri_h, d_cs_h = 0.0, 0.0, 0.0
+            n_h, n_bad_h, n_nan_h = 0, 0, 0
+            for t_h, y_h, _tr_h in beats_h:
+                for k_h in KIND_KEYS:
+                    a_h, b_h = fit_kind(t_h, y_h, k_h), head_m.fit_kind(t_h, y_h, k_h)
+                    n_h += 1
+                    for q, box in (("dt_s", "dt"), ("ri", "ri"), ("cost", "cost")):
+                        x_h, z_h = float(a_h[q]), float(b_h[q])
+                        if np.isfinite(x_h) != np.isfinite(z_h):
+                            n_nan_h += 1               # 片方だけ欠測（これも食い違い）
+                            continue
+                        if not np.isfinite(x_h):
+                            continue
+                        gap_h = abs(x_h - z_h)
+                        if box == "dt":
+                            d_dt_h = max(d_dt_h, gap_h)
+                        elif box == "ri":
+                            d_ri_h = max(d_ri_h, gap_h)
+                        else:
+                            d_cs_h = max(d_cs_h, gap_h)
+                    if any(bool(a_h["checks"][q]) != bool(b_h["checks"][q])
+                           for q in keys_h) or (list(a_h["checks"].get("pins", []))
+                                                != list(b_h["checks"].get("pins", []))):
+                        n_bad_h += 1
+            rep("既存 17 型の当てはめが HEAD と 1 ビットも違わない"
+                "（3 拍 × 17 型の ΔT・RI・残差・診断・境界の内訳）",
+                d_dt_h == 0.0 and d_ri_h == 0.0 and d_cs_h == 0.0
+                and n_bad_h == 0 and n_nan_h == 0 and n_h == 3 * len(KIND_KEYS),
+                f"{n_h} 通りを照合・ΔT の差の最大 {d_dt_h:.3e} s・RI {d_ri_h:.3e}・"
+                f"残差 {d_cs_h:.3e}・診断の食い違い {n_bad_h} 通り・"
+                f"欠測の食い違い {n_nan_h} 件（{_tm.time() - t_hd:.0f} 秒）")
+
+    # t1・t2（2026-09-17 に `fit_kind` の返り値に足した鍵）。ΔT = t2 − t1 であり、
+    # 合成の拍では第1成分の真のピーク（`synth_beat` が返す `t_fwd`）に近いはずである。
+    r_t1_fb, r_t1_fz = fit_kind(t, y, "fb"), fit_kind(t, y, "frozen")
+    gap_t1 = abs(1000.0 * (r_t1_fb["t1_s"] - tr["t_fwd"]))
+    rep("`fit_kind` が第1成分・第2成分のピーク時刻（t1・t2）を返し、ΔT = t2 − t1 になる",
+        np.isfinite(r_t1_fb["t1_s"]) and np.isfinite(r_t1_fb["t2_s"])
+        and abs((r_t1_fb["t2_s"] - r_t1_fb["t1_s"]) - r_t1_fb["dt_s"]) <= 1e-12
+        and abs(r_t1_fz["t1_s"] - r_t1_fb["t1_s"]) <= 1e-9
+        and gap_t1 <= 5.0,
+        f"(0) t1 {1000 * r_t1_fb['t1_s']:.2f} ms・t2 {1000 * r_t1_fb['t2_s']:.2f} ms"
+        f"（合成の第1成分の真のピーク {1000 * tr['t_fwd']:.2f} ms・差 {gap_t1:.2f} ms）・"
+        f"(1) t1 {1000 * r_t1_fz['t1_s']:.2f} ms")
 
     # 打ち切りの割合が本当に配線されているか（2026-09-15 に足した。lab_log 追記145）。
     # 3 つの割合は同じ拍に別々の ΔT を返さなければならない。返り値が同じなら、割合が
@@ -3876,6 +4542,10 @@ def selftest() -> int:
     with tempfile.TemporaryDirectory() as td:
         refit_p = Path(td) / "50_refit_selftest.csv"
         vars_c = ("fb", "relax")
+        # 51番の記録は**わざと無い場所**を指す。この機械に実データの 51_wave_sep.csv が
+        # あると、模擬の被験者番号に実データの前進波が結合されてしまい、自己検査が
+        # 機械によって変わる（C7 の「51番が無いときの案内」もここで通す）。
+        no_wave = Path(td) / "51_wave_sep_none.csv"
         bufm = io.StringIO()
         with redirect_stdout(bufm):        # 模擬の作成と読み込みの print は表に出さない
             m26 = _load("26_pwdb_compare.py", "m26")
@@ -3895,11 +4565,13 @@ def selftest() -> int:
         bufc = io.StringIO()
         with redirect_stdout(bufc):
             c1 = section_c(root, limit=24, jobs=1, variants=vars_c, refit_csv=refit_p,
-                           resume=True, d26=None)
+                           resume=True, d26=None, b_variants=vars_c,
+                           wave_csv=no_wave)
         txt_c1 = bufc.getvalue()
-        need_cols = ["subj_no", "fs", "n_samp", "klass_own", "sys_own_ms", "dia_own_ms"]
+        need_cols = ["subj_no", "fs", "n_samp", "klass_own", "sys_own_ms", "dia_own_ms",
+                     "noise_sd"]
         for k in vars_c:
-            need_cols += ([f"dt_{k}_ms", f"ri_{k}", f"ok_{k}", f"cost_{k}"]
+            need_cols += ([f"dt_{k}_ms", f"t1_{k}_ms", f"ri_{k}", f"ok_{k}", f"cost_{k}"]
                           + [f"{tag}_{k}" for tag, _q in CHK_COLS])
         got = pd.read_csv(refit_p)
         rep("(g) 節C が記録（CSV）を書き、要る列が揃う（型 2 つぶん）",
@@ -3912,7 +4584,8 @@ def selftest() -> int:
         bufc2 = io.StringIO()
         with redirect_stdout(bufc2):
             c2 = section_c(root, limit=24, jobs=1, variants=vars_c, refit_csv=refit_p,
-                           resume=True, d26=None)
+                           resume=True, d26=None, b_variants=vars_c,
+                           wave_csv=no_wave)
         rep("(g) 再開すると 1 名も当てはめ直さず、記録も同じ内容になる",
             c2["info"]["n_fit"] == 0 and c2["info"]["n_cache"] == 24
             and refit_p.read_text(encoding="utf-8") == txt_first,
@@ -3925,7 +4598,8 @@ def selftest() -> int:
         bufc3 = io.StringIO()
         with redirect_stdout(bufc3):
             c3 = section_c(root, limit=24, jobs=1, variants=vars_c, refit_csv=refit_p,
-                           resume=True, d26=None)
+                           resume=True, d26=None, b_variants=vars_c,
+                           wave_csv=no_wave)
         got3 = pd.read_csv(refit_p)
         rep("(g) 記録に境界の内訳 pin_{型} の列があり、値が入っている",
             all(c in got.columns for c in pin_cols)
@@ -4008,7 +4682,8 @@ def selftest() -> int:
         rep("(g) B 段はどの型の A 段の部分集合でもあり、いちばん小さい A 段を超えない",
             sub_ok and int(bm.sum()) <= min(int(a_.sum()) for a_ in am.values())
             and n_bad_b == 0
-            and "段 B = 比べるすべての手法が採用した共通例" in txt_c1
+            and "段 B = `--b-stage` の" in txt_c1
+            and "すべて採用した共通例" in txt_c1
             and "B 段の人数（波形の型ごと" in txt_c1
             and "**C4 は A 段と C 段だけである**" in txt_c1,
             f"B 段 {int(bm.sum())} 名・A 段 "
@@ -4019,6 +4694,224 @@ def selftest() -> int:
             f"節C の返り値 {c1['n_b']} 名 / 突き合わせ {c1['n']} 名"
             f"（記録から数えた共通例 {int(bm.sum())} 名。真値の表と突き合わせる段で"
             "減ることはある）")
+
+        # ============================================================ 2026-09-17 の追加
+        # --- C6・C7・C8 が C5 の後に印字され、返り値に入る
+        rep("(g) C6・C7・C8 が C5 の後に印字され、節C の返り値に入る",
+            all(h in txt_c1 for h in ("C6. 採否の偏り", "C7. 第1成分のピーク時刻 t1",
+                                      "C8. 振った因子ごとの主効果"))
+            and txt_c1.index("C5. 予測との照合") < txt_c1.index("C6. 採否の偏り")
+            < txt_c1.index("C7. 第1成分のピーク時刻 t1")
+            < txt_c1.index("C8. 振った因子ごとの主効果")
+            and all(q in c1 for q in ("c6", "c7", "c8"))
+            and "**この表は C 段だけである。**" in txt_c1
+            and "**C7 は A 段と C 段だけである**" in txt_c1
+            and "**C8 は A 段と C 段だけである**" in txt_c1,
+            f"ます目 C6 {len(c1['c6'])} 個・C7 {len(c1['c7'])} 個・C8 {len(c1['c8'])} 個")
+
+        # --- C6（W4 採否の偏り）。通過率は ok_{型} の平均そのもの、三分位は年齢層ごと
+        got_c6 = pd.read_csv(refit_p)
+        ok_fb6 = pd.to_numeric(got_c6["ok_fb"], errors="coerce").to_numpy(float)
+        ter6 = _tertile_in_age(
+            pd.DataFrame({"age": [25] * 9 + [35] * 9,
+                          COL_PWV: list(range(9)) + list(range(9))}), COL_PWV)
+        rep("(g) C6 は C 段の通過率（ok_{型} の平均）を出し、三分位は年齢層ごとに切る",
+            abs(c1["c6"][(None, "ok_fb")]["ok"] - float(np.nanmean(ok_fb6))) <= 1e-12
+            and c1["c6"][(None, "ok_fb")]["n"] == int(np.isfinite(ok_fb6).sum())
+            and list(ter6) == [0, 0, 0, 1, 1, 1, 2, 2, 2] * 2
+            and len(c1["c6"][(None, "ok_fb")]["tertile"]) == len(C6_TERT),
+            f"通過率 {c1['c6'][(None, 'ok_fb')]['ok']:.3f}"
+            f"（記録から {float(np.nanmean(ok_fb6)):.3f}）・"
+            f"三分位の通過率 "
+            + "・".join(f"{q} {_n(v)}" for q, v in
+                        zip(C6_TERT, c1["c6"][(None, "ok_fb")]["tertile"])))
+
+        # --- C7（W5 第1成分の位置）。仕込んだ差がそのまま中央値に出るか
+        n_c7 = 24
+        d_c7t = pd.DataFrame({
+            "subj_no": np.arange(1, n_c7 + 1), "age": 25.0, KLASS_COL: 1.0,
+            "sys_own_ms": 100.0 + np.arange(n_c7, dtype=float),
+            "t1_fb_ms": 107.0 + np.arange(n_c7, dtype=float),      # 収縮期 +7 ms
+            COL_PF: 120.0 + np.arange(n_c7, dtype=float),          # 前進波 −13 ms
+            "ok_fb": 1, COL_PWV: 6.0 + 0.1 * np.arange(n_c7, dtype=float)})
+        d_c7t[STAGE_B_COL] = False
+        with redirect_stdout(io.StringIO()):
+            c7t = print_c7(d_c7t, ("fb",))
+        rec_c7 = c7t[(1, "fb", "C")]
+        rep("(g) C7 の t1 と差が仕込んだ値と一致する（t1 − 収縮期 +7 ms・t1 − 前進波 −13 ms）",
+            rec_c7["n"] == n_c7
+            and abs(rec_c7["t1"] - float(np.median(d_c7t["t1_fb_ms"]))) <= 1e-12
+            and abs(rec_c7["d_sys"] - 7.0) <= 1e-12
+            and abs(rec_c7["d_pf"] + 13.0) <= 1e-12
+            and abs(rec_c7["rho_pf"] - 1.0) <= 1e-9,
+            f"n {rec_c7['n']}・t1 の中央値 {rec_c7['t1']:.1f} ms・"
+            f"t1 − 収縮期 {rec_c7['d_sys']:+.1f} ms・t1 − 前進波 {rec_c7['d_pf']:+.1f} ms・"
+            f"ρ(t1, 前進波) {rec_c7['rho_pf']:+.3f}")
+        rep("(g) 51番の記録が無いと C7 の前進波の 2 列は「—」になり、走らせ方を案内する",
+            c1["wave_sep"] == "" and "51番の記録" in txt_c1
+            and "51_pwdb_wave_separation.py" in txt_c1
+            and all(not np.isfinite(c1["c7"][(None, k, "C")]["d_pf"]) for k in vars_c),
+            f"51番の記録 {c1['wave_sep'] or '（無し）'}")
+
+        # --- C8（W1b 因子ごとの主効果）。20番の `_factor_effects` と同じ値になるか
+        n_c8 = 6 * 30
+        rng_c8 = np.random.default_rng(7)
+        lv_c8 = rng_c8.integers(-1, 2, size=(n_c8, len(M.FACTORS)))
+        d_c8t = pd.DataFrame({"subj_no": np.arange(1, n_c8 + 1),
+                              "age": np.repeat(list(AGES_SYN), n_c8 // 6).astype(float),
+                              KLASS_COL: 1.0, "ok_fb": 1})
+        for j, f_ in enumerate(M.FACTORS):
+            d_c8t[f"var_{f_}"] = lv_c8[:, j].astype(float)
+        d_c8t["dt_fb_ms"] = (200.0 - 20.0 * lv_c8[:, M.FACTORS.index("pwv")]
+                             + rng_c8.normal(0.0, 2.0, n_c8))
+        d_c8t["ri_fb"] = (0.40 + 0.05 * lv_c8[:, M.FACTORS.index("mbp")]
+                          + rng_c8.normal(0.0, 0.01, n_c8))
+        d_c8t[STAGE_B_COL] = False
+        with redirect_stdout(io.StringIO()):
+            c8t = print_c8(d_c8t, ("fb",))
+        e_ref, r_ref = M._factor_effects(d_c8t, "dt_fb_ms")
+        e_got = c8t[(None, "dt_fb_ms", "C")]["eff"]
+        r_got = c8t[(None, "dt_fb_ms", "C")]["rho"]
+        i_pwv = M.FACTORS.index("pwv")
+        rep("(g) C8 は 20番の `_factor_effects` と同じ値を返す（計算し直していない）",
+            np.array_equal(np.asarray(e_got), np.asarray(e_ref), equal_nan=True)
+            and np.array_equal(np.asarray(r_got), np.asarray(r_ref), equal_nan=True)
+            and float(e_got[i_pwv]) < -10.0 and float(r_got[i_pwv]) < -0.5,
+            "仕込んだ 脈波伝播速度 −1/+1 で ΔT が ±20 ms 動く合成の表で、"
+            f"主効果 {float(e_got[i_pwv]):+.1f}%・ρ {float(r_got[i_pwv]):+.2f}")
+        with redirect_stdout(io.StringIO()) as buf_c8n:
+            c8n = print_c8(d_c8t.drop(columns=[f"var_{f_}" for f_ in M.FACTORS]),
+                           ("fb",))
+        rep("(g) var_{因子} が無い表では C8 を飛ばし、案内を印字して落ちない",
+            c8n == {} and "C8 は計算できない" in buf_c8n.getvalue()
+            and "var_pwv" in buf_c8n.getvalue(),
+            "変動表の列を抜いた表で照合した")
+
+        # --- B 段を候補で絞る（--b-stage。2026-09-17）
+        d_bs = pd.DataFrame({"ok_fb": [1, 1, 0, 1], "ok_trunc08": [1, 0, 1, 1],
+                             "ok_deriv": [1, 1, 1, 0], "ok_relax": [0, 0, 0, 0]})
+        m_bs = b_stage_mask(d_bs, B_STAGE_DEFAULT)
+        rep("(g) B 段は `--b-stage` の型すべての A 段の部分集合で、既定は fb,trunc08,deriv",
+            B_STAGE_DEFAULT == ("fb", "trunc08", "deriv")
+            and list(m_bs) == [True, False, False, False]
+            and all(bool(np.all((d_bs[f"ok_{k}"] == 1).to_numpy()[m_bs]))
+                    for k in B_STAGE_DEFAULT),
+            f"B 段 {int(m_bs.sum())}/4 名・A 段 "
+            + "・".join(f"{_kind_no(k)} {int((d_bs[f'ok_{k}'] == 1).sum())} 名"
+                        for k in B_STAGE_DEFAULT))
+        rep("(g) `--b-stage` に無い型が不採用でも B 段には入りうる（B 段は挙げた型だけで決まる）",
+            bool(m_bs[0]) and int(d_bs["ok_relax"].iloc[0]) == 0,
+            "(2) Δμ0.01 は 4 名とも不採用だが、1 人目は B 段に入る")
+        rep("(g) `--b-stage` の型が `--variants` に無い・列が無いときは B 段を全部偽にする",
+            b_stage_missing(d_bs, ("fb", "trunc08"), B_STAGE_DEFAULT) == ["deriv"]
+            and b_stage_missing(d_bs, KIND_KEYS, ("convout",)) == ["convout"]
+            and b_stage_missing(d_bs, KIND_KEYS, B_STAGE_DEFAULT) == []
+            and not b_stage_mask(d_bs, ("convout",)).any(),
+            "型が足りないときは黙って C 段にせず、★ を印字して全部偽にする")
+
+        # --- 記録の保ち（--variants を絞っても、指定しなかった型の列が消えない）
+        import shutil as _sh
+        p_keep = Path(td) / "keep.csv"
+        _sh.copy2(refit_p, p_keep)
+        # (0) の t1 の列だけを落として「古い記録」を作る。読み書きで最後の桁が動かない
+        # よう、記録と同じ `float_precision="round_trip"` で読む（`_cached_rows` と同じ）。
+        pd.read_csv(p_keep, float_precision="round_trip").drop(
+            columns=["t1_fb_ms"]).to_csv(p_keep, index=False)
+        base_keep = pd.read_csv(p_keep)        # 当て直す前の記録（これと突き合わせる）
+        with redirect_stdout(io.StringIO()):
+            _kk, _pp, info_k = build_refit(root, limit=6, jobs=1, variants=("fb",),
+                                           refit_csv=p_keep, resume=True)
+        got_k = pd.read_csv(p_keep).set_index("subj_no")
+        base_i = base_keep.set_index("subj_no")
+        keep_cols = [c for c in base_keep.columns if "relax" in c]
+        # 記録の被験者は減らない（`--limit` で選ばれなかった行も残る）。**その実行で
+        # 新しく当てた被験者が増える**ことはあるので、元からある被験者だけを突き合わせる
+        # （増えた行の (2) の列は欠測になり、列の型が int から float に変わる。だから
+        # 文字ではなく数として比べる。`pin_` だけは文字の列なので文字で比べる）。
+        common = [s_ for s_ in base_i.index if s_ in got_k.index]
+        bad_keep = [c for c in keep_cols if not c.startswith("pin_")
+                    and not np.array_equal(
+                        pd.to_numeric(got_k.loc[common, c], errors="coerce").to_numpy(float),
+                        pd.to_numeric(base_i.loc[common, c], errors="coerce").to_numpy(float),
+                        equal_nan=True)]
+        bad_keep += [c for c in keep_cols if c.startswith("pin_")
+                     and got_k.loc[common, c].astype(str).tolist()
+                     != base_i.loc[common, c].astype(str).tolist()]
+        same_keep = not bad_keep
+        rep("(g) 2 型で書いた記録に 1 型だけ指定して当て直しても、もう 1 型の列は失われない",
+            info_k["n_fit"] == 6 and len(common) == len(base_i)
+            and all(c in got_k.columns for c in keep_cols) and same_keep
+            and int(np.isfinite(pd.to_numeric(got_k["t1_fb_ms"],
+                                              errors="coerce")).sum()) >= 6,
+            f"当て直した {info_k['n_fit']} 名・記録に残った元の被験者 {len(common)}/"
+            f"{len(base_i)} 名・保たれた (2) の列 {len(keep_cols)} 個"
+            + (f"（食い違い {bad_keep}）" if bad_keep else "") + "・"
+            f"t1_fb_ms が入った {int(np.isfinite(pd.to_numeric(got_k['t1_fb_ms'], errors='coerce')).sum())} 名")
+
+        # --- W6 の雑音（--noise）
+        hr_n = dict(zip(hae_["subj_no"].astype(int), hae_["HR"].astype(float)))
+        fin_n = [int(v) for v, ok_ in zip(
+            got["subj_no"],
+            np.isfinite(pd.to_numeric(got["dt_fb_ms"], errors="coerce"))) if ok_]
+        sub_n = fin_n[0]
+        row_n = ppg_.iloc[idx_by[sub_n]].to_numpy(float)
+        r_n0 = refit_subject((sub_n, row_n, hr_n.get(sub_n, np.nan), ("fb",), 0.0))
+        y_n, fs_n = M.beat_of(row_n, hr_n.get(sub_n, np.nan))
+        r_direct = fit_kind(np.arange(y_n.size) / fs_n, y_n, "fb")
+        rep("(g) --noise 0 は雑音なしと 1 ビットも違わない（拍に何も足さない）",
+            abs(r_n0["dt_fb_ms"] - 1000.0 * r_direct["dt_s"]) == 0.0
+            and abs(r_n0["ri_fb"] - r_direct["ri"]) == 0.0
+            and abs(r_n0["t1_fb_ms"] - 1000.0 * r_direct["t1_s"]) == 0.0
+            and float(r_n0["noise_sd"]) == 0.0,
+            f"ΔT の差 {abs(r_n0['dt_fb_ms'] - 1000.0 * r_direct['dt_s']):.3e} ms・"
+            f"RI の差 {abs(r_n0['ri_fb'] - r_direct['ri']):.3e}")
+        sd_n = 0.01
+        r_n1 = refit_subject((sub_n, row_n, hr_n.get(sub_n, np.nan), ("fb",), sd_n))
+        rng_n = np.random.default_rng(SEED_NOISE + sub_n)
+        y_noisy = y_n + (sd_n * float(np.ptp(y_n))) * rng_n.standard_normal(y_n.size)
+        rep("(g) --noise 0.01 で拍は変わるが、波形の型・収縮期ピークは変わらない",
+            float(np.max(np.abs(y_noisy - y_n))) > 0.0
+            and "klass_own" in r_n0 and "sys_own_ms" in r_n0
+            and r_n1.get("klass_own") == r_n0.get("klass_own")
+            and r_n1.get("sys_own_ms") == r_n0.get("sys_own_ms")
+            and r_n1.get("dia_own_ms") == r_n0.get("dia_own_ms")
+            and float(r_n1["noise_sd"]) == sd_n,
+            f"拍の差の最大 {float(np.max(np.abs(y_noisy - y_n))):.5f}"
+            f"（峰から谷まで {float(np.ptp(y_n)):.3f}）・型 {r_n1.get('klass_own')}・"
+            f"収縮期 {_n(float(r_n1.get('sys_own_ms', float('nan'))), 1)} ms・"
+            f"ΔT は {r_n0['dt_fb_ms']:.1f} → {r_n1['dt_fb_ms']:.1f} ms")
+        rep("(g) --noise の記録は別のファイルになる（雑音なしの記録を上書きしない）",
+            _refit_path(None, 0, 0.0).name == REFIT_NAME
+            and _refit_path(None, 0, 0.01).name == "50_refit_noise0.01.csv"
+            and _refit_path(None, 24, 0.01).name == "50_refit_noise0.01_limit24.csv"
+            and _refit_path(None, 24, 0.0).name == "50_refit_limit24.csv",
+            f"{_refit_path(None, 0, 0.01).name} / "
+            f"{_refit_path(None, 24, 0.01).name}")
+        err_n = ""
+        try:
+            with redirect_stdout(io.StringIO()):
+                build_refit(root, limit=6, jobs=1, variants=("fb",),
+                            refit_csv=p_keep, resume=True, noise_sd=0.02)
+        except ValueError as e:
+            err_n = str(e)
+        rep("(g) 記録の noise_sd と --noise が違えば止める（雑音の違う行を混ぜない）",
+            "noise_sd" in err_n and "0.02" in err_n,
+            (err_n[:70] + "…") if err_n else "止まらなかった")
+
+        # --- --no-resume は上書きの前に退避する
+        p_bak = Path(td) / "bak.csv"
+        _sh.copy2(refit_p, p_bak)
+        n_before = len(pd.read_csv(p_bak))
+        with redirect_stdout(io.StringIO()) as buf_bk:
+            build_refit(root, limit=6, jobs=1, variants=("fb",), refit_csv=p_bak,
+                        resume=False)
+        baks = sorted(Path(td).glob("bak.csv.bak-*"))
+        rep("(g) --no-resume は既存の記録を退避してから上書きする（15 時間の記録を消さない）",
+            len(baks) == 1 and len(pd.read_csv(baks[0])) == n_before
+            and len(pd.read_csv(p_bak)) == 6
+            and "既存の記録を退避した" in buf_bk.getvalue(),
+            f"退避 {baks[0].name if baks else '（無し）'}（{n_before} 名）→ "
+            f"書き直した記録 {len(pd.read_csv(p_bak))} 名")
 
     # --- (g) --pwdb が無いまま節C を頼まれたら、落ちずに終了コード 2
     bufp = io.StringIO()
@@ -4114,11 +5007,19 @@ def main() -> None:
     ap.add_argument("--variants", type=str, default=",".join(VARIANTS_DEFAULT),
                     help="節C で当てる型（KINDS の鍵をコンマで並べる。既定 "
                          + ",".join(VARIANTS_DEFAULT) + "）")
+    ap.add_argument("--b-stage", type=str, default=",".join(B_STAGE_DEFAULT),
+                    help="節C の B 段でそろえる型（KINDS の鍵をコンマで並べる。既定 "
+                         + ",".join(B_STAGE_DEFAULT)
+                         + "）。B 段 = ここに挙げた型がすべて採用した共通例")
+    ap.add_argument("--noise", type=float, default=0.0,
+                    help="節C で拍に白色ガウス雑音を足す（峰から谷までの振幅に対する"
+                         "標準偏差。既定 0.0 = 足さない）。記録は 50_refit_noiseSD.csv")
     ap.add_argument("--refit-csv", type=str, default=None,
                     help="節C の記録の場所（既定 data/pwdb/50_refit.csv。--limit なら"
-                         " 50_refit_limitN.csv）")
+                         " 50_refit_limitN.csv、--noise なら 50_refit_noiseSD.csv）")
     ap.add_argument("--no-resume", action="store_true",
-                    help="節C で記録を使わずに全員当てはめ直す（既定は再開する）")
+                    help="節C で記録を使わずに全員当てはめ直す（既定は再開する。"
+                         "上書きの前に 50_refit.csv.bak-日時 へ退避する）")
     ap.add_argument("--selftest", action="store_true",
                     help="合成だけで計算の筋道を検算する（CSV もネットワークも要らない）")
     args = ap.parse_args()
@@ -4129,10 +5030,18 @@ def main() -> None:
         ap.error("--jobs は 1 以上")
     if args.limit < 0:
         ap.error("--limit は 0 以上（0 = 全員）")
+    if args.noise < 0:
+        ap.error("--noise は 0 以上（0 = 雑音を足さない）")
     variants = tuple(v.strip() for v in args.variants.split(",") if v.strip())
     bad = [v for v in variants if v not in KIND_KEYS]
     if bad:
         ap.error(f"--variants に知らない型がある: {bad}（使えるのは {list(KIND_KEYS)}）")
+    b_variants = tuple(v.strip() for v in args.b_stage.split(",") if v.strip())
+    bad_b = [v for v in b_variants if v not in KIND_KEYS]
+    if bad_b:
+        ap.error(f"--b-stage に知らない型がある: {bad_b}（使えるのは {list(KIND_KEYS)}）")
+    if not b_variants:
+        ap.error("--b-stage には 1 つ以上の型が要る（B 段はそろえる相手を決める指定である）")
 
     want_b = "B" in args.section
     want_c = "C" in args.section
@@ -4170,7 +5079,8 @@ def main() -> None:
         print("\n  ★ --fast: 節A・節A-2 の掃引を減らしている。**本番の表ではない。**")
     out = report(args.section, d, src, taus=taus, dts=dts, ris=ris, seed=args.seed,
                  pwdb=args.pwdb, limit=args.limit, jobs=args.jobs, variants=variants,
-                 refit_csv=args.refit_csv, resume=not args.no_resume)
+                 refit_csv=args.refit_csv, resume=not args.no_resume,
+                 b_variants=b_variants, noise_sd=args.noise)
     sys.exit(out["code"])
 
 
