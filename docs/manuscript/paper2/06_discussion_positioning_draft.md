@@ -143,3 +143,30 @@
 2. 表6・表6b・表7 を採るなら v2 の図表点数（現在 図3点・表4点）を改め、`00_outline.md` の構成表も直す。
 3. 用語検査（`python3 analysis/scripts/check_terminology.py`）を通してから本文に写す。
 4. 文献 [Millasseau 2002; Hashimoto 2002] は書誌を照合してから参考文献に足す（Hellqvist 2024・Epstein 2014・Goswami 2010 は照合済み）。
+
+---
+
+## B 段・雑音の結果を受けた修正（2026-09-22。表6c・lab_log 追記158）
+
+案 A の数値は確定した。修正するのは次の 3 点。
+
+1. **RI の文を弱める。**「RI × 末梢血管抵抗は、打ち切った版では A 段でしか規準を満たさず」の後に足す:
+   > 同じ被験者の上で比べる B 段でも 0.381 にとどまり、拍の振幅の 1%・2% の白色雑音を足すと 0.266・0.168 に落ちる。
+   > 1 次微分の版の RI（C 段 0.416）も雑音で 0.196・0.173 に落ちる。分解由来の RI は、どの版も特徴点法（0.550）に届かず、雑音に残らない。
+   （英文）The truncated variants met the RI criterion only on tier A; on tier B (the same subjects for all methods) the value was 0.381,
+   and white noise of 1% and 2% of the pulse amplitude reduced it to 0.266 and 0.168. The derivative-domain RI (tier C 0.416) fell to
+   0.196 and 0.173 with the same noise. No decomposition-derived RI reached fiducial-point analysis (0.550) or survived noise.
+2. **ΔT の候補を打ち切りに絞る。**「1 次微分の版は +88.8 ms のまま 0.687 に達した」の後に足す:
+   > ただし 1 次微分の版は雑音に弱く、1%・2% の雑音で 0.337・0.347 に落ち、通過率は 0.290 まで下がる。打ち切った版は 0.486・0.454 を保つ。
+   > 打ち切った版の採否は硬さに偏らない（採否 × 大動脈脈波伝播速度の層内 ρ +0.03）が、1 次微分の版は硬い被験者ほど不採用になる（−0.54）。
+   （英文）The derivative-domain variant, however, is fragile: with 1% and 2% noise its tier-C value fell to 0.337 and 0.347 and its
+   acceptance to 0.290, whereas the truncated variant kept 0.486 and 0.454. Acceptance of the truncated variant was not related to
+   stiffness (within-stratum ρ +0.03), while the derivative-domain variant rejected stiffer subjects (−0.54).
+3. **第1成分の位置の但し書きを足す**（§4.3 機構 3 か限界に）:
+   > どの版でも第1成分のピークは線形分離の前進波のピークより 34〜50 ms 遅く、PPG の収縮期ピークに座る。打ち切った版と 1 次微分の版では
+   > 第1成分の位置が硬さとともに動き（層内 ρ −0.49・−0.73）、ΔT の関連は第2成分だけでなく第1成分の移動を含む。
+   （英文）In every variant the first component peaked 34–50 ms after the peak of the linearly separated forward wave, at the systolic
+   peak of the PPG. In the truncated and derivative-domain variants its position moved with stiffness (within-stratum ρ −0.49 and −0.73),
+   so the association of ΔT involves the first component as well as the second.
+
+**残る不備**: 雑音の列で比べている特徴点法は雑音を足していない同梱の値である。同じ条件の比較には、雑音を足した拍に自前の特徴点法を当てた行が要る（W6b）。
