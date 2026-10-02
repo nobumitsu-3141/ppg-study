@@ -1,0 +1,46 @@
+[
+  {"code":"1.1","chapter":1,"title":"心電図前史","type":"figure","caption":"体表心電図の夜明け",
+   "figure":{"id":"fig_1_1_prehistory","kind":"schematic","spec":"横方向の年表矢印。左から順にボックス: 1842 Matteucci(カエル心の活動電流を発見)/1856 Kölliker & Müller(心拍に同期した電流を検出)/1872 Lippmann毛細管電位計の発明/1887 Waller がヒト体表から初の心電図を記録(毛細管電位計)。起点1887 WallerのノードのみGOLDで強調し他はINK。注記(GRAY)『Waller自身は臨床応用に懐疑的だった』。矢印は電気生理→臨床記録への流れ。"},
+   "cite":"Waller AD. J Physiol 1887;8:229-234.","cite_url":"https://doi.org/10.1113/jphysiol.1887.sp000257","verify":false},
+
+  {"code":"1.2","chapter":1,"title":"Einthoven","type":"figure","caption":"弦線電流計と三角形",
+   "figure":{"id":"fig_1_2_einthoven","kind":"schematic","spec":"左: 弦線電流計の模式(強磁場中の細い石英線が電流で振れ、光学的に拡大投影して記録)。右: Einthoven三角形(正三角形の頂点=右手/左手/左足)、各辺に双極肢誘導 I(右手→左手)/II(右手→左足)/III(左手→左足)と極性(+/−)。中央に年表: 1901 弦線電流計/1902-03 記録の確立/1924 ノーベル生理学・医学賞。GOLD強調=『三角形』『ノーベル賞』。"},
+   "cite":"Rivera-Ruiz M, et al. Tex Heart Inst J 2008;35:174-178.","cite_url":"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2435435/","verify":false},
+
+  {"code":"1.3","chapter":1,"title":"12誘導の確立","type":"figure","caption":"単極誘導の追加で12へ",
+   "figure":{"id":"fig_1_3_twelve_lead","kind":"schematic","spec":"系統樹。根=双極肢誘導 I/II/III(Einthoven, 1900年代)。分岐1: Wilson中心端子(1934)→単極胸部誘導 V1-V6(6本)。分岐2: Goldberger 増幅単極肢誘導 aVR/aVL/aVF(1942, 3本)。合流ノードで 3+6+3=12誘導が1940年代に標準化。標準化ノードをGOLDで強調。各分岐に発案者名と年。"},
+   "cite":"AlGhatrif M, Lindsay J. J Community Hosp Intern Med Perspect 2012;2:14383.","cite_url":"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3714093/","verify":false},
+
+  {"code":"1.4","chapter":1,"title":"連続監視誕生","type":"figure","caption":"単発記録から常時監視へ",
+   "figure":{"id":"fig_1_4_monitoring","kind":"schematic","spec":"年表矢印。1950年代 陰極線オシロスコープのベッドサイド床上モニタ/1961 Holter 携帯型長時間記録/1962 CCU(不整脈の常時監視で心筋梗塞死亡を低減)/1970年代 テレメトリ/1980年代 ST自動解析/1990年代- デジタル化・ネットワーク化。GOLD強調=『CCU』『Holter』。矢印は間欠記録→連続監視→自動解析。"},
+   "cite":"Holter NJ. Science 1961;134:1214-1220.","cite_url":"https://doi.org/10.1126/science.134.3486.1214","verify":false},
+
+  {"code":"1.5","chapter":1,"title":"麻酔とECG","type":"column",
+   "column":{"heading":"周術期モニタとしてのECG","body":["術中ECGは1950-60年代に麻酔管理へ普及。","1986年のASA基準でECGの連続監視が必須に。","調律にII、虚血にV5を併用が標準(II+V5)。"],"accent":"GOLD"},
+   "notes":"周術期モニタとしてのECG\n・術中ECGは1950-60年代に麻酔管理へ普及し、不整脈と心筋虚血の早期発見に用いられるようになった。\n・1986年のASA基本モニタリング基準で心電図の連続監視が必須項目に位置づけられた。\n・周術期は調律監視にII誘導、虚血監視にV5を併用するのが標準(II+V5)。",
+   "cite":"ASA. Standards for Basic Anesthetic Monitoring (承認1986, 改訂あり).","cite_url":"https://www.asahq.org/standards-and-practice-parameters/standard-for-basic-anesthetic-monitoring","verify":false},
+
+  {"code":"2.1","chapter":2,"title":"活動電位","type":"figure","caption":"活動電位の相とイオン電流",
+   "figure":{"id":"fig_2_1_action_potential","kind":"schematic","spec":"左: 心室筋の活動電位波形に相番号0-4。0相=急速脱分極(INa内向き)/1相=一過性外向き(Ito, K)/2相=プラトー(L型Ca内向き ⇔ K外向きが拮抗)/3相=再分極(IKr・IKs, K外向き)/4相=静止電位(IK1)。右: 速い反応(心筋・Na依存、立ち上がり急峻)と遅い反応(洞・房室結節・Ca依存、緩徐で4相自然脱分極=自動能)の対比。GOLD強調=『0相 INa』『2相 Ca』。矢印でイオンの内向き/外向き。"},
+   "cite":"Grant AO. Circ Arrhythm Electrophysiol 2009;2:185-194.","cite_url":"https://doi.org/10.1161/CIRCEP.108.789081","verify":false},
+
+  {"code":"2.2","chapter":2,"title":"刺激伝導系","type":"figure","caption":"伝導路と速度・自動能の階層",
+   "figure":{"id":"fig_2_2_conduction","kind":"schematic","spec":"心臓断面に伝導路: 洞結節(SA, 右房)→房室結節(AV, 伝導遅延)→His束→右脚/左脚(左脚は前枝・後枝)→Purkinje線維→心室筋。伝導速度の目安(SA・AV結節≈0.05 m/s=遅い / His-Purkinje≈2-4 m/s=速い / 心室筋≈0.3-1 m/s)。固有自動能(SA 60-100, 房室接合部 40-60, His-Purkinje/心室 20-40 bpm)を階層表示。AV結節の遅延=PR時間をGOLDで強調。"},
+   "cite":"Park DS, Fishman GI. Circulation 2011;123:904-915.","cite_url":"https://doi.org/10.1161/CIRCULATIONAHA.110.942284","verify":false},
+
+  {"code":"2.3","chapter":2,"title":"電気ベクトル","type":"figure","caption":"瞬時ベクトルの総和と平均軸",
+   "figure":{"id":"fig_2_3_vector","kind":"schematic","spec":"脱分極中の多数の心筋を微小ダイポール(小矢印)で描き、瞬時ベクトルの総和=心起電力ベクトル(1本の太いGOLD矢印)になる概念。時間経過でベクトルの向き・大きさが変わる様子を簡略QRSベクトルループで表現し、その前額面平均=平均電気軸(角度)。ラベル=『ダイポール』『瞬時ベクトル』『平均電気軸』。GOLD強調=総和ベクトル。"},
+   "cite":"Kligfield P, et al. Circulation 2007;115:1306-1324.","cite_url":"https://doi.org/10.1161/CIRCULATIONAHA.106.180200","verify":false},
+
+  {"code":"2.4","chapter":2,"title":"誘導と体表","type":"figure","caption":"ベクトルの誘導軸への射影",
+   "figure":{"id":"fig_2_4_projection","kind":"schematic","spec":"中央に心起電力ベクトル、周囲にEinthoven三角形の双極誘導軸(I=0°(左向き+), II=+60°, III=+120°)。ベクトルを各誘導軸へ正射影した長さ・向きが、その誘導波形の振幅・極性になることを、破線の射影線と対応する小波形で示す。軸に平行なほど振幅大、直交すると等電位(振幅ゼロ)。GOLD強調=『射影=波形振幅』。"},
+   "cite":"Kligfield P, et al. Circulation 2007;115:1306-1324.","cite_url":"https://doi.org/10.1161/CIRCULATIONAHA.106.180200","verify":false},
+
+  {"code":"2.5","chapter":2,"title":"なぜII誘導か","type":"figure","caption":"II誘導が調律監視に最適な理由",
+   "figure":{"id":"fig_2_5_lead_ii","kind":"schematic","spec":"前額面の円座標にII誘導軸(+60°)を描き、平均QRS軸(正常≈+30〜+60°)と心房脱分極ベクトル(P軸≈+60°)がII軸とほぼ平行→P波・QRSが大きく陽性で調律判読に最適。加えてII/III/aVFは下壁を反映(下壁虚血監視にも有用)。右に模式的なII誘導ストリップ(明瞭な陽性P・QRS)。GOLD強調=『P軸∥II軸』『下壁を反映』。"},
+   "cite":"Drew BJ, et al. Circulation 2004;110:2721-2746.","cite_url":"https://doi.org/10.1161/01.CIR.0000145144.56673.59","verify":false},
+
+  {"code":"2.6","chapter":2,"title":"信号処理","type":"figure","caption":"電極から波形までの信号処理",
+   "figure":{"id":"fig_2_6_signal_chain","kind":"schematic","spec":"左→右のブロック図。(1)電極-皮膚界面(Ag/AgCl, 半電池電位・分極)→(2)差動増幅器(2電極の電位差を増幅し同相ノイズを除去=CMRRが高いほど良い)→(3)右下肢の基準/駆動電極(RLD; 同相除去を補助)→(4)フィルタ切替(モニタモード≈0.5–40 Hz: 基線動揺と筋電・電源ノイズを抑えるがSTが歪む / 診断・STモード≈0.05–150 Hz: STを正確に再現)→(5)表示・記録(掃引25 mm/s, 校正1 mV=10 mm)。GOLD強調=『CMRR』『0.05–150 Hz』『25 mm/s・1 mV=10 mm』。"},
+   "cite":"Drew BJ, et al. Circulation 2004;110:2721-2746.","cite_url":"https://doi.org/10.1161/01.CIR.0000145144.56673.59","verify":false}
+]

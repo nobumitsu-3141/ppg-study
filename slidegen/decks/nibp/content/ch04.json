@@ -1,0 +1,75 @@
+{
+  "chapter": 4,
+  "chapter_title_ja": "正常",
+  "nav_short": "正常",
+  "slides": [
+    {
+      "id": "4.1",
+      "title": "正常値とMAP・臓器灌流圧",
+      "bullets": [
+        "成人の目安 SBP<120／DBP<80",
+        "MAP ≈ DBP + ⅓(SBP−DBP)",
+        "MAPが臓器灌流の指標",
+        "灌流圧 = MAP − 下流圧"
+      ],
+      "callout": "臓器灌流を担うのは平均血圧（MAP）",
+      "notes": "正常成人はACC/AHA基準で SBP<120／DBP<80 mmHg。MAP ≈ DBP + ⅓脈圧 は近似式で、安静時に拡張期が心周期の約2/3を占めることに由来する。頻脈では拡張期が短縮しMAPは算術平均に近づくため、この式は過小評価しやすい。臓器灌流の駆動圧はMAPで、脳灌流圧 CPP = MAP − ICP（またはCVP）、腎・冠灌流もMAP依存。左室心筋は拡張期に灌流される点も想起。正常MAPの目安は概ね70〜105 mmHg。",
+      "figure": null,
+      "sources": ["ACC/AHA 2017 高血圧ガイドライン（正常値）", "MAP=DBP+⅓脈圧（近似）"],
+      "confidence": "high"
+    },
+    {
+      "id": "4.2",
+      "title": "中枢〜末梢の部位差（末梢増幅）",
+      "bullets": [
+        "末梢ほどSBPは上昇",
+        "DBPはやや低下",
+        "MAPはほぼ一定",
+        "脈圧は末梢で拡大"
+      ],
+      "callout": "SBP↑DBP↓でもMAPは一定",
+      "notes": "peripheral (systolic) amplification。圧波が大動脈から橈骨など末梢へ伝わると波形が尖鋭化し、SBPは上昇（若年で+10〜20 mmHgのことも）、DBPはわずかに低下、MAPは末梢抵抗によりわずか（1〜3 mmHg）下がるだけでほぼ一定。原因は反射波の重畳、末梢動脈の先細り・硬化、インピーダンス不整合。臨床的には正常では橈骨A-lineのSBPが中枢SBPより高い。加齢・血管硬化で増幅は減り、逆に血管拡張時やCPB中は橈骨が中枢より低く出て逆転しうる（詳細は第8章）。部位横断の比較にはMAPが最も安定。",
+      "figure": {
+        "kind": "waveform",
+        "spec": "同一心拍の動脈圧波形を2本重ね描き。横軸=時間（右向き矢印『時間』）、縦軸=圧mmHg。曲線1=大動脈(近位):なだらかで丸いピーク、SBP約120・DBP約80（濃紺の太線）。曲線2=橈骨(末梢):立ち上がりが急でピークが尖り高い、SBP約140・DBP約75、ディクロティックノッチ後に反射波の隆起（青2E6FBF）。両波形のMAP（時間平均）を1本の水平点線（約93 mmHg）で示し『MAPはほぼ一定』を強調。末梢の脈圧拡大を両矢印で注記。白背景・透過保存。",
+        "labels": ["大動脈(近位)", "橈骨(末梢)", "SBP↑", "DBP↓", "MAP ほぼ一定", "脈圧拡大", "時間→"]
+      },
+      "sources": ["peripheral (systolic) amplification の生理"],
+      "confidence": "high"
+    },
+    {
+      "id": "4.3",
+      "title": "体位・呼吸性変動・左右差",
+      "bullets": [
+        "自発吸気でSBP軽度低下",
+        "陽圧換気で周期的変動",
+        "左右差は通常<10 mmHg",
+        ">20 mmHg持続は病的示唆"
+      ],
+      "callout": "左右差>20 mmHgが続けば血管病変を疑う",
+      "notes": "体位変換は静水圧レベルを変える（3.2）。呼吸性変動:自発吸気で胸腔内圧低下により一過性にSBPが軽度低下（正常<10 mmHg、>10 mmHg=奇脈でタンポナーデ・重症喘息を示唆）。陽圧換気ではタイミングが逆転し周期的変動を生み、SVV/PPVとして輸液反応性に使う（術中運用は第5章）。左右差:通常SBPで<10 mmHgは生理的（右腕がやや高いことが多い）。持続するSBP左右差>20 mmHgは鎖骨下動脈狭窄・大動脈解離/縮窄・末梢動脈疾患を示唆し、高い側を基準に採り精査する。",
+      "figure": null,
+      "sources": ["奇脈<10mmHg（生理）", "inter-arm SBP差>20mmHg=鎖骨下狭窄示唆（メタ解析）"],
+      "confidence": "high"
+    },
+    {
+      "id": "4.4",
+      "title": "NIBP対A-lineの一致度",
+      "bullets": [
+        "一致はBland-Altmanで評価",
+        "基準は平均差±5・SD±8 mmHg",
+        "オシロはMAPが最も一致",
+        "SBP/DBPはばらつく"
+      ],
+      "callout": "NIBPはMAPが最も一致良好",
+      "notes": "NIBPと観血的の一致はBland-Altman法で評価する:横軸に2法の平均、縦軸に差(NIBP−A-line)をとり、bias（平均差）と一致限界（bias ± 1.96SD）を報告。規制上の基準はAAMI/ISO 81060-2の平均差≤5 mmHg・SD≤8 mmHg。オシロメトリックはMAPを直接測るため最も一致がよく、SBP/DBPは推定なのでばらつく。NIBPは低血圧を高めに、高血圧を低めに出す傾向（中央への回帰）。またNIBPは間欠的・遅れがあり beat-to-beat では非互換（限界は第5章）。A-lineも常に真値ではない（ゼロ点・ダンピング）ので、乖離時は両者を吟味する。",
+      "figure": {
+        "kind": "schematic",
+        "spec": "Bland-Altman プロットの模式。横軸=2法の平均 (NIBP+A-line)/2 [mmHg]、縦軸=差 NIBP−A-line [mmHg]。散布点を帯状に配置。中央にbias（平均差）の水平実線（0付近、例+1 mmHg、濃紺）。その上下に一致限界 bias±1.96SD の灰破線。±5 mmHgのAAMI/ISO基準線を赤C00000の水平線で示し、多くの点がこの帯に収まる様子。右上に注記箱（塗りF2E2B3・金枠BF9000）で『平均差≤5, SD≤8 mmHg』。白背景・透過保存。",
+        "labels": ["平均差(bias)", "一致限界 = bias ± 1.96SD", "AAMI/ISO 基準 ±5 mmHg", "差 = NIBP − A-line", "平均 (NIBP + A-line)/2"]
+      },
+      "sources": ["Bland & Altman 1986, Lancet", "ISO 81060-2:2018"],
+      "confidence": "high"
+    }
+  ]
+}

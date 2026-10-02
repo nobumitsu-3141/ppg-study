@@ -1,0 +1,46 @@
+[
+  {"code":"3.1","chapter":3,"title":"三点誘導","type":"figure","caption":"RA/LA/LLと誘導I・II・III",
+   "figure":{"id":"fig_3_1_three_lead","kind":"schematic","spec":"体表にEinthoven三角を描く。電極=RA(右鎖骨下)・LA(左鎖骨下)・LL(左下腹/左腸骨窩)。矢印で誘導ベクトル: I=LA−RA(左向き0°)、II=LL−RA(右下+60°)、III=LL−LA(右下+120°)。色分けラベル: AHA(RA=白/LA=黒/LL=赤)、IEC(R=赤/L=黄/F=緑)。強調『II誘導=心軸に沿いP波最大・モニタの基本』。GRAYで三角、GOLDでベクトル矢印。"},
+   "cite":"Mason JW, et al. AHA/ACCF/HRS ECG標準化 Part II. Circulation 2007.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=standardization+interpretation+electrocardiogram+part+II+Mason","verify":false},
+
+  {"code":"3.2","chapter":3,"title":"五点誘導","type":"figure","caption":"5電極でaVとV5を同時取得",
+   "figure":{"id":"fig_3_2_five_lead","kind":"schematic","spec":"胸部前面に5電極: RA・LA(両鎖骨下)、RL・LL(両下腹)、C=胸部電極。V5位置を強調=第5肋間・左前腋窩線(V4と同じ高さ)。注記『四肢4電極→I/II/III/aVR/aVL/aVF(6誘導)＋C=V5で計7誘導を同時表示』。運用ラベル『II＋V5併用: IIで調律、V5で側壁虚血』。TEAL枠でV5、GOLDでC電極。"},
+   "cite":"Mason JW, et al. AHA/ACCF/HRS ECG標準化 Part II. Circulation 2007.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=standardization+interpretation+electrocardiogram+part+II+Mason","verify":false},
+
+  {"code":"3.3","chapter":3,"title":"変法誘導","type":"column",
+   "column":{"heading":"虚血監視・鑑別に使う変法誘導","accent":"TEAL","body":["CM5：陽極をV5・陰極を胸骨柄に。虚血監視に高感度。","CS5：陰極を右鎖骨下・陽極をV5。四肢誘導と整合しやすい。","MCL1：V1類似波形。P波/QRS幅/脚ブロック/PVC起源に強い。"]},
+   "notes":"虚血監視・鑑別に使う変法誘導\n・CM5：陽極をV5・陰極を胸骨柄に。前側壁虚血のST低下を高感度に検出。3〜5電極モニタでの虚血監視に。\n・CS5：陰極を右鎖骨下・陽極をV5。虚血を捉えつつ四肢誘導との整合が取りやすい。\n・MCL1：V1類似波形。P波・QRS幅・脚ブロック・PVC起源の鑑別に強い。",
+   "cite":"London MJ, et al. Anesthesiology 1988;69:232-241.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/3407971/","verify":false},
+
+  {"code":"3.4","chapter":3,"title":"波形の構成","type":"figure","caption":"1拍の各波と基線・J点",
+   "figure":{"id":"fig_3_4_complex","kind":"schematic","spec":"1拍の理想波形に各成分ラベル。P=心房脱分極、QRS=心室脱分極(Q/R/S)、T=心室再分極、U=T後の小波(機序は諸説)。基線(等電位=TP/PR基線)を破線、J点=QRS終末とST接合部を矢印で明示。注記『心房再分極(Ta)はQRSに埋没』。GOLDでP・T、INKでQRS、GRAYで基線・U波。"},
+   "cite":"Kligfield P, et al. AHA/ACCF/HRS ECG標準化 Part I. Circulation 2007;115:1306.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/17322457/","verify":false},
+
+  {"code":"3.5","chapter":3,"title":"間隔の正常値","type":"figure","caption":"PR・QRS・QT/QTcの帯","fig_kind":"table",
+   "figure":{"id":"fig_3_5_intervals","kind":"table","spec":"波形上に間隔を色帯で重ね、下に表を併記。表: PR 0.12–0.20s / QRS <0.12s(≧0.12で幅広) / QT 心拍数依存・補正必須 / RR=60/HR。補正式: Bazett QTc=QT/√RR、Fridericia QTc=QT/RR^(1/3)。QTc上限の目安=男≲0.45s・女≲0.46s、≳0.50sは高リスク。ST=J点〜T開始の等電位区間。BLUEでPR帯、TEALでQRS帯、GOLDでQT帯。強調『頻脈ではBazettが過補正→Fridericia/Framingham併用』。"},
+   "cite":"Rautaharju PM, et al. AHA/ACCF/HRS Part IV (ST/T/U・QT). Circulation 2009.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=standardization+electrocardiogram+ST+T+U+QT+interval+Rautaharju","verify":false},
+
+  {"code":"3.6","chapter":3,"title":"心拍数の算出","type":"figure","caption":"300則・6秒法・R-R比較",
+   "figure":{"id":"fig_3_6_rate","kind":"schematic","spec":"3手法を並置。①300則=300/(R-R間の大マス数)→300/150/100/75/60/50。②6秒法=6秒(30大マス)内のQRS数×10、不整脈向き。③R-R法=60/RR(秒)、規則調律で精密。右にモニタ自動計測=R波検出。誤差: ダブルカウント(高いT波・ペーシングスパイクをRと誤認→HR約2倍)、アンダーカウント(低電位QRSが検出閾値以下→HR過小)。REDで誤差、GOLDで計測点。"},
+   "cite":"Kligfield P, et al. AHA/ACCF/HRS ECG標準化 Part I. Circulation 2007;115:1306.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/17322457/","verify":false},
+
+  {"code":"3.7","chapter":3,"title":"電気軸の基礎","type":"figure","caption":"六軸座標とI/aVF判定",
+   "figure":{"id":"fig_3_7_axis","kind":"schematic","spec":"六軸基準系の円座標(0°=I陽極方向、+90°=aVF下方)。扇形で色分け: 正常軸 −30〜+90°(TEAL)、左軸偏位 −30〜−90°(GOLD)、右軸偏位 +90〜+180°(BLUE)、北西(不定) −90〜±180°(GRAY)。4象限判定『I(+)aVF(+)=正常 / I(+)aVF(−)=左軸疑い(IIで−30°境界確認) / I(−)aVF(+)=右軸 / I(−)aVF(−)=北西』。"},
+   "cite":"Surawicz B, Knilans T. Chou's Electrocardiography in Clinical Practice.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=frontal+plane+QRS+axis+deviation+hexaxial+electrocardiogram","verify":false},
+
+  {"code":"4.1","chapter":4,"title":"正常洞調律","type":"figure","caption":"II誘導の正常洞調律",
+   "figure":{"id":"fig_4_1_nsr","kind":"ecg_strip","spec":"II誘導・掃引25mm/sの整った洞調律を4〜5拍。所見ラベル: ①P波が各QRSに1:1で先行 ②P軸正常=I・IIで陽性/aVRで陰性 ③レート60〜100/分 ④R-R規則的 ⑤PR一定(0.12–0.20s)。矢印でP→QRS対応、GOLDでP波、TEALで規則R-Rのブラケット。注記『洞結源の証拠=正常P軸＋一定PR』。"},
+   "cite":"正常洞調律の心電図基準 (AHA/ACCF/HRS Part I 準拠).","cite_url":"https://pubmed.ncbi.nlm.nih.gov/17322457/","verify":false},
+
+  {"code":"4.2","chapter":4,"title":"各波の正常値","type":"figure","caption":"P・Q・QRS・Tの正常値",
+   "figure":{"id":"fig_4_2_normal_values","kind":"ecg_strip","spec":"拡大波形に値ラベルを吹き出しで付す。P波: 幅<0.12s・高さ<2.5mm。正常Q(中隔性q): 幅<0.04s・深さ<同誘導R波の1/4。QRS幅<0.12s。T波: 通常QRSと同方向(I・II・V3–V6で陽性、aVRで陰性、V1は変動)。QTc上限の目安=男≲0.45s・女≲0.46s(境界は目安)。GOLDでP・T、INKでQRS、REDで異常閾値の注記。"},
+   "cite":"Surawicz B. Chou's Electrocardiography / AHA Part IV. Circulation 2009.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=normal+limits+P+wave+QRS+duration+Q+wave+electrocardiogram","verify":false},
+
+  {"code":"4.3","chapter":4,"title":"正常ST-T","type":"figure","caption":"J点とST・T波の拡大",
+   "figure":{"id":"fig_4_3_normal_stt","kind":"ecg_strip","spec":"ST-T部を拡大。ラベル: J点(QRS終末)、ST=等電位(偏位は通常<1mm、上に緩やかな凹型でT波へ移行)、T波は非対称(立ち上がり緩・下降急)。誘導差の注記『aVR/V1でT陰性は正常』。正常変異=早期再分極(J点の切痕/スラー＋わずかなST上昇、下側壁誘導)。TEALでST基線、GOLDでT波、GRAYで早期再分極パターン。"},
+   "cite":"Macfarlane PW, et al. 早期再分極 consensus. JACC 2015 / AHA Part IV.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/?term=early+repolarization+pattern+consensus+Macfarlane","verify":false},
+
+  {"code":"4.4","chapter":4,"title":"モニタ正常像","type":"figure","caption":"呼吸性洞性不整脈のモニタ像",
+   "figure":{"id":"fig_4_4_monitor_normal","kind":"ecg_strip","spec":"モニタ画面風にII誘導ストリップ。掃引25mm/s・ゲイン10mm/mVを画面端に表記。呼吸性洞性不整脈=吸気でR-R短縮(HR上昇)・呼気で延長を波状ブラケットで示す(P軸は正常のまま=洞調律内変動で異常でない)。注記『迷走神経緊張による徐脈、アスリート心(安静時徐脈)』。TEALで吸気相、GOLDで呼気相、強調『P波が正常なら生理的変動』。"},
+   "cite":"Kligfield P, et al. AHA/ACCF/HRS Part I (記録・掃引). Circulation 2007.","cite_url":"https://pubmed.ncbi.nlm.nih.gov/17322457/","verify":false}
+]
