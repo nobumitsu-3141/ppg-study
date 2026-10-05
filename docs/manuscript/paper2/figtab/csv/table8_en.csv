@@ -1,0 +1,14 @@
+Handling of the diastolic decline,"ΔT × PWV, tier A","ΔT × PWV, tier C","RI × resistance, tier A","RI × resistance, tier C",Pass rate,ΔT offset from the supplied fiducial point (tier A),group
+(0) Frozen fit (no diastolic term),0.220 (6/6),0.207 (6/6),0.233 (5/6),0.184 (4/6),0.901,+98.5 ms,
+(2) Second-component delay bound 0.08 → 0.01 s,0.216 (6/6),0.206 (6/6),0.236 (6/6),0.180 (5/6),0.899,+97.9 ms,
+"(4) Reservoir term (forward wave convolved, τ ≥ 0.05 s)",0.457 (5/6),0.245 (3/6),0.635 (5/6),0.274 (5/6),0.088,+138.2 ms,Add a term for the diastolic decline
+"(4c) Reservoir term, τ ≥ 0.15 s",0.508 (3/4),0.187 (4/6),0.270 (4/4),0.418 (6/6),0.035,+69.4 ms,Add a term for the diastolic decline
+(3) Free exponential decay term,0.267 (5/6),0.272 (6/6),0.268 (6/6),0.258 (6/6),0.591,+96.7 ms,Add a term for the diastolic decline
+(7) Output-side convolution of the two-component sum,0.042 (4/6),0.267 (2/6),0.381 (5/6),0.361 (4/6),0.728,+84.7 ms,Add a term for the diastolic decline
+"(8) Two-stage: τ from the last 30%, deconvolve, then frozen fit",0.102 (4/5),0.012 (4/6),0.060 (2/5),0.195 (6/6),0.086,+80.3 ms,Add a term for the diastolic decline
+(6b) Fit truncated at 0.65 of the beat length,0.828 (6/6),0.596 (6/6),0.530 (6/6),0.107 (6/6),0.413,+25.8 ms,Exclude or down-weight the diastolic decline
+(6c) Truncated at 0.55 of the beat,0.728 (4/6),0.582 (6/6),0.444 (6/6),0.182 (3/6),0.156,+44.5 ms,Exclude or down-weight the diastolic decline
+(6d) Truncated at 0.75 of the beat,0.662 (6/6),0.545 (6/6),0.326 (6/6),0.149 (6/6),0.726,+78.7 ms,Exclude or down-weight the diastolic decline
+(6e) Truncated at an absolute 0.45 s (at most 0.90 of the beat),0.711 (6/6),0.724 (6/6),0.461 (4/6),0.110 (3/6),0.187,+42.0 ms,Exclude or down-weight the diastolic decline
+(9) Residual taken in the first-derivative domain,0.523 (6/6),0.687 (6/6),0.336 (6/6),0.416 (6/6),0.510,+88.8 ms,Exclude or down-weight the diastolic decline
+Fiducial-point analysis (database-supplied; reference),—,0.430 (6/6),—,0.550 (6/6),—,0 (reference),Exclude or down-weight the diastolic decline

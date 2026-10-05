@@ -1,0 +1,96 @@
+Paper 2: tables (English)
+
+All numbers are read by build_tables.py from data/paper2_numbers.json (a mechanical parse of ../02_tables.md by data/extract_tables.py); none is typed by hand. Verdicts (pass/fail) are those of docs/research/roadmap_v1.md §9 and are not changed. Tables 4 onward are exploratory, post hoc descriptions made after the prespecified decision and are not used for it. Every table that shows tiers A/B/C carries the tier note as a footnote. Footnote letters (a, b, …) are attached to the caption or to column headers.
+
+Table 1. Prespecified analysis items: rule, date frozen, result, verdict and source. Criterion frozen before the run: within-stratum Spearman ρ with the predicted sign in all 6 strata and median |ρ| ≥ 0.30.
+  (a) Rule texts from lab_log 2026-09-03 (prespecified criteria of study 0), `docs/research/gate0_rules_v2.md` (2026-09-04) and lab_log 2026-09-04 (thresholds frozen before the decision test). Verdicts are identical to `docs/research/roadmap_v1.md` §9. Result values are read from tables 1, 2, 2b and 2c of `02_tables.md` (`data/paper2_numbers.json`). 'Entry n' is a numbered addendum of lab_log. The random-beat invariants (script 28) are an implementation check, not an analysis item, and are omitted.
+  (b) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+
+Table 2. Median within-age-stratum Spearman rank correlation (decision test, 4,374 subjects, 6 strata). Criterion frozen before the run: predicted sign in all 6 strata and median |ρ| ≥ 0.30 (ΔT × aortic PWV negative, RI × peripheral vascular resistance positive). Magnitudes are shown; the number in parentheses is the number of strata with the predicted sign.
+  (a) Source: table 1 of `02_tables.md` (`docs/research/roadmap_v1.md` §9; lab_log entry 12). Frozen version: script 20 `20_pwdb_validity.py`; fiducial-point analysis and positive control: script 23 `23_pwdb_landmarks.py`; rebuilt version and early amplitude ratio: scripts 26 `26_pwdb_compare.py` and 27 `27_threshold_sensitivity.py` (`data/pwdb/pwdb_compare.csv`, `pwdb_compare_report.txt`).
+  (b) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum). 'Not evaluated', the index was not evaluated; —, no such index.
+  (c) The two rebuilt-version rows accepted few beats and are given by tier. Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+
+Table 3. Within-stratum main effect of each varied factor (difference between the +1 SD and −1 SD means ÷ stratum mean, %). In parentheses, the within-stratum Spearman rank correlation of the factor with the index.
+  (a) Source: table 2 of `02_tables.md` (`docs/research/roadmap_v1.md` §9; lab_log entry 12; factor tables of scripts 20, 23 and 26).
+  (b) Bold, the rows and columns contrasted in the text (pulse wave velocity and heart rate). For fiducial-point ΔT the pulse-wave-velocity column is 12 times the heart-rate column; for decomposition ΔT only 1.6 times. In rank terms decomposition ΔT follows heart rate (−0.54) more than pulse wave velocity (−0.26).
+
+Table 3b. One-factor-at-a-time sweep (other factors at their reference values; median over age strata; ΔT in ms).
+  (a) Source: table 2b of `02_tables.md` (lab_log 2026-09-03, results of study 0; entry 12; script 20). Values of the frozen decomposition.
+  (b) Bold, the row with the largest reversal (pulse wave velocity): ΔT moves against the prediction on the −1 SD side and RI is U-shaped. In ΔT the mean-arterial-pressure row also reverses slightly (337.2 → 352.8 → 348.7; lab_log entry 113).
+
+Table 3c. True transit times from the model onset-time table.
+  (a) Source: table 2c of `02_tables.md` (lab_log 2026-09-03, results of study 0; script 20; PWDB file `pwdb_onset_times.csv`).
+  (b) Within-stratum ρ(aortic PWV, root→finger transit time) = −0.99 (6/6); ρ(decomposition ΔT, same) = +0.19 (6/6).
+
+Table 4. Basis function and number of components, exhaustive sweep (exploratory, post hoc).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 3 of `02_tables.md`; lab_log entry 13. Script 31 `31_pwdb_basis_explore.py` (`data/pwdb/pwdb_basis_explore.csv`).
+  (c) Subjects: 98 notched beats taken from 120 subjects, in 4 strata of at least 8 beats (smaller than the 4,374 subjects and 6 strata of the decision test, so the values are wider). Preprocessing and Wang's acceptance criterion identical to the decision test. |ρ| is the within-stratum median over all beats (acceptance ignored); in parentheses, the number of strata with the predicted sign.
+  (d) Bold, the two best-tracking rows among the decompositions.
+
+Table 5a. Published fitting conditions applied unchanged (exploratory, post hoc).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 4 of `02_tables.md`; lab_log entry 18. Script 33 `33_pwdb_literature_replica.py` (`docs/research/results/33_literature_replica_report.txt`; lab_log entries 16–18).
+  (c) Subjects: 624 chosen systematically (subject number modulo 7 equal to 0). In the same subset the fiducial-point indices supplied with PWDB (Charlton) give ΔT 0.705 and RI 0.501. In parentheses, the number of strata with the predicted sign.
+  (d) Bold, the best condition for ΔT and the only condition whose RI exceeded the fiducial-point value.
+  (e) For RI only Couceiro's R1_d exceeds the fiducial-point value (0.585 versus 0.501). Under the prespecified rule this row is not taken into the verdict. Three caveats: in this model peripheral vascular resistance determines the diastolic decay, so part of the association is built in; measured waveforms often lack a diastolic peak; and deviations remain in our replication.
+
+Table 5b. Deviations from the published conditions in the replication (supplement to table 5a).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: the deviation table under table 4 of `02_tables.md`; lab_log entry 18. Deviation table of script 33 (lab_log entries 17, 18).
+
+Table 6a. Within-age-stratum Spearman rank correlation by waveform type (exploratory, post hoc).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 5 of `02_tables.md`; script 48 (`docs/research/results/48_pwdb_by_waveform_type.txt`); lab_log entry 137. Section C of script 50 reproduces the fiducial-point values of types 1 and 3 from the same input.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. Fiducial-point indices carry no acceptance decision and are therefore always tier C.
+  (d) Subjects as in the decision test (4,374); waveform type by `pda2.find_landmarks` (type 1, dicrotic notch and diastolic peak present as extrema; type 3, no extrema, but the inflection point of the descending limb can stand in; type 4, neither found). Six age strata, at least 8 subjects per stratum. Median |ρ|; in parentheses, the number of strata with the predicted sign. The three left columns are ΔT × aortic PWV (predicted sign negative; positive for the early amplitude ratio), the two right columns RI × peripheral vascular resistance (positive).
+  (e) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+Table 6b. Within-stratum spread of the true values themselves (restriction of range; exploratory, post hoc, tier C).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 5b of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_BC.txt`); lab_log entry 147.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+  (d) Type-1 values must not be read as a failure of the methods: restricted to type 1, aortic PWV barely varies within an age stratum. The interquartile range was taken per age stratum and its median across strata is shown (units as distributed with PWDB). This table was made after the weakness of type 1 was seen; no prediction was fixed and no test is made. Bold, the values contrasted in the text.
+
+Table 7. Diagnosis and the corresponding modifications: what was changed, the observation behind it, the prediction fixed before the run, and the result (type 3; exploratory, post hoc).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 6 of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_BC.txt`, `50_reservoir_bench_C14.txt`); lab_log entries 144, 146, 147, 149, 151, 152. Text columns condense `data/prespec_chronology.json` (reconstructed from lab_log) to at most 20 words and were checked against the entries cited; the numeric column is identical to table 6 of `02_tables.md` (table 8 of this set). 'Entry n' is a numbered addendum of lab_log.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+  (d) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+Table 8. Type-3 correlations when the handling of the diastolic decline is changed (exploratory, post hoc, 4,374 subjects).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 6 of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_BC.txt`, `50_reservoir_bench_C14.txt`); lab_log entries 144, 146, 147, 149, 151, 152.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. Pass rate: the fraction accepted under the same convergence checks as the frozen version (parameters on a bound, component height, difference in reflection coefficient between competing solutions), i.e. the fraction remaining in tier A.
+  (d) Refits of the same beats of the same 4,374 subjects. The two-kernel model has no term for the diastolic decline, so versions that change only its handling are grouped into those that add a term for the decline and those that exclude it from the fit or down-weight it in the residual. The main fraction 0.65 was fixed before this analysis and was not re-chosen after seeing these numbers (lab_log entry 145). The last column is the median difference between the peak of the second component and the diastolic fiducial point supplied with PWDB (positive, second component later).
+  (e) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+Table 9. Tier B and runs with added noise (type 3; exploratory, post hoc).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 6c of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_B3.txt`, `50_reservoir_bench_noise0.01.txt`, `50_reservoir_bench_noise0.02.txt`); lab_log entry 158.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. Tier B here: subjects accepted by all three of the frozen fit, the 0.65T truncation and the derivative-domain version (732; 388 at 1% noise, 323 at 2%); tier C, all type-3 subjects (3,378).
+  (d) Noise is white Gaussian noise whose SD is the stated fraction of the peak-to-trough amplitude of the beat; waveform type and fiducial points were assigned on the beat before noise was added.
+  (e) The fiducial-point reference (tier C) is computed on the noise-free beats, so in the noise columns it is not a like-for-like comparison.
+  (f) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+Table S1. Parameters that reached a search bound (type 3, tier C, top two).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 6b of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_BC.txt`, `50_reservoir_bench_C14.txt`); lab_log entries 144, 146, 147, 149, 151, 152.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+  (d) a1, μ1, σ1 and α1 are the height, position, width and skewness of the first component; a2, Δμ, σ2 and α2 the same for the second; g and τ the gain and time constant of the reservoir term. ':lo' lower bound, ':hi' upper bound. A beat can reach bounds in several parameters, so the fractions do not sum to 1.
+  (e) Bold, the parameters discussed in the text as the sign of degeneracy.
+
+Table S2a. Difference between each method's ΔT and the arrival time ΔT_true of the linearly separated backward wave (tier C).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 7a of `02_tables.md`; script 51 (`docs/research/results/51_wave_separation.txt`); lab_log entries 150, 152.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+  (d) The backward wave was obtained from the digital pressure P and flow velocity U of PWDB by linear wave separation, P_f = (ΔP + ρc·ΔU)/2 and P_b = (ΔP − ρc·ΔU)/2 (ρc, slope of the early-systolic P–U loop; baseline, minimum within the beat); ΔT_true is the difference between the peak times of P_b and P_f.
+  (e) n, subjects in which the separation could be evaluated (1,183 excluded because ρc could not be estimated or the backward wave was essentially absent). Difference = (method's ΔT) − (ΔT_true). ρ is the Spearman correlation pooled over age strata.
+
+Table S2b. The same frozen decomposition applied to the digital pressure waveform (within-stratum Spearman; all 4,374 subjects).
+  (a) Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+  (b) Source: table 7b of `02_tables.md`; script 51 (`docs/research/results/51_wave_separation.txt`); lab_log entries 150, 152.
+  (c) Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+  (d) Restricted to type 3, ΔT of the pressure waveform is 0.400 (6/6) in tier A, meeting the criterion, and 0.227 (6/6) in tier C, not meeting it.
+  (e) Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).

@@ -3,7 +3,7 @@
   "methods": {
     "pda_frozen": {
       "ja": "分解法・凍結版（歪みガウス 2 成分）",
-      "en": "Decomposition, frozen version (two skewed Gaussians)",
+      "en": "Decomposition, frozen version (two skew-Gaussian components)",
       "short_ja": "凍結版",
       "short_en": "Frozen"
     },

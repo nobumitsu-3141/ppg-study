@@ -1,0 +1,12 @@
+Handling of the diastolic decline,Tier,"ΔT × PWV, no noise",1%,2%,"RI × resistance, no noise",1%,2%,"Pass rate, none / 1% / 2%"
+(0) Frozen fit (no diastolic term),A,0.220,0.213,0.209,0.233,0.246,0.253,0.901 / 0.881 / 0.862
+(0) Frozen fit (no diastolic term),B,0.510,0.532,0.563,0.184,0.201,0.134,
+(0) Frozen fit (no diastolic term),C,0.207,0.138,0.130,0.184,0.189,0.173,
+(6b) Fit truncated at 0.65 of the beat length,A,0.828,0.819,0.786,0.530,0.493,0.414,0.413 / 0.379 / 0.350
+(6b) Fit truncated at 0.65 of the beat length,B,0.630,0.609,0.651,0.381,0.266,0.168,
+(6b) Fit truncated at 0.65 of the beat length,C,0.596,0.486,0.454,0.107,0.075,0.083,
+(9) Residual taken in the first-derivative domain,A,0.523,0.370,0.416,0.336,0.103,0.181,0.510 / 0.326 / 0.290
+(9) Residual taken in the first-derivative domain,B,0.622,0.642,0.659,0.435,0.318,0.176,
+(9) Residual taken in the first-derivative domain,C,0.687,0.337,0.347,0.416,0.196,0.173,
+Fiducial-point analysis (database-supplied; reference),B,0.373,0.411,0.487,0.562,0.405,0.384,—
+Fiducial-point analysis (database-supplied; reference),C,0.430,(as at left),(as at left),0.550,(as at left),(as at left),—

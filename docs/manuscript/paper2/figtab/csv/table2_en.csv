@@ -1,0 +1,7 @@
+Index construction,ΔT × aortic PWV,RI × peripheral vascular resistance,Verdict
+"Decomposition, frozen version (two skew-Gaussian components)",0.223 (6/6),0.207 (5/6),fail
+"Decomposition, rebuilt version, skew-Gaussian route","accepted 2/4,374; tiers A and B not evaluable; tier C 0.167",tiers A and B not evaluable; tier C 0.354 (3/6),fail
+"Decomposition, rebuilt version, gamma route",accepted 103; tier A 0.798 (3/4 strata); tier C 0.556 (6/6),tier A 0.609 (4/4); tier C 0.280 (6/6),fail
+"Fiducial-point analysis (same waveforms, database-supplied)",0.710 (6/6),0.504 (6/6),pass
+Early amplitude ratio Am_b/Am_p1,0.836 (6/6),not evaluated,pass
+Model-derived pulse transit time (positive control),0.571 (6/6),—,pass

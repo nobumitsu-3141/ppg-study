@@ -1,0 +1,17 @@
+Figure 4. Three fits superimposed on one synthetic beat (illustration, not PWDB): why the frozen fit misses the peak of the synthetic reflected wave, and where the truncated fit (6b, 0.65T) and the derivative-domain fit (9) place the second component.
+
+What is shown: rows are synthetic beats (top: type-3-like, reflected-wave arrival parameter 0.10 s, overlapping systole; bottom: type-1-like, arrival parameter 0.28 s, separated; reservoir time constant 0.45 s in both), columns are the fit variants. Each panel shows the fitted signal (normalised synthetic beat, black), component 1 (grey dashed, open circle at its peak), component 2 (colour per column, marker at its peak) and the peaks of the synthetic forward and reflected waves (two dotted lines). In the truncation column the region beyond 0.65T is hatched (not fitted). The panel title gives ΔT = peak of component 2 − peak of component 1, and the true value = peak of the synthetic reflected wave − peak of the forward wave (the spacing of the two dotted lines).
+
+The arrival parameter (0.10 and 0.28 s) and the true value (78.0 and 310.0 ms) differ because, in the generator, the width and skewness of the reflected wave change with its arrival, and the true value is defined as a difference of peaks, not of the position parameters (docstring of synth_beat in script 50; lab-log entry 141).
+
+**The numbers in the panel titles come from the synthetic beat only, not from the 4,374 PWDB subjects.**
+
+Fitted values (ms; the self-test checks agreement with fit_kind of script 50 within 0.5 ms, and the frozen column also against (0), the frozen implementation itself in src/pda.py):
+  type3: true 78.0, frozen 174.9, trunc08 143.2, deriv 111.9
+  type1: true 310.0, frozen 308.9, trunc08 322.6, deriv 315.9
+
+Source: analysis/scripts/50_reservoir_bench.py section A (synth_beat, _bounds, _frozen_starts, _model, _components and the solution rule of fit_kind). Design and findings of the synthetic beats: lab-log entry 141; alignment of starts and solution rule with the frozen fit: entry 143. Results of (6b) and (9) on PWDB: 02_tables.md Tables 6 and 6c (script 50 section C; docs/research/results/50_reservoir_bench_C14.txt and others; entries 146, 152, 158). This file is not in the present working tree (lab-log entry 152 records it as output on Mac 1; the numbers were taken through 02_tables.md).
+
+Post-hoc note: Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+
+Script: docs/manuscript/paper2/figtab/build_fig_synthetic.py.

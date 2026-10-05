@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="428.07685pt" height="440.675276pt" viewBox="0 0 428.07685 440.675276" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-05T16:47:48.604629</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 440.675276 
+L 428.07685 440.675276 
+L 428.07685 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="line2d_1">
+    <path d="M 46.227402 166.227402 
+L 46.227402 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 88.180157 166.227402 
+L 88.180157 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 130.132913 166.227402 
+L 130.132913 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 172.085669 166.227402 
+L 172.085669 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 214.038425 166.227402 
+L 214.038425 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 255.991181 166.227402 
+L 255.991181 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 297.943937 166.227402 
+L 297.943937 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 339.896693 166.227402 
+L 339.896693 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_9">
+    <path d="M 381.849449 166.227402 
+L 381.849449 161.691969 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.6"/>
+   </g>
+   <g id="line2d_10">
+    <path d="M 46.227402 163.959685 
+L 46.227402 155.455748 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_11">
+    <path d="M 88.180157 163.959685 
+L 88.180157 88.447874 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_12">
+    <path d="M 130.132913 163.959685 
+L 130.132913 155.455748 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_13">
+    <path d="M 214.038425 163.959685 
+L 214.038425 88.447874 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_14">
+    <path d="M 255.991181 163.959685 
+L 255.991181 155.455748 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_15">
+    <path d="M 297.943937 163.959685 
+L 297.943937 88.447874 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_16">
+    <path d="M 339.896693 163.959685 
+L 339.896693 155.455748 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_17">
+    <path d="M 88.180157 179.062047 
+L 88.180157 183.802205 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_18">
+    <path d="M 172.085669 282.306142 
+L 172.085669 300.810079 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_19">
+    <path d="M 172.085669 179.062047 
+L 172.085669 183.802205 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_20">
+    <path d="M 214.038425 179.062047 
+L 214.038425 300.810079 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_21">
+    <path d="M 255.991181 179.062047 
+L 255.991181 183.802205 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_22">
+    <path d="M 297.943937 179.062047 
+L 297.943937 300.810079 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_23">
+    <path d="M 339.896693 179.062047 
+L 339.896693 183.802205 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_24">
+    <path d="M 381.849449 179.062047 
+L 381.849449 300.810079 
+" clip-path="url(#pf39aae74ff)" style="fill: none; stroke: #222222; stroke-width: 0.5; stroke-linecap: square"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(4.274646 12.282771)">上段（軸の上）: 走らせる前に固定・予測したこと</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(4.274646 22.290271)">下段（軸の下）: 実行と結果</text>
+   </g>
+   <g id="patch_2">
+    <path d="M 4.274646 163.959685 
+Q 214.038425 163.959685 422.907778 163.959685 
+" style="fill: none; stroke: #222222; stroke-width: 0.8; stroke-linecap: round"/>
+    <path d="M 419.707778 162.359685 
+L 422.907778 163.959685 
+L 419.707778 165.559685 
+z
+" style="fill: #222222; stroke: #222222; stroke-width: 0.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="46.227402" y="174.967251" transform="rotate(-0 46.227402 174.967251)">2026/8/30</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="88.180157" y="174.967251" transform="rotate(-0 88.180157 174.967251)">9/3</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="130.132913" y="174.967251" transform="rotate(-0 130.132913 174.967251)">9/4</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="172.085669" y="174.967251" transform="rotate(-0 172.085669 174.967251)">9/6</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="214.038425" y="174.967251" transform="rotate(-0 214.038425 174.967251)">9/14</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="255.991181" y="174.967251" transform="rotate(-0 255.991181 174.967251)">9/15</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="297.943937" y="174.967251" transform="rotate(-0 297.943937 174.967251)">9/16</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="339.896693" y="174.967251" transform="rotate(-0 339.896693 174.967251)">9/17</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: middle; fill: #222222" x="381.849449" y="174.967251" transform="rotate(-0 381.849449 174.967251)">9/22</text>
+   </g>
+   <g id="patch_3">
+    <path d="M 12.835276 155.455748 
+L 79.619528 155.455748 
+Q 81.887244 155.455748 81.887244 153.188031 
+L 81.887244 109.219528 
+Q 81.887244 106.951811 79.619528 106.951811 
+L 12.835276 106.951811 
+Q 10.567559 106.951811 10.567559 109.219528 
+L 10.567559 153.188031 
+Q 10.567559 155.455748 12.835276 155.455748 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 54.788031 88.447874 
+L 121.572283 88.447874 
+Q 123.84 88.447874 123.84 86.180157 
+L 123.84 32.211654 
+Q 123.84 29.943937 121.572283 29.943937 
+L 54.788031 29.943937 
+Q 52.520315 29.943937 52.520315 32.211654 
+L 52.520315 86.180157 
+Q 52.520315 88.447874 54.788031 88.447874 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 96.740787 155.455748 
+L 163.525039 155.455748 
+Q 165.792756 155.455748 165.792756 153.188031 
+L 165.792756 109.219528 
+Q 165.792756 106.951811 163.525039 106.951811 
+L 96.740787 106.951811 
+Q 94.473071 106.951811 94.473071 109.219528 
+L 94.473071 153.188031 
+Q 94.473071 155.455748 96.740787 155.455748 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 180.646299 88.447874 
+L 247.430551 88.447874 
+Q 249.698268 88.447874 249.698268 86.180157 
+L 249.698268 42.211654 
+Q 249.698268 39.943937 247.430551 39.943937 
+L 180.646299 39.943937 
+Q 178.378583 39.943937 178.378583 42.211654 
+L 178.378583 86.180157 
+Q 178.378583 88.447874 180.646299 88.447874 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 222.599055 155.455748 
+L 289.383307 155.455748 
+Q 291.651024 155.455748 291.651024 153.188031 
+L 291.651024 99.219528 
+Q 291.651024 96.951811 289.383307 96.951811 
+L 222.599055 96.951811 
+Q 220.331339 96.951811 220.331339 99.219528 
+L 220.331339 153.188031 
+Q 220.331339 155.455748 222.599055 155.455748 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 264.551811 88.447874 
+L 331.336063 88.447874 
+Q 333.60378 88.447874 333.60378 86.180157 
+L 333.60378 42.211654 
+Q 333.60378 39.943937 331.336063 39.943937 
+L 264.551811 39.943937 
+Q 262.284094 39.943937 262.284094 42.211654 
+L 262.284094 86.180157 
+Q 262.284094 88.447874 264.551811 88.447874 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 306.504567 155.455748 
+L 373.288819 155.455748 
+Q 375.556535 155.455748 375.556535 153.188031 
+L 375.556535 109.219528 
+Q 375.556535 106.951811 373.288819 106.951811 
+L 306.504567 106.951811 
+Q 304.23685 106.951811 304.23685 109.219528 
+L 304.23685 153.188031 
+Q 304.23685 155.455748 306.504567 155.455748 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #e9f0f7; stroke: #0072b2; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 54.788031 272.306142 
+L 121.572283 272.306142 
+Q 123.84 272.306142 123.84 270.038425 
+L 123.84 186.069921 
+Q 123.84 183.802205 121.572283 183.802205 
+L 54.788031 183.802205 
+Q 52.520315 183.802205 52.520315 186.069921 
+L 52.520315 270.038425 
+Q 52.520315 272.306142 54.788031 272.306142 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke: #222222; stroke-width: 0.9; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 128.205354 379.314016 
+L 194.989606 379.314016 
+Q 197.257323 379.314016 197.257323 377.046299 
+L 197.257323 303.077795 
+Q 197.257323 300.810079 194.989606 300.810079 
+L 128.205354 300.810079 
+Q 125.937638 300.810079 125.937638 303.077795 
+L 125.937638 377.046299 
+Q 125.937638 379.314016 128.205354 379.314016 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 138.693543 282.306142 
+L 205.477795 282.306142 
+Q 207.745512 282.306142 207.745512 280.038425 
+L 207.745512 186.069921 
+Q 207.745512 183.802205 205.477795 183.802205 
+L 138.693543 183.802205 
+Q 136.425827 183.802205 136.425827 186.069921 
+L 136.425827 280.038425 
+Q 136.425827 282.306142 138.693543 282.306142 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke: #222222; stroke-width: 0.9; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 203.720315 379.314016 
+L 270.504567 379.314016 
+Q 272.772283 379.314016 272.772283 377.046299 
+L 272.772283 303.077795 
+Q 272.772283 300.810079 270.504567 300.810079 
+L 203.720315 300.810079 
+Q 201.452598 300.810079 201.452598 303.077795 
+L 201.452598 377.046299 
+Q 201.452598 379.314016 203.720315 379.314016 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 222.599055 242.306142 
+L 289.383307 242.306142 
+Q 291.651024 242.306142 291.651024 240.038425 
+L 291.651024 186.069921 
+Q 291.651024 183.802205 289.383307 183.802205 
+L 222.599055 183.802205 
+Q 220.331339 183.802205 220.331339 186.069921 
+L 220.331339 240.038425 
+Q 220.331339 242.306142 222.599055 242.306142 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 279.235276 399.314016 
+L 346.019528 399.314016 
+Q 348.287244 399.314016 348.287244 397.046299 
+L 348.287244 303.077795 
+Q 348.287244 300.810079 346.019528 300.810079 
+L 279.235276 300.810079 
+Q 276.967559 300.810079 276.967559 303.077795 
+L 276.967559 397.046299 
+Q 276.967559 399.314016 279.235276 399.314016 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 306.504567 292.306142 
+L 373.288819 292.306142 
+Q 375.556535 292.306142 375.556535 290.038425 
+L 375.556535 186.069921 
+Q 375.556535 183.802205 373.288819 183.802205 
+L 306.504567 183.802205 
+Q 304.23685 183.802205 304.23685 186.069921 
+L 304.23685 290.038425 
+Q 304.23685 292.306142 306.504567 292.306142 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_17">
+    <path d="M 354.750236 399.314016 
+L 421.534488 399.314016 
+Q 423.802205 399.314016 423.802205 397.046299 
+L 423.802205 303.077795 
+Q 423.802205 300.810079 421.534488 300.810079 
+L 354.750236 300.810079 
+Q 352.48252 300.810079 352.48252 303.077795 
+L 352.48252 397.046299 
+Q 352.48252 399.314016 354.750236 399.314016 
+z
+" clip-path="url(#pf39aae74ff)" style="fill: #ffffff; stroke-dasharray: 1.32,0.84; stroke-dashoffset: 0; stroke: #222222; stroke-width: 0.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(4.274646 414.40813)">† 探索・事後の解析であり、判定には用いない。改良した当てはめを主解析に用いるには新たな事前登録が要る。</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(4.274646 424.443755)">A 段＝その手法が採用した被験者だけ、B 段＝比べる全手法が採用した共通例、C 段＝採否を無視した全員</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(4.274646 433.94563)">日付の間隔は経過日数に比例しない。追記番号は docs/research/lab_log.md の見出しの番号。</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(13.969134 118.337761)">研究0 を設計:</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(13.969134 128.369011)">PWDB の真値に</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(13.969134 138.302761)">ΔT・RI を当てる</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="13.969134" y="147.589636" transform="rotate(-0 13.969134 147.589636)">lab_log 8/30</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 41.353637)">判定規準を固定:</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 51.356762)">全層で予測の向</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 61.062387)">き、中央値 |ρ| ≧</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 71.279262)">0.30</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="55.92189" y="80.581762" transform="rotate(-0 55.92189 80.581762)">lab_log 9/3</text>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(97.874646 118.345886)">第2版の規則と閾</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(97.874646 128.376511)">値を決定試験の前</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(97.874646 138.405886)">に凍結</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="97.874646" y="147.589636" transform="rotate(-0 97.874646 147.589636)">lab_log 9/4</text>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(181.780157 51.341762)">型別解析の予測</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(181.780157 61.341762)">P1〜P5 を計算の</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(181.780157 71.383012)">前に固定</text>
+   </g>
+   <g id="text_19">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="181.780157" y="81.374887" transform="rotate(-0 181.780157 81.374887)">追記136</text>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 108.265261)">再当てはめの予測</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 118.387136)">P6〜P10 を固定。</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 128.380886)">0.65T は選び直さ</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 138.417761)">ない</text>
+   </g>
+   <g id="text_21">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="223.732913" y="148.382761" transform="rotate(-0 223.732913 148.382761)">追記143・145</text>
+   </g>
+   <g id="text_22">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(265.685669 50.745512)">(7)(8)(9)(6e) と B</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(265.685669 61.353637)">段を走らせる前に</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(265.685669 71.269262)">設計</text>
+   </g>
+   <g id="text_23">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="265.685669" y="81.374887" transform="rotate(-0 265.685669 81.374887)">追記149・151</text>
+   </g>
+   <g id="text_24">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 118.357761)">B 段と雑音の読み</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 128.375261)">方を走らせる前に</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 138.387136)">固定</text>
+   </g>
+   <g id="text_25">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="307.638425" y="148.382761" transform="rotate(-0 307.638425 148.382761)">追記153</text>
+   </g>
+   <g id="text_26">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 195.24878)">判定（記録）: 凍結</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 205.19253)">版 不成立、特徴点</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 215.23878)">法 成立</text>
+   </g>
+   <g id="text_27">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 224.59628)">ΔT×PWV |ρ|</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 235.199405)">0.223 対 0.710、</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 245.199405)">RI 0.207 対</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(55.92189 255.13753)">0.504</text>
+   </g>
+   <g id="text_28">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="55.92189" y="264.74128" transform="rotate(-0 55.92189 264.74128)">lab_log 9/3・表1</text>
+   </g>
+   <g id="text_29">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 312.204154)">† 基底と文献の条</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 322.264154)">件を総当たり（31</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 332.244779)">番・33番）</text>
+   </g>
+   <g id="text_30">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 342.200404)">どの版も特徴点法</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 352.341029)">ΔT 0.710 に及ば</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(129.339213 362.276029)">ない</text>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="129.339213" y="372.241029" transform="rotate(-0 129.339213 372.241029)">追記13・18</text>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 195.226905)">決定試験（記録）:</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 205.19628)">第2版 不成立、特</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 215.184405)">徴点法・早期振幅</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 225.23878)">比 成立</text>
+   </g>
+   <g id="text_33">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 234.895655)">採択 2/4,374、A・</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 245.215655)">B 段は判定不能、C</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 255.184405)">段 0.167。早期振</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(139.827402 265.24503)">幅比 0.836</text>
+   </g>
+   <g id="text_34">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="139.827402" y="275.24503" transform="rotate(-0 139.827402 275.24503)">追記12・表1</text>
+   </g>
+   <g id="text_35">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 312.207904)">† 型別解析（48</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 322.244779)">番）: P1〜P5 のう</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 332.258529)">ち P4 のみ はい</text>
+   </g>
+   <g id="text_36">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 342.223529)">第2成分は特徴点</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 352.252279)">より型3 で +98.5</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(204.854173 362.207904)">ms 遅い（A 段）</text>
+   </g>
+   <g id="text_37">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="204.854173" y="372.241029" transform="rotate(-0 204.854173 372.241029)">追記137</text>
+   </g>
+   <g id="text_38">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 195.20003)">† 合成脈波の診</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 205.19253)">断: 短い到達で</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 215.23503)">ΔT の順位が消え</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(223.732913 225.076905)">る</text>
+   </g>
+   <g id="text_39">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="223.732913" y="235.233155" transform="rotate(-0 223.732913 235.233155)">追記141</text>
+   </g>
+   <g id="text_40">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 312.244779)">† 再当てはめ 5・</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 322.252904)">7・10 型（15〜16</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 332.252904)">日）: P6〜P9 いい</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 342.287904)">え</text>
+   </g>
+   <g id="text_41">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 352.215404)">貯留槽の項は縮</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 362.237279)">退。0.65T が最良</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 372.252904)">（型3 ΔT A</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(280.369134 382.252904)">0.828・C 0.596）</text>
+   </g>
+   <g id="text_42">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="280.369134" y="392.241029" transform="rotate(-0 280.369134 392.241029)">追記144〜147</text>
+   </g>
+   <g id="text_43">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 195.223155)">† 14 型＋線形分</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 205.250655)">離: 下降を外す・抑</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 215.26253)">える案だけが効く</text>
+   </g>
+   <g id="text_44">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 225.20003)">項を足す案はどれ</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 235.28378)">も効かず（打ち切り</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 245.208155)">と 1 次微分の領域</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 255.223155)">は効く）、線形分離</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 265.19253)">の後進波にはどの</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(307.638425 275.18378)">指標も載らない</text>
+   </g>
+   <g id="text_45">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="307.638425" y="285.233155" transform="rotate(-0 307.638425 285.233155)">追記152</text>
+   </g>
+   <g id="text_46">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 312.216029)">† B 段と雑音:</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 322.204154)">0.65T は雑音に残</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 332.180404)">り、微分領域は崩</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 342.236654)">れる</text>
+   </g>
+   <g id="text_47">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 352.216029)">C 段 ΔT 雑音</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 362.207279)">2%: 0.454 対</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 372.161029)">0.347。RI はどの</text>
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; fill: #222222" transform="translate(355.884094 382.200404)">版も残らない</text>
+   </g>
+   <g id="text_48">
+    <text style="font-size: 8px; font-family: 'IPAPGothic'; text-anchor: start; fill: #7f7f7f" x="355.884094" y="392.252904" transform="rotate(-0 355.884094 392.252904)">追記158・表6c</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pf39aae74ff">
+   <rect x="1.44" y="1.44" width="425.19685" height="437.795276"/>
+  </clipPath>
+ </defs>
+</svg>

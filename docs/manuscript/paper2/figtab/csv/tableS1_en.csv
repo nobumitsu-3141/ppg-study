@@ -1,0 +1,10 @@
+Handling of the diastolic decline,Fraction of beats at a bound,Breakdown
+(0) Frozen fit (no diastolic term),0.072,α1:hi 0.04; σ1:hi 0.03
+"(4) Reservoir term (forward wave convolved, τ ≥ 0.05 s)",0.903,g:hi 0.61; τ:lo 0.21
+"(4c) Reservoir term, τ ≥ 0.15 s",0.932,τ:lo 0.88; g:hi 0.56
+(3) Free exponential decay term,0.372,τ:lo 0.33
+(7) Output-side convolution of the two-component sum,0.254,α1:hi 0.25; μ1:lo 0.02 (τ:lo 0.00)
+"(8) Two-stage: τ from the last 30%, deconvolve, then frozen fit",0.914,σ2:hi 0.70; μ1:lo 0.35
+(6b) Fit truncated at 0.65 of the beat length,0.562,σ2:hi 0.30; α2:hi 0.23
+(6e) Truncated at an absolute 0.45 s (at most 0.90 of the beat),0.803,σ2:hi 0.39; α2:hi 0.39
+(9) Residual taken in the first-derivative domain,0.319,σ2:hi 0.23; Δμ:lo 0.11

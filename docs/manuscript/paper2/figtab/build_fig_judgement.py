@@ -154,7 +154,8 @@ def build(lang: str, numbers: dict):
 
     fig = plt.figure(figsize=(mm(150), mm(92)))
     bottom = 0.37
-    gs = GridSpec(1, 2, figure=fig, left=0.29, right=0.985, top=0.91, bottom=bottom, wspace=0.14)
+    left = 0.29 if lang == "ja" else 0.33      # 英文の行名は長いので左の余白を広く取る
+    gs = GridSpec(1, 2, figure=fig, left=left, right=0.985, top=0.91, bottom=bottom, wspace=0.14)
     axes = [fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1], sharey=None)]
     titles = {"dt_pwv": "(a) " + L[lang]["dt_pwv"], "ri_pvr": "(b) " + L[lang]["ri_pvr"]}
     drawn = []
@@ -227,7 +228,7 @@ def build(lang: str, numbers: dict):
             elif cell.get("note"):
                 ax.text(0.02, i, tx["not_evaluated"], ha="left", va="center", fontsize=8, color=PALETTE["grey"],
                         bbox=dict(fc="white", ec="none", pad=0.3), zorder=4)
-    fig.text((0.29 + 0.985) / 2, bottom - 0.075, L[lang]["rho"], ha="center", va="top", fontsize=8)
+    fig.text((left + 0.985) / 2, bottom - 0.075, L[lang]["rho"], ha="center", va="top", fontsize=8)
     footer = wrap_text(criterion_text(numbers, lang), lang) + "\n" + wrap_text(STAGE_NOTE[lang], lang)
     fig.text(0.01, 0.012, footer, ha="left", va="bottom", fontsize=8, color=PALETTE["ink"], linespacing=1.3)
     return fig, drawn, crit

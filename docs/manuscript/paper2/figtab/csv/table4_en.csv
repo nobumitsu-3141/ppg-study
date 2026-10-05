@@ -1,0 +1,13 @@
+Basis,Components,Wang pass,Errx median [ms],NRMSE median,Parameters on a bound,ΔT × PWV |ρ|
+"Skew-Gaussian, α∈[0,8] (frozen)",2,0.0%,40,0.0212,2%,0.14 (2/4)
+"Skew-Gaussian, α∈[0,8] (frozen)",3,2.0%,24,0.0110,0%,0.08 (4/4)
+Gaussian (no skew),2,0.0%,30,0.0491,4%,0.54 (4/4)
+Gaussian (no skew),3,0.0%,14,0.0191,86%,0.55 (3/4)
+Gaussian (no skew),4,1.0%,15,0.0145,94%,0.28 (3/4)
+Gaussian (no skew),5,1.0%,13,0.0084,92%,0.52 (3/4)
+"Skew-Gaussian, α∈[−8,8] (Basso)",2,0.0%,40,0.0212,2%,0.14 (2/4)
+"Skew-Gaussian, α∈[−8,8] (Basso)",3,2.0%,23,0.0111,0%,0.12 (3/4)
+Gamma (frozen search bounds),3,15.3%,12,0.0071,93%,0.56 (4/4)
+Gamma (frozen search bounds),4,22.4%,10,0.0051,99%,0.35 (3/4)
+Gamma (wide search bounds),3,10.2%,12,0.0068,89%,0.55 (4/4)
+Gamma (wide search bounds),4,31.6%,8,0.0047,99%,0.38 (3/4)

@@ -1,0 +1,9 @@
+Waveform type,Method,n,Median difference,Pooled Spearman ρ
+Type 1,Decomposition (PPG),315,+257.8 ms,−0.135
+Type 1,Decomposition (pressure),315,+255.4 ms,−0.107
+Type 1,Fiducial-point (supplied),315,+222.0 ms,−0.385
+Type 3,Decomposition (PPG),"2,771",+219.0 ms,+0.041
+Type 3,Decomposition (pressure),"2,771",+187.6 ms,+0.059
+Type 3,Fiducial-point (supplied),"2,758",+114.0 ms,−0.022
+Type 4,Decomposition (PPG),105,+13.1 ms,+0.500
+Type 4,Fiducial-point (supplied),72,+38.2 ms,−0.538

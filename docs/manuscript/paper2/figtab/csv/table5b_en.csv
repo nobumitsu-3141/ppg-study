@@ -1,0 +1,6 @@
+Source,Deviation
+All conditions,"The optimiser was that of our environment (SciPy), not identical to the originals"
+Wang 2013,The weight search step was set to 1
+Couceiro 2015,"For the 1% of beats whose fifth-component initial value could not be formed from table 1 of the original, the default was used"
+Tigges 2017,"Resampling to 40 Hz for the corrected Akaike information criterion used a Kaiser window, as the original describes"
+Common,PWDB gives one noise-free beat per subject; the conditions differ from the measured waveforms of the originals
