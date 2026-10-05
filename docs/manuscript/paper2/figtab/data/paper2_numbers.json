@@ -1,0 +1,4784 @@
+{
+  "meta": {
+    "source_md": "docs/manuscript/paper2/02_tables.md",
+    "generated_by": "docs/manuscript/paper2/figtab/data/extract_tables.py",
+    "document_title": "論文2 表（完成版）― すべて凍結記録から起こした",
+    "document_header": "**作成 2026-09-07（表5・表5b・表6・表6b を 2026-09-16 に追加。表6・表6b を 2026-09-17 に更新し、表7 を追加）。**出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。表1〜表4 の数値は英文原稿 `01_draft_en.md`・和文原稿 `05_draft_ja.md` と同一である。**表5 以降は決定試験の判定の後に回した探索であり、判定には用いない。**原稿に採るかは未定で、採るなら第2版の原稿（`v2/`）の図表点数（現在は図3点・表4点）を改める。",
+    "document_sources": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+    "n_subjects_decision_test": 4374,
+    "criterion": {
+      "text": "全6層で予測の符号を持ち、かつ中央値 |ρ| ≥ 0.30",
+      "line": 15,
+      "min_median_abs_rho": 0.3,
+      "strata_required": 6,
+      "sign_prediction": "予測の符号は ΔT × 大動脈脈波伝播速度が負、RI × 末梢血管抵抗が正。",
+      "bold_rule": "|ρ| の中央値 ≥ 0.30 かつ全層で予測の向き"
+    },
+    "stage_definitions": {
+      "A": {
+        "text": "その手法が自分で「当てはめに成功した」と判定した被験者だけ（分解法・凍結版では `ok_v1 == 1`）",
+        "line": 177
+      },
+      "B": {
+        "text": "凍結版・0.65T の打ち切り・1 次微分の版の 3 つがすべて採用した共通例（732 名。雑音 1% で 388 名、2% で 323 名）",
+        "line": 345
+      },
+      "C": {
+        "text": "採否を無視した全例",
+        "line": 177
+      },
+      "occurrences": [
+        {
+          "stage": "A",
+          "text": "その手法が自分で「当てはめに成功した」と判定した被験者だけ（分解法・凍結版では `ok_v1 == 1`）",
+          "line": 177
+        },
+        {
+          "stage": "C",
+          "text": "採否を無視した全例",
+          "line": 177
+        },
+        {
+          "stage": "A",
+          "text": "その手法が自分で採用した被験者だけ",
+          "line": 243
+        },
+        {
+          "stage": "C",
+          "text": "採否を無視した全員",
+          "line": 243
+        },
+        {
+          "stage": "A",
+          "text": "その手法が自分で採用した被験者だけ",
+          "line": 345
+        },
+        {
+          "stage": "B",
+          "text": "凍結版・0.65T の打ち切り・1 次微分の版の 3 つがすべて採用した共通例（732 名。雑音 1% で 388 名、2% で 323 名）",
+          "line": 345
+        },
+        {
+          "stage": "C",
+          "text": "採否を無視した全員（3,378 名）",
+          "line": 345
+        }
+      ]
+    },
+    "table_order": [
+      "表1",
+      "表2",
+      "表2b",
+      "表2c",
+      "表3",
+      "表4",
+      "表4_逸脱表",
+      "表5",
+      "表5b",
+      "表6",
+      "表6b",
+      "表6c",
+      "表7a",
+      "表7b"
+    ]
+  },
+  "tables": {
+    "表1": {
+      "name": "表1",
+      "key": "表1",
+      "title": "表1　年齢層内 Spearman 順位相関の中央値（決定試験・4,374名・6層）",
+      "heading_level": 2,
+      "heading_line": 13,
+      "parent": null,
+      "table_lines": [
+        19,
+        26
+      ],
+      "stage": null,
+      "post_hoc": false,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "`docs/research/roadmap_v1.md` §9（表1・表2）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "指標の作り方",
+          "header_raw": "指標の作り方",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv",
+          "kind": "rho",
+          "header_ja": "ΔT × 大動脈PWV",
+          "header_raw": "ΔT × 大動脈PWV",
+          "stage": null
+        },
+        {
+          "key": "ri_pvr",
+          "kind": "rho",
+          "header_ja": "RI × 末梢血管抵抗",
+          "header_raw": "RI × 末梢血管抵抗",
+          "stage": null
+        },
+        {
+          "key": "verdict",
+          "kind": "verdict",
+          "header_ja": "判定",
+          "header_raw": "判定",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "判定規準は実行前に凍結: 全6層で予測の符号を持ち、かつ中央値 |ρ| ≥ 0.30。\n予測の符号は ΔT × 大動脈脈波伝播速度が負、RI × 末梢血管抵抗が正。表には絶対値を示す。\n括弧内は予測の符号を持った層の数。"
+      ],
+      "postscript": [
+        "同じ規準を他の特徴点由来指標に当てると、スティフネス指標 0.710・2次微分の加齢指数 0.885 が成立し、\n増大係数 0.143 は不成立。収縮期側の基準点を p1 に置き換えた ΔT は 0.423（5/6）で、\n同一の 4,269 名における自前の特徴点由来 ΔT 0.536 に劣った。\n早期振幅比は Hellqvist の参照である頸大腿脈波伝播速度に対しては 0.758（5/6）で成立しない。",
+        "波形の型は、切痕あり 891名（20.4%）・変曲点のみ 3,378名（77.2%）・いずれも無し 105名（2.4%）。\n分解法の判定は切痕のある拍で下されている。"
+      ],
+      "groups": [],
+      "row_count": 6,
+      "rows": [
+        {
+          "id": "pda_frozen",
+          "line": 21,
+          "label_ja": "分解法・凍結版（歪みガウス2成分）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.223（6/6）",
+            "rho": 0.223,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "0.207（5/6）",
+            "rho": 0.207,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "verdict": {
+            "raw": "不成立",
+            "verdict": "不成立",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "pda_v2_skewgauss",
+          "line": 22,
+          "label_ja": "分解法・第2版 歪みガウス",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "採択 2/4,374。A・B は判定不能、C 0.167",
+            "rho": null,
+            "strata": null,
+            "stages": {
+              "A": {
+                "rho": null,
+                "strata": null,
+                "note": "判定不能"
+              },
+              "B": {
+                "rho": null,
+                "strata": null,
+                "note": "判定不能"
+              },
+              "C": {
+                "rho": 0.167,
+                "strata": null
+              }
+            },
+            "adopted": {
+              "n": 2,
+              "of": 4374
+            },
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "A・B は判定不能、C 0.354（3/6）",
+            "rho": null,
+            "strata": null,
+            "stages": {
+              "A": {
+                "rho": null,
+                "strata": null,
+                "note": "判定不能"
+              },
+              "B": {
+                "rho": null,
+                "strata": null,
+                "note": "判定不能"
+              },
+              "C": {
+                "rho": 0.354,
+                "strata": "3/6",
+                "strata_pass": 3,
+                "strata_total": 6
+              }
+            },
+            "bold": false
+          },
+          "verdict": {
+            "raw": "不成立",
+            "verdict": "不成立",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "pda_v2_gamma",
+          "line": 23,
+          "label_ja": "分解法・第2版 ガンマ",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "採択 103。A 0.798（3/4 層）、C 0.556",
+            "rho": null,
+            "strata": null,
+            "stages": {
+              "A": {
+                "rho": 0.798,
+                "strata": "3/4",
+                "strata_pass": 3,
+                "strata_total": 4
+              },
+              "C": {
+                "rho": 0.556,
+                "strata": null
+              }
+            },
+            "adopted": {
+              "n": 103,
+              "of": null
+            },
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "A 0.609（4/4）、C 0.280",
+            "rho": null,
+            "strata": null,
+            "stages": {
+              "A": {
+                "rho": 0.609,
+                "strata": "4/4",
+                "strata_pass": 4,
+                "strata_total": 4
+              },
+              "C": {
+                "rho": 0.28,
+                "strata": null
+              }
+            },
+            "bold": false
+          },
+          "verdict": {
+            "raw": "不成立",
+            "verdict": "不成立",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "landmark",
+          "line": 24,
+          "label_ja": "特徴点法（同一の波形）",
+          "label_bold": true,
+          "dt_pwv": {
+            "raw": "**0.710（6/6）**",
+            "rho": 0.71,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr": {
+            "raw": "**0.504（6/6）**",
+            "rho": 0.504,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "verdict": {
+            "raw": "**成立**",
+            "verdict": "成立",
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "amp_ratio",
+          "line": 25,
+          "label_ja": "早期振幅比 Am_b/Am_p1",
+          "label_bold": true,
+          "dt_pwv": {
+            "raw": "**0.836（6/6）**",
+            "rho": 0.836,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr": {
+            "raw": "未検証",
+            "rho": null,
+            "strata": null,
+            "note": "未検証",
+            "bold": false
+          },
+          "verdict": {
+            "raw": "**成立**",
+            "verdict": "成立",
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "ptt_control",
+          "line": 26,
+          "label_ja": "モデル出力の脈波到達時間（陽性対照）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.571（6/6）",
+            "rho": 0.571,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "verdict": {
+            "raw": "合格",
+            "verdict": "合格",
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表2": {
+      "name": "表2",
+      "key": "表2",
+      "title": "表2　振った因子ごとの年齢層内主効果（+1SD と −1SD の平均の差 ÷ 層平均、%）",
+      "heading_level": 2,
+      "heading_line": 38,
+      "parent": null,
+      "table_lines": [
+        42,
+        49
+      ],
+      "stage": null,
+      "post_hoc": false,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "`docs/research/roadmap_v1.md` §9（表1・表2）",
+        "`docs/research/lab_log.md` 追記12（表2）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "因子",
+          "header_raw": "因子",
+          "stage": null
+        },
+        {
+          "key": "landmark_dt",
+          "kind": "effect",
+          "header_ja": "特徴点法 ΔT",
+          "header_raw": "特徴点法 ΔT",
+          "stage": null
+        },
+        {
+          "key": "pda_dt",
+          "kind": "effect",
+          "header_ja": "分解法 ΔT",
+          "header_raw": "分解法 ΔT",
+          "stage": null
+        },
+        {
+          "key": "pda_ri",
+          "kind": "effect",
+          "header_ja": "分解法 RI",
+          "header_raw": "分解法 RI",
+          "stage": null
+        },
+        {
+          "key": "amp_ratio",
+          "kind": "effect",
+          "header_ja": "早期振幅比",
+          "header_raw": "早期振幅比",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "括弧内はその因子と指標の年齢層内 Spearman 順位相関。"
+      ],
+      "postscript": [
+        "特徴点法の ΔT では脈波伝播速度の列が心拍数の列の 12 倍であるのに対し、分解法の ΔT では 1.6 倍にとどまる。\n順位では分解法の ΔT は心拍数（−0.54）が脈波伝播速度（−0.26）を上回る。"
+      ],
+      "groups": [],
+      "row_count": 6,
+      "rows": [
+        {
+          "id": "aortic_diameter",
+          "line": 44,
+          "label_ja": "大動脈径",
+          "label_bold": false,
+          "landmark_dt": {
+            "raw": "−9.4",
+            "effect_pct": -9.4,
+            "rho": null,
+            "bold": false
+          },
+          "pda_dt": {
+            "raw": "−12.6（−0.37）",
+            "effect_pct": -12.6,
+            "rho": -0.37,
+            "bold": false
+          },
+          "pda_ri": {
+            "raw": "+33.2（+0.30）",
+            "effect_pct": 33.2,
+            "rho": 0.3,
+            "bold": false
+          },
+          "amp_ratio": {
+            "raw": "+2.0",
+            "effect_pct": 2.0,
+            "rho": null,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "heart_rate",
+          "line": 45,
+          "label_ja": "心拍数",
+          "label_bold": false,
+          "landmark_dt": {
+            "raw": "**−2.6**",
+            "effect_pct": -2.6,
+            "rho": null,
+            "bold": true
+          },
+          "pda_dt": {
+            "raw": "**−10.9（−0.54）**",
+            "effect_pct": -10.9,
+            "rho": -0.54,
+            "bold": true
+          },
+          "pda_ri": {
+            "raw": "−40.3（−0.37）",
+            "effect_pct": -40.3,
+            "rho": -0.37,
+            "bold": false
+          },
+          "amp_ratio": {
+            "raw": "+4.0",
+            "effect_pct": 4.0,
+            "rho": null,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "ejection_time",
+          "line": 46,
+          "label_ja": "駆出時間",
+          "label_bold": false,
+          "landmark_dt": {
+            "raw": "+4.6",
+            "effect_pct": 4.6,
+            "rho": null,
+            "bold": false
+          },
+          "pda_dt": {
+            "raw": "+0.7（+0.09）",
+            "effect_pct": 0.7,
+            "rho": 0.09,
+            "bold": false
+          },
+          "pda_ri": {
+            "raw": "+3.2（−0.10）",
+            "effect_pct": 3.2,
+            "rho": -0.1,
+            "bold": false
+          },
+          "amp_ratio": {
+            "raw": "−1.1",
+            "effect_pct": -1.1,
+            "rho": null,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "map",
+          "line": 47,
+          "label_ja": "平均血圧",
+          "label_bold": false,
+          "landmark_dt": {
+            "raw": "−15.1",
+            "effect_pct": -15.1,
+            "rho": null,
+            "bold": false
+          },
+          "pda_dt": {
+            "raw": "−7.7（−0.09）",
+            "effect_pct": -7.7,
+            "rho": -0.09,
+            "bold": false
+          },
+          "pda_ri": {
+            "raw": "+24.2（−0.00）",
+            "effect_pct": 24.2,
+            "rho": -0.0,
+            "bold": false
+          },
+          "amp_ratio": {
+            "raw": "−4.0",
+            "effect_pct": -4.0,
+            "rho": null,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "pwv",
+          "line": 48,
+          "label_ja": "脈波伝播速度",
+          "label_bold": true,
+          "landmark_dt": {
+            "raw": "**−31.2**",
+            "effect_pct": -31.2,
+            "rho": null,
+            "bold": true
+          },
+          "pda_dt": {
+            "raw": "**−17.0（−0.26）**",
+            "effect_pct": -17.0,
+            "rho": -0.26,
+            "bold": true
+          },
+          "pda_ri": {
+            "raw": "**+33.7（−0.17）**",
+            "effect_pct": 33.7,
+            "rho": -0.17,
+            "bold": true
+          },
+          "amp_ratio": {
+            "raw": "**−7.1**",
+            "effect_pct": -7.1,
+            "rho": null,
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "stroke_volume",
+          "line": 49,
+          "label_ja": "1回拍出量",
+          "label_bold": false,
+          "landmark_dt": {
+            "raw": "+15.9",
+            "effect_pct": 15.9,
+            "rho": null,
+            "bold": false
+          },
+          "pda_dt": {
+            "raw": "−4.1（+0.05）",
+            "effect_pct": -4.1,
+            "rho": 0.05,
+            "bold": false
+          },
+          "pda_ri": {
+            "raw": "+21.6（−0.05）",
+            "effect_pct": 21.6,
+            "rho": -0.05,
+            "bold": false
+          },
+          "amp_ratio": {
+            "raw": "−0.2",
+            "effect_pct": -0.2,
+            "rho": null,
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表2b": {
+      "name": "表2b",
+      "key": "表2b",
+      "title": "表2b　1因子掃引（他の因子は基準値。年齢層の中央値）",
+      "heading_level": 3,
+      "heading_line": 54,
+      "parent": "表2",
+      "table_lines": [
+        56,
+        63
+      ],
+      "stage": null,
+      "post_hoc": false,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "`docs/research/roadmap_v1.md` §9（表1・表2）",
+        "`docs/research/lab_log.md` 追記12（表2）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "因子",
+          "header_raw": "因子",
+          "stage": null
+        },
+        {
+          "key": "dt_minus1sd",
+          "kind": "num",
+          "header_ja": "ΔT −1SD",
+          "header_raw": "ΔT −1SD",
+          "stage": null
+        },
+        {
+          "key": "dt_base",
+          "kind": "num",
+          "header_ja": "ΔT 基準",
+          "header_raw": "ΔT 基準",
+          "stage": null
+        },
+        {
+          "key": "dt_plus1sd",
+          "kind": "num",
+          "header_ja": "ΔT +1SD",
+          "header_raw": "ΔT +1SD",
+          "stage": null
+        },
+        {
+          "key": "ri_minus1sd",
+          "kind": "num",
+          "header_ja": "RI −1SD",
+          "header_raw": "RI −1SD",
+          "stage": null
+        },
+        {
+          "key": "ri_base",
+          "kind": "num",
+          "header_ja": "RI 基準",
+          "header_raw": "RI 基準",
+          "stage": null
+        },
+        {
+          "key": "ri_plus1sd",
+          "kind": "num",
+          "header_ja": "RI +1SD",
+          "header_raw": "RI +1SD",
+          "stage": null
+        }
+      ],
+      "preamble": [],
+      "postscript": [
+        "脈波伝播速度の行のみ単調でない。ΔT は −1SD 側が予測と逆向きに動き、RI は U 字を描く。"
+      ],
+      "groups": [],
+      "row_count": 6,
+      "rows": [
+        {
+          "id": "pwv",
+          "line": 58,
+          "label_ja": "脈波伝播速度",
+          "label_bold": true,
+          "dt_minus1sd": {
+            "raw": "**332.3**",
+            "value": 332.3,
+            "bold": true
+          },
+          "dt_base": {
+            "raw": "**352.8**",
+            "value": 352.8,
+            "bold": true
+          },
+          "dt_plus1sd": {
+            "raw": "**251.2**",
+            "value": 251.2,
+            "bold": true
+          },
+          "ri_minus1sd": {
+            "raw": "**0.325**",
+            "value": 0.325,
+            "bold": true
+          },
+          "ri_base": {
+            "raw": "**0.254**",
+            "value": 0.254,
+            "bold": true
+          },
+          "ri_plus1sd": {
+            "raw": "**0.647**",
+            "value": 0.647,
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "heart_rate",
+          "line": 59,
+          "label_ja": "心拍数",
+          "label_bold": false,
+          "dt_minus1sd": {
+            "raw": "382.5",
+            "value": 382.5,
+            "bold": false
+          },
+          "dt_base": {
+            "raw": "352.8",
+            "value": 352.8,
+            "bold": false
+          },
+          "dt_plus1sd": {
+            "raw": "321.6",
+            "value": 321.6,
+            "bold": false
+          },
+          "ri_minus1sd": {
+            "raw": "0.324",
+            "value": 0.324,
+            "bold": false
+          },
+          "ri_base": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "ri_plus1sd": {
+            "raw": "0.230",
+            "value": 0.23,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "aortic_diameter",
+          "line": 60,
+          "label_ja": "大動脈径",
+          "label_bold": false,
+          "dt_minus1sd": {
+            "raw": "353.6",
+            "value": 353.6,
+            "bold": false
+          },
+          "dt_base": {
+            "raw": "352.8",
+            "value": 352.8,
+            "bold": false
+          },
+          "dt_plus1sd": {
+            "raw": "332.1",
+            "value": 332.1,
+            "bold": false
+          },
+          "ri_minus1sd": {
+            "raw": "0.235",
+            "value": 0.235,
+            "bold": false
+          },
+          "ri_base": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "ri_plus1sd": {
+            "raw": "0.322",
+            "value": 0.322,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "ejection_time",
+          "line": 61,
+          "label_ja": "駆出時間",
+          "label_bold": false,
+          "dt_minus1sd": {
+            "raw": "341.2",
+            "value": 341.2,
+            "bold": false
+          },
+          "dt_base": {
+            "raw": "352.8",
+            "value": 352.8,
+            "bold": false
+          },
+          "dt_plus1sd": {
+            "raw": "362.9",
+            "value": 362.9,
+            "bold": false
+          },
+          "ri_minus1sd": {
+            "raw": "0.274",
+            "value": 0.274,
+            "bold": false
+          },
+          "ri_base": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "ri_plus1sd": {
+            "raw": "0.233",
+            "value": 0.233,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "map",
+          "line": 62,
+          "label_ja": "平均血圧",
+          "label_bold": false,
+          "dt_minus1sd": {
+            "raw": "337.2",
+            "value": 337.2,
+            "bold": false
+          },
+          "dt_base": {
+            "raw": "352.8",
+            "value": 352.8,
+            "bold": false
+          },
+          "dt_plus1sd": {
+            "raw": "348.7",
+            "value": 348.7,
+            "bold": false
+          },
+          "ri_minus1sd": {
+            "raw": "0.294",
+            "value": 0.294,
+            "bold": false
+          },
+          "ri_base": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "ri_plus1sd": {
+            "raw": "0.236",
+            "value": 0.236,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "stroke_volume",
+          "line": 63,
+          "label_ja": "1回拍出量",
+          "label_bold": false,
+          "dt_minus1sd": {
+            "raw": "339.5",
+            "value": 339.5,
+            "bold": false
+          },
+          "dt_base": {
+            "raw": "352.8",
+            "value": 352.8,
+            "bold": false
+          },
+          "dt_plus1sd": {
+            "raw": "356.7",
+            "value": 356.7,
+            "bold": false
+          },
+          "ri_minus1sd": {
+            "raw": "0.282",
+            "value": 0.282,
+            "bold": false
+          },
+          "ri_base": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "ri_plus1sd": {
+            "raw": "0.251",
+            "value": 0.251,
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表2c": {
+      "name": "表2c",
+      "key": "表2c",
+      "title": "表2c　真の伝播時間（モデルの立ち上がり時刻表より）",
+      "heading_level": 3,
+      "heading_line": 67,
+      "parent": "表2",
+      "table_lines": [
+        69,
+        72
+      ],
+      "stage": null,
+      "post_hoc": false,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "`docs/research/roadmap_v1.md` §9（表1・表2）",
+        "`docs/research/lab_log.md` 追記12（表2）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "区間",
+          "header_raw": "区間",
+          "stage": null
+        },
+        {
+          "key": "median",
+          "kind": "ms",
+          "header_ja": "中央値",
+          "header_raw": "中央値",
+          "stage": null
+        },
+        {
+          "key": "p5_p95",
+          "kind": "range_ms",
+          "header_ja": "5〜95パーセンタイル",
+          "header_raw": "5〜95パーセンタイル",
+          "stage": null
+        }
+      ],
+      "preamble": [],
+      "postscript": [
+        "年齢層内 ρ（大動脈PWV、起始部→指尖の伝播時間）= −0.99（6/6）。\n年齢層内 ρ（分解法 ΔT、同）= +0.19（6/6）。"
+      ],
+      "groups": [],
+      "row_count": 2,
+      "rows": [
+        {
+          "id": "aorta_to_finger",
+          "line": 71,
+          "label_ja": "大動脈起始部 → 指尖",
+          "label_bold": false,
+          "median": {
+            "raw": "96 ms",
+            "value": 96.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "p5_p95": {
+            "raw": "66〜120 ms",
+            "lo": 66.0,
+            "hi": 120.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "radial_to_finger",
+          "line": 72,
+          "label_ja": "橈骨 → 指尖",
+          "label_bold": false,
+          "median": {
+            "raw": "8 ms",
+            "value": 8.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "p5_p95": {
+            "raw": "4〜16 ms",
+            "lo": 4.0,
+            "hi": 16.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表3": {
+      "name": "表3",
+      "key": "表3",
+      "title": "表3　基底関数と成分数の総当たり（探索・事後）",
+      "heading_level": 2,
+      "heading_line": 79,
+      "parent": null,
+      "table_lines": [
+        86,
+        99
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "追記13（表3）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "基底",
+          "header_raw": "基底",
+          "stage": null
+        },
+        {
+          "key": "n_components",
+          "kind": "int",
+          "header_ja": "成分",
+          "header_raw": "成分",
+          "stage": null
+        },
+        {
+          "key": "wang_pass",
+          "kind": "pct",
+          "header_ja": "Wang 通過",
+          "header_raw": "Wang 通過",
+          "stage": null
+        },
+        {
+          "key": "errx_median_ms",
+          "kind": "num",
+          "header_ja": "Errx 中央値 [ms]",
+          "header_raw": "Errx 中央値 [ms]",
+          "stage": null
+        },
+        {
+          "key": "nrmse_median",
+          "kind": "num",
+          "header_ja": "NRMSE 中央値",
+          "header_raw": "NRMSE 中央値",
+          "stage": null
+        },
+        {
+          "key": "boundary_fraction",
+          "kind": "pct",
+          "header_ja": "母数が境界にある割合",
+          "header_raw": "母数が境界にある割合",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv",
+          "kind": "rho",
+          "header_ja": "ΔT × PWV |ρ|",
+          "header_raw": "ΔT × PWV |ρ|",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "**この解析は決定試験の判定の後に回した探索であり、判定には用いない。**\n対象は 120 名から取った切痕のある 98 拍で、層は 8 拍以上の 4 層である\n（決定試験の 4,374 名・6 層より小さく、値の幅は広い）。前処理と Wang の採否規準は決定試験と同一。\n|ρ| は全例（採否を無視）の年齢層内中央値、括弧内は予測の符号を持った層の数。"
+      ],
+      "postscript": [
+        "読みは 4 点ある。",
+        "1. **歪みガウスの失敗は歪みの符号によるものではない。**左歪みを許した Basso 式の行は、\n2成分で凍結版と完全に同じ、3成分でもほぼ同じである（最適解が左歪みを選ばない）。\n2. **歪みを外した素朴な 2 ガウスが 0.54（4/4層）で最も追う一方、当てはまりは最も悪い**\n（NRMSE 4.9%、Wang 通過 0%）。歪みという自由度は当てはまりを 0.049 から 0.021 へ改善する一方で、\n成分のピークを特徴点から切り離す。\n3. **成分を増やすと当てはまりは上がり、真値への追従は下がる**（ガンマ 3→4 で 0.56→0.35、\nガウス 2→4 で 0.54→0.28）。当てはめの採択率を上げる方向と真値を追う方向は逆である。\n4. **どの基底も、同じ被験者の特徴点由来 ΔT（決定試験の全例 0.710・6層）に届かない。**\n分解の中で最良は 0.56 である。成分のピークが特徴点そのものに近いほど追従が良いという構造であり、\n特徴点を直接測るほうがよい。",
+        "**母数が境界にある割合について。**ガンマ経路では探索範囲を広げても 89〜99% で変わらない。\nしたがって「探索範囲が解を決めている」というより、**この族の母数がこれらの拍で同定されていない**\nと読むのが正確である。決定試験で報告した「範囲を広げると 0.119」は**採択された拍**についての値であり\n（624名の 3.5%、約 22 名）、全例では範囲によらず 0.55 であった。この区別を落とさない。"
+      ],
+      "groups": [],
+      "row_count": 12,
+      "rows": [
+        {
+          "id": "skewgauss_a08_m2",
+          "line": 88,
+          "label_ja": "歪みガウス α∈[0,8]（凍結版）",
+          "label_bold": false,
+          "n_components": {
+            "raw": "2",
+            "value": 2,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "0.0%",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "40",
+            "value": 40.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0212",
+            "value": 0.0212,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "2%",
+            "value": 2.0,
+            "fraction": 0.02,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.14（2/4）",
+            "rho": 0.14,
+            "strata": "2/4",
+            "strata_pass": 2,
+            "strata_total": 4,
+            "bold": false
+          },
+          "basis_ja": "歪みガウス α∈[0,8]（凍結版）",
+          "reference": false,
+          "basis_id": "skewgauss_a08"
+        },
+        {
+          "id": "skewgauss_a08_m3",
+          "line": 89,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "歪みガウス α∈[0,8]（凍結版）",
+          "n_components": {
+            "raw": "3",
+            "value": 3,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "2.0%",
+            "value": 2.0,
+            "fraction": 0.02,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "24",
+            "value": 24.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0110",
+            "value": 0.011,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "0%",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.08（4/4）",
+            "rho": 0.08,
+            "strata": "4/4",
+            "strata_pass": 4,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "skewgauss_a08"
+        },
+        {
+          "id": "gauss_m2",
+          "line": 90,
+          "label_ja": "ガウス（歪みなし）",
+          "label_bold": true,
+          "n_components": {
+            "raw": "**2**",
+            "value": 2,
+            "bold": true
+          },
+          "wang_pass": {
+            "raw": "**0.0%**",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": true
+          },
+          "errx_median_ms": {
+            "raw": "**30**",
+            "value": 30.0,
+            "bold": true
+          },
+          "nrmse_median": {
+            "raw": "**0.0491**",
+            "value": 0.0491,
+            "bold": true
+          },
+          "boundary_fraction": {
+            "raw": "**4%**",
+            "value": 4.0,
+            "fraction": 0.04,
+            "unit": "%",
+            "bold": true
+          },
+          "dt_pwv": {
+            "raw": "**0.54（4/4）**",
+            "rho": 0.54,
+            "strata": "4/4",
+            "strata_pass": 4,
+            "strata_total": 4,
+            "bold": true
+          },
+          "basis_ja": "ガウス（歪みなし）",
+          "reference": false,
+          "basis_id": "gauss"
+        },
+        {
+          "id": "gauss_m3",
+          "line": 91,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "ガウス（歪みなし）",
+          "n_components": {
+            "raw": "3",
+            "value": 3,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "0.0%",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "14",
+            "value": 14.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0191",
+            "value": 0.0191,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "86%",
+            "value": 86.0,
+            "fraction": 0.86,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.55（3/4）",
+            "rho": 0.55,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "gauss"
+        },
+        {
+          "id": "gauss_m4",
+          "line": 92,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "ガウス（歪みなし）",
+          "n_components": {
+            "raw": "4",
+            "value": 4,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "1.0%",
+            "value": 1.0,
+            "fraction": 0.01,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "15",
+            "value": 15.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0145",
+            "value": 0.0145,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "94%",
+            "value": 94.0,
+            "fraction": 0.94,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.28（3/4）",
+            "rho": 0.28,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "gauss"
+        },
+        {
+          "id": "gauss_m5",
+          "line": 93,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "ガウス（歪みなし）",
+          "n_components": {
+            "raw": "5",
+            "value": 5,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "1.0%",
+            "value": 1.0,
+            "fraction": 0.01,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "13",
+            "value": 13.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0084",
+            "value": 0.0084,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "92%",
+            "value": 92.0,
+            "fraction": 0.92,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.52（3/4）",
+            "rho": 0.52,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "gauss"
+        },
+        {
+          "id": "skewgauss_pm8_m2",
+          "line": 94,
+          "label_ja": "歪みガウス α∈[−8,8]（Basso 式）",
+          "label_bold": false,
+          "n_components": {
+            "raw": "2",
+            "value": 2,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "0.0%",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "40",
+            "value": 40.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0212",
+            "value": 0.0212,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "2%",
+            "value": 2.0,
+            "fraction": 0.02,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.14（2/4）",
+            "rho": 0.14,
+            "strata": "2/4",
+            "strata_pass": 2,
+            "strata_total": 4,
+            "bold": false
+          },
+          "basis_ja": "歪みガウス α∈[−8,8]（Basso 式）",
+          "reference": false,
+          "basis_id": "skewgauss_pm8"
+        },
+        {
+          "id": "skewgauss_pm8_m3",
+          "line": 95,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "歪みガウス α∈[−8,8]（Basso 式）",
+          "n_components": {
+            "raw": "3",
+            "value": 3,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "2.0%",
+            "value": 2.0,
+            "fraction": 0.02,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "23",
+            "value": 23.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0111",
+            "value": 0.0111,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "0%",
+            "value": 0.0,
+            "fraction": 0.0,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.12（3/4）",
+            "rho": 0.12,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "skewgauss_pm8"
+        },
+        {
+          "id": "gamma_frozen_m3",
+          "line": 96,
+          "label_ja": "ガンマ（凍結の探索範囲）",
+          "label_bold": true,
+          "n_components": {
+            "raw": "**3**",
+            "value": 3,
+            "bold": true
+          },
+          "wang_pass": {
+            "raw": "**15.3%**",
+            "value": 15.3,
+            "fraction": 0.153,
+            "unit": "%",
+            "bold": true
+          },
+          "errx_median_ms": {
+            "raw": "**12**",
+            "value": 12.0,
+            "bold": true
+          },
+          "nrmse_median": {
+            "raw": "**0.0071**",
+            "value": 0.0071,
+            "bold": true
+          },
+          "boundary_fraction": {
+            "raw": "**93%**",
+            "value": 93.0,
+            "fraction": 0.93,
+            "unit": "%",
+            "bold": true
+          },
+          "dt_pwv": {
+            "raw": "**0.56（4/4）**",
+            "rho": 0.56,
+            "strata": "4/4",
+            "strata_pass": 4,
+            "strata_total": 4,
+            "bold": true
+          },
+          "basis_ja": "ガンマ（凍結の探索範囲）",
+          "reference": false,
+          "basis_id": "gamma_frozen"
+        },
+        {
+          "id": "gamma_frozen_m4",
+          "line": 97,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "ガンマ（凍結の探索範囲）",
+          "n_components": {
+            "raw": "4",
+            "value": 4,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "22.4%",
+            "value": 22.4,
+            "fraction": 0.224,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "10",
+            "value": 10.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0051",
+            "value": 0.0051,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "99%",
+            "value": 99.0,
+            "fraction": 0.99,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.35（3/4）",
+            "rho": 0.35,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "gamma_frozen"
+        },
+        {
+          "id": "gamma_wide_m3",
+          "line": 98,
+          "label_ja": "ガンマ（広い探索範囲）",
+          "label_bold": false,
+          "n_components": {
+            "raw": "3",
+            "value": 3,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "10.2%",
+            "value": 10.2,
+            "fraction": 0.102,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "12",
+            "value": 12.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0068",
+            "value": 0.0068,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "89%",
+            "value": 89.0,
+            "fraction": 0.89,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.55（4/4）",
+            "rho": 0.55,
+            "strata": "4/4",
+            "strata_pass": 4,
+            "strata_total": 4,
+            "bold": false
+          },
+          "basis_ja": "ガンマ（広い探索範囲）",
+          "reference": false,
+          "basis_id": "gamma_wide"
+        },
+        {
+          "id": "gamma_wide_m4",
+          "line": 99,
+          "label_ja": "同",
+          "label_bold": false,
+          "basis_ja": "ガンマ（広い探索範囲）",
+          "n_components": {
+            "raw": "4",
+            "value": 4,
+            "bold": false
+          },
+          "wang_pass": {
+            "raw": "31.6%",
+            "value": 31.6,
+            "fraction": 0.316,
+            "unit": "%",
+            "bold": false
+          },
+          "errx_median_ms": {
+            "raw": "8",
+            "value": 8.0,
+            "bold": false
+          },
+          "nrmse_median": {
+            "raw": "0.0047",
+            "value": 0.0047,
+            "bold": false
+          },
+          "boundary_fraction": {
+            "raw": "99%",
+            "value": 99.0,
+            "fraction": 0.99,
+            "unit": "%",
+            "bold": false
+          },
+          "dt_pwv": {
+            "raw": "0.38（3/4）",
+            "rho": 0.38,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "reference": false,
+          "basis_id": "gamma_wide"
+        }
+      ]
+    },
+    "表4": {
+      "name": "表4",
+      "key": "表4",
+      "title": "表4　公表された条件をそのまま当てた結果（探索・事後）",
+      "heading_level": 2,
+      "heading_line": 121,
+      "parent": null,
+      "table_lines": [
+        127,
+        135
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "追記18（表4）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "条件の出どころ",
+          "header_raw": "条件の出どころ",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv",
+          "kind": "rho",
+          "header_ja": "ΔT × 大動脈PWV",
+          "header_raw": "ΔT × 大動脈PWV",
+          "stage": null
+        },
+        {
+          "key": "ri_pvr",
+          "kind": "rho",
+          "header_ja": "RI × 末梢血管抵抗",
+          "header_raw": "RI × 末梢血管抵抗",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "**判定には用いない。**対象は系統的に選んだ 624 名（subj_no を 7 で割った剰余が 0）。\n同一集団における Charlton 同梱の特徴点由来指標は ΔT 0.705・RI 0.501 である。\n括弧内は予測の符号を持った層の数。"
+      ],
+      "postscript": [
+        "**ΔT については、どの条件も特徴点由来に届かない。**最良は Tigges 推奨の Gamma M=3 で 0.578 であり、\n第2版のガンマ経路の全例 0.556 および表3 の 0.56 と同じ水準にある。すなわち我々の実装が劣っていたのではなく、\n文献の条件で出る上限がこの水準である。",
+        "**RI については Couceiro の R1_d のみが特徴点由来を上回る**（0.585 対 0.501）。\n事前に定めた規準の下でこの行は判定に採らない。留保は 3 つある。本モデルでは末梢血管抵抗が拡張期の減衰を\n決めるため関連の一部が内蔵されていること、実測波形では拡張期ピークが得られないことが多いこと、\nおよび我々の再現に逸脱が残ることである。"
+      ],
+      "groups": [],
+      "row_count": 7,
+      "rows": [
+        {
+          "id": "tigges2017",
+          "line": 129,
+          "label_ja": "Tigges 2017（推奨の Gamma M=3）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "**0.578（6/6）**",
+            "rho": 0.578,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "fleischhauer2020",
+          "line": 130,
+          "label_ja": "Fleischhauer 2020（2核）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.505（5/6）",
+            "rho": 0.505,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "0.314（5/6）",
+            "rho": 0.314,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "couceiro2015",
+          "line": 131,
+          "label_ja": "Couceiro 2015",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.500（6/6）",
+            "rho": 0.5,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "**R1_d 0.585（6/6）**",
+            "rho": 0.585,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "prefix": "R1_d",
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "wang2013",
+          "line": 132,
+          "label_ja": "Wang 2013（全例）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.457（5/6）",
+            "rho": 0.457,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "basso2024",
+          "line": 133,
+          "label_ja": "Basso 2024（L=3）",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "0.314（6/6）",
+            "rho": 0.314,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "goswami2010",
+          "line": 134,
+          "label_ja": "Goswami 2010",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "0.343（5/6）",
+            "rho": 0.343,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "landmark_ref",
+          "line": 135,
+          "label_ja": "参照: Charlton 同梱の特徴点由来",
+          "label_bold": false,
+          "dt_pwv": {
+            "raw": "0.705",
+            "rho": 0.705,
+            "strata": null,
+            "bold": false
+          },
+          "ri_pvr": {
+            "raw": "0.501",
+            "rho": 0.501,
+            "strata": null,
+            "bold": false
+          },
+          "reference": true
+        }
+      ]
+    },
+    "表4_逸脱表": {
+      "name": "逸脱表",
+      "key": "表4_逸脱表",
+      "title": "逸脱表（投稿時に本文に入れる）",
+      "heading_level": 3,
+      "heading_line": 158,
+      "parent": "表4",
+      "table_lines": [
+        160,
+        166
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出どころは `docs/research/roadmap_v1.md` §9（表1・表2）、`docs/research/lab_log.md` 追記12（表2）・追記13（表3）・追記18（表4）・追記137（表5）・追記144・146・147（表5b・表6・表6b）・追記149・151・152（表6・表6b の更新と表7）。",
+      "source_kind": "文書の冒頭（出どころ）",
+      "source_lines": [
+        3,
+        9
+      ],
+      "source_segments": [
+        "追記18（表4）"
+      ],
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "出どころ",
+          "header_raw": "出どころ",
+          "stage": null
+        },
+        {
+          "key": "deviation_ja",
+          "kind": "text",
+          "header_ja": "逸脱",
+          "header_raw": "逸脱",
+          "stage": null
+        }
+      ],
+      "preamble": [],
+      "postscript": [],
+      "groups": [],
+      "row_count": 5,
+      "rows": [
+        {
+          "id": "all",
+          "line": 162,
+          "label_ja": "全条件",
+          "label_bold": false,
+          "deviation_ja": {
+            "raw": "最適化器は我々の環境のもの（SciPy）を用いた。原著と同一ではない",
+            "text": "最適化器は我々の環境のもの（SciPy）を用いた。原著と同一ではない",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "wang2013",
+          "line": 163,
+          "label_ja": "Wang 2013",
+          "label_bold": false,
+          "deviation_ja": {
+            "raw": "重みの探索の刻みを 1 とした",
+            "text": "重みの探索の刻みを 1 とした",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "couceiro2015",
+          "line": 164,
+          "label_ja": "Couceiro 2015",
+          "label_bold": false,
+          "deviation_ja": {
+            "raw": "第5成分の初期値は表1 から作れなかった 1% の拍で既定値を用いた",
+            "text": "第5成分の初期値は表1 から作れなかった 1% の拍で既定値を用いた",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "tigges2017",
+          "line": 165,
+          "label_ja": "Tigges 2017",
+          "label_bold": false,
+          "deviation_ja": {
+            "raw": "補正赤池情報量規準のための 40 Hz への再標本化は原著の記述どおり Kaiser 窓で行った",
+            "text": "補正赤池情報量規準のための 40 Hz への再標本化は原著の記述どおり Kaiser 窓で行った",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "common",
+          "line": 166,
+          "label_ja": "共通",
+          "label_bold": false,
+          "deviation_ja": {
+            "raw": "PWDB は 1 拍・雑音なしであり、原著が対象とした実測波形とは条件が異なる",
+            "text": "PWDB は 1 拍・雑音なしであり、原著が対象とした実測波形とは条件が異なる",
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表5": {
+      "name": "表5",
+      "key": "表5",
+      "title": "表5　波形の型で分けた年齢層内 Spearman 順位相関（探索・事後）",
+      "heading_level": 2,
+      "heading_line": 170,
+      "parent": null,
+      "table_lines": [
+        181,
+        186
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出典: `analysis/scripts/48_pwdb_by_waveform_type.py`（`docs/research/results/48_pwdb_by_waveform_type.txt`、lab_log 追記137）。",
+      "source_kind": "出典（同じ節）",
+      "source_lines": [
+        207,
+        209
+      ],
+      "source_paragraph": "出典: `analysis/scripts/48_pwdb_by_waveform_type.py`（`docs/research/results/48_pwdb_by_waveform_type.txt`、lab_log 追記137）。50番 節C が同じ入力から型1 0.343・型3 0.430 を再現している（`docs/research/results/50_reservoir_bench_BC.txt`）。",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label_n",
+          "header_ja": "波形の型（n）",
+          "header_raw": "波形の型（n）",
+          "stage": null
+        },
+        {
+          "key": "landmark_dt_C",
+          "kind": "rho",
+          "header_ja": "特徴点法 ΔT C 段",
+          "header_raw": "特徴点法 ΔT<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "pda_frozen_dt_A",
+          "kind": "rho",
+          "header_ja": "分解法・凍結版 ΔT A 段",
+          "header_raw": "分解法・凍結版 ΔT<br>A 段",
+          "stage": "A"
+        },
+        {
+          "key": "amp_ratio_C",
+          "kind": "rho",
+          "header_ja": "早期振幅比 C 段",
+          "header_raw": "早期振幅比<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "landmark_ri_C",
+          "kind": "rho",
+          "header_ja": "特徴点法 RI C 段",
+          "header_raw": "特徴点法 RI<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "pda_frozen_ri_A",
+          "kind": "rho",
+          "header_ja": "分解法・凍結版 RI A 段",
+          "header_raw": "分解法・凍結版 RI<br>A 段",
+          "stage": "A"
+        }
+      ],
+      "preamble": [
+        "**この解析は決定試験の判定の後に回した探索であり、判定には用いない。**対象は決定試験と同じ 4,374 名で、\n波形の型は `pda2.find_landmarks` による（型1 ＝ 重複切痕と拡張期ピークが極値として現れる、\n型3 ＝ 極値は無いが下降脚の変曲点で代用できる、型4 ＝ いずれも見つからない）。\n層は年齢の 6 値、1 層 8 名以上。|ρ| の中央値を示し、括弧内は予測の符号を持った層の数である。",
+        "**段の定義**（本稿で表を読むときに毎回参照する）:\n**A 段** ＝ その手法が自分で「当てはめに成功した」と判定した被験者だけ（分解法・凍結版では `ok_v1 == 1`）。\n**C 段** ＝ 採否を無視した全例。特徴点由来の指標は採否の判定を持たないので常に C 段である。"
+      ],
+      "postscript": [
+        "左の 3 列は ΔT × 大動脈脈波伝播速度（予測の符号は負、早期振幅比は正）、右の 2 列は RI × 末梢血管抵抗（正）である。",
+        "読み取れることは 3 つある。",
+        "**第一に、全例の相関は型の混合を含む。**特徴点法の ΔT は全例で 0.710 だが、型を固定すると型1 で 0.343、\n型3 で 0.430 にとどまる。同じ年齢層の中で型1（切痕が残る）と型3（切痕が消えた）が分かれ、型そのものが\n硬さの関数であるため、型をまたぐ差が全例の値を押し上げている。これは指標が硬さを反映していることの一部であって\n欠陥ではないが、**型を固定した中での関連は全例の値より弱い**。",
+        "**第二に、分解法・凍結版 ΔT の陰性は型に依らない。**切痕が極値として残る型1 でも 0.224（4/6）であり、\n第2成分のピークは同梱の拡張期ピークより中央値 36.9 ms 遅い（型3 では 98.5 ms）。第2成分は拡張期ピークに載っていない。",
+        "**第三に、分解由来の RI は型1 では末梢血管抵抗を追う。**凍結版 0.554（6/6）は特徴点法の 0.481 を上回る。\n全例の 0.207 は型3（77%）で生じており、型3 では凍結版 RI の相関が年齢とともに消える（25 歳層 +0.54 → 75 歳層 −0.01）。\n第2版の歪みガウスでも型1 の RI は 0.553（6/6）だが、型3 では高齢層で符号が反転する（+0.53 → −0.49）。\n**切痕が極値として残らない型では、第2成分の振幅を決める基準が波形の中に無い。**",
+        "早期振幅比の全例 25 歳層がほぼ 0 であったのは、型1（+0.74）と型3（−0.47）で符号が逆で打ち消し合うためである。",
+        "出典: `analysis/scripts/48_pwdb_by_waveform_type.py`（`docs/research/results/48_pwdb_by_waveform_type.txt`、\nlab_log 追記137）。50番 節C が同じ入力から型1 0.343・型3 0.430 を再現している\n（`docs/research/results/50_reservoir_bench_BC.txt`）。"
+      ],
+      "groups": [],
+      "row_count": 4,
+      "rows": [
+        {
+          "id": "type1",
+          "line": 183,
+          "label_ja": "型1　切痕あり（891）",
+          "label_bold": false,
+          "n": 891,
+          "strata_count": null,
+          "landmark_dt_C": {
+            "raw": "0.343（4/6）",
+            "rho": 0.343,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pda_frozen_dt_A": {
+            "raw": "0.224（4/6）",
+            "rho": 0.224,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "amp_ratio_C": {
+            "raw": "0.326（4/6）",
+            "rho": 0.326,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "landmark_ri_C": {
+            "raw": "0.481（6/6）",
+            "rho": 0.481,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pda_frozen_ri_A": {
+            "raw": "**0.554（6/6）**",
+            "rho": 0.554,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "type3",
+          "line": 184,
+          "label_ja": "型3　変曲点のみ（3,378）",
+          "label_bold": false,
+          "n": 3378,
+          "strata_count": null,
+          "landmark_dt_C": {
+            "raw": "**0.430（6/6）**",
+            "rho": 0.43,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "pda_frozen_dt_A": {
+            "raw": "0.220（6/6）",
+            "rho": 0.22,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "amp_ratio_C": {
+            "raw": "**0.815（6/6）**",
+            "rho": 0.815,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "landmark_ri_C": {
+            "raw": "**0.550（6/6）**",
+            "rho": 0.55,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "pda_frozen_ri_A": {
+            "raw": "0.233（5/6）",
+            "rho": 0.233,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "type4",
+          "line": 185,
+          "label_ja": "型4　いずれも無し（105・3 層）",
+          "label_bold": false,
+          "n": 105,
+          "strata_count": 3,
+          "landmark_dt_C": {
+            "raw": "**0.796（3/3）**",
+            "rho": 0.796,
+            "strata": "3/3",
+            "strata_pass": 3,
+            "strata_total": 3,
+            "bold": true
+          },
+          "pda_frozen_dt_A": {
+            "raw": "0.472（3/3）",
+            "rho": 0.472,
+            "strata": "3/3",
+            "strata_pass": 3,
+            "strata_total": 3,
+            "bold": false
+          },
+          "amp_ratio_C": {
+            "raw": "0.247（0/3）",
+            "rho": 0.247,
+            "strata": "0/3",
+            "strata_pass": 0,
+            "strata_total": 3,
+            "bold": false
+          },
+          "landmark_ri_C": {
+            "raw": "**0.888（3/3）**",
+            "rho": 0.888,
+            "strata": "3/3",
+            "strata_pass": 3,
+            "strata_total": 3,
+            "bold": true
+          },
+          "pda_frozen_ri_A": {
+            "raw": "0.637（3/3）",
+            "rho": 0.637,
+            "strata": "3/3",
+            "strata_pass": 3,
+            "strata_total": 3,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "all",
+          "line": 186,
+          "label_ja": "全例（4,374）",
+          "label_bold": false,
+          "n": 4374,
+          "strata_count": null,
+          "landmark_dt_C": {
+            "raw": "**0.710（6/6）**",
+            "rho": 0.71,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "pda_frozen_dt_A": {
+            "raw": "0.223（6/6）",
+            "rho": 0.223,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "amp_ratio_C": {
+            "raw": "**0.836（6/6）**",
+            "rho": 0.836,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "landmark_ri_C": {
+            "raw": "**0.504（6/6）**",
+            "rho": 0.504,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "pda_frozen_ri_A": {
+            "raw": "0.207（5/6）",
+            "rho": 0.207,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表5b": {
+      "name": "表5b",
+      "key": "表5b",
+      "title": "表5b　真値そのものの層内のばらつき（範囲の制限。探索・事後・C 段）",
+      "heading_level": 2,
+      "heading_line": 213,
+      "parent": null,
+      "table_lines": [
+        219,
+        224
+      ],
+      "stage": "C",
+      "post_hoc": true,
+      "source": "出典: `analysis/scripts/50_reservoir_bench.py` 節B 表 B6（`docs/research/results/50_reservoir_bench_BC.txt`、lab_log 追記147）。",
+      "source_kind": "出典（同じ節）",
+      "source_lines": [
+        236,
+        237
+      ],
+      "source_paragraph": "出典: `analysis/scripts/50_reservoir_bench.py` 節B 表 B6（`docs/research/results/50_reservoir_bench_BC.txt`、lab_log 追記147）。",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "波形の型",
+          "header_raw": "波形の型",
+          "stage": null
+        },
+        {
+          "key": "pwv_iqr_width_m_s",
+          "kind": "num",
+          "header_ja": "大動脈PWV の幅 [m/s]",
+          "header_raw": "大動脈PWV の幅 [m/s]",
+          "stage": null
+        },
+        {
+          "key": "pvr_iqr_width",
+          "kind": "sci",
+          "header_ja": "末梢血管抵抗の幅",
+          "header_raw": "末梢血管抵抗の幅",
+          "stage": null
+        },
+        {
+          "key": "strata_ge8",
+          "kind": "frac",
+          "header_ja": "8 名以上の層",
+          "header_raw": "8 名以上の層",
+          "stage": null
+        },
+        {
+          "key": "min_stratum_n",
+          "kind": "int",
+          "header_ja": "最小の層 n",
+          "header_raw": "最小の層 n",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "**型1 の値を「手法の失敗」と読んではいけない。**表5 の型1 の列は、どの手法でも低い。その理由は、\n**型1 に絞ると年齢層の中で大動脈脈波伝播速度がほとんど動かなくなる**ことにある。\n四分位範囲の幅を年齢層ごとに出し、層をまたいだ中央値を示す（数値は PWDB の配布物の単位のまま）。"
+      ],
+      "postscript": [
+        "**型1 の被験者の大動脈脈波伝播速度は、同じ年齢層の中で型3 の約 1/12 しか動いていない**\n（55 歳層では四分位範囲が 6.369〜6.428 m/s、幅 0.059 m/s である）。ほとんど動かない量に対する順位相関は、\n手法の精度によらず小さく出る。一方、**末梢血管抵抗の幅は型1 ÷ 型3 ＝ 0.810 とほぼ等しく**、実際に型1 の\nRI × 末梢血管抵抗は凍結版でも 0.554（6/6）である。すなわち型1 が苦手なのではなく、\n**型1 では大動脈脈波伝播速度を相手にした比較が構成上ほとんど情報を持たない**。\n型1 は各年齢層の中で末梢血管コンプライアンスが高い側の部分集団であり（PWV の中央値は 25 歳層 5.479 →\n75 歳層 7.171 m/s で、型3 の 6.278 → 9.871 m/s より常に低い）、型で絞ると脈波伝播速度がほぼ固定される。",
+        "この表は型1 の弱さを見たあとで作った記述であり、予測は立てていない。検定も行わない。",
+        "出典: `analysis/scripts/50_reservoir_bench.py` 節B 表 B6（`docs/research/results/50_reservoir_bench_BC.txt`、\nlab_log 追記147）。"
+      ],
+      "groups": [],
+      "row_count": 4,
+      "rows": [
+        {
+          "id": "type1",
+          "line": 221,
+          "label_ja": "型1　切痕あり",
+          "label_bold": false,
+          "pwv_iqr_width_m_s": {
+            "raw": "**0.114**",
+            "value": 0.114,
+            "bold": true
+          },
+          "pvr_iqr_width": {
+            "raw": "3.71×10⁷",
+            "value": 37100000.0,
+            "mantissa": 3.71,
+            "exponent": 7,
+            "bold": false
+          },
+          "strata_ge8": {
+            "raw": "6 / 6",
+            "num": 6,
+            "den": 6,
+            "bold": false
+          },
+          "min_stratum_n": {
+            "raw": "53",
+            "value": 53,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "type3",
+          "line": 222,
+          "label_ja": "型3　変曲点のみ",
+          "label_bold": false,
+          "pwv_iqr_width_m_s": {
+            "raw": "**1.431**",
+            "value": 1.431,
+            "bold": true
+          },
+          "pvr_iqr_width": {
+            "raw": "4.58×10⁷",
+            "value": 45800000.0,
+            "mantissa": 4.58,
+            "exponent": 7,
+            "bold": false
+          },
+          "strata_ge8": {
+            "raw": "6 / 6",
+            "num": 6,
+            "den": 6,
+            "bold": false
+          },
+          "min_stratum_n": {
+            "raw": "405",
+            "value": 405,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "type4",
+          "line": 223,
+          "label_ja": "型4　いずれも無し",
+          "label_bold": false,
+          "pwv_iqr_width_m_s": {
+            "raw": "0.934",
+            "value": 0.934,
+            "bold": false
+          },
+          "pvr_iqr_width": {
+            "raw": "2.48×10⁷",
+            "value": 24800000.0,
+            "mantissa": 2.48,
+            "exponent": 7,
+            "bold": false
+          },
+          "strata_ge8": {
+            "raw": "3 / 6",
+            "num": 3,
+            "den": 6,
+            "bold": false
+          },
+          "min_stratum_n": {
+            "raw": "29",
+            "value": 29,
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "ratio_type1_type3",
+          "line": 224,
+          "label_ja": "型1 ÷ 型3",
+          "label_bold": false,
+          "pwv_iqr_width_m_s": {
+            "raw": "**0.080**",
+            "value": 0.08,
+            "bold": true
+          },
+          "pvr_iqr_width": {
+            "raw": "0.810",
+            "value": 0.81,
+            "bold": false
+          },
+          "strata_ge8": {
+            "raw": "—",
+            "num": null,
+            "den": null,
+            "dash": true,
+            "bold": false
+          },
+          "min_stratum_n": {
+            "raw": "—",
+            "value": null,
+            "dash": true,
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表6": {
+      "name": "表6",
+      "key": "表6",
+      "title": "表6　拡張期の下降の扱いを変えたときの型3 の関連（探索・事後・4,374 名）",
+      "heading_level": 2,
+      "heading_line": 241,
+      "parent": null,
+      "table_lines": [
+        251,
+        267
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出典（表6・表6b とも）: `analysis/scripts/50_reservoir_bench.py` 節C（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。",
+      "source_kind": "出典（明示）",
+      "source_lines": [
+        339,
+        341
+      ],
+      "source_paragraph": "出典（表6・表6b とも）: `analysis/scripts/50_reservoir_bench.py` 節C（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。**改良した当てはめを主解析に用いるには、新たな事前登録が要る。**",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "拡張期の下降の扱い",
+          "header_raw": "拡張期の下降の扱い",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv_A",
+          "kind": "rho",
+          "header_ja": "ΔT×PWV A 段",
+          "header_raw": "ΔT×PWV<br>A 段",
+          "stage": "A"
+        },
+        {
+          "key": "dt_pwv_C",
+          "kind": "rho",
+          "header_ja": "ΔT×PWV C 段",
+          "header_raw": "ΔT×PWV<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "ri_pvr_A",
+          "kind": "rho",
+          "header_ja": "RI×抵抗 A 段",
+          "header_raw": "RI×抵抗<br>A 段",
+          "stage": "A"
+        },
+        {
+          "key": "ri_pvr_C",
+          "kind": "rho",
+          "header_ja": "RI×抵抗 C 段",
+          "header_raw": "RI×抵抗<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "pass_rate",
+          "kind": "num",
+          "header_ja": "通過率",
+          "header_raw": "通過率",
+          "stage": null
+        },
+        {
+          "key": "dt_offset_vs_landmark_ms_A",
+          "kind": "ms",
+          "header_ja": "同梱の特徴点との ΔT の差（A 段）",
+          "header_raw": "同梱の特徴点との<br>ΔT の差（A 段）",
+          "stage": "A"
+        }
+      ],
+      "preamble": [
+        "**この解析は決定試験の判定の後に回した探索であり、判定には用いない。**本稿の主解析（表1）は凍結版の実装で確定しており、\n以下は「なぜ分解法が特徴点法に劣ったのか」を診断するために、同じ 4,374 名の同じ拍に当てはめ直したものである。\n2 カーネル模型には拡張期の下降を受ける項が無い。そこで下降の扱いだけを変えた版を、**下降を説明する項を足す案**と、\n**下降を当てはめの対象から外す、または残差の中で小さくする案**に分けて並べる。\n段の定義は表5 と同じ（A 段 ＝ その手法が自分で採用した被験者だけ、C 段 ＝ 採否を無視した全員）。\n通過率は凍結版と同じ収束検算（境界張り付き・成分の高さ・競合解の反射係数の差）を当てたときに採用になる割合、\nすなわち A 段に残る割合である。"
+      ],
+      "postscript": [
+        "**下降を説明する項を足す 5 つの案はいずれも失敗し、下降を当てはめの対象から外す（打ち切り）か、\n残差の中で小さくする（1 次微分の領域）案だけが働いた。**\n打ち切った版では型3 の ΔT × 大動脈脈波伝播速度が 0.220 から 0.596（C 段・6/6）に上がり、\n同梱の特徴点法（0.430）を上回る。\n**打ち切る割合を 0.55〜0.75 倍で振っても C 段は 0.545〜0.596・6/6 で変わらず、絶対時間 0.45 s で切っても 0.724・6/6 である。**\n拍長の割合で切ると切る位置が心拍数の関数になるが、絶対時間で切っても同じ向き・同じ水準なので、\n打ち切りの効果は切る位置が心拍数に依存することの産物ではない。\n主とする割合 0.65 は本解析の前に決めた値であり、これらの数値を見て選び直していない。\n切る範囲を狭くするほど ΔT の相関は上がるが、第2成分の形を決める情報が減るので通過率は下がる\n（0.75 倍 0.726 → 0.65 倍 0.413 → 0.55 倍 0.156。絶対時間 0.45 s は 0.187）。",
+        "**出力側の畳み込みは、波形には最もよく合う版でありながら関連を失った。**通過率 0.728 は凍結版に次いで高く、\n時定数が下限に達した拍は無い（表6b）。それでも ΔT × 大動脈脈波伝播速度は A 段 0.042 で、凍結版より悪い。\n下降を説明する自由度を模型に与えると、第2成分をどこに置いても残差を小さくできるようになり、\n第2成分の位置が残差から決まらなくなる。**波形に合うことと、指標が硬さを追うことは別である。**\n2 段階の逆畳み込みは、戻した波形に当てた第2成分の幅が上限に達し（表6b）、通過率 0.086 にとどまった。",
+        "**1 次微分の領域で残差を取る版だけが、ΔT と RI の両方で C 段の規準を満たす**（0.687・0.416、いずれも 6/6）。\nゆっくり下がる拡張期は微分すると小さくなり、残差は収縮期ピークと変曲点の周りで決まる。\nただし競合解を持つ拍が 0.331 と多く、通過率は 0.510 である。",
+        "**第2成分が同梱の特徴点の位置に戻ることは、関連の条件ではない。**拍長の 0.65 倍で打ち切った版は特徴点との差が\n+98.5 → +25.8 ms に縮んだが、1 次微分の版は +88.8 ms のままで、後者の C 段（0.687）は前者（0.596）より高い。",
+        "**RI については、打ち切った版は A 段でしか規準を満たさない**（3 つの割合と絶対時間のすべてで C 段は 0.107〜0.182）。\nこれが当てはめの良さによるのか採用の仕方によるのかは、同じ被験者の上で比べる B 段\n（比べる手法すべてが採用した共通例）で分かれる（次の実行で計算する）。\n1 次微分の版は C 段でも満たす（0.416）が、同梱の特徴点法（0.550）には届かない。",
+        "**第2成分の位置の下限は原因ではない。**下限を 0.08 s から 0.01 s に緩めても値はほとんど動かず、\n凍結版では 4,374 名のいずれの型でも下限に張り付いた拍は 1 つも無かった。"
+      ],
+      "groups": [
+        "下降を説明する項を足す",
+        "下降を当てはめの対象から外す・残差の中で小さくする"
+      ],
+      "row_count": 13,
+      "rows": [
+        {
+          "id": "fb",
+          "line": 253,
+          "label_ja": "凍結版（項を持たない）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.220（6/6）",
+            "rho": 0.22,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.207（6/6）",
+            "rho": 0.207,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.233（5/6）",
+            "rho": 0.233,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.184（4/6）",
+            "rho": 0.184,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.901",
+            "value": 0.901,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+98.5 ms",
+            "value": 98.5,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "dmu001",
+          "line": 254,
+          "label_ja": "第2成分の位置の下限を 0.08 → 0.01 s",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.216（6/6）",
+            "rho": 0.216,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.206（6/6）",
+            "rho": 0.206,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.236（6/6）",
+            "rho": 0.236,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.180（5/6）",
+            "rho": 0.18,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.899",
+            "value": 0.899,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+97.9 ms",
+            "value": 97.9,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "reservoir",
+          "line": 256,
+          "group": "下降を説明する項を足す",
+          "label_ja": "貯留槽の項を足す（前進波の畳み込み）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.457（5/6）",
+            "rho": 0.457,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.245（3/6）",
+            "rho": 0.245,
+            "strata": "3/6",
+            "strata_pass": 3,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.635（5/6）",
+            "rho": 0.635,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.274（5/6）",
+            "rho": 0.274,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.088",
+            "value": 0.088,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+138.2 ms",
+            "value": 138.2,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "reservoir_tau015",
+          "line": 257,
+          "group": "下降を説明する項を足す",
+          "label_ja": "同（時定数の下限を 0.05 → 0.15 s）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.508（3/4）",
+            "rho": 0.508,
+            "strata": "3/4",
+            "strata_pass": 3,
+            "strata_total": 4,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.187（4/6）",
+            "rho": 0.187,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.270（4/4）",
+            "rho": 0.27,
+            "strata": "4/4",
+            "strata_pass": 4,
+            "strata_total": 4,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.418（6/6）",
+            "rho": 0.418,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.035",
+            "value": 0.035,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+69.4 ms",
+            "value": 69.4,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "decay",
+          "line": 258,
+          "group": "下降を説明する項を足す",
+          "label_ja": "自由な指数減衰を足す",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.267（5/6）",
+            "rho": 0.267,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.272（6/6）",
+            "rho": 0.272,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.268（6/6）",
+            "rho": 0.268,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.258（6/6）",
+            "rho": 0.258,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.591",
+            "value": 0.591,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+96.7 ms",
+            "value": 96.7,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "conv",
+          "line": 259,
+          "group": "下降を説明する項を足す",
+          "label_ja": "出力側の畳み込み（2 成分の和に単位面積の指数核を掛けて置き換える）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.042（4/6）",
+            "rho": 0.042,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.267（2/6）",
+            "rho": 0.267,
+            "strata": "2/6",
+            "strata_pass": 2,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.381（5/6）",
+            "rho": 0.381,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.361（4/6）",
+            "rho": 0.361,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.728",
+            "value": 0.728,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+84.7 ms",
+            "value": 84.7,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "twostage",
+          "line": 260,
+          "group": "下降を説明する項を足す",
+          "label_ja": "2 段階（拡張期の後ろ 30% から時定数を推定し、逆畳み込みしてから凍結版を当てる）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.102（4/5）",
+            "rho": 0.102,
+            "strata": "4/5",
+            "strata_pass": 4,
+            "strata_total": 5,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.012（4/6）",
+            "rho": 0.012,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.060（2/5）",
+            "rho": 0.06,
+            "strata": "2/5",
+            "strata_pass": 2,
+            "strata_total": 5,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.195（6/6）",
+            "rho": 0.195,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.086",
+            "value": 0.086,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+80.3 ms",
+            "value": 80.3,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc065",
+          "line": 262,
+          "group": "下降を当てはめの対象から外す・残差の中で小さくする",
+          "label_ja": "当てはめを拍長の 0.65 倍で打ち切る",
+          "label_bold": true,
+          "dt_pwv_A": {
+            "raw": "**0.828（6/6）**",
+            "rho": 0.828,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "dt_pwv_C": {
+            "raw": "**0.596（6/6）**",
+            "rho": 0.596,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_A": {
+            "raw": "**0.530（6/6）**",
+            "rho": 0.53,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_C": {
+            "raw": "0.107（6/6）",
+            "rho": 0.107,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.413",
+            "value": 0.413,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "**+25.8 ms**",
+            "value": 25.8,
+            "unit": "ms",
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc055",
+          "line": 263,
+          "group": "下降を当てはめの対象から外す・残差の中で小さくする",
+          "label_ja": "同 0.55 倍",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.728（4/6）",
+            "rho": 0.728,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.582（6/6）",
+            "rho": 0.582,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.444（6/6）",
+            "rho": 0.444,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.182（3/6）",
+            "rho": 0.182,
+            "strata": "3/6",
+            "strata_pass": 3,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.156",
+            "value": 0.156,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+44.5 ms",
+            "value": 44.5,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc075",
+          "line": 264,
+          "group": "下降を当てはめの対象から外す・残差の中で小さくする",
+          "label_ja": "同 0.75 倍",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.662（6/6）",
+            "rho": 0.662,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.545（6/6）",
+            "rho": 0.545,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.326（6/6）",
+            "rho": 0.326,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.149（6/6）",
+            "rho": 0.149,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.726",
+            "value": 0.726,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+78.7 ms",
+            "value": 78.7,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc_abs045",
+          "line": 265,
+          "group": "下降を当てはめの対象から外す・残差の中で小さくする",
+          "label_ja": "絶対時間 0.45 s で打ち切る（拍長の 0.90 倍を上限）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "**0.711（6/6）**",
+            "rho": 0.711,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "dt_pwv_C": {
+            "raw": "**0.724（6/6）**",
+            "rho": 0.724,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_A": {
+            "raw": "0.461（4/6）",
+            "rho": 0.461,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.110（3/6）",
+            "rho": 0.11,
+            "strata": "3/6",
+            "strata_pass": 3,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "0.187",
+            "value": 0.187,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+42.0 ms",
+            "value": 42.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "deriv",
+          "line": 266,
+          "group": "下降を当てはめの対象から外す・残差の中で小さくする",
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "label_bold": true,
+          "dt_pwv_A": {
+            "raw": "**0.523（6/6）**",
+            "rho": 0.523,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "dt_pwv_C": {
+            "raw": "**0.687（6/6）**",
+            "rho": 0.687,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_A": {
+            "raw": "**0.336（6/6）**",
+            "rho": 0.336,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_C": {
+            "raw": "**0.416（6/6）**",
+            "rho": 0.416,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "pass_rate": {
+            "raw": "0.510",
+            "value": 0.51,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "+88.8 ms",
+            "value": 88.8,
+            "unit": "ms",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "landmark",
+          "line": 267,
+          "group": null,
+          "label_ja": "（参考）特徴点法（同梱）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.430（6/6）",
+            "rho": 0.43,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.550（6/6）",
+            "rho": 0.55,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "pass_rate": {
+            "raw": "—",
+            "value": null,
+            "dash": true,
+            "bold": false
+          },
+          "dt_offset_vs_landmark_ms_A": {
+            "raw": "0（基準）",
+            "value": 0.0,
+            "unit": "ms",
+            "note": "基準",
+            "bold": false
+          },
+          "reference": true
+        }
+      ]
+    },
+    "表6b": {
+      "name": "表6b",
+      "key": "表6b",
+      "title": "表6b　当てはめが探索範囲の端に達した母数（型3・C 段・上位 2 つ）",
+      "heading_level": 2,
+      "heading_line": 303,
+      "parent": null,
+      "table_lines": [
+        310,
+        320
+      ],
+      "stage": "C",
+      "post_hoc": true,
+      "source": "出典（表6・表6b とも）: `analysis/scripts/50_reservoir_bench.py` 節C（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。",
+      "source_kind": "出典（明示）",
+      "source_lines": [
+        339,
+        341
+      ],
+      "source_paragraph": "出典（表6・表6b とも）: `analysis/scripts/50_reservoir_bench.py` 節C（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。**改良した当てはめを主解析に用いるには、新たな事前登録が要る。**",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "拡張期の下降の扱い",
+          "header_raw": "拡張期の下降の扱い",
+          "stage": null
+        },
+        {
+          "key": "boundary_fraction",
+          "kind": "num",
+          "header_ja": "端に達した拍の割合",
+          "header_raw": "端に達した拍の割合",
+          "stage": null
+        },
+        {
+          "key": "breakdown",
+          "kind": "breakdown",
+          "header_ja": "内訳",
+          "header_raw": "内訳",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "表6 の各案がなぜ失敗し、なぜ働いたかは、どの母数が探索範囲の端に達したかで説明できる。\n母数の名は a1・μ1・σ1・α1 が第1成分の高さ・位置・幅・歪度、a2・Δμ・σ2・α2 が第2成分の同じもの、\ng・τ が貯留槽の大きさと時定数である。`:lo` は下限、`:hi` は上限に達したことを表し、\n1 つの拍が複数の母数で端に達しうるので割合の合計は 1 にならない。"
+      ],
+      "postscript": [
+        "貯留槽の項は `res(t) = g·∫g1(s)·e^{−(t−s)/τ}ds/τ` で核を単位面積に規格化してあるため、\n**時定数 τ を 0 に近づけると核はデルタ関数に近づき、この項は第1成分の定数倍に一致する。**\n当てはめは拡張期の下降を説明する代わりに、この縮退した向き（g を上限へ、τ を下限へ）に進む。\n**時定数の下限を 0.05 s から 0.15 s に引き上げても、端に達する拍の割合は 0.21 から 0.88 に増えただけで、\n縮退は解消しない。**すなわちこの失敗は下限の選び方の問題ではなく、2 カーネル模型に貯留槽の項を加えたときの\n同定性の問題である。自由な指数減衰も同じ向きに縮退する。",
+        "出力側の畳み込みは核を 2 成分の和の全体に掛けて置き換えるので、時定数を 0 に近づけると凍結版そのものに一致し、\n縮退する向きが無い。実際に時定数が下限に達した拍は無く、端に達するのは第1成分の歪度である。\n**この版の失敗は同定性の問題ではなく、下降を説明できるようになった分だけ第2成分の位置が残差から決まらなくなったことによる**（表6）。\n2 段階の逆畳み込みは、推定した時定数で戻した波形の拡張期が持ち上がり、第2成分の幅が上限に達する。",
+        "これに対し、**打ち切った版と 1 次微分の版で端に達するのは第2成分の幅と歪度であって、位置ではない**\n（1 次微分の版で位置の下限に達した拍は 0.11）。\n拡張期を当てはめの対象から外すと第2成分の形を決める情報が減るため通過率は下がるが、\nΔT が用いるのは位置であり、A 段と C 段の双方で関連が保たれることがその裏づけである。",
+        "出典（表6・表6b とも）: `analysis/scripts/50_reservoir_bench.py` 節C\n（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。\n**改良した当てはめを主解析に用いるには、新たな事前登録が要る。**"
+      ],
+      "groups": [],
+      "row_count": 9,
+      "rows": [
+        {
+          "id": "fb",
+          "line": 312,
+          "label_ja": "凍結版（項を持たない）",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.072",
+            "value": 0.072,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "α1:hi 0.04・σ1:hi 0.03",
+            "items": [
+              {
+                "param": "α1",
+                "bound": "hi",
+                "fraction": 0.04,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "α1:hi 0.04"
+              },
+              {
+                "param": "σ1",
+                "bound": "hi",
+                "fraction": 0.03,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "σ1:hi 0.03"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "reservoir",
+          "line": 313,
+          "label_ja": "貯留槽の項（時定数の下限 0.05 s）",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.903",
+            "value": 0.903,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "**g:hi 0.61**・**τ:lo 0.21**",
+            "items": [
+              {
+                "param": "g",
+                "bound": "hi",
+                "fraction": 0.61,
+                "bold": true,
+                "parenthetical": false,
+                "raw": "**g:hi 0.61**"
+              },
+              {
+                "param": "τ",
+                "bound": "lo",
+                "fraction": 0.21,
+                "bold": true,
+                "parenthetical": false,
+                "raw": "**τ:lo 0.21**"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "reservoir_tau015",
+          "line": 314,
+          "label_ja": "貯留槽の項（同 0.15 s）",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.932",
+            "value": 0.932,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "**τ:lo 0.88**・g:hi 0.56",
+            "items": [
+              {
+                "param": "τ",
+                "bound": "lo",
+                "fraction": 0.88,
+                "bold": true,
+                "parenthetical": false,
+                "raw": "**τ:lo 0.88**"
+              },
+              {
+                "param": "g",
+                "bound": "hi",
+                "fraction": 0.56,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "g:hi 0.56"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "decay",
+          "line": 315,
+          "label_ja": "自由な指数減衰",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.372",
+            "value": 0.372,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "**τ:lo 0.33**",
+            "items": [
+              {
+                "param": "τ",
+                "bound": "lo",
+                "fraction": 0.33,
+                "bold": true,
+                "parenthetical": false,
+                "raw": "τ:lo 0.33"
+              }
+            ],
+            "bold": true
+          },
+          "reference": false
+        },
+        {
+          "id": "conv",
+          "line": 316,
+          "label_ja": "出力側の畳み込み",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.254",
+            "value": 0.254,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "α1:hi 0.25・μ1:lo 0.02（τ:lo 0.00）",
+            "items": [
+              {
+                "param": "α1",
+                "bound": "hi",
+                "fraction": 0.25,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "α1:hi 0.25"
+              },
+              {
+                "param": "μ1",
+                "bound": "lo",
+                "fraction": 0.02,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "μ1:lo 0.02"
+              },
+              {
+                "param": "τ",
+                "bound": "lo",
+                "fraction": 0.0,
+                "bold": false,
+                "parenthetical": true,
+                "raw": "τ:lo 0.00"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "twostage",
+          "line": 317,
+          "label_ja": "2 段階（逆畳み込み）",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.914",
+            "value": 0.914,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "**σ2:hi 0.70**・μ1:lo 0.35",
+            "items": [
+              {
+                "param": "σ2",
+                "bound": "hi",
+                "fraction": 0.7,
+                "bold": true,
+                "parenthetical": false,
+                "raw": "**σ2:hi 0.70**"
+              },
+              {
+                "param": "μ1",
+                "bound": "lo",
+                "fraction": 0.35,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "μ1:lo 0.35"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc065",
+          "line": 318,
+          "label_ja": "拍長の 0.65 倍で打ち切る",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.562",
+            "value": 0.562,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "σ2:hi 0.30・α2:hi 0.23",
+            "items": [
+              {
+                "param": "σ2",
+                "bound": "hi",
+                "fraction": 0.3,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "σ2:hi 0.30"
+              },
+              {
+                "param": "α2",
+                "bound": "hi",
+                "fraction": 0.23,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "α2:hi 0.23"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "trunc_abs045",
+          "line": 319,
+          "label_ja": "絶対時間 0.45 s で打ち切る",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.803",
+            "value": 0.803,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "σ2:hi 0.39・α2:hi 0.39",
+            "items": [
+              {
+                "param": "σ2",
+                "bound": "hi",
+                "fraction": 0.39,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "σ2:hi 0.39"
+              },
+              {
+                "param": "α2",
+                "bound": "hi",
+                "fraction": 0.39,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "α2:hi 0.39"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "deriv",
+          "line": 320,
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "label_bold": false,
+          "boundary_fraction": {
+            "raw": "0.319",
+            "value": 0.319,
+            "bold": false
+          },
+          "breakdown": {
+            "raw": "σ2:hi 0.23・Δμ:lo 0.11",
+            "items": [
+              {
+                "param": "σ2",
+                "bound": "hi",
+                "fraction": 0.23,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "σ2:hi 0.23"
+              },
+              {
+                "param": "Δμ",
+                "bound": "lo",
+                "fraction": 0.11,
+                "bold": false,
+                "parenthetical": false,
+                "raw": "Δμ:lo 0.11"
+              }
+            ],
+            "bold": false
+          },
+          "reference": false
+        }
+      ]
+    },
+    "表6c": {
+      "name": "表6c",
+      "key": "表6c",
+      "title": "表6c　B 段と、雑音を足した実行（型3・探索・事後）",
+      "heading_level": 3,
+      "heading_line": 343,
+      "parent": "表6b",
+      "table_lines": [
+        350,
+        362
+      ],
+      "stage": "B",
+      "post_hoc": true,
+      "source": "出典: `analysis/scripts/50_reservoir_bench.py` 節C（`--b-stage fb,trunc08,deriv`・`--noise 0.01`・`--noise 0.02`。`docs/research/results/50_reservoir_bench_B3.txt`・`50_reservoir_bench_noise0.01.txt`・`50_reservoir_bench_noise0.02.txt`、lab_log 追記158）。",
+      "source_kind": "出典（同じ節）",
+      "source_lines": [
+        371,
+        372
+      ],
+      "source_paragraph": "出典: `analysis/scripts/50_reservoir_bench.py` 節C（`--b-stage fb,trunc08,deriv`・`--noise 0.01`・`--noise 0.02`。`docs/research/results/50_reservoir_bench_B3.txt`・`50_reservoir_bench_noise0.01.txt`・`50_reservoir_bench_noise0.02.txt`、lab_log 追記158）。",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "拡張期の下降の扱い",
+          "header_raw": "拡張期の下降の扱い",
+          "stage": null
+        },
+        {
+          "key": "stage",
+          "kind": "stage",
+          "header_ja": "段",
+          "header_raw": "段",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv_0",
+          "kind": "rho",
+          "header_ja": "ΔT×PWV 雑音なし",
+          "header_raw": "ΔT×PWV<br>雑音なし",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv_001",
+          "kind": "rho",
+          "header_ja": "1%",
+          "header_raw": "1%",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv_002",
+          "kind": "rho",
+          "header_ja": "2%",
+          "header_raw": "2%",
+          "stage": null
+        },
+        {
+          "key": "ri_pvr_0",
+          "kind": "rho",
+          "header_ja": "RI×抵抗 雑音なし",
+          "header_raw": "RI×抵抗<br>雑音なし",
+          "stage": null
+        },
+        {
+          "key": "ri_pvr_001",
+          "kind": "rho",
+          "header_ja": "1%",
+          "header_raw": "1%",
+          "stage": null
+        },
+        {
+          "key": "ri_pvr_002",
+          "kind": "rho",
+          "header_ja": "2%",
+          "header_raw": "2%",
+          "stage": null
+        },
+        {
+          "key": "pass_rate",
+          "kind": "triple",
+          "header_ja": "通過率 なし／1%／2%",
+          "header_raw": "通過率<br>なし／1%／2%",
+          "stage": null
+        }
+      ],
+      "preamble": [
+        "段の定義: A 段 ＝ その手法が自分で採用した被験者だけ、B 段 ＝ 凍結版・0.65T の打ち切り・1 次微分の版の 3 つがすべて採用した共通例\n（732 名。雑音 1% で 388 名、2% で 323 名）、C 段 ＝ 採否を無視した全員（3,378 名）。雑音は拍の峰から谷までの振幅に対する\n比を標準偏差とする白色ガウス雑音で、波形の型と特徴点は雑音を足す前の拍から付けた。**太字は規準（|ρ| の中央値 ≥ 0.30 かつ\n全層で予測の向き）を満たす。**同梱の特徴点法の C 段は雑音を足していない拍の値であり、雑音の列では同じ条件の比較になっていない。"
+      ],
+      "postscript": [
+        "**B 段は 3 つの当てはめの採用を重ねた部分集合であり、分解に有利な集団である。**凍結版の ΔT でさえ B 段では 0.510 に達し、\n同梱の特徴点法は B 段（0.373）のほうが C 段（0.430）より低い。打ち切った版の RI が A 段で 0.530 に達するのは、\n同じ被験者の上で凍結版（0.184）より良い当てはめになっているためでもある（B 段 0.381）が、採用しなかった被験者には\n広がらず（C 段 0.107）、雑音を足すと B 段でも 0.266・0.168 に落ちる。**分解由来の RI は、どの版も特徴点法（0.550）に届かず、\n雑音に残らない。**ΔT では、打ち切った版は雑音 2% でも C 段 0.454（6/6）を保つのに対し、1 次微分の版は 0.687 から 0.337 に\n落ち、通過率は 0.290 まで下がる（競合解を持つ拍が 0.331 → 0.642）。**1 次微分の領域は雑音に弱い。**",
+        "出典: `analysis/scripts/50_reservoir_bench.py` 節C（`--b-stage fb,trunc08,deriv`・`--noise 0.01`・`--noise 0.02`。\n`docs/research/results/50_reservoir_bench_B3.txt`・`50_reservoir_bench_noise0.01.txt`・`50_reservoir_bench_noise0.02.txt`、lab_log 追記158）。"
+      ],
+      "groups": [],
+      "row_count": 11,
+      "rows": [
+        {
+          "id": "fb",
+          "line": 352,
+          "label_ja": "凍結版",
+          "label_bold": false,
+          "stage": "A",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "0.220",
+              "rho": 0.22,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.213",
+              "rho": 0.213,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.209",
+              "rho": 0.209,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "0.233",
+              "rho": 0.233,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.246",
+              "rho": 0.246,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.253",
+              "rho": 0.253,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": {
+            "raw": "0.901／0.881／0.862",
+            "0": 0.901,
+            "0.01": 0.881,
+            "0.02": 0.862
+          }
+        },
+        {
+          "id": "fb",
+          "line": 353,
+          "label_ja": "凍結版",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "B",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.510**",
+              "rho": 0.51,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.532**",
+              "rho": 0.532,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.563**",
+              "rho": 0.563,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "0.184",
+              "rho": 0.184,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.201",
+              "rho": 0.201,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.134",
+              "rho": 0.134,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "fb",
+          "line": 354,
+          "label_ja": "凍結版",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "C",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "0.207",
+              "rho": 0.207,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.138",
+              "rho": 0.138,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.130",
+              "rho": 0.13,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "0.184",
+              "rho": 0.184,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.189",
+              "rho": 0.189,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.173",
+              "rho": 0.173,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "trunc065",
+          "line": 355,
+          "label_ja": "拍長の 0.65 倍で打ち切る",
+          "label_bold": false,
+          "stage": "A",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.828**",
+              "rho": 0.828,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.819**",
+              "rho": 0.819,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.786**",
+              "rho": 0.786,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.530**",
+              "rho": 0.53,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.493**",
+              "rho": 0.493,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.414**",
+              "rho": 0.414,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "pass_rate": {
+            "raw": "0.413／0.379／0.350",
+            "0": 0.413,
+            "0.01": 0.379,
+            "0.02": 0.35
+          }
+        },
+        {
+          "id": "trunc065",
+          "line": 356,
+          "label_ja": "拍長の 0.65 倍で打ち切る",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "B",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.630**",
+              "rho": 0.63,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.609**",
+              "rho": 0.609,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.651**",
+              "rho": 0.651,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.381**",
+              "rho": 0.381,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "0.266",
+              "rho": 0.266,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.168",
+              "rho": 0.168,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "trunc065",
+          "line": 357,
+          "label_ja": "拍長の 0.65 倍で打ち切る",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "C",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.596**",
+              "rho": 0.596,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.486**",
+              "rho": 0.486,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.454**",
+              "rho": 0.454,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "0.107",
+              "rho": 0.107,
+              "strata": null,
+              "bold": false
+            },
+            "0.01": {
+              "raw": "0.075",
+              "rho": 0.075,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.083",
+              "rho": 0.083,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "deriv",
+          "line": 358,
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "label_bold": false,
+          "stage": "A",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.523**",
+              "rho": 0.523,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.370**",
+              "rho": 0.37,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.416**",
+              "rho": 0.416,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.336**",
+              "rho": 0.336,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "0.103",
+              "rho": 0.103,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.181",
+              "rho": 0.181,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": {
+            "raw": "0.510／0.326／0.290",
+            "0": 0.51,
+            "0.01": 0.326,
+            "0.02": 0.29
+          }
+        },
+        {
+          "id": "deriv",
+          "line": 359,
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "B",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.622**",
+              "rho": 0.622,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.642**",
+              "rho": 0.642,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.659**",
+              "rho": 0.659,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.435**",
+              "rho": 0.435,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.318**",
+              "rho": 0.318,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "0.176",
+              "rho": 0.176,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "deriv",
+          "line": 360,
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "C",
+          "reference": false,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.687**",
+              "rho": 0.687,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.337**",
+              "rho": 0.337,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.347**",
+              "rho": 0.347,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.416**",
+              "rho": 0.416,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "0.196",
+              "rho": 0.196,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "0.173",
+              "rho": 0.173,
+              "strata": null,
+              "bold": false
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "landmark",
+          "line": 361,
+          "label_ja": "（参考）特徴点法（同梱）",
+          "label_bold": false,
+          "stage": "B",
+          "reference": true,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.373**",
+              "rho": 0.373,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "0.411",
+              "rho": 0.411,
+              "strata": null,
+              "bold": false
+            },
+            "0.02": {
+              "raw": "**0.487**",
+              "rho": 0.487,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.562**",
+              "rho": 0.562,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "**0.405**",
+              "rho": 0.405,
+              "strata": null,
+              "bold": true
+            },
+            "0.02": {
+              "raw": "**0.384**",
+              "rho": 0.384,
+              "strata": null,
+              "bold": true
+            }
+          },
+          "pass_rate": null
+        },
+        {
+          "id": "landmark",
+          "line": 362,
+          "label_ja": "（参考）特徴点法（同梱）",
+          "label_bold": false,
+          "label_carried": true,
+          "stage": "C",
+          "reference": true,
+          "dt_pwv": {
+            "0": {
+              "raw": "**0.430**",
+              "rho": 0.43,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "（同左）",
+              "rho": 0.43,
+              "strata": null,
+              "bold": true,
+              "same_as_left": true
+            },
+            "0.02": {
+              "raw": "（同左）",
+              "rho": 0.43,
+              "strata": null,
+              "bold": true,
+              "same_as_left": true
+            }
+          },
+          "ri_pvr": {
+            "0": {
+              "raw": "**0.550**",
+              "rho": 0.55,
+              "strata": null,
+              "bold": true
+            },
+            "0.01": {
+              "raw": "（同左）",
+              "rho": 0.55,
+              "strata": null,
+              "bold": true,
+              "same_as_left": true
+            },
+            "0.02": {
+              "raw": "（同左）",
+              "rho": 0.55,
+              "strata": null,
+              "bold": true,
+              "same_as_left": true
+            }
+          },
+          "pass_rate": null
+        }
+      ],
+      "noise_levels": [
+        "0",
+        "0.01",
+        "0.02"
+      ],
+      "methods": {
+        "fb": {
+          "label_ja": "凍結版",
+          "pass_rate": {
+            "raw": "0.901／0.881／0.862",
+            "0": 0.901,
+            "0.01": 0.881,
+            "0.02": 0.862
+          }
+        },
+        "trunc065": {
+          "label_ja": "拍長の 0.65 倍で打ち切る",
+          "pass_rate": {
+            "raw": "0.413／0.379／0.350",
+            "0": 0.413,
+            "0.01": 0.379,
+            "0.02": 0.35
+          }
+        },
+        "deriv": {
+          "label_ja": "残差を 1 次微分の領域で取る",
+          "pass_rate": {
+            "raw": "0.510／0.326／0.290",
+            "0": 0.51,
+            "0.01": 0.326,
+            "0.02": 0.29
+          }
+        }
+      }
+    },
+    "表7a": {
+      "name": "表7a",
+      "key": "表7a",
+      "title": "表7a　手法の ΔT と線形分離の後進波の到達時間 ΔT_true との差（C 段）",
+      "heading_level": 3,
+      "heading_line": 384,
+      "parent": "表7",
+      "table_lines": [
+        386,
+        395
+      ],
+      "stage": "C",
+      "post_hoc": true,
+      "source": "出典: `analysis/scripts/51_pwdb_wave_separation.py`（`docs/research/results/51_wave_separation.txt`、lab_log 追記150・152）。",
+      "source_kind": "出典（上位の節）",
+      "source_lines": [
+        434,
+        434
+      ],
+      "source_paragraph": "出典: `analysis/scripts/51_pwdb_wave_separation.py`（`docs/research/results/51_wave_separation.txt`、lab_log 追記150・152）。",
+      "columns": [
+        {
+          "key": "type_ja",
+          "kind": "label",
+          "header_ja": "波形の型",
+          "header_raw": "波形の型",
+          "stage": null
+        },
+        {
+          "key": "method_ja",
+          "kind": "label",
+          "header_ja": "手法",
+          "header_raw": "手法",
+          "stage": null
+        },
+        {
+          "key": "n",
+          "kind": "int",
+          "header_ja": "n",
+          "header_raw": "n",
+          "stage": null
+        },
+        {
+          "key": "dt_diff_ms",
+          "kind": "ms",
+          "header_ja": "差の中央値",
+          "header_raw": "差の中央値",
+          "stage": null
+        },
+        {
+          "key": "rho_pooled",
+          "kind": "num",
+          "header_ja": "まとめた順位相関 ρ",
+          "header_raw": "まとめた順位相関 ρ",
+          "stage": null
+        }
+      ],
+      "preamble": [],
+      "postscript": [
+        "n は線形分離を評価できた被験者（ρc を推定できない、または後進波が実質的に無い 1,183 名を除く）。\n差 ＝（手法の ΔT）−（ΔT_true）。ρ は年齢層で分けずにまとめた Spearman。",
+        "**型1・型3 では、分解法も特徴点法も線形分離の後進波のピークより 110〜260 ms 遅い位置を捉えており、順位相関はほぼ 0 である。**\n両手法が測っているのは線形分離が返す後進波ではない。さらに真値どうしの関係（どの分解も超えられない上限）を見ると、\nΔT_true × 大動脈脈波伝播速度は型3 で |ρ| の中央値 0.371 だが向きの合う層は 0/6（25 歳層 +0.18 → 75 歳層 +0.74。\n硬いほど**遅く**到達する）、全例でも 0.512・0/6 であり、**線形分離の後進波の到達時間は指尖では硬さの指標にならない。**\n一方 RI_true × 末梢血管抵抗は 0.84〜0.93（6/6）で、後進波の振幅比は末梢の反射係数を表す。\n指尖で線形に分離した後進波は末端からの局所の反射が支配しており（到達の中央値 86〜138 ms）、\n両手法が捉える拡張期の波（同梱の特徴点では収縮期ピーク後 226〜304 ms）はそれとは別の現象で、そちらが硬さと関連する。\n**したがって分解法の弱点は「反射波を捉え損ねている」ことではなく、特徴点法と同じ拡張期の波を、\n拡張期の下降に引かれて取り損ねていることである**（表6）。型4（変曲点の無い 105 名）だけは、分解の第2成分が\n線形分離の後進波のピークに近い（差 +13.1 ms・ρ +0.500）。",
+        "本稿では「反射波」の語を、線形分離の後進波と区別せずには使わない。分解法・特徴点法が与える ΔT は\n「拡張期の波の到達時間」であり、それが硬さと関連する理由は reservoir-wave の議論\n（Wang ら 2003・Mynard と Smolich 2014・Westerhof ら 2015。書誌は投稿前に照合する）の論点と重なるので、考察で限定して述べる。"
+      ],
+      "groups": [],
+      "row_count": 8,
+      "rows": [
+        {
+          "id": "type1_pda_ppg",
+          "line": 388,
+          "type_ja": "型1",
+          "type_bold": false,
+          "method_ja": "分解（PPG）",
+          "method_bold": false,
+          "n": {
+            "raw": "315",
+            "value": 315,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+257.8 ms",
+            "value": 257.8,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "−0.135",
+            "value": -0.135,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type1",
+          "method_id": "pda_ppg"
+        },
+        {
+          "id": "type1_pda_pressure",
+          "line": 389,
+          "type_ja": "型1",
+          "type_bold": false,
+          "method_ja": "分解（圧）",
+          "method_bold": false,
+          "n": {
+            "raw": "315",
+            "value": 315,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+255.4 ms",
+            "value": 255.4,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "−0.107",
+            "value": -0.107,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type1",
+          "method_id": "pda_pressure"
+        },
+        {
+          "id": "type1_landmark",
+          "line": 390,
+          "type_ja": "型1",
+          "type_bold": false,
+          "method_ja": "特徴点法（同梱）",
+          "method_bold": false,
+          "n": {
+            "raw": "315",
+            "value": 315,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+222.0 ms",
+            "value": 222.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "−0.385",
+            "value": -0.385,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type1",
+          "method_id": "landmark"
+        },
+        {
+          "id": "type3_pda_ppg",
+          "line": 391,
+          "type_ja": "型3",
+          "type_bold": false,
+          "method_ja": "分解（PPG）",
+          "method_bold": false,
+          "n": {
+            "raw": "2,771",
+            "value": 2771,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+219.0 ms",
+            "value": 219.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "+0.041",
+            "value": 0.041,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type3",
+          "method_id": "pda_ppg"
+        },
+        {
+          "id": "type3_pda_pressure",
+          "line": 392,
+          "type_ja": "型3",
+          "type_bold": false,
+          "method_ja": "分解（圧）",
+          "method_bold": false,
+          "n": {
+            "raw": "2,771",
+            "value": 2771,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+187.6 ms",
+            "value": 187.6,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "+0.059",
+            "value": 0.059,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type3",
+          "method_id": "pda_pressure"
+        },
+        {
+          "id": "type3_landmark",
+          "line": 393,
+          "type_ja": "型3",
+          "type_bold": false,
+          "method_ja": "特徴点法（同梱）",
+          "method_bold": false,
+          "n": {
+            "raw": "2,758",
+            "value": 2758,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+114.0 ms",
+            "value": 114.0,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "−0.022",
+            "value": -0.022,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type3",
+          "method_id": "landmark"
+        },
+        {
+          "id": "type4_pda_ppg",
+          "line": 394,
+          "type_ja": "型4",
+          "type_bold": false,
+          "method_ja": "分解（PPG）",
+          "method_bold": false,
+          "n": {
+            "raw": "105",
+            "value": 105,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+13.1 ms",
+            "value": 13.1,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "+0.500",
+            "value": 0.5,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type4",
+          "method_id": "pda_ppg"
+        },
+        {
+          "id": "type4_landmark",
+          "line": 395,
+          "type_ja": "型4",
+          "type_bold": false,
+          "method_ja": "特徴点法（同梱）",
+          "method_bold": false,
+          "n": {
+            "raw": "72",
+            "value": 72,
+            "bold": false
+          },
+          "dt_diff_ms": {
+            "raw": "+38.2 ms",
+            "value": 38.2,
+            "unit": "ms",
+            "bold": false
+          },
+          "rho_pooled": {
+            "raw": "−0.538",
+            "value": -0.538,
+            "bold": false
+          },
+          "reference": false,
+          "type_id": "type4",
+          "method_id": "landmark"
+        }
+      ]
+    },
+    "表7b": {
+      "name": "表7b",
+      "key": "表7b",
+      "title": "表7b　同じ凍結版の分解を指尖の圧波形に当てた結果（年齢層内 Spearman・全例 4,374 名）",
+      "heading_level": 3,
+      "heading_line": 415,
+      "parent": "表7",
+      "table_lines": [
+        417,
+        421
+      ],
+      "stage": null,
+      "post_hoc": true,
+      "source": "出典: `analysis/scripts/51_pwdb_wave_separation.py`（`docs/research/results/51_wave_separation.txt`、lab_log 追記150・152）。",
+      "source_kind": "出典（同じ節）",
+      "source_lines": [
+        434,
+        434
+      ],
+      "source_paragraph": "出典: `analysis/scripts/51_pwdb_wave_separation.py`（`docs/research/results/51_wave_separation.txt`、lab_log 追記150・152）。",
+      "columns": [
+        {
+          "key": "label_ja",
+          "kind": "label",
+          "header_ja": "当てた波形",
+          "header_raw": "当てた波形",
+          "stage": null
+        },
+        {
+          "key": "dt_pwv_A",
+          "kind": "rho",
+          "header_ja": "ΔT×PWV A 段",
+          "header_raw": "ΔT×PWV<br>A 段",
+          "stage": "A"
+        },
+        {
+          "key": "dt_pwv_C",
+          "kind": "rho",
+          "header_ja": "ΔT×PWV C 段",
+          "header_raw": "ΔT×PWV<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "ri_pvr_A",
+          "kind": "rho",
+          "header_ja": "RI×抵抗 A 段",
+          "header_raw": "RI×抵抗<br>A 段",
+          "stage": "A"
+        },
+        {
+          "key": "ri_pvr_C",
+          "kind": "rho",
+          "header_ja": "RI×抵抗 C 段",
+          "header_raw": "RI×抵抗<br>C 段",
+          "stage": "C"
+        },
+        {
+          "key": "adoption_rate",
+          "kind": "pct",
+          "header_ja": "採択率",
+          "header_raw": "採択率",
+          "stage": null
+        }
+      ],
+      "preamble": [],
+      "postscript": [
+        "型3 に限ると、圧波形の ΔT は A 段 0.400（6/6・成立）、C 段 0.227（6/6・不成立）。",
+        "**圧波形に当てると ΔT は規準を満たす（A 段 0.223 → 0.486、C 段 0.205 → 0.313）が、RI は変わらない（0.207 → 0.225）。**\n指尖 PPG が末梢の Windkessel の容積であり、圧より長い拡張期の下降を持つことは、分解法が劣った理由の一部である。\nしかし圧波形でも同梱の特徴点法（0.710）には届かず、RI はまったく改善しないので、\n**弱点は「PPG という量に 2 成分の和の模型を当てること」に固有であり、圧に当てても特徴点法には届かない**、と限定して述べる。",
+        "留保: ρc を推定できなかった被験者が 1,183 名（27%）、P と U の最小値が別の標本に来る被験者が 69%\n（基線の取り方が RI_true にだけ効く）、ρc の主（P–U ループ）と検（二乗和法）の比が 25 歳層 1.06 → 75 歳層 1.28 と\n年齢で開くので、線形分離の前提（一様な管）が末端で崩れている可能性がある。いずれも in silico の結果である。",
+        "出典: `analysis/scripts/51_pwdb_wave_separation.py`（`docs/research/results/51_wave_separation.txt`、lab_log 追記150・152）。"
+      ],
+      "groups": [],
+      "row_count": 3,
+      "rows": [
+        {
+          "id": "ppg",
+          "line": 419,
+          "label_ja": "PPG（本稿の主解析）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "0.223（6/6）",
+            "rho": 0.223,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.205（6/6）",
+            "rho": 0.205,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "0.207（5/6）",
+            "rho": 0.207,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.171（4/6）",
+            "rho": 0.171,
+            "strata": "4/6",
+            "strata_pass": 4,
+            "strata_total": 6,
+            "bold": false
+          },
+          "adoption_rate": {
+            "raw": "92.3%",
+            "value": 92.3,
+            "fraction": 0.923,
+            "unit": "%",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "pressure",
+          "line": 420,
+          "label_ja": "圧波形",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "**0.486（6/6）**",
+            "rho": 0.486,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "dt_pwv_C": {
+            "raw": "**0.313（6/6）**",
+            "rho": 0.313,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": true
+          },
+          "ri_pvr_A": {
+            "raw": "0.225（6/6）",
+            "rho": 0.225,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.220（5/6）",
+            "rho": 0.22,
+            "strata": "5/6",
+            "strata_pass": 5,
+            "strata_total": 6,
+            "bold": false
+          },
+          "adoption_rate": {
+            "raw": "84.5%",
+            "value": 84.5,
+            "fraction": 0.845,
+            "unit": "%",
+            "bold": false
+          },
+          "reference": false
+        },
+        {
+          "id": "landmark",
+          "line": 421,
+          "label_ja": "（参考）特徴点法（同梱・PPG）",
+          "label_bold": false,
+          "dt_pwv_A": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "dt_pwv_C": {
+            "raw": "0.710（6/6）",
+            "rho": 0.71,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "ri_pvr_A": {
+            "raw": "—",
+            "rho": null,
+            "strata": null,
+            "dash": true,
+            "bold": false
+          },
+          "ri_pvr_C": {
+            "raw": "0.504（6/6）",
+            "rho": 0.504,
+            "strata": "6/6",
+            "strata_pass": 6,
+            "strata_total": 6,
+            "bold": false
+          },
+          "adoption_rate": {
+            "raw": "—",
+            "value": null,
+            "fraction": null,
+            "unit": "%",
+            "dash": true,
+            "bold": false
+          },
+          "reference": true
+        }
+      ]
+    }
+  },
+  "sections": {
+    "表4_記述": {
+      "title": "記述",
+      "heading_level": 3,
+      "heading_line": 146,
+      "parent": "表4",
+      "post_hoc": false,
+      "paragraphs": [
+        "- Tigges の補正赤池情報量規準は Gamma M=3 が 42%・M=4 が 32% で最良となり、\nTigges 2017 の実測（Gamma M=3 が 28.1% で最頻）を再現した。\nNormal と Rayleigh は本データベースでは一度も最良にならない（拡張期の減衰が指数的であるため）。\n- Wang の条件では 99% の拍が 5 ガウスに増え、採択率は 5.9% であった。\n選ばれた重みの中央値は上限の 100 である。採用分は 1 層しかなく判定できない。\n- 自前の特徴点実装（`pda2.find_landmarks`）は ΔT 0.513・RI 0.236 で、Charlton 同梱値に劣る。\n変曲点のみの型が 78% を占め、そこで下降脚の変曲点を拡張期ピークの代用としているためである。\n**同梱値が何を拡張期ピークとしているかは原著者の算出によるので、我々の実装の限界として記録する。**\n- 切痕のある拍のみでは Couceiro 0.440（6/6）と特徴点 0.433（4/6）が同程度であり、表3 の像と整合する。"
+      ]
+    },
+    "表7": {
+      "title": "表7　指尖の圧と流速から線形に分離した後進波との照合と、同じ分解を圧波形に当てた結果（探索・事後・4,374 名）",
+      "heading_level": 2,
+      "heading_line": 376,
+      "parent": null,
+      "post_hoc": true,
+      "paragraphs": [
+        "**この解析も決定試験の判定の後に回した探索であり、判定には用いない。**PWDB は指尖の圧 P と流速 U を同じ拍で与えるので、\n線形の波分離 P_f = (ΔP + ρc·ΔU)/2、P_b = (ΔP − ρc·ΔU)/2（ρc は収縮期初期の P–U ループの傾き、基線は拍内の最小値）で\n**線形分離の後進波**を作り、その到達時間 ΔT_true（P_b と P_f のピーク時刻の差）と振幅比 RI_true を真の値として、\n分解法の第2成分と同梱の特徴点がそれに載っているかを見た（表7a）。あわせて凍結版の分解を PPG ではなく指尖の**圧波形**に当て、\nPPG という量への変換がどれだけ効いているかを見た（表7b）。段の定義は表5 と同じ。"
+      ]
+    }
+  },
+  "issues": []
+}

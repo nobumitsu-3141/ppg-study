@@ -33,9 +33,9 @@ PALETTE = {
 }
 CRITERION = 0.30
 
-# 投稿先（Physiological Measurement, IOP）の図幅。Understand の結果で確定した値に合わせて直す。
-WIDTH_MM = {"single": 85.0, "double": 178.0}
-MIN_FONT_PT = 7.0
+# 投稿先（Physiological Measurement, IOP 共通の規定）の図幅と最小文字サイズ。
+WIDTH_MM = {"single": 85.0, "double": 150.0}   # IOP 共通: 8.5 cm／15 cm
+MIN_FONT_PT = 8.0                                # IOP 共通: 最終寸法で 8〜12 pt
 
 JA_FONT_FILES = [
     "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf",
@@ -50,7 +50,7 @@ def mm(x: float) -> float:
 
 def setup(lang: str = "ja", base_pt: float = 8.0) -> None:
     """rcParams を整える。文字は編集可能なテキストとして埋め込む。"""
-    family = ["DejaVu Sans"]
+    family = ["Liberation Sans", "DejaVu Sans"]   # Helvetica 互換（IOP の指定書体に合わせる）
     if lang == "ja":
         for p in JA_FONT_FILES:
             if Path(p).exists():
@@ -113,7 +113,7 @@ def texts_of(fig) -> list[str]:
 # 段の注釈（CLAUDE.md §3: 段を出すときは毎回その場に 1 行）
 STAGE_NOTE = {
     "ja": "A 段＝その手法が採用した被験者だけ、B 段＝比べる全手法が採用した共通例、C 段＝採否を無視した全員",
-    "en": "Stage A = subjects the method itself accepted; B = subjects accepted by every compared method; C = all subjects",
+    "en": "Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance",
 }
 
 # 図に共通する語（和・英）

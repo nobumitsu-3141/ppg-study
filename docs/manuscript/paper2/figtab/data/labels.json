@@ -1,0 +1,249 @@
+{
+  "_note": "図と表で共有する名称（和・英）。id は data/paper2_numbers.json の行 id。英語は投稿先（Physiological Measurement）用。 段は英文原稿（01_draft_en_v2.md）に合わせて tier と訳す。",
+  "methods": {
+    "pda_frozen": {
+      "ja": "分解法・凍結版（歪みガウス 2 成分）",
+      "en": "Decomposition, frozen version (two skewed Gaussians)",
+      "short_ja": "凍結版",
+      "short_en": "Frozen"
+    },
+    "pda_v2_skewgauss": {
+      "ja": "分解法・第2版 歪みガウス（主たる経路）",
+      "en": "Decomposition, rebuilt version, skewed-Gaussian route",
+      "short_ja": "第2版 歪みガウス",
+      "short_en": "Rebuilt, skew-Gaussian"
+    },
+    "pda_v2_gamma": {
+      "ja": "分解法・第2版 ガンマ（併記）",
+      "en": "Decomposition, rebuilt version, gamma route",
+      "short_ja": "第2版 ガンマ",
+      "short_en": "Rebuilt, gamma"
+    },
+    "landmark": {
+      "ja": "特徴点法（同一の波形・同梱）",
+      "en": "Fiducial-point analysis (same waveforms, database-supplied)",
+      "short_ja": "特徴点法",
+      "short_en": "Fiducial-point"
+    },
+    "amp_ratio": {
+      "ja": "早期振幅比 Am_b/Am_p1",
+      "en": "Early amplitude ratio Am_b/Am_p1",
+      "short_ja": "早期振幅比",
+      "short_en": "Amplitude ratio"
+    },
+    "ptt_control": {
+      "ja": "モデル出力の脈波到達時間（陽性対照）",
+      "en": "Model-output pulse transit time (positive control)",
+      "short_ja": "陽性対照",
+      "short_en": "Positive control"
+    }
+  },
+  "factors": {
+    "aortic_diameter": {
+      "ja": "大動脈径",
+      "en": "Aortic diameter"
+    },
+    "heart_rate": {
+      "ja": "心拍数",
+      "en": "Heart rate"
+    },
+    "ejection_time": {
+      "ja": "駆出時間",
+      "en": "Ejection time"
+    },
+    "map": {
+      "ja": "平均血圧",
+      "en": "Mean arterial pressure"
+    },
+    "pwv": {
+      "ja": "脈波伝播速度",
+      "en": "Pulse wave velocity"
+    },
+    "stroke_volume": {
+      "ja": "1回拍出量",
+      "en": "Stroke volume"
+    }
+  },
+  "indices": {
+    "landmark_dt": {
+      "ja": "特徴点法 ΔT",
+      "en": "Fiducial-point ΔT"
+    },
+    "pda_dt": {
+      "ja": "分解法 ΔT（凍結版）",
+      "en": "Decomposition ΔT (frozen)"
+    },
+    "pda_ri": {
+      "ja": "分解法 RI（凍結版）",
+      "en": "Decomposition RI (frozen)"
+    },
+    "amp_ratio": {
+      "ja": "早期振幅比",
+      "en": "Early amplitude ratio"
+    }
+  },
+  "types": {
+    "type1": {
+      "ja": "型1　切痕あり",
+      "en": "Type 1, notch present"
+    },
+    "type3": {
+      "ja": "型3　変曲点のみ",
+      "en": "Type 3, inflection only"
+    },
+    "type4": {
+      "ja": "型4　いずれも無し",
+      "en": "Type 4, neither"
+    },
+    "all": {
+      "ja": "全例",
+      "en": "All subjects"
+    }
+  },
+  "variant_groups": {
+    "base": {
+      "ja": "基準",
+      "en": "Reference fits"
+    },
+    "add": {
+      "ja": "下降を説明する項を足す",
+      "en": "Add a term for the diastolic decline"
+    },
+    "remove": {
+      "ja": "下降を当てはめの対象から外す・残差の中で小さくする",
+      "en": "Exclude or down-weight the diastolic decline"
+    },
+    "ref": {
+      "ja": "参考",
+      "en": "Reference"
+    }
+  },
+  "variants": {
+    "fb": {
+      "group": "base",
+      "no": "(0)",
+      "ja": "凍結版（項を持たない）",
+      "en": "Frozen fit (no diastolic term)",
+      "short_ja": "凍結版",
+      "short_en": "Frozen"
+    },
+    "dmu001": {
+      "group": "base",
+      "no": "(2)",
+      "ja": "第2成分の位置の下限を 0.08 → 0.01 s",
+      "en": "Second-component delay bound 0.08 → 0.01 s",
+      "short_ja": "下限 0.01 s",
+      "short_en": "Delay bound 0.01 s"
+    },
+    "reservoir": {
+      "group": "add",
+      "no": "(4)",
+      "ja": "貯留槽の項を足す（前進波の畳み込み）",
+      "en": "Reservoir term (forward wave convolved, τ ≥ 0.05 s)",
+      "short_ja": "貯留槽の項",
+      "short_en": "Reservoir term"
+    },
+    "reservoir_tau015": {
+      "group": "add",
+      "no": "(4c)",
+      "ja": "同（時定数の下限を 0.05 → 0.15 s）",
+      "en": "Reservoir term, τ ≥ 0.15 s",
+      "short_ja": "貯留槽 τ ≥ 0.15 s",
+      "short_en": "Reservoir, τ ≥ 0.15 s"
+    },
+    "decay": {
+      "group": "add",
+      "no": "(3)",
+      "ja": "自由な指数減衰を足す",
+      "en": "Free exponential decay term",
+      "short_ja": "指数減衰",
+      "short_en": "Exponential decay"
+    },
+    "conv": {
+      "group": "add",
+      "no": "(7)",
+      "ja": "出力側の畳み込み（2 成分の和に単位面積の指数核を掛けて置き換える）",
+      "en": "Output-side convolution of the two-component sum",
+      "short_ja": "出力側の畳み込み",
+      "short_en": "Output convolution"
+    },
+    "twostage": {
+      "group": "add",
+      "no": "(8)",
+      "ja": "2 段階（拡張期の後ろ 30% から時定数を推定し、逆畳み込みしてから凍結版を当てる）",
+      "en": "Two-stage: τ from the last 30%, deconvolve, then frozen fit",
+      "short_ja": "2 段階（逆畳み込み）",
+      "short_en": "Two-stage deconvolution"
+    },
+    "trunc065": {
+      "group": "remove",
+      "no": "(6b)",
+      "ja": "当てはめを拍長の 0.65 倍で打ち切る",
+      "en": "Fit truncated at 0.65 of the beat length",
+      "short_ja": "0.65T で打ち切る",
+      "short_en": "Truncate at 0.65T"
+    },
+    "trunc055": {
+      "group": "remove",
+      "no": "(6c)",
+      "ja": "同 0.55 倍",
+      "en": "Truncated at 0.55 of the beat",
+      "short_ja": "0.55T",
+      "short_en": "Truncate at 0.55T"
+    },
+    "trunc075": {
+      "group": "remove",
+      "no": "(6d)",
+      "ja": "同 0.75 倍",
+      "en": "Truncated at 0.75 of the beat",
+      "short_ja": "0.75T",
+      "short_en": "Truncate at 0.75T"
+    },
+    "trunc_abs045": {
+      "group": "remove",
+      "no": "(6e)",
+      "ja": "絶対時間 0.45 s で打ち切る（拍長の 0.90 倍を上限）",
+      "en": "Truncated at an absolute 0.45 s (at most 0.90 of the beat)",
+      "short_ja": "0.45 s で打ち切る",
+      "short_en": "Truncate at 0.45 s"
+    },
+    "deriv": {
+      "group": "remove",
+      "no": "(9)",
+      "ja": "残差を 1 次微分の領域で取る",
+      "en": "Residual taken in the first-derivative domain",
+      "short_ja": "1 次微分の領域",
+      "short_en": "Derivative domain"
+    },
+    "landmark": {
+      "group": "ref",
+      "no": "",
+      "ja": "（参考）特徴点法（同梱）",
+      "en": "Fiducial-point analysis (database-supplied; reference)",
+      "short_ja": "特徴点法",
+      "short_en": "Fiducial-point"
+    }
+  },
+  "stages": {
+    "A": {
+      "ja": "A 段",
+      "en": "Tier A"
+    },
+    "B": {
+      "ja": "B 段",
+      "en": "Tier B"
+    },
+    "C": {
+      "ja": "C 段",
+      "en": "Tier C"
+    }
+  },
+  "stage_note": {
+    "ja": "A 段＝その手法が採用した被験者だけ、B 段＝比べる全手法が採用した共通例、C 段＝採否を無視した全員",
+    "en": "Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance"
+  },
+  "posthoc_note": {
+    "ja": "探索・事後の解析であり、判定には用いない。改良した当てはめを主解析に用いるには新たな事前登録が要る。",
+    "en": "Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration."
+  }
+}
