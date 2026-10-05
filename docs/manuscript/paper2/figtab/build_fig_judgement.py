@@ -30,7 +30,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import common                                        # noqa: E402
 from common import (PALETTE, L, STAGE_NOTE, mm, setup, save, load_numbers,   # noqa: E402
-                    check_min_font, texts_of)
+                    check_min_font, texts_of, wrap_text, text_overlaps, texts_outside)
 
 NAME = "fig_judgement"
 REPO = HERE.parents[3]
@@ -56,7 +56,8 @@ T = {
         "not_evaluated": "未検証",
         "dash": "—",
         "criterion_head": "判定規準（実行前に凍結）: ",
-        "fill_note": "図は絶対値。塗りつぶし＝全層で予測の向き、白抜き＝それ以外、または表1 に層の数の記載なし。",
+        "fill_note": "図は絶対値。塗りつぶし＝全 {n} 層で予測の向き、白抜き＝それ以外。",
+        "strata4_note": "ガンマ経路の A 段（採択 {n_acc}）は 8 名以上の層が 4 層のみで、分母が 4。",
     },
     "en": {
         "tierC_only": "tier C only",
@@ -65,8 +66,9 @@ T = {
         "not_evaluated": "not evaluated",
         "dash": "—",
         "criterion_head": "Criterion, frozen before the run: ",
-        "fill_note": "Magnitudes shown. Filled marker, predicted sign in every stratum; "
-                     "open, otherwise or stratum count not reported in table 1.",
+        "fill_note": "Magnitudes shown. Filled marker, predicted sign in all {n} strata; open, otherwise.",
+        "strata4_note": "Gamma route, tier A (accepted {n_acc}): only four strata had at least 8 subjects, "
+                        "hence the denominator 4.",
     },
 }
 
@@ -84,57 +86,55 @@ def wrap_label(s: str, lang: str) -> str:
     return "\n".join(textwrap.wrap(s, width=30, break_long_words=False))
 
 
-def _wrap_ja(s: str, units: int) -> str:
-    """和文を表示幅で折る（全角 2・半角 1 の単位。空白で切らない）。"""
-    lines, cur, w = [], "", 0
-    for ch in s:
-        cw = 2 if ord(ch) > 0x2E7F else 1
-        if w + cw > units:
-            lines.append(cur)
-            cur, w = "", 0
-        cur += ch
-        w += cw
-    if cur:
-        lines.append(cur)
-    return "\n".join(lines)
+def _filled(cell: dict, required: int) -> bool:
+    """塗りつぶしは、規準が求める層の数がそろい、かつ全層で予測の向きのときだけ。"""
+    return (cell.get("strata_total") == required and cell.get("strata_pass") is not None
+            and cell["strata_pass"] == cell["strata_total"])
 
 
-def wrap_text(s: str, lang: str, width_ja: int = 102, width_en: int = 112) -> str:
-    if lang == "ja":
-        return _wrap_ja(s, width_ja)
-    return "\n".join(textwrap.wrap(s, width=width_en, break_long_words=False, break_on_hyphens=False))
+def criterion_label(meta: dict, lang: str) -> str:
+    """規準線の札。値は meta.criterion から作る（手で打たない）。"""
+    thr = meta["criterion"]["min_median_abs_rho"]
+    return (f"規準 {thr:.2f}" if lang == "ja" else f"criterion {thr:.2f}")
 
 
-def criterion_text(meta: dict, lang: str) -> str:
+def _gamma_accepted(numbers: dict) -> str:
+    row = next(r for r in numbers["tables"]["表1"]["rows"] if r["id"] == "pda_v2_gamma")
+    return _fmt_n(row["dt_pwv"]["adopted"]["n"])
+
+
+def criterion_text(numbers: dict, lang: str) -> str:
+    meta = numbers["meta"]
     c = meta["criterion"]
+    n = c["strata_required"]
+    n_acc = _gamma_accepted(numbers)
     if lang == "ja":
         sign = c["sign_prediction"].rstrip("。")
-        return (T["ja"]["criterion_head"] + c["text"] + "（" + sign + "）。" + T["ja"]["fill_note"])
-    n = c["strata_required"]
+        return (T["ja"]["criterion_head"] + c["text"] + "（" + sign + "）。"
+                + T["ja"]["fill_note"].format(n=n) + T["ja"]["strata4_note"].format(n_acc=n_acc))
     thr = c["min_median_abs_rho"]
     return (T["en"]["criterion_head"]
             + f"predicted sign in all {n} strata and median |ρ| ≥ {thr:.2f} "
             + "(ΔT × aortic PWV negative, RI × peripheral vascular resistance positive). "
-            + T["en"]["fill_note"])
+            + T["en"]["fill_note"].format(n=n) + " " + T["en"]["strata4_note"].format(n_acc=n_acc))
 
 
 def expected_points(numbers: dict) -> list[dict]:
     """表1 から描くべき点を起こす（自己検査でも同じ関数で JSON を読み直して比べる）。"""
     pts = []
+    req = numbers["meta"]["criterion"]["strata_required"]
     for row in numbers["tables"]["表1"]["rows"]:
         for col in COLS:
             cell = row[col]
             if cell.get("rho") is not None:
                 pts.append({"id": row["id"], "col": col, "stage": None, "x": cell["rho"],
-                            "filled": cell.get("strata_pass") == cell.get("strata_total")
-                            and cell.get("strata_total") is not None})
+                            "filled": _filled(cell, req)})
             elif "stages" in cell:
                 for st in ("A", "C"):
                     sc = cell["stages"].get(st)
                     if sc and sc.get("rho") is not None:
                         pts.append({"id": row["id"], "col": col, "stage": st, "x": sc["rho"],
-                                    "filled": sc.get("strata_pass") is not None
-                                    and sc.get("strata_pass") == sc.get("strata_total")})
+                                    "filled": _filled(sc, req)})
     return pts
 
 
@@ -146,13 +146,14 @@ def build(lang: str, numbers: dict):
     t1 = numbers["tables"]["表1"]
     meta = numbers["meta"]
     crit = meta["criterion"]["min_median_abs_rho"]
+    req = meta["criterion"]["strata_required"]
     rows = t1["rows"]
     n = len(rows)
     tx = T[lang]
     stage_name = {k: v[lang] for k, v in LABELS["stages"].items()}
 
-    fig = plt.figure(figsize=(mm(150), mm(88)))
-    bottom = 0.35
+    fig = plt.figure(figsize=(mm(150), mm(92)))
+    bottom = 0.37
     gs = GridSpec(1, 2, figure=fig, left=0.29, right=0.985, top=0.91, bottom=bottom, wspace=0.14)
     axes = [fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1], sharey=None)]
     titles = {"dt_pwv": "(a) " + L[lang]["dt_pwv"], "ri_pvr": "(b) " + L[lang]["ri_pvr"]}
@@ -170,7 +171,7 @@ def build(lang: str, numbers: dict):
             ax.tick_params(axis="y", length=0)
         ax.set_title(titles[col], loc="center", fontsize=8)
         ax.axvline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1)
-        ax.text(crit + 0.03, n - 0.55, L[lang]["criterion"], ha="left", va="center",
+        ax.text(crit + 0.03, n - 0.55, criterion_label(meta, lang), ha="left", va="center",
                 fontsize=8, color=PALETTE["grey"])
         for i, row in enumerate(rows):
             color = PALETTE[FAMILY[row["id"]][0]]
@@ -185,8 +186,7 @@ def build(lang: str, numbers: dict):
                 return ln
 
             if cell.get("rho") is not None:
-                filled = cell.get("strata_total") is not None and cell["strata_pass"] == cell["strata_total"]
-                put(cell["rho"], filled)
+                put(cell["rho"], _filled(cell, req))
                 ax.annotate(cell["strata"], (cell["rho"], i), xytext=(5, 0), textcoords="offset points",
                             ha="left", va="center", fontsize=8, color=PALETTE["ink"])
             elif "stages" in cell:
@@ -197,15 +197,16 @@ def build(lang: str, numbers: dict):
                 if has_a:
                     # A 段と C 段を細線で結ぶ
                     ax.plot([xa, xc], [i, i], color=PALETTE["light"], lw=0.8, zorder=2)
-                    fa = st["A"].get("strata_pass") is not None and st["A"]["strata_pass"] == st["A"]["strata_total"]
-                    put(xa, fa, "A")
+                    put(xa, _filled(st["A"], req), "A")
                     ax.annotate(f"A {st['A']['strata']}", (xa, i), xytext=(5, 0), textcoords="offset points",
                                 ha="left", va="center", fontsize=8, color=PALETTE["ink"])
-                fc = st["C"].get("strata_pass") is not None and st["C"]["strata_pass"] == st["C"]["strata_total"]
-                put(xc, fc, "C")
+                put(xc, _filled(st["C"], req), "C")
                 if has_a:
-                    ax.annotate("C", (xc, i), xytext=(5, 0), textcoords="offset points",
-                                ha="left", va="center", fontsize=8, color=PALETTE["ink"])
+                    # 規準線に重なる点は値も書く（どちら側かを読めるように）
+                    c_lab = "C" if abs(xc - crit) >= 0.04 else f"C {xc:.3f}"
+                    ax.annotate(c_lab, (xc, i), xytext=(5, 0), textcoords="offset points",
+                                ha="left", va="center", fontsize=8, color=PALETTE["ink"],
+                                bbox=dict(fc="white", ec="none", pad=0.15))
                     if cell.get("adopted"):
                         ax.annotate(tx["accepted"].format(n=_fmt_n(cell["adopted"]["n"])), (xc, i),
                                     xytext=(-6, 0), textcoords="offset points",
@@ -224,9 +225,10 @@ def build(lang: str, numbers: dict):
             elif cell.get("dash"):
                 ax.text(0.02, i, tx["dash"], ha="left", va="center", fontsize=8, color=PALETTE["grey"])
             elif cell.get("note"):
-                ax.text(0.02, i, tx["not_evaluated"], ha="left", va="center", fontsize=8, color=PALETTE["grey"])
+                ax.text(0.02, i, tx["not_evaluated"], ha="left", va="center", fontsize=8, color=PALETTE["grey"],
+                        bbox=dict(fc="white", ec="none", pad=0.3), zorder=4)
     fig.text((0.29 + 0.985) / 2, bottom - 0.075, L[lang]["rho"], ha="center", va="top", fontsize=8)
-    footer = wrap_text(criterion_text(meta, lang), lang) + "\n" + wrap_text(STAGE_NOTE[lang], lang)
+    footer = wrap_text(criterion_text(numbers, lang), lang) + "\n" + wrap_text(STAGE_NOTE[lang], lang)
     fig.text(0.01, 0.012, footer, ha="left", va="bottom", fontsize=8, color=PALETTE["ink"], linespacing=1.3)
     return fig, drawn, crit
 
@@ -236,6 +238,10 @@ def legend_text(lang: str, numbers: dict) -> str:
     meta = numbers["meta"]
     n_subj = _fmt_n(meta["n_subjects_decision_test"])
     thr = meta["criterion"]["min_median_abs_rho"]
+    req = meta["criterion"]["strata_required"]
+    sk = next(r for r in t1["rows"] if r["id"] == "pda_v2_skewgauss")["dt_pwv"]["adopted"]
+    sk_n, sk_of = _fmt_n(sk["n"]), _fmt_n(sk["of"])
+    gm_n = _gamma_accepted(numbers)
     if lang == "ja":
         return "\n".join([
             f"図1　判定の図 ― 表1 の年齢層内 Spearman |ρ| の中央値と規準線 {thr:.2f}",
@@ -243,20 +249,21 @@ def legend_text(lang: str, numbers: dict) -> str:
             f"何を示すか: 決定試験（PWDB {n_subj} 名・6 層）で、表1 の 6 通りの指標の作り方ごとに、"
             "ΔT × 大動脈脈波伝播速度（a）と RI × 末梢血管抵抗（b）の年齢層内 Spearman 順位相関の絶対値の中央値を点で示す。"
             f"破線は実行前に凍結した規準（{meta['criterion']['text']}）。{meta['criterion']['sign_prediction']}"
-            "塗りつぶしは全層で予測の向き、白抜きはそれ以外か表1 に層の数の記載がないもの。点の横の x/6 は予測の向きを持った層の数。"
-            "第2版 歪みガウスは採択 2/4,374 で A・B 段が判定できないので C 段のみ、第2版 ガンマは A 段（採択 103）と C 段を細線で結んだ。"
-            "陽性対照に RI の欄は無く（—）、早期振幅比の RI は未検証。判定の札は図に書かず表に任せる。",
+            f"塗りつぶしは規準が求める全 {req} 層で予測の向き、白抜きはそれ以外。点の横の x/y は予測の向きを持った層の数／8 名以上の層の数。"
+            f"第2版 歪みガウスは採択 {sk_n}/{sk_of} で A・B 段が判定できないので C 段のみ、第2版 ガンマは A 段（採択 {gm_n}）と C 段を細線で結んだ。"
+            f"ガンマ経路の A 段は 8 名以上の層が 4 層のみなので分母が 4 で、全 {req} 層の規準は評価できない（lab_log 追記12）。"
+            "陽性対照（モデル出力の脈波到達時間 × 大動脈脈波伝播速度）は表全体が有効かを確かめる行で、"
+            "規準は中央値 |ρ| ≥ 0.5 かつ全層で負（`gate0_rules_v2.md`。満たしたので表1 は有効）。"
+            "陽性対照に RI の欄は無く（—）、早期振幅比の RI は未検証。判定（成立・不成立）は図に書かず、表1 に示す。",
             "",
-            "出典: `02_tables.md` 表1（`docs/research/roadmap_v1.md` §9）。"
+            "出典: `02_tables.md` 表1（`docs/research/roadmap_v1.md` §9 の判定の表。lab_log 追記12）。"
             "凍結版は 20番 `20_pwdb_validity.py`（`data/pwdb/pwdb_indices.csv`。lab_log 2026-09-03「研究0 の結果」）、"
             "特徴点法と陽性対照は 23番 `23_pwdb_landmarks.py`（lab_log 2026-09-03「判定の訂正」）、"
-            "第2版と早期振幅比は 26番 `26_pwdb_compare.py`・27番 `27_threshold_sensitivity.py`"
-            "（`data/pwdb/pwdb_compare.csv`・`pwdb_compare_report.txt`。lab_log 追記11・12）。"
+            "第2版と早期振幅比は 26番 `26_pwdb_compare.py`（`data/pwdb/pwdb_compare.csv`・`pwdb_compare_report.txt`。lab_log 追記12）。"
+            "27番 `27_threshold_sensitivity.py` は閾値の感度（表1 の値ではない）。"
             "数値は `data/paper2_numbers.json` から台本 `build_fig_judgement.py` が読む。",
             "",
             "段の注釈: " + STAGE_NOTE["ja"],
-            "",
-            f"表1 の出所（02_tables.md の記載）: {t1['source']}",
         ])
     return "\n".join([
         f"Figure 1. Decision figure: median within-age-stratum Spearman |ρ| of table 1 against the criterion line {thr:.2f}.",
@@ -266,17 +273,22 @@ def legend_text(lang: str, numbers: dict) -> str:
         "ΔT with aortic PWV (a) and of RI with peripheral vascular resistance (b). The dashed line is the criterion frozen "
         f"before the run (predicted sign in all {meta['criterion']['strata_required']} strata and median |ρ| ≥ {thr:.2f}; "
         "ΔT × aortic PWV negative, RI × peripheral vascular resistance positive; magnitudes shown). Filled markers have the "
-        "predicted sign in every stratum; open markers do not, or table 1 does not report the stratum count. The x/6 beside "
-        "a marker is the number of strata with the predicted sign. The rebuilt skew-Gaussian route accepted 2 of 4,374 "
-        "subjects, so tiers A and B could not be evaluated and only tier C is plotted; for the rebuilt gamma route tier A "
-        "(accepted 103) and tier C are joined by a thin line. The positive control has no RI entry (—) and the RI of the "
-        "early amplitude ratio was not evaluated. Verdicts are not written in the figure; they are given in the table.",
+        f"predicted sign in all {req} strata required by the criterion; open markers do not. The x/y beside a marker is the "
+        "number of strata with the predicted sign over the number of strata with at least 8 subjects. The rebuilt skew-Gaussian "
+        f"route accepted {sk_n} of {sk_of} subjects, so tiers A and B could not be evaluated and only tier C is plotted; for the "
+        f"rebuilt gamma route tier A (accepted {gm_n}) and tier C are joined by a thin line. In tier A of the gamma route only "
+        f"four strata had at least 8 subjects, hence the denominator 4, and the {req}-stratum criterion cannot be met there "
+        "(lab_log entry 12). The positive control (model-derived pulse transit time × aortic PWV) tests whether the table is "
+        "valid at all; its own requirement is median |ρ| ≥ 0.5 with the predicted sign in every stratum (`gate0_rules_v2.md`), "
+        "which it met. The positive control has no RI entry (—) and the RI of the early amplitude ratio was not evaluated. "
+        "Verdicts (pass or fail) are not written in the figure; they are given in table 1.",
         "",
-        "Source: table 1 of `02_tables.md` (`docs/research/roadmap_v1.md` §9). Frozen version: script 20 "
-        "`20_pwdb_validity.py` (`data/pwdb/pwdb_indices.csv`; lab_log 2026-09-03, results of study 0). Fiducial-point "
-        "analysis and positive control: script 23 `23_pwdb_landmarks.py` (lab_log 2026-09-03, correction of the verdict). "
-        "Rebuilt version and early amplitude ratio: scripts 26 `26_pwdb_compare.py` and 27 `27_threshold_sensitivity.py` "
-        "(`data/pwdb/pwdb_compare.csv`, `pwdb_compare_report.txt`; lab_log entries 11 and 12). All numbers are read from "
+        "Source: table 1 of `02_tables.md` (the decision table of `docs/research/roadmap_v1.md` §9; lab_log entry 12). "
+        "Frozen version: script 20 `20_pwdb_validity.py` (`data/pwdb/pwdb_indices.csv`; lab_log 2026-09-03, results of "
+        "study 0). Fiducial-point analysis and positive control: script 23 `23_pwdb_landmarks.py` (lab_log 2026-09-03, "
+        "correction of the verdict). Rebuilt version and early amplitude ratio: script 26 `26_pwdb_compare.py` "
+        "(`data/pwdb/pwdb_compare.csv`, `pwdb_compare_report.txt`; lab_log entry 12); script 27 "
+        "`27_threshold_sensitivity.py` gives the threshold sensitivity, not the values of table 1. All numbers are read from "
         "`data/paper2_numbers.json` by `build_fig_judgement.py`.",
         "",
         "Tier note: " + STAGE_NOTE["en"],
@@ -332,9 +344,21 @@ def selftest() -> int:
         joined = "\n".join(texts)
         bad_font = check_min_font(fig)
         rep(f"文字はすべて {common.MIN_FONT_PT:g} pt 以上", not bad_font, f"{bad_font[:3]}")
-        rep("段の注釈が脚注にある", STAGE_NOTE[lang] in joined.replace("\n", "") or
-            STAGE_NOTE[lang].replace(" ", "") in joined.replace("\n", "").replace(" ", ""))
-        rep("規準線の札がある", L[lang]["criterion"] in texts)
+        rep("段の注釈が脚注にある", STAGE_NOTE[lang].replace(" ", "") in joined.replace("\n", "").replace(" ", ""))
+        rep("分母 4 の説明が脚注にある", ("分母が 4" in joined.replace("\n", "")) if lang == "ja"
+            else ("denominator 4" in joined.replace("\n", " ")))
+        rep("規準線の札が meta.criterion の値で書かれている", criterion_label(fresh["meta"], lang) in texts)
+        req = fresh["meta"]["criterion"]["strata_required"]
+        exp_by_key = {key(p): p for p in exp}
+        rep(f"塗りつぶした点はすべて層の数が {req} で全層が予測の向き",
+            all(exp_by_key[k]["filled"] is False or True for k in exp_by_key) and
+            not [p for p in drawn if p["filled"] and not any(
+                e["id"] == p["id"] and e["col"] == p["col"] and (e["stage"] or "") == (p["stage"] or "") and e["filled"]
+                for e in exp)])
+        ov = text_overlaps(fig)
+        rep("文字どうしが重ならない", not ov, f"{ov[:3]}")
+        outside = texts_outside(fig)
+        rep("文字が図の枠からはみ出さない", not outside, f"{outside[:3]}")
         verdict_words = ["成立", "合格", " pass", "fail"]
         rep("判定の語（成立・不成立・pass・fail）を図に書いていない",
             not any(w in joined for w in verdict_words))

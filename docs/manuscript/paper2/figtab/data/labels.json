@@ -9,7 +9,7 @@
     },
     "pda_v2_skewgauss": {
       "ja": "分解法・第2版 歪みガウス（主たる経路）",
-      "en": "Decomposition, rebuilt version, skewed-Gaussian route",
+      "en": "Decomposition, rebuilt version, skew-Gaussian route",
       "short_ja": "第2版 歪みガウス",
       "short_en": "Rebuilt, skew-Gaussian"
     },
@@ -33,7 +33,7 @@
     },
     "ptt_control": {
       "ja": "モデル出力の脈波到達時間（陽性対照）",
-      "en": "Model-output pulse transit time (positive control)",
+      "en": "Model-derived pulse transit time (positive control)",
       "short_ja": "陽性対照",
       "short_en": "Positive control"
     }

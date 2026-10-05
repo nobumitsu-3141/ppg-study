@@ -241,7 +241,7 @@
           "label_ja": "分解法・第2版 ガンマ",
           "label_bold": false,
           "dt_pwv": {
-            "raw": "採択 103。A 0.798（3/4 層）、C 0.556",
+            "raw": "採択 103。A 0.798（3/4 層）、C 0.556（6/6）",
             "rho": null,
             "strata": null,
             "stages": {
@@ -253,7 +253,9 @@
               },
               "C": {
                 "rho": 0.556,
-                "strata": null
+                "strata": "6/6",
+                "strata_pass": 6,
+                "strata_total": 6
               }
             },
             "adopted": {
@@ -263,7 +265,7 @@
             "bold": false
           },
           "ri_pvr": {
-            "raw": "A 0.609（4/4）、C 0.280",
+            "raw": "A 0.609（4/4）、C 0.280（6/6）",
             "rho": null,
             "strata": null,
             "stages": {
@@ -275,7 +277,9 @@
               },
               "C": {
                 "rho": 0.28,
-                "strata": null
+                "strata": "6/6",
+                "strata_pass": 6,
+                "strata_total": 6
               }
             },
             "bold": false
@@ -704,7 +708,7 @@
       ],
       "preamble": [],
       "postscript": [
-        "脈波伝播速度の行のみ単調でない。ΔT は −1SD 側が予測と逆向きに動き、RI は U 字を描く。"
+        "脈波伝播速度の行が最も大きく折れ返る。ΔT は −1SD 側が予測と逆向きに動き、RI は U 字を描く。ΔT では平均血圧の行も小さく折れ返る（337.2 → 352.8 → 348.7。lab_log 追記113）。"
       ],
       "groups": [],
       "row_count": 6,

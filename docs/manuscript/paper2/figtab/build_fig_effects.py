@@ -34,7 +34,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import common                                        # noqa: E402
 from common import (PALETTE, mm, setup, save, load_numbers,   # noqa: E402
-                    check_min_font, texts_of)
+                    check_min_font, texts_of, wrap_text, text_overlaps, texts_outside)
 
 NAME = "fig_effects"
 REPO = HERE.parents[3]
@@ -84,26 +84,6 @@ T = {
                    "factors at reference; median over age strata."),
     },
 }
-
-
-def _wrap_ja(s: str, units: int) -> str:
-    lines, cur, w = [], "", 0
-    for ch in s:
-        cw = 2 if ord(ch) > 0x2E7F else 1
-        if w + cw > units:
-            lines.append(cur)
-            cur, w = "", 0
-        cur += ch
-        w += cw
-    if cur:
-        lines.append(cur)
-    return "\n".join(lines)
-
-
-def wrap_text(s: str, lang: str, width_ja: int = 102, width_en: int = 112) -> str:
-    if lang == "ja":
-        return _wrap_ja(s, width_ja)
-    return "\n".join(textwrap.wrap(s, width=width_en, break_long_words=False, break_on_hyphens=False))
 
 
 def wrap_factor(s: str, lang: str) -> str:
@@ -173,7 +153,7 @@ def build(lang: str, numbers: dict):
     nf = len(factors)
     nk = len(index_keys)
     bh = 0.18
-    offs = [(-(nk - 1) / 2 + j) * 0.24 for j in range(nk)]
+    offs = [(-(nk - 1) / 2 + j) * 0.265 for j in range(nk)]
     for i, fid in enumerate(factors):
         row = t2["rows"][i]
         for j, key in enumerate(index_keys):
@@ -227,6 +207,8 @@ def build(lang: str, numbers: dict):
         # RI は基準値の数字を点の下に書くので、下に余白を広く取る
         lo_pad = pad if keys is dt_keys else (hi - lo) * 0.22
         ax.set_ylim(lo - lo_pad, hi + pad)
+        # 目盛は表示範囲の中だけに置く（範囲外の目盛の文字が残らないように）
+        ax.set_yticks([t for t in ax.get_yticks() if lo - lo_pad <= t <= hi + pad])
         lo = lo - lo_pad + pad
         ax.set_xlim(-0.25, 2.25)
         ax.set_xticks(x)
@@ -263,15 +245,27 @@ def build(lang: str, numbers: dict):
 def legend_text(lang: str, numbers: dict) -> str:
     t2 = numbers["tables"]["表2"]
     t2b = numbers["tables"]["表2b"]
+    index_keys = [c["key"] for c in t2["columns"] if c["kind"] == "effect"]
+    nf, nk = len(t2["rows"]), len(index_keys)
+    sep = "・" if lang == "ja" else ", "
+    factor_names = sep.join(LABELS["factors"][r["id"]][lang] for r in t2["rows"])
+    index_names = sep.join(LABELS["indices"][k][lang] for k in index_keys)
+    dt_keys, ri_keys = table2b_keys(t2b)
+    rows2b = {r["id"]: r for r in t2b["rows"]}
+    arrow = " → "
+    pv_dt = arrow.join(f"{rows2b['pwv'][k]['value']:.1f}" for k in dt_keys)
+    pv_ri = arrow.join(f"{rows2b['pwv'][k]['value']:.3f}" for k in ri_keys)
+    map_dt = arrow.join(f"{rows2b['map'][k]['value']:.1f}" for k in dt_keys)
     if lang == "ja":
         return "\n".join([
             "図2　振った因子ごとの年齢層内主効果（表2）と 1 因子掃引（表2b）― 記述・事前に計画した解析",
             "",
-            f"何を示すか: (a) {t2['title']}。6 因子（大動脈径・心拍数・駆出時間・平均血圧・脈波伝播速度・1回拍出量）× "
-            "4 指標（特徴点法 ΔT、分解法 ΔT・RI（凍結版）、早期振幅比）の横棒。塗り・ハッチで指標を分け、"
+            f"何を示すか: (a) {t2['title']}。{nf} 因子（{factor_names}）× "
+            f"{nk} 指標（{index_names}）の横棒。塗り・ハッチで指標を分け、"
             "分解法の 2 指標には表2 の括弧内の値（その因子と指標の年齢層内 Spearman ρ）を棒の先に添えた。"
             f"(b) {t2b['title']}。上が分解法 ΔT（ms）、下が分解法 RI で、−1SD・基準・+1SD での値を因子ごとに結んだ。"
-            "脈波伝播速度（青）だけが単調でなく、ΔT は −1SD 側が予測と逆向きに動き、RI は U 字を描く（表2b の注記）。"
+            f"脈波伝播速度（青）の行が最も大きく折れ返り、ΔT は −1SD 側が予測と逆向きに動き（{pv_dt}）、"
+            f"RI は U 字を描く（{pv_ri}）。ΔT では平均血圧の行も小さく折れ返る（{map_dt}。lab_log 追記113）。"
             "青の数字は脈波伝播速度の 3 値。",
             "",
             "出典: `02_tables.md` 表2・表2b（`docs/research/roadmap_v1.md` §9）。20番 `20_pwdb_validity.py`"
@@ -286,15 +280,15 @@ def legend_text(lang: str, numbers: dict) -> str:
         "Figure 2. Within-stratum main effect of each varied factor (table 2) and single-factor sweeps (table 2b): "
         "descriptive analyses planned before the run.",
         "",
-        "What is shown: (a) main effect of each of the six factors (aortic diameter, heart rate, ejection time, mean "
-        "arterial pressure, pulse wave velocity, stroke volume) on four indices (fiducial-point ΔT, decomposition ΔT and "
-        "RI of the frozen version, early amplitude ratio), computed within each age stratum as the mean at +1 SD minus the "
+        f"What is shown: (a) main effect of each of the {nf} factors ({factor_names}) on {nk} indices ({index_names}), "
+        "computed within each age stratum as the mean at +1 SD minus the "
         "mean at −1 SD of the factor, divided by the stratum mean (%). Fill and hatch distinguish the indices; for the two "
         "decomposition indices the within-stratum Spearman ρ between factor and index, as given in table 2, is written in "
         "parentheses at the end of the bar. (b) Single-factor sweeps: the stratum median of decomposition ΔT (ms, top) and "
         "RI (bottom) when one factor is moved across −1 SD, reference and +1 SD while the other five are held at reference. "
-        "Only the response to pulse wave velocity (blue) is not monotone: ΔT moves opposite to the prediction on the −1 SD "
-        "side and RI is U-shaped (note to table 2b). The blue numbers are the three values for pulse wave velocity.",
+        "The response to pulse wave velocity (blue) folds back most: ΔT moves opposite to the prediction on the −1 SD side "
+        f"({pv_dt}) and RI is U-shaped ({pv_ri}). For ΔT the mean arterial pressure row also folds back slightly ({map_dt}; "
+        "lab_log entry 113). The blue numbers are the three values for pulse wave velocity.",
         "",
         "Source: tables 2 and 2b of `02_tables.md` (`docs/research/roadmap_v1.md` §9). Script 20 `20_pwdb_validity.py` "
         "(`data/pwdb/pwdb_indices.csv`; lab_log 2026-09-03, results of study 0, tables of main effects and single-factor "
@@ -375,6 +369,10 @@ def selftest() -> int:
         bad_font = check_min_font(fig)
         rep(f"文字はすべて {common.MIN_FONT_PT:g} pt 以上", not bad_font, f"{bad_font[:3]}")
         rep("脚注に「記述・事前に計画」の注記がある", T[lang]["planned"] in joined.replace("\n", ""))
+        ov = text_overlaps(fig)
+        rep("文字どうしが重ならない", not ov, f"{ov[:3]}")
+        outside = texts_outside(fig)
+        rep("文字が図の枠からはみ出さない", not outside, f"{outside[:3]}")
         rep("脚注に表2・表2b の出典がある", ("表2・表2b" in joined.replace("\n", "")) if lang == "ja"
             else ("tables 2 and 2b" in joined.replace("\n", " ")))
         verdict_words = ["成立", "合格", " pass", "fail"]
