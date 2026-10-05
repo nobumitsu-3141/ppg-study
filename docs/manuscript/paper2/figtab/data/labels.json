@@ -245,5 +245,134 @@
   "posthoc_note": {
     "ja": "探索・事後の解析であり、判定には用いない。改良した当てはめを主解析に用いるには新たな事前登録が要る。",
     "en": "Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration."
+  },
+  "table_numbers": {
+    "_note": "02_tables.md の表番号 → この図表集の番号。図の中と凡例文・表の見出しはこの集の番号で書き、凡例文と脚注にだけ（02_tables.md 表n）を添える。",
+    "表1": {
+      "ja": "表2",
+      "en": "Table 2",
+      "tid": "table2"
+    },
+    "表2": {
+      "ja": "表3",
+      "en": "Table 3",
+      "tid": "table3"
+    },
+    "表2b": {
+      "ja": "表3b",
+      "en": "Table 3b",
+      "tid": "table3b"
+    },
+    "表2c": {
+      "ja": "表3c",
+      "en": "Table 3c",
+      "tid": "table3c"
+    },
+    "表3": {
+      "ja": "表4",
+      "en": "Table 4",
+      "tid": "table4"
+    },
+    "表4": {
+      "ja": "表5a",
+      "en": "Table 5a",
+      "tid": "table5a"
+    },
+    "表4_逸脱表": {
+      "ja": "表5b",
+      "en": "Table 5b",
+      "tid": "table5b"
+    },
+    "表5": {
+      "ja": "表6a",
+      "en": "Table 6a",
+      "tid": "table6a"
+    },
+    "表5b": {
+      "ja": "表6b",
+      "en": "Table 6b",
+      "tid": "table6b"
+    },
+    "表6": {
+      "ja": "表8",
+      "en": "Table 8",
+      "tid": "table8"
+    },
+    "表6d": {
+      "ja": "表8b",
+      "en": "Table 8b",
+      "tid": "table8b"
+    },
+    "表6b": {
+      "ja": "補足表 S1",
+      "en": "Table S1",
+      "tid": "tableS1"
+    },
+    "表6c": {
+      "ja": "表9",
+      "en": "Table 9",
+      "tid": "table9"
+    },
+    "表6e": {
+      "ja": "補足表 S3",
+      "en": "Table S3",
+      "tid": "tableS3"
+    },
+    "表7a": {
+      "ja": "補足表 S2a",
+      "en": "Table S2a",
+      "tid": "tableS2a"
+    },
+    "表7b": {
+      "ja": "補足表 S2b",
+      "en": "Table S2b",
+      "tid": "tableS2b"
+    },
+    "prespec_items": {
+      "ja": "表1",
+      "en": "Table 1",
+      "tid": "table1"
+    },
+    "diagnosis_map": {
+      "ja": "表7",
+      "en": "Table 7",
+      "tid": "table7"
+    }
+  },
+  "figure_numbers": {
+    "fig_judgement": {
+      "ja": "図1",
+      "en": "Figure 1"
+    },
+    "fig_effects": {
+      "ja": "図2",
+      "en": "Figure 2"
+    },
+    "fig_timeline": {
+      "ja": "図3",
+      "en": "Figure 3"
+    },
+    "fig_synthetic": {
+      "ja": "図4",
+      "en": "Figure 4"
+    },
+    "fig_variants": {
+      "ja": "図5",
+      "en": "Figure 5"
+    },
+    "fig_noise": {
+      "ja": "図6",
+      "en": "Figure 6"
+    },
+    "fig_tradeoff": {
+      "ja": "図7",
+      "en": "Figure 7"
+    }
+  },
+  "verdict_en": {
+    "_note": "英文の判定語。規準は pass／fail（英文原稿 v2 の表1 と同じ）、陽性対照は passed。",
+    "成立": "pass",
+    "不成立": "fail",
+    "合格": "passed"
   }
 }
