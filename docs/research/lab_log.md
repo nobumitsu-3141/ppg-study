@@ -9789,3 +9789,23 @@ docx は RESULT PASS（図 7・表 18）、用語検査 exit 0。docx は LibreO
 **段の注釈**: A 段＝その手法が採用した被験者だけ、B 段＝比べる全手法が採用した共通例、C 段＝採否を無視した全員。
 
 **この環境**: Python 3.11.15・matplotlib 3.11.2（図の描画のみ。数値は一切計算していない）。
+
+## 2026-10-06（追記163）　英文原稿 v2 の指標名を early amplitude ratio にそろえた
+
+**依頼**: 「英文原稿 v2 の amplitude ratio の表記をそろえて」（追記161・162 で残件として挙げた不一致）。
+
+**直したこと**（`docs/manuscript/paper2/v2/01_draft_en_v2.md`。数値は変えていない）:
+- 方法の見出し「**Upstroke amplitude ratio.**」→「**Early amplitude ratio.**」（264 行）。定義の文（上昇脚だけを使う）はそのまま。
+- 表1 の行「Upstroke amplitude ratio Am_b/Am_p1」→「Early amplitude ratio Am_b/Am_p1」（387 行）。
+- 結果「波形の型」の「the upstroke ratio」→「the early amplitude ratio」（533 行）。
+- 含意の「an upstroke-only index is an alternative … (0.836)」に「such as the early amplitude ratio」を添えた（711 行）。0.836 がどの指標の値かを
+  名で示すためで、主張（上昇脚だけを使う指標は代わりになりうる）は変えていない。
+
+**そろえた先**: 英文 v2 の他の 6 か所（要旨・方法・結果・考察）がすでに early amplitude ratio、和文 v2 は 10 か所すべて「早期振幅比」、
+図表集の名称（`figtab/data/labels.json`）と用語表（`docs/research/terminology.md`「p1・b 波・早期振幅比 Am_b/Am_p1 ｜ Hellqvist 2024」）も同じ。
+英文 v2 の中に「upstroke ratio」「Upstroke amplitude ratio」は残っていない（early amplitude ratio は 10 か所）。v1（`../01_draft_en.md`）は
+v2 の README のとおり当時のまま残し、直していない（191・276・374 行に旧い名が残る）。
+
+**docx**: `paper2_draft_en_v2.docx` を `docs/manuscript/build_en_docx.js` で作り直した（node 22.22.2・docx 9.8.1 をこの環境の作業用の場所に
+入れて実行）。先に、直す前の md（HEAD）から同じ手順で作った docx の文が、commit 済みの docx の文と 139 段落すべて一致することを確かめて
+から作り直した。作り直した docx の文の差は上の 4 か所だけ。和文の docx は変えていない。README_v2 の変更一覧に 34 として記録した。

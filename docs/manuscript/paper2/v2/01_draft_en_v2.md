@@ -261,7 +261,7 @@ RI_lm the ratio of their heights and SI = subject height / ΔT_lm. Where no notc
 descending limb showed a well-defined change of slope (Dawber type 3), the inflection point
 was used in place of the diastolic peak, and the substitution was recorded.
 
-**Upstroke amplitude ratio.** Am_b/Am_p1 as defined by Hellqvist 2024: t_b is the first
+**Early amplitude ratio.** Am_b/Am_p1 as defined by Hellqvist 2024: t_b is the first
 trough of the second derivative, t_p1 is the zero-crossing of the tangent drawn to the
 descending linear part of the first derivative after its first peak, so that t_p1 = t_b −
 y′(t_b)/y″(t_b), and the index is y(t_b)/y(t_p1). It uses only the upstroke (the rising
@@ -384,7 +384,7 @@ prespecified positive control had already passed and its verdict is unchanged.
 | Decomposition, rebuilt version — skew-Gaussian | accepted 2/4,374; tier C 0.167 | tier C 0.354 (3/6) | fail |
 | Decomposition, rebuilt version — gamma | accepted 103; tier A 0.798 (3/4 strata); tier C 0.556 | tier A 0.609 (4/4); tier C 0.280 | fail |
 | **Fiducial-point analysis (same waveforms)** | **0.710 (6/6)** | **0.504 (6/6)** | **pass** |
-| **Upstroke amplitude ratio Am_b/Am_p1** | **0.836 (6/6)** | — | **pass** |
+| **Early amplitude ratio Am_b/Am_p1** | **0.836 (6/6)** | — | **pass** |
 | Model-derived transit time (positive control) | 0.571 (6/6) | — | pass |
 
 Neither decomposition version passed. The frozen version passed its convergence audit in
@@ -530,8 +530,8 @@ positions of the measured fiducial points (the notch and the diastolic peak), so
 be applied to beats that have neither; for tiers A and B of the rebuilt version the rule
 therefore gives up the very advantage of decomposition, that it returns a value in beats
 without a notch. Type 3 was read with fiducial points (the inflection standing in for the
-diastolic peak), the p1 construction and the upstroke ratio. The frozen decomposition has
-no such rule and was fitted to all subjects regardless of type, so how decomposition
+diastolic peak), the p1 construction and the early amplitude ratio. The frozen
+decomposition has no such rule and was fitted to all subjects regardless of type, so how decomposition
 performs in beats without a notch is read from the frozen version and from tier C.
 
 The model's true transit times (which contain no pre-ejection period) were 96 ms (5th–95th
@@ -708,8 +708,8 @@ point is that **the criteria by which decomposition methods are usually selected
 detect this failure**, and that checking construct validity — whether an index measures
 the quantity it is meant to measure — against known truth is cheap: the database is open
 and the analysis takes hours. Where the dicrotic notch is unavailable, an upstroke-only
-index is an alternative that requires no diastolic feature and, in this population,
-outperformed both families (0.836).
+index such as the early amplitude ratio is an alternative that requires no diastolic
+feature and, in this population, outperformed both families (0.836).
 
 ---
 
