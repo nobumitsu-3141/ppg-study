@@ -64,6 +64,8 @@ KINDS = [("frozen", "fb"), ("trunc08", "trunc065"), ("deriv", "deriv")]
 KIND_COLOR = {"frozen": common.PALETTE["pda"], "trunc08": common.PALETTE["amp"],
               "deriv": common.PALETTE["control"]}
 KIND_MARKER = {"frozen": "s", "trunc08": "o", "deriv": "^"}
+# 第2成分の線種。色だけに頼らず、白黒でも列を見分けられるようにする（第1成分は灰の短い破線）
+KIND_LS = {"frozen": "-", "trunc08": (0, (6, 2)), "deriv": (0, (4, 1.5, 1, 1.5))}
 
 TEXT = {
     "ja": {
@@ -80,8 +82,7 @@ TEXT = {
         "rows": {"type3": "型3 相当の合成脈波\n反射波が収縮期に重なる",
                  "type1": "型1 相当の合成脈波\n反射波が遅く分離する"},
         "note": "表題の ΔT と真値は合成脈波 1 拍への当てはめの値で、PWDB の結果ではない。真値は合成した反射波の"
-                "ピーク − 前進波のピーク（2 本の点線の間隔）。凍結版の列は 50番の (1)（(0) 凍結版本体 src/pda.py の"
-                "複製。自己検査で (0) の返り値と一致）。",
+                "ピーク − 前進波のピーク（2 本の点線の間隔）。T は拍長。",
     },
     "en": {
         "synthetic": "Synthetic beat (illustration, not PWDB)",
@@ -98,8 +99,7 @@ TEXT = {
                  "type1": "Type-1-like beat\nreflection separated"},
         "note": "ΔT and the true value in each panel title come from the fit to this one synthetic beat, "
                 "not from PWDB. The true value is the peak of the synthetic reflected wave minus the peak of the "
-                "forward wave (the two dotted lines). 'Frozen' is variant (1) of script 50, a copy of src/pda.py; "
-                "the self-test checks its result against (0), the frozen implementation itself.",
+                "forward wave (the two dotted lines). T, beat length.",
     },
 }
 
@@ -288,7 +288,7 @@ def _legend_handles(T: dict, labels: dict, lang: str, ink: str, grey: str) -> li
                Line2D([], [], color=grey, lw=0.8, ls=(0, (3, 1.5)), marker="o", ms=3.2,
                       mfc="white", mec=grey, label=T["comp1"])]
     for kind, vid in KINDS:
-        handles.append(Line2D([], [], color=KIND_COLOR[kind], lw=1.0, marker=KIND_MARKER[kind],
+        handles.append(Line2D([], [], color=KIND_COLOR[kind], lw=1.0, ls=KIND_LS[kind], marker=KIND_MARKER[kind],
                               ms=3.6, label=T["comp2"].format(k=_col_header(labels, vid, lang))))
     handles.append(Line2D([], [], color=ink, lw=0.7, ls=(0, (1, 1.4)), label=T["true_line"]))
     handles.append(Patch(fc="#E6E6E6", ec="#BDBDBD", lw=0.0, hatch="////", label=T["trunc"]))
@@ -308,9 +308,9 @@ def _legend_size_mm(handles: list) -> tuple[float, float]:
 
 
 def _col_header(labels: dict, vid: str, lang: str) -> str:
+    """列の見出し: 表8 の (n) の番号と labels.json の短い名（凍結版も (0) を付けて、表8・図5 と同じ名にする）。"""
     v = labels["variants"][vid]
-    short = v[f"short_{lang}"]
-    return f"{v['no']} {short}" if vid != "fb" else short
+    return f"{v['no']} {v[f'short_{lang}']}"
 
 
 def trunc_frac(m50) -> float:
@@ -343,8 +343,9 @@ def build(lang: str, labels: dict | None = None):
     note = T["note"] + "\n" + labels["posthoc_note"][lang]
     meas = Measurer(FONT_PT)
     try:
+        # 測る描画器（100 dpi）と出力（600 dpi）で幅がわずかに違うので、1 mm 控えて折る（図幅 150 mm を超えないように）
         note_lines = [ln for para in note.split("\n")
-                      for ln in wrap_text(para, WIDTH_MM - 2 * MARGIN_MM, meas, lang)]
+                      for ln in wrap_text(para, WIDTH_MM - 2 * MARGIN_MM - 1.0, meas, lang)]
     finally:
         meas.close()
     handles = _legend_handles(T, labels, lang, ink, grey)
@@ -373,7 +374,7 @@ def build(lang: str, labels: dict | None = None):
                 ax.axvspan(float(t[0]) + f["cut_s"], Tb, fc="#E6E6E6", ec="#BDBDBD", lw=0.0,
                            hatch="////", zorder=0)
                 ax.text(float(t[0]) + f["cut_s"] + 0.01, 1.08, T["cut"], ha="left", va="top",
-                        fontsize=FONT_PT, color=ink, zorder=5)
+                        fontsize=FONT_PT, color=ink, zorder=5, bbox=common.LABEL_BOX)
                 record["shaded"].append((bkey, kind, float(t[0]) + f["cut_s"]))
             # 合成の前進波と反射波のピーク（真値 ΔT ＝ その差）。到達の母数 dt_set の位置ではない
             for x_true in (tr["t_fwd"], tr["t_ref"]):
@@ -381,7 +382,7 @@ def build(lang: str, labels: dict | None = None):
             record["truth_lines"][(bkey, kind)] = (float(tr["t_fwd"]), float(tr["t_ref"]))
             record["axes"][(bkey, kind)] = ax
             ax.plot(t, skew(t, *f["c1"]), color=grey, lw=0.8, ls=(0, (3, 1.5)), zorder=2)
-            ax.plot(t, skew(t, *f["c2"]), color=col, lw=1.0, zorder=3)
+            ax.plot(t, skew(t, *f["c2"]), color=col, lw=1.0, ls=KIND_LS[kind], zorder=3)
             ax.plot(t, f["ys"], color=ink, lw=1.0, zorder=4)
             ax.plot([f["tp1"]], [f["h1"]], marker="o", ms=3.2, mfc="white", mec=grey, mew=0.8,
                     ls="none", zorder=5)
@@ -445,57 +446,71 @@ def legend_text(lang: str, rec: dict) -> str:
     m50 = load_m50()
     frac = f"{trunc_frac(m50):.2f}"
     n_sub = int(common.load_numbers()["meta"]["n_subjects_decision_test"])
+    labels = json.load(open(LABELS, encoding="utf-8"))
     top, bot = (data["beats"][k] for k, _d, _tau in BEATS[:2])   # 上の行・下の行（描く順と同じ）
     dt_set = [f"{b['dt_true']:.2f}" for b in (top, bot)]           # 到達の母数（synth_beat の dt_set）
     dt_true = [f"{1000 * b['truth']['dt_s']:.1f}" for b in (top, bot)]   # 真値（ピークの差）
     tau = f"{top['tau']:.2f}"
-    posthoc = json.load(open(LABELS, encoding="utf-8"))["posthoc_note"][lang]
+    posthoc = labels["posthoc_note"][lang]
+    t8, t9 = common.table_no("表6", lang), common.table_no("表6c", lang)
+    row_name = {"ja": {"type3": "型3 相当", "type1": "型1 相当"}, "en": {"type3": "type-3-like", "type1": "type-1-like"}}[lang]
     lines = []
     if lang == "ja":
-        lines += [f"図4　合成脈波 1 拍に 3 つの当てはめを重ねた模式図（例示。PWDB ではない）。凍結版がなぜ合成した"
-                  f"反射波のピークを取り逃がし、(6b) {frac}T の打ち切りと (9) 1 次微分の領域が第2成分をどこに置くか。",
+        lines += [f"図4　合成脈波 1 拍に 3 つの当てはめを重ねた模式図（例示。PWDB ではない）― 第2成分の位置と、"
+                  "合成した反射波のピークとの差",
                   "",
                   f"示しているもの: 行は合成脈波（上: 型3 相当、反射波の到達の母数 {dt_set[0]} s で収縮期に重なる。"
-                  f"下: 型1 相当、同 {dt_set[1]} s で遅く分離する。貯留槽の時定数はどちらも {tau} s）、列は当てはめの型。"
-                  "各枠は、当てはめの対象（正規化した合成脈波・黒の実線）、第1成分（灰の破線・白抜き丸はピーク）、"
-                  "第2成分（列ごとの色・印はピーク）、合成した前進波と反射波のピーク（2 本の点線）。打ち切りの列は "
-                  f"{frac}T 以降を網掛けにした（当てはめに使わない区間）。枠の表題の ΔT は第2成分のピーク − "
-                  "第1成分のピーク、真値は合成した反射波のピーク − 前進波のピーク（2 本の点線の間隔）。",
+                  f"下: 型1 相当、同 {dt_set[1]} s で遅く分離する。貯留槽の時定数はどちらも {tau} s）、列は当てはめの型"
+                  f"（{t8} の (0) 凍結版・(6b) 拍長 T の {frac} 倍で打ち切る・(9) 残差を 1 次微分の領域で取る）。"
+                  "各枠は、当てはめの対象（正規化した合成脈波・黒の太い実線）、第1成分（灰の短い破線・白抜き丸はピーク）、"
+                  "第2成分（列ごとの色と線種。(0) 実線・(6b) 長い破線・(9) 一点鎖線。印はピーク）、合成した前進波と反射波のピーク"
+                  f"（2 本の点線）。打ち切りの列は {frac}T 以降を網掛けにした（当てはめに使わない区間）。T は拍長。"
+                  "枠の表題の ΔT は第2成分のピーク − 第1成分のピーク、真値は合成した反射波のピーク − 前進波のピーク"
+                  "（2 本の点線の間隔）。",
                   "",
                   f"到達の母数（{dt_set[0]}・{dt_set[1]} s）と真値（{dt_true[0]}・{dt_true[1]} ms）が一致しないのは、"
                   "合成では反射波の幅と歪度が到達とともに変わり、真値を母数の差ではなくピークの差で定義するため"
                   "（50番 synth_beat の docstring・lab_log 追記141）。",
                   "",
-                  f"**表題の数値は合成脈波だけから出した値で、PWDB の {n_sub:,d} 名の結果ではない。**", ""]
-        lines.append("当てはめの返り値（ms。自己検査で 50番 fit_kind と 0.5 ms 以内の一致を、凍結版の列は (0) 凍結版本体"
-                     "（src/pda.py）との一致も確かめる）:")
+                  f"**表題の数値は合成脈波だけから出した値で、PWDB の {n_sub:,d} 名の結果ではない。**"
+                  "合成脈波から立てた「凍結版の第2成分の位置の下限（Δμ ≥ 0.08 s）が主因」という読み（lab_log 追記141）は、"
+                  f"PWDB の {n_sub:,d} 名への再当てはめで否定された（下限に張り付いた拍は 1 拍も無い。追記144、{t8} の注）。"
+                  "合成でも、型3 相当で凍結版が探索範囲の端に達した 7 拍はすべて第2成分の歪度の上限で、Δμ の下限は 7 拍中 2 拍"
+                  "だった（追記144 の続き）。この図は、拡張期の下降を当てはめから外す 2 つの版が第2成分をどこに置くかの例示であり、"
+                  "機構の証明ではない。",
+                  "",
+                  "凍結版の列は 50番の (1)（(0) 凍結版本体 src/pda.py と同じ探索範囲・起点・解の選び方の複製）で描いた。"
+                  "自己検査で (0) の返り値との一致を確かめる。", ""]
+        lines.append("当てはめの返り値（ms。自己検査で 50番 fit_kind と 0.5 ms 以内の一致を確かめる）:")
         for bkey, _d, _tau in BEATS:
             tr = data["beats"][bkey]["truth"]
-            row = f"  {bkey}: 真値 {1000 * tr['dt_s']:.1f}"
-            for kind, _v in KINDS:
-                row += f"、{kind} {rec['dt_ms'][(bkey, kind)]:.1f}"
+            row = f"  {row_name[bkey]}: 真値 {1000 * tr['dt_s']:.1f}"
+            for kind, vid in KINDS:
+                row += f"、{_col_header(labels, vid, lang)} {rec['dt_ms'][(bkey, kind)]:.1f}"
             lines.append(row)
         lines += ["",
                   "出どころ: analysis/scripts/50_reservoir_bench.py 節A（synth_beat・_bounds・_frozen_starts・_model・"
                   "_components・fit_kind の解の選び方）。合成脈波の設計と所見は lab_log 追記141、起点と解の選び方を"
-                  "凍結版と同一にした経緯は追記143。(6b)(9) の実データでの結果は 02_tables.md 表6・表6c"
-                  "（50番 節C。docs/research/results/50_reservoir_bench_C14.txt ほか、追記146・152・158）"
-                  + _result_note("ja") + "。",
+                  "凍結版と同一にした経緯は追記143、実データでの否定は追記144。(6b)(9) の実データでの結果は "
+                  f"02_tables.md 表6・表6c（この集の{t8}・{t9}。50番 節C。docs/research/results/50_reservoir_bench_C14.txt ほか、"
+                  "追記146・152・158）" + _result_note("ja") + "。",
                   "",
                   "探索・事後の注記: " + posthoc,
                   "",
                   "図の台本: docs/manuscript/paper2/figtab/build_fig_synthetic.py。"]
     else:
-        lines += ["Figure 4. Three fits superimposed on one synthetic beat (illustration, not PWDB): why the frozen "
-                  f"fit misses the peak of the synthetic reflected wave, and where the truncated fit (6b, {frac}T) and the "
-                  "derivative-domain fit (9) place the second component.",
+        t8e, t9e = t8[0].lower() + t8[1:], t9[0].lower() + t9[1:]
+        lines += ["Figure 4. Three fits superimposed on one synthetic beat (illustration, not PWDB): position of the "
+                  "second component relative to the peak of the synthetic reflected wave.",
                   "",
                   f"What is shown: rows are synthetic beats (top: type-3-like, reflected-wave arrival parameter {dt_set[0]} s, "
                   f"overlapping systole; bottom: type-1-like, arrival parameter {dt_set[1]} s, separated; reservoir time "
-                  f"constant {tau} s in both), columns are the fit variants. Each panel shows the fitted signal (normalised "
-                  "synthetic beat, black), component 1 (grey dashed, open circle at its peak), component 2 (colour "
-                  "per column, marker at its peak) and the peaks of the synthetic forward and reflected waves (two dotted "
-                  f"lines). In the truncation column the region beyond {frac}T is hatched (not fitted). The panel title gives "
+                  f"constant {tau} s in both), columns are the fit variants of {t8e} ((0) frozen; (6b) truncated at {frac} of "
+                  "the beat length T; (9) residual taken in the first-derivative domain). Each panel shows the fitted signal "
+                  "(normalised synthetic beat, thick black line), component 1 (short grey dashes, open circle at its peak), "
+                  "component 2 (colour and line style per column: (0) solid, (6b) long dashes, (9) dash-dot; marker at its "
+                  "peak) and the peaks of the synthetic forward and reflected waves (two dotted lines). In the truncation "
+                  f"column the region beyond {frac}T is hatched (not fitted). T, beat length. The panel title gives "
                   "ΔT = peak of component 2 − peak of component 1, and the true value = peak of the synthetic "
                   "reflected wave − peak of the forward wave (the spacing of the two dotted lines).",
                   "",
@@ -505,21 +520,31 @@ def legend_text(lang: str, rec: dict) -> str:
                   "(docstring of synth_beat in script 50; lab-log entry 141).",
                   "",
                   f"**The numbers in the panel titles come from the synthetic beat only, not from the {n_sub:,d} PWDB "
-                  "subjects.**", ""]
-        lines.append("Fitted values (ms; the self-test checks agreement with fit_kind of script 50 within 0.5 ms, and the "
-                     "frozen column also against (0), the frozen implementation itself in src/pda.py):")
+                  "subjects.** The reading drawn from the synthetic beats, that the lower bound on the position of the frozen "
+                  "fit's second component (Δμ ≥ 0.08 s) was the main cause (lab-log entry 141), was refuted when the "
+                  f"{n_sub:,d} PWDB subjects were refitted: not a single beat sat at that bound (entry 144; note to {t8e}). "
+                  "Even in the synthetic type-3-like beats, all 7 beats at the edge of the search range had the second "
+                  "component's skewness at its upper limit, and only 2 of the 7 were at the Δμ bound (continuation of entry "
+                  "144). The figure illustrates where the two versions that exclude the diastolic decline from the fit place "
+                  "the second component; it does not establish the mechanism.",
+                  "",
+                  "The frozen column was drawn with variant (1) of script 50, a copy of the frozen implementation (0) in "
+                  "src/pda.py with the same search range, starts and solution rule; the self-test checks its result against (0).",
+                  ""]
+        lines.append("Fitted values (ms; the self-test checks agreement with fit_kind of script 50 within 0.5 ms):")
         for bkey, _d, _tau in BEATS:
             tr = data["beats"][bkey]["truth"]
-            row = f"  {bkey}: true {1000 * tr['dt_s']:.1f}"
-            for kind, _v in KINDS:
-                row += f", {kind} {rec['dt_ms'][(bkey, kind)]:.1f}"
+            row = f"  {row_name[bkey]}: true {1000 * tr['dt_s']:.1f}"
+            for kind, vid in KINDS:
+                row += f"; {_col_header(labels, vid, lang)} {rec['dt_ms'][(bkey, kind)]:.1f}"
             lines.append(row)
         lines += ["",
                   "Source: analysis/scripts/50_reservoir_bench.py section A (synth_beat, _bounds, _frozen_starts, _model, "
                   "_components and the solution rule of fit_kind). Design and findings of the synthetic beats: lab-log "
-                  "entry 141; alignment of starts and solution rule with the frozen fit: entry 143. Results of (6b) and (9) "
-                  "on PWDB: 02_tables.md Tables 6 and 6c (script 50 section C; docs/research/results/50_reservoir_bench_C14.txt "
-                  "and others; entries 146, 152, 158)" + _result_note("en") + ".",
+                  "entry 141; alignment of starts and solution rule with the frozen fit: entry 143; refutation on real data: "
+                  f"entry 144. Results of (6b) and (9) on PWDB: tables 6 and 6c of 02_tables.md ({t8e} and {t9e} of this set; "
+                  "script 50 section C; docs/research/results/50_reservoir_bench_C14.txt and others; entries 146, 152, 158)"
+                  + _result_note("en") + ".",
                   "",
                   "Post-hoc note: " + posthoc,
                   "",
@@ -648,6 +673,22 @@ def selftest() -> int:
         # 3. 文字の大きさ
         bad = common.check_min_font(fig)
         check(f"[{lang}] 文字がすべて {common.MIN_FONT_PT:g} pt 以上", not bad, str(bad[:3]))
+        # 図の中に出どころ（台本の番号・ファイル名・lab_log）と、台本の内部の鍵（frozen・trunc08・deriv）を書かない
+        prov_re = (r"\d+\s*番|\.py|lab_log|追記|trunc08|frozen|deriv" if lang == "ja"
+                   else r"(?i)\bscript\s*\d|\.py\b|lab[_ ]log|\bentr(y|ies)\b|trunc08|\bderiv\b")
+        prov = [t[:30] for t in rec["texts"] if re.search(prov_re, t)]
+        check(f"[{lang}] 図の中に出どころと台本の内部の鍵を書いていない", not prov, str(prov[:3]))
+        heads = [rec["titles"][(BEATS[0][0], k)].split("\n")[0] for k, _v in KINDS]
+        want = [_col_header(json.load(open(LABELS, encoding="utf-8")), v, lang) for _k, v in KINDS]
+        check(f"[{lang}] 列の見出しが表8 の (n) の番号と短い名", heads == want, f"{heads} != {want}")
+        # 線種は描画器の破線の型で比べる（get_linestyle はどの破線も "--" と返すため）
+        ls2 = {kind: {str(getattr(ln, "_unscaled_dash_pattern", ln.get_linestyle()))
+                      for (bk, kd), ax in rec["axes"].items() if kd == kind
+                      for ln in ax.get_lines() if ln.get_zorder() == 3}
+               for kind, _v in KINDS}
+        check(f"[{lang}] 第2成分の線種が列ごとに違い、列の中では同じ（色だけに頼らない）",
+              all(len(v) == 1 for v in ls2.values()) and len({next(iter(v)) for v in ls2.values()}) == len(KINDS),
+              str(ls2))
         # 4. 注記
         check(f"[{lang}] 「合成脈波（例示）」の札がある", TEXT[lang]["synthetic"] in texts)
         check(f"[{lang}] 探索・事後の注記がある", _squash(labels["posthoc_note"][lang]) in _squash(alltext))
@@ -670,6 +711,10 @@ def selftest() -> int:
         outside, overlap = _layout_problems(fig)
         check(f"[{lang}] すべての文字が図の中に収まる", not outside, str(outside[:3]))
         check(f"[{lang}] 文字どうしが重ならない", not overlap, str(overlap[:3]))
+        cs = common.texts_crossing_spines(fig)
+        check(f"[{lang}] 枠の中の文字が軸の線に掛かっていない", not cs, str(cs[:3]))
+        tlo = common.text_line_overlaps(fig)
+        check(f"[{lang}] 枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tlo, str(tlo[:3]))
         plt.close(fig)
 
     ok = all(results)

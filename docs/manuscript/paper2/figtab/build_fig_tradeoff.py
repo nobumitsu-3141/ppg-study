@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""図7 当てはまりと真値への追従の関係 ― (a) 表3 の NRMSE 対 |ρ|、(b) 表6 の通過率 対 C 段の |ρ|。
+"""図7 当てはまりと真値への追従の関係 ― (a) 表4 の NRMSE 対 |ρ|、(b) 表8 の通過率 対 C 段の |ρ|。
 
-(a) 表3（基底関数と成分数の総当たり。120 名から取った型1 の 98 拍・4 層）: 横軸は NRMSE の中央値（対数目盛）、
+表の番号はこの図表集の番号（labels.json の table_numbers）。表4＝02_tables.md 表3、表8＝02_tables.md 表6。
+図の中の題名と脚注はこの集の番号で書き、凡例文の出典にだけ 02_tables.md の番号を添える。
+
+(a) 表4（基底関数と成分数の総当たり。120 名から取った型1 の 98 拍・4 層）: 横軸は NRMSE の中央値（対数目盛）、
 縦軸は ΔT × 大動脈PWV の年齢層内 Spearman |ρ| の中央値（全例＝C 段）。記号の形は基底の族
 （歪みガウス α∈[0,8]・ガウス・歪みガウス α∈[−8,8]・ガンマ（凍結の探索範囲）・ガンマ（広い探索範囲））、記号の横の数字は成分数と、
-括弧内に予測の向きを持った層の数／層の数（表3 の x/4。規準は全層で予測の向きを要るので、0.30 を超えても 3/4 の点は満たさない）。
-同じ族の点は成分数の順に細線で結ぶ。
-(b) 表6（拡張期の下降の扱いを変えた版。型3・3,378 名・6 層）: 横軸は通過率（A 段に残る割合）、縦軸は C 段の |ρ|。
-点は版ごとに 1 つで、表6 の (n) の番号と予測の向きを持った層の数（x/6）を添える（名は脚注の対応表。labels.json の short_ja / short_en）。
+括弧内に予測の向きを持った層の数／層の数（表4 の x/4。規準は全層で予測の向きを要るので、0.30 を超えても 3/4 の点は満たさない）。
+同じ族の点は成分数の順に細線で結ぶ。記号が重なる 2 つの族の点で注釈の文字が同じもの（A_SHARED）は、注釈を 1 つにまとめ、
+そのことを脚注に書く（同じ「3 (4/4)」が 2 つ並ぶと、どの記号の注釈か読めないため）。
+(b) 表8（拡張期の下降の扱いを変えた版。型3・3,378 名・6 層）: 横軸は通過率（A 段に残る割合）、縦軸は C 段の |ρ|。
+点は版ごとに 1 つで、表8 の (n) の番号と予測の向きを持った層の数（x/6）を添える（名は脚注の対応表。labels.json の short_ja / short_en）。
 白抜き＝下降を説明する項を足す案、塗りつぶし＝下降を当てはめの対象から外す・残差の中で小さくする案、灰の四角＝基準。
 特徴点法（同梱）の C 段の値を横の点線で引く（図5 と同じ線種）。両方の枠に規準線 0.30（灰の破線）を引く。
-2 つの枠は対象が異なる（表3 は型1 の 98 拍、表6 は型3 の 3,378 名）ので、脚注にその旨を書く。
+2 つの枠は対象が異なる（表4 は型1 の 98 拍、表8 は型3 の 3,378 名）ので、脚注にその旨を書く。
 値はすべて `data/paper2_numbers.json`（`../02_tables.md` を機械で読んだもの）から取り、手で打たない。
-表3・表6 は探索・事後なので、脚注にその旨と段の注釈（CLAUDE.md §3）を置く。判定（成立・不成立）は図に書かない。
+表4・表8 は探索・事後なので、脚注にその旨と段の注釈（CLAUDE.md §3）を置く。判定（成立・不成立）は図に書かない。
 
 使い方
     python3 build_fig_tradeoff.py                 和文・英文の両方を out/ に書く
@@ -83,7 +87,11 @@ A_LABEL = {
 B_LABEL = {
     "fb": (0, -7, "center"), "dmu001": (0, -15, "center"), "decay": (-5, 0, "right"),
     "reservoir": (5, 2, "left"), "reservoir_tau015": (5, -2, "left"),
+    "twostage": (5, 6, "left"),          # (8) は C 段の |ρ| が 0.012 で横軸に近いので、注釈を記号の右上に置く
 }
+# (a) で記号が重なる 2 つの族の点（キー）と、その注釈を兼ねる点（値）。注釈の文字（成分数と層の数）が同じときだけ
+# まとめ、違えば別々に描く（shared_labels で確かめる）。同じ「3 (4/4)」が 2 つ並ぶと、どの記号の注釈か読めないため
+A_SHARED = {"gamma_wide_m3": "gamma_frozen_m3", "gamma_wide_m4": "gamma_frozen_m4", "skewgauss_pm8_m2": "skewgauss_a08_m2"}
 MARKER_PT = 4.5
 XLIM_A, YLIM_A = (0.0022, 0.07), (0.0, 0.8)     # 左端は ▽4（NRMSE 0.0047）の左に置く注釈が枠に収まる値
 XLIM_B, YLIM_B = (0.0, 1.0), (0.0, 0.85)
@@ -95,38 +103,43 @@ PANEL_H_MM, TOP_MM, XAXIS_MM = 45.0, 9.0, 10.0
 
 T = {
     "ja": {
-        "title_a": "(a) 表3: 基底と成分数\n（型1 の {nbeat} 拍）",
-        "title_b": "(b) 表6: 下降の扱いの改良案\n（型3・{n3} 名）",
+        "title_a": "(a) {tno}: 基底と成分数\n（型1 の {nbeat} 拍）",
+        "title_b": "(b) {tno}: 下降の扱いの改良案\n（型3・{n3} 名）",
         "xlabel_a": "NRMSE の中央値（対数目盛。左ほど当てはまりが良い）",
         "xlabel_b": "通過率（A 段に残る割合）",
         "ylabel_a": "ΔT × 大動脈PWV の |ρ|（C 段・{ns} 層）",
         "ylabel_b": "ΔT × 大動脈PWV の |ρ|（C 段・{ns} 層）",
         "lm_line": "特徴点法（同梱）{v:.3f}",
-        "key_a": "(a) の記号＝基底の族: {items}。数字＝成分数（括弧内は予測の向きを持った層の数／層の数）。同じ族は成分数の順に細線で結ぶ。",
+        "key_a": "(a) の記号＝基底の族: {items}。数字＝成分数（括弧内は予測の向きを持った層の数／層の数）。同じ族は成分数の順に細線で結ぶ。"
+                 "{shared}",
+        "shared": "記号が重なる {pairs} は、成分数と層の数が同じなので注釈を 1 つにまとめた。",
+        "pair_sep": " と ",
         "key_b": "(b) の記号: ○＝下降を説明する項を足す、●＝下降を当てはめの対象から外す・残差の中で小さくする、■（灰）＝基準。"
                  "番号: {items}。番号の右の数字＝予測の向きを持った層の数／層の数。朱の点線＝特徴点法（同梱）の C 段の値。"
                  "灰の破線＝規準 {thr:.2f}。",
-        "subjects": "(a) と (b) は対象が異なる: (a) は {nsub} 名から取った型1（切痕あり）の {nbeat} 拍・{ns_a} 層（表3）、"
-                    "(b) は型3（変曲点のみ）の {n3} 名・{ns_b} 層（表6）。縦軸はいずれも年齢層内 Spearman |ρ| の中央値（C 段）。",
+        "subjects": "(a) と (b) は対象が異なる: (a) は {nsub} 名から取った型1（切痕あり）の {nbeat} 拍・{ns_a} 層（{t_a}）、"
+                    "(b) は型3（変曲点のみ）の {n3} 名・{ns_b} 層（{t_b}）。縦軸はいずれも年齢層内 Spearman |ρ| の中央値（C 段）。",
         "sep": "、",
         "eq": "＝",
     },
     "en": {
-        "title_a": "(a) Table 3: basis and component count\n({nbeat} type-1 beats)",
-        "title_b": "(b) Table 6: diastolic-decline variants\n(type 3, n = {n3})",
+        "title_a": "(a) {tno}: basis and component count\n({nbeat} type-1 beats)",
+        "title_b": "(b) {tno}: diastolic-decline variants\n(type 3, n = {n3})",
         "xlabel_a": "Median NRMSE (log scale; smaller means a closer fit)",
         "xlabel_b": "Pass rate (fraction remaining in tier A)",
         "ylabel_a": "|ρ| of ΔT × aortic PWV (tier C, {ns} strata)",
         "ylabel_b": "|ρ| of ΔT × aortic PWV (tier C, {ns} strata)",
         "lm_line": "Fiducial-point {v:.3f}",
         "key_a": "Markers in (a), basis family: {items}. Numbers, component count (in parentheses, strata with the predicted sign / "
-                 "strata evaluated). Points of one family are joined in order of component count.",
+                 "strata evaluated). Points of one family are joined in order of component count.{shared}",
+        "shared": " Overlapping {pairs} have the same component count and stratum count, so one label serves both.",
+        "pair_sep": " and ",
         "key_b": "Markers in (b): open circle, add a term for the diastolic decline; filled circle, exclude or down-weight the diastolic "
                  "decline; grey square, reference fits. Numbers: {items}. The fraction after a number, strata with the predicted sign / "
                  "strata evaluated. Vermilion dotted line, tier-C value of the fiducial-point analysis (database-supplied). "
                  "Grey dashed line, criterion {thr:.2f}.",
         "subjects": "(a) and (b) are different subject sets: (a) {nbeat} type-1 beats (notch present) from {nsub} subjects, {ns_a} strata "
-                    "(table 3); (b) the {n3} type-3 subjects (inflection only), {ns_b} strata (table 6). Both y axes are the median "
+                    "({t_a}); (b) the {n3} type-3 subjects (inflection only), {ns_b} strata ({t_b}). Both y axes are the median "
                     "within-age-stratum Spearman |ρ| (tier C).",
         "sep": "; ",
         "eq": " = ",
@@ -179,6 +192,31 @@ def points_b(numbers: dict) -> list[dict]:
     return out
 
 
+def tref(key: str, lang: str) -> str:
+    """02_tables.md の表番号を、この集の番号にして返す（英文の文中は小文字の table）。"""
+    t = common.table_no(key, lang)
+    return t[0].lower() + t[1:] if lang == "en" else t
+
+
+def shared_labels(numbers: dict) -> dict:
+    """A_SHARED のうち、注釈の文字が同じでまとめられるもの（キーの点 → 注釈を兼ねる点）。"""
+    pa = {p["id"]: p for p in points_a(numbers)}
+    return {k: v for k, v in A_SHARED.items() if k in pa and v in pa and a_label(pa[k]) == a_label(pa[v])}
+
+
+def shared_sentence(numbers: dict, lang: str) -> str:
+    """注釈をまとめた点の組を脚注に書く文（まとめていなければ空）。"""
+    sh = shared_labels(numbers)
+    if not sh:
+        return ""
+    pa = {p["id"]: p for p in points_a(numbers)}
+    tx = T[lang]
+
+    def g(pid):
+        return f"{FAMILY[pa[pid]['family']]['glyph']}{pa[pid]['m']}"
+    return tx["shared"].format(pairs=tx["sep"].join(f"{g(v)}{tx['pair_sep']}{g(k)}" for k, v in sh.items()))
+
+
 def a_label(p: dict) -> str:
     """(a) の点の注釈: 成分数と、括弧内に予測の向きを持った層の数／層の数（表3 の x/4）。"""
     return f"{p['m']} ({p['strata']})"
@@ -215,8 +253,11 @@ def build(lang: str, numbers: dict):
     lm = landmark_c(numbers)
     key_a, key_b = key_items(numbers, lang)
 
-    footer_lines = [tx["key_a"].format(items=key_a), tx["key_b"].format(items=key_b, thr=crit),
-                    tx["subjects"].format(nsub=f"{nsub:,}", nbeat=nbeat, ns_a=ns_a, n3=f"{n3:,}", ns_b=ns_b),
+    sh = shared_labels(numbers)
+    footer_lines = [tx["key_a"].format(items=key_a, shared=shared_sentence(numbers, lang)),
+                    tx["key_b"].format(items=key_b, thr=crit),
+                    tx["subjects"].format(nsub=f"{nsub:,}", nbeat=nbeat, ns_a=ns_a, n3=f"{n3:,}", ns_b=ns_b,
+                                          t_a=tref("表3", lang), t_b=tref("表6", lang)),
                     STAGE_NOTE[lang], LABELS["posthoc_note"][lang]]
     footer = "\n".join(wrap_text(s, lang) for s in footer_lines)
     n_footer = footer.count("\n") + 1
@@ -237,10 +278,11 @@ def build(lang: str, numbers: dict):
     ax_a.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax_a.set_yticks([0, 0.2, 0.4, 0.6, 0.8])
     ax_a.set_yticklabels(["0", "0.2", "0.4", "0.6", "0.8"])
-    ax_a.set_title(tx["title_a"].format(nbeat=nbeat), fontsize=8, loc="center", pad=3, linespacing=1.1)
+    ax_a.set_title(tx["title_a"].format(tno=common.table_no("表3", lang), nbeat=nbeat), fontsize=8, loc="center", pad=3,
+                   linespacing=1.1)
     ax_a.set_xlabel(tx["xlabel_a"], fontsize=8)
     ax_a.set_ylabel(tx["ylabel_a"].format(ns=ns_a), fontsize=8)
-    ax_a.axhline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1)
+    ax_a.axhline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1, label="ref:criterion")
     ax_a.text(XLIM_A[1] * 0.93, crit + 0.012, L[lang]["criterion"], ha="right", va="bottom", fontsize=8, color=PALETTE["grey"])
     drawn_a = []
     for fid in FAMILY_ORDER:
@@ -250,11 +292,15 @@ def build(lang: str, numbers: dict):
         ln, = ax_a.plot([p["x"] for p in pts], [p["y"] for p in pts], ls="none", marker=sty["marker"], ms=sty["ms"],
                         mfc=sty["mfc"], mec=sty["color"], mew=1.0, zorder=4 if sty["mfc"] != "white" else 3, label=fid)
         for p, x, y in zip(pts, ln.get_xdata(), ln.get_ydata()):
-            dx, dy, ha = A_LABEL.get(p["id"], (sty["label_dx"], sty["label_dy"], sty["ha"]))
             lab = a_label(p)
+            rec = {"id": p["id"], "family": fid, "m": p["m"], "x": float(x), "y": float(y), "label": lab,
+                   "shared_with": sh.get(p["id"])}
+            drawn_a.append(rec)
+            if p["id"] in sh:                    # 注釈は重なる相手の点が兼ねる（脚注に書く）
+                continue
+            dx, dy, ha = A_LABEL.get(p["id"], (sty["label_dx"], sty["label_dy"], sty["ha"]))
             ax_a.annotate(lab, (x, y), xytext=(dx, dy), textcoords="offset points", ha=ha, va="center", fontsize=8,
                           color=PALETTE["ink"])
-            drawn_a.append({"id": p["id"], "family": fid, "m": p["m"], "x": float(x), "y": float(y), "label": lab})
 
     # (b) 表6
     pb = points_b(numbers)
@@ -264,12 +310,14 @@ def build(lang: str, numbers: dict):
     ax_b.set_xticklabels(["0", "0.2", "0.4", "0.6", "0.8", "1.0"])
     ax_b.set_yticks([0, 0.2, 0.4, 0.6, 0.8])
     ax_b.set_yticklabels(["0", "0.2", "0.4", "0.6", "0.8"])
-    ax_b.set_title(tx["title_b"].format(n3=f"{n3:,}"), fontsize=8, loc="center", pad=3, linespacing=1.1)
+    ax_b.set_title(tx["title_b"].format(tno=common.table_no("表6", lang), n3=f"{n3:,}"), fontsize=8, loc="center", pad=3,
+                   linespacing=1.1)
     ax_b.set_xlabel(tx["xlabel_b"], fontsize=8)
     ax_b.set_ylabel(tx["ylabel_b"].format(ns=ns_b), fontsize=8)
-    ax_b.axhline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1)
+    ax_b.axhline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1, label="ref:criterion")
     ax_b.text(0.99, crit + 0.012, L[lang]["criterion"], ha="right", va="bottom", fontsize=8, color=PALETTE["grey"])
-    ax_b.axhline(lm, color=PALETTE["landmark"], lw=0.8, ls=(0, (1, 1.6)), zorder=1)      # 点線（図5 の特徴点法の線と同じ）
+    ax_b.axhline(lm, color=PALETTE["landmark"], lw=0.8, ls=(0, (1, 1.6)), zorder=1,      # 点線（図5 の特徴点法の線と同じ）
+                 label="ref:fiducial")
     ax_b.text(0.99, lm + 0.012, tx["lm_line"].format(v=lm), ha="right", va="bottom", fontsize=8, color=PALETTE["landmark"])
     drawn_b = []
     for p in pb:
@@ -294,23 +342,28 @@ def legend_text(lang: str, numbers: dict) -> str:
     n3, ns_b = f"{type3_n(numbers):,}", strata_b(numbers)
     lm = landmark_c(numbers)
     key_a, key_b = key_items(numbers, lang)
+    n_b = len(points_b(numbers))
+    shared = shared_sentence(numbers, lang)
+    t4, t8 = tref("表3", lang), tref("表6", lang)            # この集の番号（02_tables.md の表3・表6）
     src6 = re.sub(r"^出典[^:：]*[:：]\s*", "", numbers["tables"]["表6"].get("source_paragraph", ""))
     if lang == "ja":
         return "\n".join([
-            "図7　当てはまりと真値への追従の関係 ― (a) 表3 の NRMSE 対 |ρ|、(b) 表6 の通過率 対 C 段の |ρ|",
+            f"図7　当てはまりと真値への追従の関係 ― (a) {t4} の NRMSE 対 |ρ|、(b) {t8} の通過率 対 C 段の |ρ|",
             "",
-            f"何を示すか: (a) 基底関数と成分数の総当たり（表3。{nsub} 名から取った型1（切痕あり）の {nbeat} 拍、層は 8 拍以上の {ns_a} 層）。"
+            f"何を示すか: (a) 基底関数と成分数の総当たり（{t4}。{nsub} 名から取った型1（切痕あり）の {nbeat} 拍、層は 8 拍以上の {ns_a} 層）。"
             "横軸は波形への当てはまり（NRMSE の中央値、対数目盛。左ほど残差が小さい）、縦軸は ΔT × 大動脈脈波伝播速度の"
             f"年齢層内 Spearman |ρ| の中央値（全例＝C 段）。記号は基底の族（{key_a}）、数字は成分数（括弧内は予測の向きを持った層の数／層の数）、"
-            "同じ族は成分数の順に細線で結ぶ。"
-            f"(b) 拡張期の下降の扱いを変えた 12 の版（表6。型3 の {n3} 名・{ns_b} 層）。横軸は通過率（凍結版と同じ収束検算で採用になる割合＝"
-            f"A 段に残る割合）、縦軸は C 段の |ρ|。番号は表6 の (n)（{key_b}）で、その右の数字は予測の向きを持った層の数／層の数。"
+            f"同じ族は成分数の順に細線で結ぶ。{shared}"
+            f"(b) 拡張期の下降の扱いを変えた {n_b} の版（{t8}。当てた 14 型のうち (4b)・(6) を除く。型3 の {n3} 名・{ns_b} 層）。"
+            "横軸は通過率（凍結版と同じ収束検算で採用になる割合＝"
+            f"A 段に残る割合）、縦軸は C 段の |ρ|。番号は{t8} の (n)（{key_b}）で、その右の数字は予測の向きを持った層の数／層の数。"
             "白抜きは下降を説明する項を足す案、塗りつぶしは下降を"
             "当てはめの対象から外す・残差の中で小さくする案、灰の四角は基準。朱の点線は特徴点法（同梱）の C 段の値"
-            f"（{lm:.3f}）。両方の枠の灰の破線は規準 {thr:.2f}。(a) と (b) は対象が異なるので、値を直接は比べない。判定の札は図に書かず表に任せる。",
+            f"（{lm:.3f}）。両方の枠の灰の破線は規準 {thr:.2f}。(a) と (b) は対象が異なるので、値を直接は比べない。"
+            "良い版は 14 型から事後に選んだので、その値は楽観側にある。判定の札は図に書かず表に任せる。",
             "",
-            "出典: `02_tables.md` 表3（31番 `analysis/scripts/31_pwdb_basis_explore.py`。結果の CSV は Mac の "
-            "`data/pwdb/pwdb_basis_explore.csv`、lab_log 追記13）と表6（50番 `analysis/scripts/50_reservoir_bench.py` 節C。"
+            f"出典: `02_tables.md` 表3（この集の{t4}。31番 `analysis/scripts/31_pwdb_basis_explore.py`。結果の CSV は Mac の "
+            f"`data/pwdb/pwdb_basis_explore.csv`、lab_log 追記13）と表6（この集の{t8}。50番 `analysis/scripts/50_reservoir_bench.py` 節C。"
             "`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、lab_log 追記144・146・147・149・151・152）。"
             "数値は `data/paper2_numbers.json` から台本 `build_fig_tradeoff.py` が読む。",
             "",
@@ -318,29 +371,32 @@ def legend_text(lang: str, numbers: dict) -> str:
             "",
             "探索・事後の注記: " + LABELS["posthoc_note"]["ja"],
             "",
-            f"表3 の前書き（02_tables.md）: {' '.join(numbers['tables']['表3']['preamble'])}",
+            f"02_tables.md 表3 の前書き（表の番号はこの集のものに読み替えた）: {common.renumber(' '.join(numbers['tables']['表3']['preamble']))}",
             "",
-            f"表6 の出典の記載（02_tables.md）: {src6}",
+            f"02_tables.md 表6 の出典の記載（同）: {common.renumber(src6)}",
         ])
     return "\n".join([
-        "Figure 7. Goodness of fit versus tracking of the reference quantity: (a) NRMSE against |ρ| from table 3; "
-        "(b) pass rate against tier-C |ρ| from table 6.",
+        f"Figure 7. Goodness of fit versus tracking of the reference quantity: (a) NRMSE against |ρ| from {t4}; "
+        f"(b) pass rate against tier-C |ρ| from {t8}.",
         "",
-        f"What is shown: (a) the sweep of basis functions and component counts (table 3; {nbeat} type-1 beats, notch present, "
+        f"What is shown: (a) the sweep of basis functions and component counts ({t4}; {nbeat} type-1 beats, notch present, "
         f"from {nsub} subjects; {ns_a} strata with at least 8 beats). x, goodness of fit (median NRMSE, log scale; smaller residual "
         "to the left); y, median within-age-stratum Spearman |ρ| of ΔT with aortic PWV (all beats, i.e. tier C). Marker shape, basis "
         f"family ({key_a}); number, component count (in parentheses, the number of strata with the predicted sign over the number "
-        "of strata evaluated); points of one family are joined in order of component count. "
-        f"(b) the 12 variants that change how the diastolic decline is treated (table 6; the {n3} type-3 subjects, {ns_b} strata). "
+        f"of strata evaluated); points of one family are joined in order of component count.{shared} "
+        f"(b) the {n_b} variants that change how the diastolic decline is treated ({t8}; (4b) and (6) of the 14 versions fitted are "
+        f"omitted; the {n3} type-3 subjects, {ns_b} strata). "
         "x, pass rate (fraction accepted by the same convergence checks as the frozen version, i.e. remaining in tier A); y, tier-C |ρ|. "
-        f"Numbers are the (n) of table 6 ({key_b}), each followed by the number of strata with the predicted sign over the number of "
+        f"Numbers are the (n) of {t8} ({key_b}), each followed by the number of strata with the predicted sign over the number of "
         "strata evaluated. Open circles, add a term for the diastolic decline; filled circles, exclude or "
         "down-weight the diastolic decline; grey squares, reference fits. The vermilion dotted line is the tier-C value of the "
         f"database-supplied fiducial-point analysis ({lm:.3f}). The grey dashed line in both panels is the criterion {thr:.2f}. "
-        "(a) and (b) are different subject sets, so their values are not compared directly. Verdicts are not written in the figure.",
+        "(a) and (b) are different subject sets, so their values are not compared directly. The better versions were chosen post "
+        "hoc from 14, so their values are optimistic. Verdicts are not written in the figure.",
         "",
-        "Source: table 3 of `02_tables.md` (script 31 `analysis/scripts/31_pwdb_basis_explore.py`; result CSV "
-        "`data/pwdb/pwdb_basis_explore.csv` on the Mac; lab_log entry 13) and table 6 (script 50 `analysis/scripts/50_reservoir_bench.py`, "
+        f"Source: table 3 of `02_tables.md` ({t4} of this set; script 31 `analysis/scripts/31_pwdb_basis_explore.py`; result CSV "
+        "`data/pwdb/pwdb_basis_explore.csv` on the Mac; lab_log entry 13) and table 6 of `02_tables.md` "
+        f"({t8} of this set; script 50 `analysis/scripts/50_reservoir_bench.py`, "
         "part C; `docs/research/results/50_reservoir_bench_BC.txt`, `50_reservoir_bench_C14.txt`; lab_log entries 144, 146, 147, 149, 151, 152). "
         "All numbers are read from `data/paper2_numbers.json` by `build_fig_tradeoff.py`.",
         "",
@@ -395,16 +451,21 @@ def selftest() -> int:
         fresh = load_numbers()
         ea = {p["id"]: p for p in points_a(fresh)}
         da = {p["id"]: p for p in drawn_a}
-        rep("(a) の点の数が表3 の行の数（12）", len(drawn_a) == len(ea) == 12 == len(fresh["tables"]["表3"]["rows"]),
+        rep("(a) の点の数が表4（02_tables.md 表3）の行の数（12）", len(drawn_a) == len(ea) == 12 == len(fresh["tables"]["表3"]["rows"]),
             f"描いた {len(drawn_a)}・期待 {len(ea)}")
         diff = [k for k in ea if k not in da or abs(da[k]["x"] - ea[k]["x"]) > 1e-12 or abs(da[k]["y"] - ea[k]["y"]) > 1e-12
                 or da[k]["m"] != ea[k]["m"] or da[k]["family"] != ea[k]["family"]]
         rep("(a) の NRMSE・|ρ|・成分数・族が JSON と一致（全点）", not diff, f"差 {diff}")
         bad = [k for k in ea if da.get(k, {}).get("label") != a_label(ea[k])]
         rep("(a) の注釈が「成分数 (予測の向きを持った層の数／層の数)」で JSON の値（全点）", not bad, f"{bad}")
+        sh = shared_labels(fresh)
+        n_ann = sum(1 for t in fig.axes[0].texts if t.get_text() != L[lang]["criterion"])
+        rep("(a) の注釈の数＝点の数 − 注釈をまとめた点の数", n_ann == len(drawn_a) - len(sh), f"{n_ann} 対 {len(drawn_a)}−{len(sh)}")
+        bad = [k for k, v in sh.items() if a_label(ea[k]) != a_label(ea[v]) or da[k]["shared_with"] != v]
+        rep("注釈をまとめた点どうしは注釈の文字が同じ", not bad, f"{bad}")
         eb = {p["id"]: p for p in points_b(fresh)}
         db = {p["id"]: p for p in drawn_b}
-        rep("(b) の点の数が表6 の通過率を持つ行の数（12）", len(drawn_b) == len(eb) == 12, f"描いた {len(drawn_b)}・期待 {len(eb)}")
+        rep("(b) の点の数が表8（02_tables.md 表6）の通過率を持つ行の数（12）", len(drawn_b) == len(eb) == 12, f"描いた {len(drawn_b)}・期待 {len(eb)}")
         diff = [k for k in eb if k not in db or abs(db[k]["x"] - eb[k]["x"]) > 1e-12 or abs(db[k]["y"] - eb[k]["y"]) > 1e-12
                 or db[k]["no"] != eb[k]["no"]]
         rep("(b) の通過率・C 段の |ρ|・番号が JSON と一致（全点）", not diff, f"差 {diff}")
@@ -430,6 +491,14 @@ def selftest() -> int:
         rep("対象の違い（表3 の拍数・被験者数・層、型3 の人数・層）が脚注にある",
             all(str(v) in flat for v in (nbeat, nsub, ns_a, strata_b(fresh))) and f"{type3_n(fresh):,}" in flat)
         rep("規準線の札が両方の枠にある", sum(1 for t in texts if t == L[lang]["criterion"]) == 2)
+        rep("注釈をまとめたことが脚注にある", (not sh) or "".join(shared_sentence(fresh, lang).split()) in "".join(flat.split()))
+        want_titles = [common.table_no("表3", lang), common.table_no("表6", lang)]
+        rep("枠の題名がこの集の表番号（表4・表8）", all(w in fig.axes[i].get_title() for i, w in enumerate(want_titles)),
+            f"{[ax.get_title() for ax in fig.axes[:2]]}")
+        old_no = re.findall(r"表[36](?![0-9a-z])", joined) if lang == "ja" else re.findall(r"(?i)table [36](?![0-9a-z])", joined)
+        rep("図の中に 02_tables.md の表番号（表3・表6）を書いていない", not old_no, f"{old_no}")
+        prov = [w for w in ("02_tables", "lab_log", "追記", "entry ") if w in joined]
+        rep("図の中に出どころ（ファイル名・lab_log・追記）を書いていない", not prov, f"{prov}")
         rep("特徴点法の線の札に表6 の C 段の値がある", f"{landmark_c(fresh):.3f}" in flat)
         vh = _verdict_hits(joined)
         rep("判定の語（成立・不成立・pass・fail）を図に書いていない", not vh, f"{vh}")
@@ -442,6 +511,10 @@ def selftest() -> int:
         rep("文字と記号の重なりが無い（描画器の寸法で確認）", not om, f"{om[:4]}")
         outside = texts_outside(fig)
         rep("図の縁からはみ出す文字が無い", not outside, f"{outside[:3]}")
+        cs = common.texts_crossing_spines(fig)
+        rep("枠の中の文字が軸の線に掛かっていない", not cs, f"{cs[:3]}")
+        tl = common.text_line_overlaps(fig)
+        rep("枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tl, f"{tl[:3]}")
         leg = legend_text(lang, fresh)
         if banned is None:
             print("  （用語検査器が無いので禁止語の確認は飛ばした）")

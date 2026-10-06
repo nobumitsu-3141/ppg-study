@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""論文2 図表集 ― 図 7 点（凡例文つき）と表 16 点を A・B・C の 3 部にまとめた docx を作る。
+"""論文2 図表集 ― 図 7 点（凡例文つき）と表 18 点を A・B・C の 3 部にまとめた docx を作る。
 
 和文 `論文2_図表集_ja.docx`・英文 `paper2_figures_tables_en.docx`。図は `out/<名前>_<言語>.png`（600 dpi）を
-300 dpi に落として 150 mm 幅で貼り、凡例文は `out/<名前>_legend_<言語>.txt` をそのまま段落にする。
+300 dpi に落として図の実寸の幅（150 mm 以下）で貼り、凡例文は `out/<名前>_legend_<言語>.txt` をそのまま段落にする。
 表は `build_tables.py` の表（`build_all`）を同じ描き方（`write_docx` と同じ書式）で入れる。数値はどこにも手で打たない。
 
 使い方
     python3 build_figtab_docx.py             両方の docx を書く
     python3 build_figtab_docx.py --zip       あわせて配布用の zip（paper2_figtab.zip）を作る
-    python3 build_figtab_docx.py --selftest  図 7・表 16 が入り、凡例文が揃い、禁止語が無いことを確かめる
+    python3 build_figtab_docx.py --selftest  図 7・表 18 が入り、図の幅が 150 mm 以下で、凡例文が揃い、禁止語が無いことを確かめる
 """
 from __future__ import annotations
 
@@ -42,9 +42,9 @@ PARTS = [
      "tables": ["table1", "table2", "table3", "table3b", "table3c", "table4", "table5a", "table5b"]},
     {"key": "B",
      "title": {"ja": "B　解析を踏まえた改善の設計", "en": "Part B. Design of the improvements"},
-     "lead": {"ja": "何が分かり、何を変えようとし、走らせる前に何を予測したか。表6 以降は探索・事後。",
+     "lead": {"ja": "何が分かり、何を変えようとし、走らせる前に何を予測したか。表4 以降は探索・事後で、判定には用いない。",
               "en": "What the analyses showed, what was changed, and what was predicted before each run. "
-                    "Table 6 onward is exploratory and post hoc."},
+                    "Table 4 onward is exploratory and post hoc and is not used for the decision."},
      "figures": ["fig_timeline", "fig_synthetic"],
      "tables": ["table6a", "table6b", "table7"]},
     {"key": "C",
@@ -53,7 +53,7 @@ PARTS = [
               "en": "What changed per variant in tiers A, B and C, and what survives noise. All exploratory and "
                     "post hoc; not used for the decision."},
      "figures": ["fig_variants", "fig_noise", "fig_tradeoff"],
-     "tables": ["table8", "table9", "tableS1", "tableS2a", "tableS2b"]},
+     "tables": ["table8", "table8b", "table9", "tableS1", "tableS2a", "tableS2b", "tableS3"]},
 ]
 FIG_NO = {"fig_judgement": {"ja": "図1", "en": "Figure 1"}, "fig_effects": {"ja": "図2", "en": "Figure 2"},
           "fig_timeline": {"ja": "図3", "en": "Figure 3"}, "fig_synthetic": {"ja": "図4", "en": "Figure 4"},
@@ -65,7 +65,7 @@ TITLE = {"ja": "論文2 図表集 ― 事前に決めた解析 → 改善の設�
 INTRO = {
     "ja": [
         "論文2（PWDB 4,374 名の仮想被験者。凍結版の脈波分解は不成立、同じ波形の特徴点法は成立）の結果を、"
-        "A 事前に決めた解析、B 解析を踏まえた改善の設計、C 改善で結果は変わったか、の 3 部に分けて図 7 点と表 16 点にした。",
+        "A 事前に決めた解析、B 解析を踏まえた改善の設計、C 改善で結果は変わったか、の 3 部に分けて図 {n_fig} 点と表 {n_tab} 点にした。",
         "番号はこの図表集の中の仮の番号である（原稿 v2 は図 3 点・表 4 点で、対応は未定）。"
         "数値はすべて `../02_tables.md` を機械で読んだ `data/paper2_numbers.json` から各台本が実行時に読み、手で打っていない"
         "（図4 の合成脈波の値だけは例示で、図の中にその旨を書いた）。",
@@ -78,7 +78,7 @@ INTRO = {
         "Results of paper 2 (Pulse Wave Database, 4,374 virtual subjects; the frozen pulse decomposition failed the "
         "prespecified criterion, fiducial-point analysis of the same waveforms passed) arranged in three parts: "
         "A, the prespecified analyses; B, how the analyses led to the design of the improvements; C, whether the "
-        "improvements changed the result. Seven figures and sixteen tables.",
+        "improvements changed the result. {n_fig} figures and {n_tab} tables.",
         "Numbering is provisional to this set (manuscript v2 has three figures and four tables; the mapping is to be "
         "decided). Every number is read at run time from `data/paper2_numbers.json`, a mechanical parse of "
         "`../02_tables.md`; none is typed by hand (the only exception is the synthetic-beat illustration of figure 4, "
@@ -98,8 +98,9 @@ SOURCES = {
         "各台本は `--selftest` を持ち、描いた値と JSON の一致、最小文字サイズ 8 pt、段の注釈と探索・事後の注記、文字の重なり、"
         "禁止語（`analysis/scripts/check_terminology.py` の表）を確かめる。",
         "数値の出どころは `../02_tables.md`（表1〜表7b）で、その記録は `docs/research/lab_log.md` の追記12（決定試験）・13（基底）・"
-        "18（文献の条件）・137（型別）・141（合成脈波の診断）・143〜147（再当てはめ 5・7・10 型）・149〜153（14 型・B 段の設計）・"
-        "152（14 型と線形分離）・158（B 段と雑音）にある。事前指定の項目と改善の経過は `data/prespec_chronology.json`・"
+        "18（文献の条件）・137（型別）・139（0.65T の打ち切りを候補 (3) に挙げた）・141（合成脈波の診断）・"
+        "143〜147（再当てはめ 5・7・10 型）・149〜153（14 型・B 段の設計）・152（14 型と線形分離）・158（B 段と雑音）・"
+        "162（この図表集の点検で直したことと、0.65 の出どころの記述の訂正）にある。事前指定の項目と改善の経過は `data/prespec_chronology.json`・"
         "`notes_prespec_and_chronology.md`。",
         "Mac 1 の結果ファイル（`50_reservoir_bench_C14.txt`・`50_reservoir_bench_B3.txt`・`50_reservoir_bench_noise0.01.txt`・"
         "`50_reservoir_bench_noise0.02.txt`・`51_wave_separation.txt`）はまだリポジトリに無く、該当する数値は `02_tables.md` の記録による。",
@@ -113,9 +114,10 @@ SOURCES = {
         "values against the JSON, the 8 pt minimum font size, the tier and post-hoc notes, text overlaps and banned terms "
         "(the list of `analysis/scripts/check_terminology.py`).",
         "The numbers come from `../02_tables.md` (tables 1 to 7b), recorded in `docs/research/lab_log.md` entries 12 "
-        "(decision test), 13 (basis functions), 18 (published conditions), 137 (waveform types), 141 (synthetic-beat "
-        "diagnosis), 143 to 147 (refits with 5, 7 and 10 variants), 149 to 153 (14 variants and the design of tier B), "
-        "152 (14 variants and wave separation) and 158 (tier B and noise). The prespecified items and the chronology are "
+        "(decision test), 13 (basis functions), 18 (published conditions), 137 (waveform types), 139 (0.65T truncation "
+        "listed as candidate (3)), 141 (synthetic-beat diagnosis), 143 to 147 (refits with 5, 7 and 10 variants), 149 to "
+        "153 (14 variants and the design of tier B), 152 (14 variants and wave separation), 158 (tier B and noise) and 162 "
+        "(corrections made while checking this set, including the stated source of the value 0.65). The prespecified items and the chronology are "
         "in `data/prespec_chronology.json` and `notes_prespec_and_chronology.md`.",
         "The result files written on Mac 1 (`50_reservoir_bench_C14.txt`, `50_reservoir_bench_B3.txt`, "
         "`50_reservoir_bench_noise0.01.txt`, `50_reservoir_bench_noise0.02.txt`, `51_wave_separation.txt`) are not yet in "
@@ -236,8 +238,10 @@ def write_combined(lang: str, path: Path, tables: list) -> None:
     set_page(doc.sections[0], False)
     cur_landscape = False
     heading(TITLE[lang], body_pt + 3)
+    n_fig = sum(len(p["figures"]) for p in PARTS)
+    n_tab = sum(len(p["tables"]) for p in PARTS)
     for para in INTRO[lang]:
-        add_marked(doc.add_paragraph(), para, body_pt)
+        add_marked(doc.add_paragraph(), para.replace("{n_fig}", str(n_fig)).replace("{n_tab}", str(n_tab)), body_pt)
 
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
@@ -245,15 +249,20 @@ def write_combined(lang: str, path: Path, tables: list) -> None:
             ensure_orientation(False)
             heading(part["title"][lang], body_pt + 2)
             add_marked(doc.add_paragraph(), part["lead"][lang], body_pt)
-            for name in part["figures"]:
+            for k, name in enumerate(part["figures"]):
+                # 2 つ目以降の図は新しいページから（最初の図は部の見出しと同じページ）。表は ensure_orientation が
+                # 新しいページを始めるので、図の後ろには改ページを置かない（白紙のページができないように）
+                if k > 0:
+                    doc.add_page_break()
                 doc.add_paragraph()
-                doc.add_picture(str(png_300dpi(name, lang, tmp)), width=Mm(FIG_WIDTH_MM))
+                # 図の実寸の幅で貼る（拡大すると 8 pt の文字が大きくなり、縮めると 8 pt を下回る）
+                w_mm = min(common.png_size_mm(OUT / f"{name}_{lang}.png")[0], FIG_WIDTH_MM)
+                doc.add_picture(str(png_300dpi(name, lang, tmp)), width=Mm(w_mm))
                 paras = legend_paragraphs(name, lang)
                 cap = doc.add_paragraph()
                 style_run(cap.add_run(paras[0]), body_pt, bold=True)
                 for p in paras[1:]:
                     add_marked(doc.add_paragraph(), p, body_pt - 0.5)
-                doc.add_page_break()
             for tid in part["tables"]:
                 T = by_tid[tid]
                 ensure_orientation(T.landscape)
@@ -361,6 +370,17 @@ def selftest() -> int:
                 rep_ok = (OUT / f"{name}_{lang}.png").exists() and (OUT / f"{name}_legend_{lang}.txt").exists()
                 if not rep_ok:
                     rep(f"{name} の PNG と凡例文がある", False, name)
+            widths = {n: common.png_size_mm(OUT / f"{n}_{lang}.png")[0] for p in PARTS for n in p["figures"]}
+            # 許容は 0.1 mm（600 dpi で約 2 画素）。bbox="tight" で書き出すときの画素の丸めの分
+            wide = {n: round(w, 2) for n, w in widths.items() if w > common.FIG_MAX_WIDTH_MM + 0.1}
+            rep(f"図の PNG（600 dpi）の幅がすべて {common.FIG_MAX_WIDTH_MM:g} mm 以下", not wide, f"{wide}")
+            from docx import Document
+            shapes = Document(str(path)).inline_shapes
+            over = [round(sh.width / 36000, 1) for sh in shapes if sh.width / 36000 > FIG_WIDTH_MM + 0.1]
+            rep(f"文書に貼った図の幅がすべて {FIG_WIDTH_MM:g} mm 以下", not over, f"{over}")
+            intro = "".join(INTRO[lang]).replace("{n_fig}", str(n_fig)).replace("{n_tab}", str(n_tab))
+            rep("前書きの図と表の数が 3 部の構成と一致", (f"図 {n_fig} 点と表 {n_tab} 点" in intro) if lang == "ja"
+                else (f"{n_fig} figures and {n_tab} tables" in intro))
     print("RESULT", "PASS" if ok_all else "FAIL")
     return 0 if ok_all else 1
 

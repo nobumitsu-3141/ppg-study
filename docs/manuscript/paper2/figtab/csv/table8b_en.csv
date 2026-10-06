@@ -1,0 +1,9 @@
+"Index, fit",Tier,Type 1 (891),"Type 3 (3,378)",Type 4 (105),"All (4,374)"
+"ΔT × aortic PWV, frozen fit",A,0.224 (4/6),0.220 (6/6),0.472 (3/3),0.223 (6/6)
+"ΔT × aortic PWV, frozen fit",C,—,0.207 (6/6),—,0.205 (6/6)
+"ΔT × aortic PWV, truncated at 0.65T (delay bound 0.01 s)",A,0.193 (3/6),0.826 (6/6),0.540 (3/3),0.808 (5/6)
+"ΔT × aortic PWV, truncated at 0.65T (delay bound 0.01 s)",C,0.219 (4/6),0.586 (6/6),0.598 (3/3),0.559 (6/6)
+"ΔT × aortic PWV, fiducial-point (supplied; reference)",C,0.343 (4/6),0.430 (6/6),0.796 (3/3),0.710 (6/6)
+"RI × resistance, frozen fit",C,—,0.184 (4/6),—,0.171 (4/6)
+"RI × resistance, derivative domain",C,—,0.416 (6/6),—,0.394 (6/6)
+"RI × resistance, fiducial-point (supplied; reference)",C,0.481 (6/6),0.550 (6/6),0.888 (3/3),0.504 (6/6)

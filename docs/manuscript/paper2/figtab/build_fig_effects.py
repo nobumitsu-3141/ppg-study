@@ -59,28 +59,27 @@ FACTOR_STYLE = {
 
 T = {
     "ja": {
-        "title_a": "(a) 因子ごとの主効果（表2）",
-        "title_b": "(b) 1 因子掃引（表2b）",
+        "title_a": "(a) 因子ごとの主効果（表3）",
+        "title_b": "(b) 1 因子掃引（表3b）",
         "xlabel_a": "年齢層内の主効果（%）",
         "unit_ms": "[ms]",
         "levels": {"minus1sd": "−1SD", "base": "基準", "plus1sd": "+1SD"},
         "planned": "記述・事前に計画",
-        "footer": ("出典: 02_tables.md 表2・表2b（{planned}。lab_log 2026-09-03「研究0 の結果」・「判定の訂正」、追記12）。"
+        "footer": ("値は表3・表3b（{planned}）。"
                    "主効果＝その因子が +1SD の被験者の平均と −1SD の平均の差 ÷ 層平均（年齢層内、%）。"
-                   "括弧内は分解法の 2 指標と因子の年齢層内 Spearman ρ（表2）。"
+                   "括弧内は分解法の 2 指標と因子の年齢層内 Spearman ρ（表3）。"
                    "(b) は他の 5 因子を基準値に固定した被験者の、年齢層にわたる中央値。"),
     },
     "en": {
-        "title_a": "(a) Main effect of each factor (table 2)",
-        "title_b": "(b) Single-factor sweep (table 2b)",
+        "title_a": "(a) Main effect of each factor (table 3)",
+        "title_b": "(b) Single-factor sweep (table 3b)",
         "xlabel_a": "Within-stratum main effect (%)",
         "unit_ms": "[ms]",
         "levels": {"minus1sd": "−1 SD", "base": "reference", "plus1sd": "+1 SD"},
         "planned": "descriptive, planned before the run",
-        "footer": ("Source: tables 2 and 2b of 02_tables.md ({planned}; lab_log 2026-09-03, results of study 0 and "
-                   "correction of the verdict, and entry 12). Main effect, mean at +1 SD minus mean at −1 SD of the "
+        "footer": ("Values in tables 3 and 3b ({planned}). Main effect, mean at +1 SD minus mean at −1 SD of the "
                    "factor, divided by the stratum mean (within age strata, %). In parentheses, within-stratum Spearman ρ "
-                   "between the factor and the two decomposition indices (table 2). (b) Subjects with the other five "
+                   "between the factor and the two decomposition indices (table 3). (b) Subjects with the other five "
                    "factors at reference; median over age strata."),
     },
 }
@@ -258,17 +257,17 @@ def legend_text(lang: str, numbers: dict) -> str:
     map_dt = arrow.join(f"{rows2b['map'][k]['value']:.1f}" for k in dt_keys)
     if lang == "ja":
         return "\n".join([
-            "図2　振った因子ごとの年齢層内主効果（表2）と 1 因子掃引（表2b）― 記述・事前に計画した解析",
+            "図2　振った因子ごとの年齢層内主効果（表3）と 1 因子掃引（表3b）― 記述・事前に計画した解析",
             "",
-            f"何を示すか: (a) {t2['title']}。{nf} 因子（{factor_names}）× "
+            f"何を示すか: (a) {common.renumber(t2['title'])}。{nf} 因子（{factor_names}）× "
             f"{nk} 指標（{index_names}）の横棒。塗り・ハッチで指標を分け、"
-            "分解法の 2 指標には表2 の括弧内の値（その因子と指標の年齢層内 Spearman ρ）を棒の先に添えた。"
-            f"(b) {t2b['title']}。上が分解法 ΔT（ms）、下が分解法 RI で、−1SD・基準・+1SD での値を因子ごとに結んだ。"
+            "分解法の 2 指標には表3 の括弧内の値（その因子と指標の年齢層内 Spearman ρ）を棒の先に添えた。"
+            f"(b) {common.renumber(t2b['title'])}。上が分解法 ΔT（ms）、下が分解法 RI で、−1SD・基準・+1SD での値を因子ごとに結んだ。"
             f"脈波伝播速度（青）の行が最も大きく折れ返り、ΔT は −1SD 側が予測と逆向きに動き（{pv_dt}）、"
             f"RI は U 字を描く（{pv_ri}）。ΔT では平均血圧の行も小さく折れ返る（{map_dt}。lab_log 追記113）。"
             "青の数字は脈波伝播速度の 3 値。",
             "",
-            "出典: `02_tables.md` 表2・表2b（`docs/research/roadmap_v1.md` §9）。20番 `20_pwdb_validity.py`"
+            "出典: `02_tables.md` 表2・表2b（この集の表3・表3b。`docs/research/roadmap_v1.md` §9）。20番 `20_pwdb_validity.py`"
             "（`data/pwdb/pwdb_indices.csv`。lab_log 2026-09-03「研究0 の結果」の主効果と 1 因子掃引の表）、"
             "特徴点法 ΔT の列は 23番 `23_pwdb_landmarks.py`（lab_log 2026-09-03「判定の訂正」）、"
             "早期振幅比の列は 26番 `26_pwdb_compare.py`（lab_log 追記12 の表3）。"
@@ -277,20 +276,20 @@ def legend_text(lang: str, numbers: dict) -> str:
             "記述・事前に計画した解析であり（2026-09-03 の事前規準の「機構（記述）」の行）、判定には用いない。",
         ])
     return "\n".join([
-        "Figure 2. Within-stratum main effect of each varied factor (table 2) and single-factor sweeps (table 2b): "
+        "Figure 2. Within-stratum main effect of each varied factor (table 3) and single-factor sweeps (table 3b): "
         "descriptive analyses planned before the run.",
         "",
         f"What is shown: (a) main effect of each of the {nf} factors ({factor_names}) on {nk} indices ({index_names}), "
         "computed within each age stratum as the mean at +1 SD minus the "
         "mean at −1 SD of the factor, divided by the stratum mean (%). Fill and hatch distinguish the indices; for the two "
-        "decomposition indices the within-stratum Spearman ρ between factor and index, as given in table 2, is written in "
+        "decomposition indices the within-stratum Spearman ρ between factor and index, as given in table 3, is written in "
         "parentheses at the end of the bar. (b) Single-factor sweeps: the stratum median of decomposition ΔT (ms, top) and "
         "RI (bottom) when one factor is moved across −1 SD, reference and +1 SD while the other five are held at reference. "
         "The response to pulse wave velocity (blue) folds back most: ΔT moves opposite to the prediction on the −1 SD side "
         f"({pv_dt}) and RI is U-shaped ({pv_ri}). For ΔT the mean arterial pressure row also folds back slightly ({map_dt}; "
         "lab_log entry 113). The blue numbers are the three values for pulse wave velocity.",
         "",
-        "Source: tables 2 and 2b of `02_tables.md` (`docs/research/roadmap_v1.md` §9). Script 20 `20_pwdb_validity.py` "
+        "Source: tables 2 and 2b of `02_tables.md` (tables 3 and 3b of this set; `docs/research/roadmap_v1.md` §9). Script 20 `20_pwdb_validity.py` "
         "(`data/pwdb/pwdb_indices.csv`; lab_log 2026-09-03, results of study 0, tables of main effects and single-factor "
         "sweeps); the fiducial-point ΔT column from script 23 `23_pwdb_landmarks.py` (lab_log 2026-09-03, correction of "
         "the verdict); the early amplitude ratio column from script 26 `26_pwdb_compare.py` (lab_log entry 12, table 3). "
@@ -373,8 +372,14 @@ def selftest() -> int:
         rep("文字どうしが重ならない", not ov, f"{ov[:3]}")
         outside = texts_outside(fig)
         rep("文字が図の枠からはみ出さない", not outside, f"{outside[:3]}")
-        rep("脚注に表2・表2b の出典がある", ("表2・表2b" in joined.replace("\n", "")) if lang == "ja"
-            else ("tables 2 and 2b" in joined.replace("\n", " ")))
+        cs = common.texts_crossing_spines(fig)
+        rep("枠の中の文字が軸の線に掛かっていない", not cs, f"{cs[:3]}")
+        tl = common.text_line_overlaps(fig)
+        rep("枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tl, f"{tl[:3]}")
+        rep("脚注に表3・表3b（この集の番号）がある", ("表3・表3b" in joined.replace("\n", "")) if lang == "ja"
+            else ("tables 3 and 3b" in joined.replace("\n", " ")))
+        prov = [w for w in ("02_tables", "lab_log", "追記", "entry ") if w in joined]
+        rep("図の中に出どころ（ファイル名・lab_log・追記）を書いていない", not prov, f"{prov}")
         verdict_words = ["成立", "合格", " pass", "fail"]
         rep("判定の語（成立・不成立・pass・fail）を図に書いていない", not any(w in joined for w in verdict_words))
         ylabs = [t.get_text().replace("\n", " ") for t in fig.axes[0].get_yticklabels()]

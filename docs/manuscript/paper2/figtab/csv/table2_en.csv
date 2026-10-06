@@ -4,4 +4,4 @@ Index construction,ΔT × aortic PWV,RI × peripheral vascular resistance,Verdic
 "Decomposition, rebuilt version, gamma route",accepted 103; tier A 0.798 (3/4 strata); tier C 0.556 (6/6),tier A 0.609 (4/4); tier C 0.280 (6/6),fail
 "Fiducial-point analysis (same waveforms, database-supplied)",0.710 (6/6),0.504 (6/6),pass
 Early amplitude ratio Am_b/Am_p1,0.836 (6/6),not evaluated,pass
-Model-derived pulse transit time (positive control),0.571 (6/6),—,pass
+Model-derived pulse transit time (positive control),0.571 (6/6),—,passed

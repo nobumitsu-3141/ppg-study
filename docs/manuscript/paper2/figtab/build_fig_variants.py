@@ -52,6 +52,7 @@ UNIT_PT = 14.0
 SUB = 0.33                       # 副行の中心からのずれ（行の単位）
 HEAD_H = {1: 0.75, 2: 1.4}       # 見出し行の高さ（見出しの行数ごと）
 BOTTOM_SLOT = 0.8                # 規準線の札を置く最下段
+GROUP_GAP = 0.3                  # 群の見出しの前の間（行の単位）。前の群の最後の行の C 段の注釈が区切り線に掛からないように
 XMIN, XMAX = -0.2, 1.1           # 横軸。0 の点（(8) の C 段 0.012）が軸に切られないよう、また記号の左に置く注釈の
                                  # 場所を取るため 0 より左から（軸線は 0〜1.0 だけ描く）
 
@@ -74,7 +75,7 @@ T = {
         "lm_line": "特徴点法",
         "legend": ("白抜き＝A 段、塗りつぶし＝C 段（同じ案の両段を細線で結ぶ）。■＝特徴点法（同梱・C 段のみ）、縦の点線はその C 段の値。"
                    "数字＝予測の向きを持った層の数／層の数。右の欄＝通過率（A 段に残る割合）と、同梱の特徴点との ΔT の差（A 段）。"),
-        "n_note": "型3・{n} 名。値は表6（02_tables.md）。",
+        "n_note": "型3・{n} 名。値は表8。T は拍長。",
     },
     "en": {
         "title_dt": "(a) ΔT × aortic PWV",
@@ -86,7 +87,7 @@ T = {
         "legend": ("Open, tier A; filled, tier C (joined by a thin line). Square and dotted line, fiducial-point analysis "
                    "(database-supplied, tier C only). Fraction beside a marker, strata with the predicted sign / strata evaluated. "
                    "Right, pass rate (fraction remaining in tier A) and ΔT offset from the fiducial point (tier A)."),
-        "n_note": "Type 3, n = {n}. Values from table 6 of 02_tables.md.",
+        "n_note": "Type 3, n = {n}. Values in table 8. T, beat length.",
     },
 }
 
@@ -148,6 +149,8 @@ def plan_rows(numbers: dict, lang: str) -> tuple[list[dict], float]:
     for row in numbers["tables"]["表6"]["rows"]:
         g = LABELS["variants"][row["id"]]["group"]
         if g != prev:
+            if prev is not None:
+                y += GROUP_GAP
             head = wrap_heading(LABELS["variant_groups"][g][lang], lang)
             h = HEAD_H[min(2, head.count("\n") + 1)]
             items.append({"kind": "head", "group": g, "label": head, "top": y, "h": h})
@@ -159,25 +162,6 @@ def plan_rows(numbers: dict, lang: str) -> tuple[list[dict], float]:
 
 
 # ---------------------------------------------------------------- 描画
-
-_MEASURE_CACHE: dict = {}
-
-
-def measure_pt(_ax, s: str, fontsize: float = 8.0) -> float:
-    """文字 s を描いたときの幅（pt）を描画器で測る（図を描く前に注釈の置き場所を決めるため）。
-
-    本体の図を途中で描くと Axis に余分な目盛が残るので、別の小さな図で測る。
-    """
-    key = (tuple(plt.rcParams["font.family"]), s, fontsize)
-    if key not in _MEASURE_CACHE:
-        f = plt.figure(figsize=(1, 1))
-        t = f.text(0, 0, s, fontsize=fontsize)
-        f.canvas.draw()
-        w_px = t.get_window_extent(renderer=f.canvas.get_renderer()).width
-        _MEASURE_CACHE[key] = w_px * 72 / f.dpi
-        plt.close(f)
-    return _MEASURE_CACHE[key]
-
 
 def build(lang: str, numbers: dict):
     """図を組む。戻り値は (fig, 描いた点の一覧, 右端の欄の文字, 規準線の x, 行名の一覧)。"""
@@ -223,60 +207,18 @@ def build(lang: str, numbers: dict):
         ax.set_yticks([])
         ax.spines["left"].set_visible(False)
         ax.set_title(titles[col], fontsize=8, loc="center", linespacing=1.1)
-        # 規準線（全高）と、特徴点法の C 段の値の縦線（データ行の範囲だけ。最下段の規準の札と交わらないように）
-        ax.axvline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1)
-        ax.text(crit + 0.03, total + BOTTOM_SLOT * 0.55, L[lang]["criterion"], ha="left", va="center",
-                fontsize=8, color=PALETTE["grey"])
+        # 規準線（全高）と、特徴点法の C 段の値の縦線（データ行の範囲だけ。最下段の規準の札と交わらないように）。
+        # 参照の線は label を "ref:" で始める（注釈の白い地の下に隠れてよい線。common.text_line_overlaps）
+        ax.axvline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1, label="ref:criterion")
+        crit_txt = ax.text(crit + 0.03, total + BOTTOM_SLOT * 0.55, L[lang]["criterion"], ha="left", va="center",
+                           fontsize=8, color=PALETTE["grey"])
         lm_x = lm_row[f"{col}_C"]["rho"]
-        ax.plot([lm_x, lm_x], [-0.05, total], color=PALETTE["landmark"], lw=0.8, ls=(0, (1, 1.6)), zorder=1)
-        ax.text(lm_x + 0.03, head_y, tx["lm_line"], ha="left", va="center", fontsize=8, color=PALETTE["landmark"])
+        ax.plot([lm_x, lm_x], [-0.05, total], color=PALETTE["landmark"], lw=0.8, ls=(0, (1, 1.6)), zorder=1,
+                label="ref:fiducial")
+        lm_txt = ax.text(lm_x + 0.03, head_y, tx["lm_line"], ha="left", va="center", fontsize=8, color=PALETTE["landmark"])
 
-        # 層の数の注釈は記号の右に置く。下の副行（C 段）の注釈・記号と次の行の上の副行（A 段）の注釈・記号は
-        # 縦に近いので、横に近いときは一方の注釈を記号の左に移す（左に置くと枠の左端からはみ出すときは、
-        # 右側の注釈を相手の記号を越えるまで右へずらす）。注釈の幅は描画器で測る
-        side, nudge = {}, {}
-        for it in items:
-            if it["kind"] == "row":
-                for st in STAGES:
-                    side[(it["row"]["id"], st)] = "right"
-                    nudge[(it["row"]["id"], st)] = 0.0
-        r_pt = MARKER_PT / 2 + 0.6                       # 記号の半径と余白（pt）
-
-        def fits_left(x, w):
-            # 左端から 0.02（約 1.5 pt。枠と行名の欄の間の余白）まではみ出してよい
-            return x - (ANN_GAP_PT + w) / pt_per_unit >= XMIN - 0.02
-
-        for it, nxt in zip(items, items[1:]):
-            if it["kind"] != "row" or nxt["kind"] != "row":
-                continue
-            cc, na = it["row"][f"{col}_C"], nxt["row"][f"{col}_A"]
-            if cc.get("rho") is None or na.get("rho") is None:
-                continue
-            kc, ka = (it["row"]["id"], "C"), (nxt["row"]["id"], "A")
-            w_c, w_a = measure_pt(ax, cc["strata"]), measure_pt(ax, na["strata"])
-            d = (cc["rho"] - na["rho"]) * pt_per_unit        # C 段の記号が A 段の記号より右にある分（pt）
-            a_hits = (ANN_GAP_PT - r_pt < d < ANN_GAP_PT + w_a + r_pt) or (-w_c < d < w_a)
-            c_hits = (ANN_GAP_PT - r_pt < -d < ANN_GAP_PT + w_c + r_pt) or (-w_c < d < w_a)
-            if not (a_hits or c_hits):
-                continue
-            if d > 1.7:                                   # A 段の注釈が C 段の記号に掛かる → A を左へ
-                if fits_left(na["rho"], w_a):
-                    side[ka] = "left"
-                else:                                     # 入らなければ C 段の記号と注釈を越えるまで右へ
-                    nudge[ka] += d + (ANN_GAP_PT + w_c if side[kc] == "right" else r_pt) + 1.0
-            elif d < -1.7:                                # C 段の注釈が A 段の記号に掛かる → C を左へ
-                if fits_left(cc["rho"], w_c):
-                    side[kc] = "left"
-                else:
-                    nudge[kc] += -d + (ANN_GAP_PT + w_a if side[ka] == "right" else r_pt) + 1.0
-            else:                                         # 記号がほぼ同じ x: 注釈どうしが重なる
-                if fits_left(cc["rho"], w_c):
-                    side[kc] = "left"
-                elif fits_left(na["rho"], w_a):
-                    side[ka] = "left"
-                else:
-                    nudge[kc] += w_a - d + 1.0
-
+        # 1) 記号と、A 段・C 段を結ぶ細線を先に描く
+        requests, marker_boxes, connectors = [], [], []
         for it in items:
             yc = it["top"] + it["h"] / 2
             if it["kind"] == "head":
@@ -291,21 +233,47 @@ def build(lang: str, numbers: dict):
             def put(cell, stage, y, filled):
                 ln, = ax.plot([cell["rho"]], [y], marker=marker, ms=MARKER_PT, ls="none",
                               mfc=color if filled else "white", mec=color, mew=1.0, zorder=3)
-                left = side[(row["id"], stage)] == "left"
-                ax.annotate(cell["strata"], (cell["rho"], y),
-                            xytext=(-ANN_GAP_PT if left else ANN_GAP_PT + nudge[(row["id"], stage)], 0),
-                            textcoords="offset points", ha="right" if left else "left", va="center",
-                            fontsize=8, color=PALETTE["ink"])
+                marker_boxes.append(common.marker_box(ax, cell["rho"], y, MARKER_PT))
                 drawn.append({"id": row["id"], "col": col, "stage": stage,
                               "x": float(ln.get_xdata()[0]), "strata": cell["strata"]})
 
             if has_a and has_c:
                 ya, yc2 = yc - SUB, yc + SUB
-                ax.plot([ca["rho"], cc["rho"]], [ya, yc2], color=PALETTE["light"], lw=0.8, zorder=2)
+                ax.plot([ca["rho"], cc["rho"]], [ya, yc2], color=PALETTE["light"], lw=0.8, zorder=2, label="connector")
+                connectors.append(common.data_segment(ax, (ca["rho"], ya), (cc["rho"], yc2)))
                 put(ca, "A", ya, False)
                 put(cc, "C", yc2, True)
+                # 注釈は結ぶ線から離れる側（A 段は C 段の反対側、C 段は A 段の反対側）を先に試す
+                requests.append((row["id"], "A", ca, ya, "left" if cc["rho"] > ca["rho"] else "right"))
+                requests.append((row["id"], "C", cc, yc2, "left" if ca["rho"] > cc["rho"] else "right"))
             elif has_c:
                 put(cc, "C", yc, True)
+                requests.append((row["id"], "C", cc, yc, "right"))
+
+        # 2) 層の数の注釈を上の行から順に置く。ほかの注釈・記号・結ぶ線には掛けず（掛かる位置は採らない）、
+        #    記号のすぐ横（両側）を先に試し、規準線・特徴点法の線に掛からない側を採る（両側とも掛かるなら、
+        #    結ぶ線から離れる側に置き、白い地で線を隠す）。すぐ横が両側とも塞がっているときだけ記号から離す
+        r = fig.canvas.get_renderer()
+        grow = 1.0 * fig.dpi / 72                        # 白い地の幅（約 1 pt）だけ、置いた注釈の矩形を広げて比べる
+        placed = [t.get_window_extent(renderer=r).expanded(1, 1).padded(grow) for t in (crit_txt, lm_txt)]
+        soft = [common.vline_segment(ax, crit), common.data_segment(ax, (lm_x, -0.05), (lm_x, total))]
+        gap_mm = GAP_AB if col == "dt_pwv" else GAP_R
+        x_left = ax.transData.transform((XMIN - 0.02, 0))[0]       # 左端から 0.02（約 1.5 pt）まではみ出してよい
+        x_right = ax.bbox.x1 + 0.8 * gap_mm / 25.4 * fig.dpi       # 右は隣の枠・欄との間の 8 割まで
+
+        def cand(side, extra):
+            return (-(ANN_GAP_PT + extra), 0, "right") if side == "left" else (ANN_GAP_PT + extra, 0, "left")
+
+        for rid, stage, cell, y, pref in requests:
+            other = "right" if pref == "left" else "left"
+            # 段 0 は記号のすぐ横（両側）。そこが塞がっているときだけ、記号から 3 pt ずつ離す（段 1〜4）
+            cands = [cand(pref, 0) + (0,), cand(other, 0) + (0,)] + [
+                cand(sd, n) + (n // 3,) for n in (3, 6, 9, 12) for sd in (pref, other)]
+            _ann, box, _nhard = common.place_annotation(
+                ax, cell["strata"], (cell["rho"], y), cands, hard_boxes=placed + marker_boxes,
+                hard_segments=connectors, soft_segments=soft, xbounds=(x_left, x_right),
+                va="center", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
+            placed.append(box.padded(grow))
 
     # 行名・見出し・区切り線（左の欄）。x は図の座標、y は左の枠のデータ座標
     tr = blended_transform_factory(fig.transFigure, ax_a.transData)
@@ -350,20 +318,30 @@ def legend_text(lang: str, numbers: dict) -> str:
     thr = numbers["meta"]["criterion"]["min_median_abs_rho"]
     n = f"{type3_n(numbers):,}"
     n_all = f"{numbers['meta']['n_subjects_decision_test']:,}"
+    # 02_tables.md 表6 の注から: 省いた 2 型と楽観、型の混合（参考行 0.430 と全例 0.710）、0.65 の出どころ
+    paras = [p.replace("\n", "") for p in t6["postscript"]]
+    omit = next(p for p in paras if "表に載せていない 2 型" in p).replace("**", "")
+    mix = next(p for p in paras if p.replace("**", "").startswith("参考行の特徴点法の")).replace("**", "")
+    lm_all = next(r for r in numbers["tables"]["表1"]["rows"] if r["id"] == "landmark")["dt_pwv"]["rho"]
+    lm_t3 = next(r for r in t6["rows"] if r["id"] == "landmark")["dt_pwv_C"]["rho"]
+    n_rows = sum(1 for r in t6["rows"] if not r.get("reference"))
     if lang == "ja":
         return "\n".join([
-            f"図5　改良案ごとの関連 ― 表6（型3・{n} 名）の年齢層内 Spearman |ρ| の中央値を A 段・C 段で並べる",
+            f"図5　改良案ごとの関連 ― 表8（02_tables.md 表6。型3・{n} 名）の年齢層内 Spearman |ρ| の中央値を A 段・C 段で並べる",
             "",
             f"何を示すか: 決定試験の {n_all} 名のうち波形の型3（変曲点のみ）の {n} 名について、拡張期の下降の扱いを変えた"
-            "分解法の 12 の版と、参考の特徴点法（同梱）を、表6 の順に縦に並べる。見出しは labels.json の variant_groups"
+            f"分解法の {n_rows} の版（当てた 14 型のうち (4b)・(6) を除く）と、参考の特徴点法（同梱）を、表8 の順に縦に並べる。見出しは labels.json の variant_groups"
             "（基準／下降を説明する項を足す／下降を当てはめの対象から外す・残差の中で小さくする／参考）、行名は同じ表の短い名"
-            "（short_ja）に表6 の (n) の番号を前置したもの。"
+            "（short_ja）に表8 の (n) の番号を前置したもの。T は拍長。"
             "(a) は ΔT × 大動脈脈波伝播速度、(b) は RI × 末梢血管抵抗。各行で白抜きが A 段、塗りつぶしが C 段で、細線で結ぶ。"
             f"記号の横の数字は予測の向きを持った層の数／層の数。破線は規準 {thr:.2f}。特徴点法は C 段のみ（四角）で、縦の点線はその値。"
             "右端の 2 つの欄は通過率（凍結版と同じ収束検算を当てたときに採用になる割合＝A 段に残る割合）と、"
-            "同梱の特徴点との ΔT の差（ms・A 段）。判定の札は図に書かず表に任せる。",
+            "同梱の特徴点との ΔT の差（ms・A 段）。判定（成立・不成立）は図に書かず、表8 に示す。"
+            + common.renumber(omit) + common.renumber(mix)
+            + "主とする打ち切りの割合 0.65 は lab_log 追記139 の候補 (3)（実データに当てる前）で、同じ値は第2版の特徴点の探索で切痕を探す上限"
+              " `NOTCH_MAX_FRAC` にもある。",
             "",
-            "出典: `02_tables.md` 表6。50番 `analysis/scripts/50_reservoir_bench.py` 節C"
+            "出典: `02_tables.md` 表6（この集の表8）。50番 `analysis/scripts/50_reservoir_bench.py` 節C"
             "（`docs/research/results/50_reservoir_bench_BC.txt`・`50_reservoir_bench_C14.txt`、"
             "lab_log 追記144・146・147・149・151・152）。数値は `data/paper2_numbers.json` から台本 `build_fig_variants.py` が読む。",
             "",
@@ -371,24 +349,30 @@ def legend_text(lang: str, numbers: dict) -> str:
             "",
             "探索・事後の注記: " + LABELS["posthoc_note"]["ja"],
             "",
-            f"表6 の前書き（02_tables.md）: {t6['preamble'][0]}",
+            f"02_tables.md 表6 の前書き: {common.renumber(t6['preamble'][0])}",
         ])
     return "\n".join([
-        f"Figure 5. Association by variant: median within-age-stratum Spearman |ρ| of table 6 (type 3, n = {n}) in tiers A and C.",
+        f"Figure 5. Association by variant: median within-age-stratum Spearman |ρ| of table 8 (table 6 of 02_tables.md; type 3, n = {n}) in tiers A and C.",
         "",
-        f"What is shown: for the {n} type-3 subjects (inflection only) among the {n_all} of the decision test, the 12 "
+        f"What is shown: for the {n} type-3 subjects (inflection only) among the {n_all} of the decision test, the {n_rows} "
         "decomposition variants that change how the diastolic decline is treated, and the database-supplied fiducial-point "
-        "analysis as a reference, in the order of table 6. Group headings follow variant_groups of labels.json (reference fits / "
+        "analysis as a reference, in the order of table 8 ((4b) and (6) of the 14 versions fitted are omitted). Group headings follow variant_groups of labels.json (reference fits / "
         "add a term for the diastolic decline / exclude or down-weight the diastolic decline / reference); row labels are the "
-        "short names (short_en) of the same file prefixed with the (n) numbering of table 6. (a) ΔT × aortic PWV; "
+        "short names (short_en) of the same file prefixed with the (n) numbering of table 8; T, beat length. (a) ΔT × aortic PWV; "
         "(b) RI × peripheral vascular resistance. In each row the open marker is tier A and the filled marker is tier C, joined by "
         "a thin line. The fraction beside a marker is the number of strata with the predicted sign over the number of strata "
         f"evaluated. The dashed line is the criterion {thr:.2f}. "
         "The fiducial-point analysis has tier C only (square); the dotted vertical line marks its value. The two right columns give the "
         "pass rate (fraction accepted by the same convergence checks as the frozen version, i.e. remaining in tier A) and the ΔT "
-        "offset from the database-supplied fiducial point (ms, tier A). Verdicts are not written in the figure.",
+        "offset from the database-supplied fiducial point (ms, tier A). Verdicts are not written in the figure. "
+        "(4b) and (6), the versions with the delay bound relaxed to 0.01 s, are omitted because relaxing the bound barely changes "
+        "the values (lab_log entries 144, 146); the better versions were chosen post hoc from 14, so their values are optimistic. "
+        f"The fiducial-point reference of {lm_t3:.3f} is the value within type 3; in all {n_all} subjects fiducial-point analysis gives "
+        f"{lm_all:.3f} (table 2), and the all-subject values of the truncated fit are in table 8b. The main truncation fraction 0.65 "
+        "comes from candidate (3) of lab_log entry 139, set before any real data were fitted; the same value is the notch search "
+        "limit `NOTCH_MAX_FRAC` of the rebuilt fiducial-point detection.",
         "",
-        "Source: table 6 of `02_tables.md`. Script 50 `analysis/scripts/50_reservoir_bench.py`, part C "
+        "Source: table 6 of `02_tables.md` (table 8 of this set). Script 50 `analysis/scripts/50_reservoir_bench.py`, part C "
         "(`docs/research/results/50_reservoir_bench_BC.txt`, `50_reservoir_bench_C14.txt`; lab_log entries 144, 146, 147, 149, 151, 152). "
         "All numbers are read from `data/paper2_numbers.json` by `build_fig_variants.py`.",
         "",
@@ -502,6 +486,10 @@ def selftest() -> int:
         rep("文字と記号の重なりが無い（描画器の寸法で確認）", not om, f"{om[:4]}")
         outside = texts_outside(fig)
         rep("図の縁からはみ出す文字が無い", not outside, f"{outside[:3]}")
+        cs = common.texts_crossing_spines(fig)
+        rep("枠の中の文字が軸の線に掛かっていない", not cs, f"{cs[:3]}")
+        tl = common.text_line_overlaps(fig)
+        rep("枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tl, f"{tl[:3]}")
         leg = legend_text(lang, fresh)
         if banned is None:
             print("  （用語検査器が無いので禁止語の確認は飛ばした）")

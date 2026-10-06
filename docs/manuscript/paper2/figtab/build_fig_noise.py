@@ -49,7 +49,7 @@ STYLE = {
     "fb": {"color": PALETTE["grey"], "marker": "o", "ls": "-", "mfc": PALETTE["grey"]},
     "trunc065": {"color": PALETTE["pda"], "marker": "s", "ls": "-", "mfc": PALETTE["pda"]},
     "deriv": {"color": PALETTE["amp"], "marker": "^", "ls": "-", "mfc": PALETTE["amp"]},
-    "landmark": {"color": PALETTE["landmark"], "marker": "D", "ls": (0, (1, 1.6)), "mfc": "white"},   # 点線（破線は規準線だけ）
+    "landmark": {"color": PALETTE["landmark"], "marker": "D", "ls": "none", "mfc": "white"},   # 雑音なしの 1 点だけ（線は引かない）
 }
 GLYPH = {"fb": "●", "trunc065": "■", "deriv": "▲"}     # A 段の枠の通過率の行頭に置く記号（マーカーと同じ形）
 MARKER_PT = 4.5
@@ -67,20 +67,22 @@ T = {
         "row": {"dt_pwv": "ΔT × 大動脈PWV", "ri_pvr": "RI × 末梢血管抵抗"},
         "xlabel": "雑音（振幅に対する標準偏差の比）[%]",
         "lm_legend": "{name}（同梱・雑音なし）",
-        "legend_note": ("灰の破線＝規準 {thr:.2f}。特徴点法（同梱・点線）は雑音を足す前の拍の値で、雑音の列では同じ条件の比較になって"
-                        "いない（B 段で値が動くのは共通例の集まりが変わるため）。A 段の枠内の数字＝通過率（雑音なし／1%／2%。A 段に残る割合）。"),
+        "legend_note": ("灰の破線＝規準 {thr:.2f}。特徴点法（同梱・白抜きの菱形）は雑音を足す前の拍の値なので、雑音なしの位置にだけ置いた"
+                        "（雑音を足した拍に特徴点法を当て直す比較は未実施。B 段の 1%・2% の値は表9）。"
+                        "A 段の枠内の数字＝通過率（雑音なし／1%／2%。A 段に残る割合）。"),
         "n_note": ("B 段は {nb} 名（雑音 1% で {nb1} 名、2% で {nb2} 名）で、3 つの当てはめの採用を重ねた部分集合であり、分解に有利な集団。"
-                   "C 段は型3 の {n3} 名。値は表6c（02_tables.md）。"),
+                   "C 段は型3 の {n3} 名。値は表9。"),
     },
     "en": {
         "row": {"dt_pwv": "ΔT × aortic PWV", "ri_pvr": "RI × peripheral\nvascular resistance"},
         "xlabel": "Noise (SD as a fraction of pulse amplitude) [%]",
         "lm_legend": "{name} (noise-free)",
-        "legend_note": ("Grey dashed line, criterion {thr:.2f}. Fiducial-point values (database-supplied; dotted) are from noise-free "
-                        "beats, so the noise columns are not a like-for-like comparison (its tier-B value moves with noise only because "
-                        "the common subset changes). Numbers in the tier-A panels, pass rate (remaining in tier A) at noise 0 / 1 / 2 %."),
+        "legend_note": ("Grey dashed line, criterion {thr:.2f}. Fiducial-point values (database-supplied; open diamonds) come from "
+                        "noise-free beats and are therefore placed at 0 % only (a rerun of the fiducial points on the noisy beats has not been "
+                        "done; its tier-B values at 1 % and 2 % are in table 9). Numbers in the tier-A panels, pass rate (remaining in tier A) "
+                        "at noise 0 / 1 / 2 %."),
         "n_note": ("Tier B, {nb} subjects ({nb1} at 1 %, {nb2} at 2 %): the intersection of the subjects accepted by all three fits, "
-                   "a subset favourable to the decomposition. Tier C, {n3} type-3 subjects. Table 6c of 02_tables.md."),
+                   "a subset favourable to the decomposition. Tier C, {n3} type-3 subjects. Values in table 9."),
     },
 }
 
@@ -140,6 +142,8 @@ def series(numbers: dict) -> list[dict]:
         for col in COLS:
             ys = [row[col][lv]["rho"] for lv in t["noise_levels"]]
             if all(y is not None for y in ys):
+                if row["id"] == "landmark":
+                    ys = ys[:1]          # 雑音を足す前の拍の値なので、雑音なしの位置にだけ置く
                 out.append({"id": row["id"], "stage": row["stage"], "col": col, "y": ys})
     return out
 
@@ -246,12 +250,15 @@ def build(lang: str, numbers: dict):
                 if row is None:
                     continue
                 ys = [row[col][lv]["rho"] for lv in levels]
+                xs = xpos
                 sty = STYLE[mid]
-                ln, = ax.plot(xpos, ys, color=sty["color"], marker=sty["marker"], ms=MARKER_PT, ls=sty["ls"],
+                if mid == "landmark":
+                    xs, ys = xpos[:1], ys[:1]      # 雑音なしの拍の値なので 0% の位置にだけ置く（雑音の列に線を伸ばさない）
+                ln, = ax.plot(xs, ys, color=sty["color"], marker=sty["marker"], ms=MARKER_PT, ls=sty["ls"],
                               mfc=sty["mfc"], mec=sty["color"], mew=1.0, lw=1.0, zorder=3 if mid != "landmark" else 2,
                               label=f"{mid}/{st}/{col}")
                 drawn.append({"id": mid, "stage": st, "col": col, "y": [float(v) for v in ln.get_ydata()]})
-                lines_xy.append((list(zip(xpos, ys)), 0.03))
+                lines_xy.append((list(zip(xs, ys)), 0.03))
             # A 段の枠: 通過率を当てはめごとに 1 行ずつ、線と記号に掛からない帯に印字する
             if st == "A" and plines:
                 block = "\n".join(s for _m, s in plines)
@@ -302,42 +309,42 @@ def legend_text(lang: str, numbers: dict) -> str:
     b_sent = tier_b_sentence(numbers)
     if lang == "ja":
         return "\n".join([
-            f"図6　雑音への頑健性 ― 表6c（型3）の 3 つの当てはめを A・B・C 段で、雑音 0・1・2% について並べる",
+            f"図6　雑音への頑健性 ― 表9（02_tables.md 表6c。型3）の 3 つの当てはめを A・B・C 段で、雑音 0・1・2% について並べる",
             "",
             f"何を示すか: 型3（変曲点のみ）の {n3} 名について、凍結版、拍長の 0.65 倍で打ち切る版、残差を 1 次微分の領域で取る版の"
             "年齢層内 Spearman |ρ| の中央値を、雑音を足していない拍と、拍の峰から谷までの振幅の 1%・2% を標準偏差とする"
             "白色ガウス雑音を足した拍とで比べる。上の行は ΔT × 大動脈脈波伝播速度、下の行は RI × 末梢血管抵抗。列は A 段・B 段・C 段。"
             "凍結版は灰の丸、0.65 倍の打ち切りは青の四角、1 次微分の領域は青緑の三角。特徴点法（同梱）は B 段・C 段だけにあり、"
-            "雑音を足す前の拍の値なので朱の点線（菱形）で描く（雑音の列では同じ条件の比較になっていない。B 段の値が雑音で変わるのは"
-            f"共通例の集まりが変わるため）。灰の破線は規準 {thr:.2f}。A 段の枠の中の数字は通過率（雑音なし／1%／2%。A 段に残る割合）。"
-            f"B 段は {nb:,} 名（雑音 1% で {nb1:,} 名、2% で {nb2:,} 名）、C 段は型3 の {n3} 名。{b_sent}判定の札は図に書かず表に任せる。",
+            "雑音を足す前の拍の値なので、雑音なしの位置にだけ朱の白抜きの菱形で置いた（雑音を足した拍に特徴点法を当て直す比較は未実施。"
+            "B 段の 1%・2% の値は表9 にあり、その値が動くのは共通例の集まりが変わるため）。灰の破線は規準 {thr:.2f}。A 段の枠の中の数字は通過率（雑音なし／1%／2%。A 段に残る割合）。"
+            f"B 段は {nb:,} 名（雑音 1% で {nb1:,} 名、2% で {nb2:,} 名）、C 段は型3 の {n3} 名。{b_sent}判定（成立・不成立）は図に書かない。",
             "",
-            f"出典: `02_tables.md` 表6c。{src}数値は `data/paper2_numbers.json` から台本 `build_fig_noise.py` が読む。",
+            f"出典: `02_tables.md` 表6c（この集の表9）。{src}数値は `data/paper2_numbers.json` から台本 `build_fig_noise.py` が読む。",
             "",
             "段の注釈: " + STAGE_NOTE["ja"],
             "",
             "探索・事後の注記: " + LABELS["posthoc_note"]["ja"],
             "",
-            f"表6c の前書き（02_tables.md）: {t6c['preamble'][0]}",
+            f"02_tables.md 表6c の前書き: {common.renumber(t6c['preamble'][0])}",
             "",
-            f"表6c の後書き（02_tables.md）: {b_sent}",
+            f"02_tables.md 表6c の後書き: {common.renumber(b_sent)}",
         ])
     return "\n".join([
-        "Figure 6. Robustness to noise: the three fits of table 6c (type 3) in tiers A, B and C at noise 0, 1 and 2 %.",
+        "Figure 6. Robustness to noise: the three fits of table 9 (table 6c of 02_tables.md; type 3) in tiers A, B and C at noise 0, 1 and 2 %.",
         "",
         f"What is shown: for the {n3} type-3 subjects (inflection only), the median within-age-stratum Spearman |ρ| of the frozen fit, "
         "the fit truncated at 0.65 of the beat length and the fit with the residual taken in the first-derivative domain, on beats "
         "without added noise and on beats with white Gaussian noise whose SD is 1 % or 2 % of the peak-to-trough pulse amplitude. "
         "Top row, ΔT × aortic PWV; bottom row, RI × peripheral vascular resistance. Columns, tiers A, B and C. Frozen fit, grey circles; "
         "truncation at 0.65T, blue squares; derivative domain, blue-green triangles. The fiducial-point analysis (database-supplied) "
-        "exists in tiers B and C only and is computed from noise-free beats, so it is drawn as a vermilion dotted line with diamonds "
-        "(the noise columns are therefore not a like-for-like comparison; its tier-B value changes with noise only because the common "
-        f"subset changes). The dashed grey line is the criterion {thr:.2f}. Numbers in the tier-A panels are the pass rates (fraction "
-        f"remaining in tier A) at noise 0 / 1 / 2 %. Tier B has {nb:,} subjects ({nb1:,} at 1 %, {nb2:,} at 2 %); table 6c describes "
+        "exists in tiers B and C only and is computed from noise-free beats, so it is placed at 0 % only, as an open vermilion diamond "
+        "(a rerun of the fiducial points on the noisy beats has not been done; its tier-B values at 1 % and 2 %, which change only "
+        f"because the common subset changes, are in table 9). The dashed grey line is the criterion {thr:.2f}. Numbers in the tier-A panels are the pass rates (fraction "
+        f"remaining in tier A) at noise 0 / 1 / 2 %. Tier B has {nb:,} subjects ({nb1:,} at 1 %, {nb2:,} at 2 %); table 9 describes "
         "it as the intersection of the subjects accepted by all three fits, a subset favourable to the decomposition. Tier C has the "
         f"{n3} type-3 subjects. Verdicts are not written in the figure.",
         "",
-        f"Source: table 6c of `02_tables.md`. {source_en(src)} All numbers are read from `data/paper2_numbers.json` by "
+        f"Source: table 6c of `02_tables.md` (table 9 of this set). {source_en(src)} All numbers are read from `data/paper2_numbers.json` by "
         "`build_fig_noise.py`.",
         "",
         "Tier note: " + STAGE_NOTE["en"],
@@ -433,6 +440,10 @@ def selftest() -> int:
         rep("文字と記号の重なりが無い（描画器の寸法で確認）", not om, f"{om[:4]}")
         outside = texts_outside(fig)
         rep("図の縁からはみ出す文字が無い（凡例・脚注が 150 mm に収まる）", not outside, f"{outside[:3]}")
+        cs = common.texts_crossing_spines(fig)
+        rep("枠の中の文字が軸の線に掛かっていない", not cs, f"{cs[:3]}")
+        tl = common.text_line_overlaps(fig)
+        rep("枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tl, f"{tl[:3]}")
         leg = legend_text(lang, fresh)
         if banned is None:
             print("  （用語検査器が無いので禁止語の確認は飛ばした）")

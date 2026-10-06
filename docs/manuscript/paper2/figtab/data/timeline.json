@@ -1,175 +1,554 @@
 {
-  "_note": "図3（経過の図）の節目。data/prespec_chronology.json の chronology から選び、日付と主張を docs/research/lab_log.md の見出しと照合した（2026-10-05）。label は 40 字以内。数値は書かず、{名前} の穴を values から data/paper2_numbers.json を読んで埋める（手で打たない）。lane: pre ＝ 走らせる前に固定・予測したこと（上段）、run ＝ 実行と結果（下段）。post_hoc ＝ 決定試験（2026-09-06）の後の探索・事後。recorded_decision ＝ 事前規準による判定の記録（図はこの判定を報告するだけで、新しい判定はしない）。lab_log_headings は自己検査が lab_log.md の見出しに照合する文字列。",
+  "_note": "図3（経過の図）の節目。data/prespec_chronology.json の chronology から選び、日付と主張を docs/research/lab_log.md の見出しと照合した（2026-10-05、2026-10-06 に 9/15〜9/16 を分け直した）。label は和文 40 字・英文 44 字以内。数値は書かず、{名前} の穴を values から data/paper2_numbers.json を読んで埋める（手で打たない）。values は 1 つの値（table・row・stage・path）か、行の集まりの最大・最小（agg: max・min・absmax。rows か group〈labels.json の variants の群〉か where で行を選ぶ。stages で段を選ぶ）か、表の前書きの数（preamble_re）。lane: pre ＝ 走らせる前に固定・予測したこと（上段）、run ＝ 実行と結果（下段）。post_hoc ＝ 決定試験（2026-09-06）の後の探索・事後。recorded_decision ＝ 事前規準による判定の記録（図はこの判定を報告するだけで、新しい判定はしない）。source・source_en は凡例文にだけ書き、図には書かない（図の中に出どころを置かない）。lab_log_headings は自己検査が lab_log.md の見出しに照合する文字列。",
   "lanes": {
-    "pre": {"ja": "上段（軸の上）: 走らせる前に固定・予測したこと", "en": "Upper lane (above the axis): fixed or predicted before the run"},
-    "run": {"ja": "下段（軸の下）: 実行と結果", "en": "Lower lane (below the axis): runs and what they showed"}
+    "pre": {
+      "ja": "上段（軸の上）: 走らせる前に固定・予測したこと",
+      "en": "Upper lane (above the axis): fixed or predicted before the run"
+    },
+    "run": {
+      "ja": "下段（軸の下）: 実行と結果",
+      "en": "Lower lane (below the axis): runs and what they showed"
+    }
   },
   "values": {
-    "crit":   {"meta": ["criterion", "min_median_abs_rho"], "fmt": "{:.2f}"},
-    "fz_dt":  {"table": "表1", "row": "pda_frozen", "path": ["dt_pwv", "rho"], "fmt": "{:.3f}"},
-    "fz_ri":  {"table": "表1", "row": "pda_frozen", "path": ["ri_pvr", "rho"], "fmt": "{:.3f}"},
-    "lm_dt":  {"table": "表1", "row": "landmark", "path": ["dt_pwv", "rho"], "fmt": "{:.3f}"},
-    "lm_ri":  {"table": "表1", "row": "landmark", "path": ["ri_pvr", "rho"], "fmt": "{:.3f}"},
-    "amp_dt": {"table": "表1", "row": "amp_ratio", "path": ["dt_pwv", "rho"], "fmt": "{:.3f}"},
-    "v2_n":   {"table": "表1", "row": "pda_v2_skewgauss", "path": ["dt_pwv", "adopted", "n"], "fmt": "{:d}"},
-    "v2_of":  {"table": "表1", "row": "pda_v2_skewgauss", "path": ["dt_pwv", "adopted", "of"], "fmt": "{:,d}"},
-    "v2_dtC": {"table": "表1", "row": "pda_v2_skewgauss", "path": ["dt_pwv", "stages", "C", "rho"], "fmt": "{:.3f}"},
-    "offset": {"table": "表6", "row": "fb", "path": ["dt_offset_vs_landmark_ms_A", "value"], "fmt": "+{:.1f}"},
-    "t65_A":  {"table": "表6", "row": "trunc065", "path": ["dt_pwv_A", "rho"], "fmt": "{:.3f}"},
-    "t65_C":  {"table": "表6", "row": "trunc065", "path": ["dt_pwv_C", "rho"], "fmt": "{:.3f}"},
-    "t65_n2": {"table": "表6c", "row": "trunc065", "stage": "C", "path": ["dt_pwv", "0.02", "rho"], "fmt": "{:.3f}"},
-    "drv_n2": {"table": "表6c", "row": "deriv", "stage": "C", "path": ["dt_pwv", "0.02", "rho"], "fmt": "{:.3f}"}
+    "crit": {
+      "meta": [
+        "criterion",
+        "min_median_abs_rho"
+      ],
+      "fmt": "{:.2f}"
+    },
+    "fz_dt": {
+      "table": "表1",
+      "row": "pda_frozen",
+      "path": [
+        "dt_pwv",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "fz_ri": {
+      "table": "表1",
+      "row": "pda_frozen",
+      "path": [
+        "ri_pvr",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "lm_dt": {
+      "table": "表1",
+      "row": "landmark",
+      "path": [
+        "dt_pwv",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "lm_ri": {
+      "table": "表1",
+      "row": "landmark",
+      "path": [
+        "ri_pvr",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "amp_dt": {
+      "table": "表1",
+      "row": "amp_ratio",
+      "path": [
+        "dt_pwv",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "v2_n": {
+      "table": "表1",
+      "row": "pda_v2_skewgauss",
+      "path": [
+        "dt_pwv",
+        "adopted",
+        "n"
+      ],
+      "fmt": "{:d}"
+    },
+    "v2_of": {
+      "table": "表1",
+      "row": "pda_v2_skewgauss",
+      "path": [
+        "dt_pwv",
+        "adopted",
+        "of"
+      ],
+      "fmt": "{:,d}"
+    },
+    "v2_dtC": {
+      "table": "表1",
+      "row": "pda_v2_skewgauss",
+      "path": [
+        "dt_pwv",
+        "stages",
+        "C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "lit_best": {
+      "table": "表4",
+      "agg": "max",
+      "path": [
+        "dt_pwv",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "lit_ref": {
+      "table": "表4",
+      "row": "landmark_ref",
+      "path": [
+        "dt_pwv",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "lit_n": {
+      "table": "表4",
+      "preamble_re": "系統的に選んだ\\s*(\\d+)\\s*名",
+      "fmt": "{:d}"
+    },
+    "offset": {
+      "table": "表6",
+      "row": "fb",
+      "path": [
+        "dt_offset_vs_landmark_ms_A",
+        "value"
+      ],
+      "fmt": "+{:.1f}"
+    },
+    "t6_A": {
+      "table": "表6d",
+      "row": "dt_trunc065_dmu001",
+      "stage": "A",
+      "path": [
+        "type3",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t6_C": {
+      "table": "表6d",
+      "row": "dt_trunc065_dmu001",
+      "stage": "C",
+      "path": [
+        "type3",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t55_C": {
+      "table": "表6",
+      "row": "trunc055",
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t65_C": {
+      "table": "表6",
+      "row": "trunc065",
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t75_C": {
+      "table": "表6",
+      "row": "trunc075",
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "add3_max": {
+      "table": "表6",
+      "agg": "max",
+      "rows": [
+        "decay",
+        "reservoir",
+        "reservoir_tau015"
+      ],
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "add_max": {
+      "table": "表6",
+      "agg": "max",
+      "group": "add",
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "rem_min": {
+      "table": "表6",
+      "agg": "min",
+      "group": "remove",
+      "path": [
+        "dt_pwv_C",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "sep3_max": {
+      "table": "表7a",
+      "agg": "absmax",
+      "where": {
+        "type_id": "type3"
+      },
+      "path": [
+        "rho_pooled",
+        "value"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t65_n0": {
+      "table": "表6c",
+      "row": "trunc065",
+      "stage": "C",
+      "path": [
+        "dt_pwv",
+        "0",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "t65_n2": {
+      "table": "表6c",
+      "row": "trunc065",
+      "stage": "C",
+      "path": [
+        "dt_pwv",
+        "0.02",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "drv_n0": {
+      "table": "表6c",
+      "row": "deriv",
+      "stage": "C",
+      "path": [
+        "dt_pwv",
+        "0",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "drv_n2": {
+      "table": "表6c",
+      "row": "deriv",
+      "stage": "C",
+      "path": [
+        "dt_pwv",
+        "0.02",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    },
+    "ri_bc_n2": {
+      "table": "表6c",
+      "agg": "max",
+      "rows": [
+        "fb",
+        "trunc065",
+        "deriv"
+      ],
+      "stages": [
+        "B",
+        "C"
+      ],
+      "path": [
+        "ri_pvr",
+        "0.02",
+        "rho"
+      ],
+      "fmt": "{:.3f}"
+    }
   },
   "milestones": [
     {
-      "id": "u1", "date": "2026-08-30", "lane": "pre",
+      "id": "u1",
+      "date": "2026-08-30",
+      "lane": "pre",
       "label_ja": "研究0 を設計: PWDB の真値に ΔT・RI を当てる",
       "label_en": "Study 0 designed: ΔT, RI vs PWDB truth",
       "source": "lab_log 2026-08-30（続き7）; roadmap_v1.md §3",
-      "source_short_ja": "lab_log 8/30", "source_short_en": "lab log, 30 Aug",
-      "lab_log_headings": ["2026-08-30（続き7）研究0の解析スクリプトを作成"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-08-30（続き7）研究0の解析スクリプトを作成"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab log 2026-08-30 (continuation 7); roadmap_v1.md §3"
     },
     {
-      "id": "u2", "date": "2026-09-03", "lane": "pre",
+      "id": "u2",
+      "date": "2026-09-03",
+      "lane": "pre",
       "label_ja": "判定規準を固定: 全層で予測の向き、中央値 |ρ| ≧ {crit}",
       "label_en": "Criterion frozen: median |ρ| ≥ {crit}",
       "numbers_en": "with the predicted sign in every age stratum",
       "source": "lab_log 2026-09-03「研究0 の事前規準と、実行前に捕まえた列ずれ」; roadmap_v1.md §8",
-      "source_short_ja": "lab_log 9/3", "source_short_en": "lab log, 3 Sep",
-      "lab_log_headings": ["2026-09-03 研究0 の事前規準と、実行前に捕まえた列ずれ"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-03 研究0 の事前規準と、実行前に捕まえた列ずれ"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab log 2026-09-03, 'Prespecified criterion of Study 0 and a column shift caught before the run'; roadmap_v1.md §8"
     },
     {
-      "id": "u3", "date": "2026-09-04", "lane": "pre",
+      "id": "u3",
+      "date": "2026-09-04",
+      "lane": "pre",
       "label_ja": "第2版の規則と閾値を決定試験の前に凍結",
       "label_en": "Rebuilt-fit rules and thresholds frozen",
       "source": "lab_log 2026-09-04（追記）「決定試験の前に閾値を凍結した」; gate0_rules_v2.md; pda2_thresholds_v2.md",
-      "source_short_ja": "lab_log 9/4", "source_short_en": "lab log, 4 Sep",
-      "lab_log_headings": ["2026-09-04（追記）　決定試験の前に閾値を凍結した"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-04（追記）　決定試験の前に閾値を凍結した"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab log 2026-09-04 (addendum), 'Thresholds frozen before the decision test'; gate0_rules_v2.md; pda2_thresholds_v2.md"
     },
     {
-      "id": "u4", "date": "2026-09-14", "lane": "pre",
+      "id": "u4",
+      "date": "2026-09-14",
+      "lane": "pre",
       "label_ja": "型別解析の予測 P1〜P5 を計算の前に固定",
       "label_en": "By-type analysis: P1–P5 fixed before run",
       "source": "lab_log 追記136（48番の設計・予測固定）",
-      "source_short_ja": "追記136", "source_short_en": "entry 136",
-      "lab_log_headings": ["2026-09-14（追記136）"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-14（追記136）"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab-log entry 136 (design of script 48 and its predictions)"
     },
     {
-      "id": "u5", "date": "2026-09-15", "lane": "pre",
-      "label_ja": "再当てはめの予測 P6〜P10 を固定。0.65T は選び直さない",
-      "label_en": "P6–P10 fixed; 0.65T cut not re-selected",
-      "source": "lab_log 追記143（節C の設計と予測）・追記145（打ち切りの割合の取り決め）",
-      "source_short_ja": "追記143・145", "source_short_en": "entries 143, 145",
-      "lab_log_headings": ["2026-09-15（追記143）", "2026-09-15（追記145）"],
-      "post_hoc": false, "recorded_decision": false
+      "id": "u5",
+      "date": "2026-09-15",
+      "lane": "pre",
+      "label_ja": "0.65T の打ち切りを候補に（実データの前）。予測 P6〜P10 を固定",
+      "label_en": "0.65T cut proposed; P6–P10 fixed",
+      "source": "lab_log 追記139（第3版の候補 (3)「当てはめの範囲を 0.65T までに切る、または 1 次微分の領域で当てはめる」。実データに当てる前）・追記143（節C の設計と予測 P6〜P10）・追記145（打ち切りの割合の取り決め。5 型の実行〈追記144〉の後、9 型の実行の前）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-15（追記139）",
+        "2026-09-15（追記143）",
+        "2026-09-15（追記145）"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "numbers_ja": "5 型の実行の後: 主の割合 0.65T を以後選び直さないと取り決め",
+      "numbers_en": "after the 5-variant run: main fraction 0.65T not to be re-selected",
+      "source_en": "lab-log entries 139 (candidate (3) for a third version, 'truncate the fit at 0.65T, or fit in the first-derivative domain', before any real data were fitted), 143 (design of part C and predictions P6–P10) and 145 (agreement on the truncation fraction, written after the 5-variant run of entry 144 and before the 9-variant run)"
     },
     {
-      "id": "u6", "date": "2026-09-16", "lane": "pre",
+      "id": "u6",
+      "date": "2026-09-16",
+      "lane": "pre",
       "label_ja": "(7)(8)(9)(6e) と B 段を走らせる前に設計",
       "label_en": "(7)(8)(9)(6e) and tier B designed first",
       "source": "lab_log 追記149（改善候補の設計）・追記151（50番に (7)(8)(9)(6e) と B 段を足した）",
-      "source_short_ja": "追記149・151", "source_short_en": "entries 149, 151",
-      "lab_log_headings": ["2026-09-16（追記149）", "2026-09-16（追記151）"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-16（追記149）",
+        "2026-09-16（追記151）"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab-log entries 149 (design of the candidate improvements) and 151 (versions (7), (8), (9), (6e) and tier B added to script 50)"
     },
     {
-      "id": "u7", "date": "2026-09-17", "lane": "pre",
+      "id": "u7",
+      "date": "2026-09-17",
+      "lane": "pre",
       "label_ja": "B 段と雑音の読み方を走らせる前に固定",
       "label_en": "Tier B, noise: reading fixed before run",
       "source": "lab_log 追記153 §5（--b-stage・--noise の読み方の固定）",
-      "source_short_ja": "追記153", "source_short_en": "entry 153",
-      "lab_log_headings": ["2026-09-17（追記153）"],
-      "post_hoc": false, "recorded_decision": false
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-17（追記153）"
+      ],
+      "post_hoc": false,
+      "recorded_decision": false,
+      "source_en": "lab-log entry 153 §5 (reading rules for --b-stage and --noise fixed before the run)"
     },
     {
-      "id": "r1", "date": "2026-09-03", "lane": "run",
+      "id": "r1",
+      "date": "2026-09-03",
+      "lane": "run",
       "label_ja": "判定（記録）: 凍結版 不成立、特徴点法 成立",
-      "label_en": "Decision (recorded): frozen fit not met",
+      "label_en": "Decision (recorded): frozen fit fail",
       "numbers_ja": "ΔT×PWV |ρ| {fz_dt} 対 {lm_dt}、RI {fz_ri} 対 {lm_ri}",
-      "numbers_en": "fiducial-point met; ΔT |ρ| {fz_dt} vs {lm_dt}, RI {fz_ri} vs {lm_ri}",
-      "source": "lab_log 2026-09-03「研究0 の結果」「【判定の訂正】」; 表1",
-      "source_short_ja": "lab_log 9/3・表1", "source_short_en": "lab log, 3 Sep; Table 1",
-      "lab_log_headings": ["2026-09-03 研究0 の結果", "2026-09-03 【判定の訂正】"],
-      "post_hoc": false, "recorded_decision": true
+      "numbers_en": "fiducial-point pass; ΔT |ρ| {fz_dt} vs {lm_dt}, RI {fz_ri} vs {lm_ri}",
+      "source": "lab_log 2026-09-03「研究0 の結果」「【判定の訂正】」; 02_tables.md 表1（この集の表2）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-03 研究0 の結果",
+        "2026-09-03 【判定の訂正】"
+      ],
+      "post_hoc": false,
+      "recorded_decision": true,
+      "source_en": "lab log 2026-09-03, 'Results of Study 0' and 'Correction of the decision'; table 1 of 02_tables.md (table 2 of this set)"
     },
     {
-      "id": "r2", "date": "2026-09-06", "lane": "run",
+      "id": "r2",
+      "date": "2026-09-06",
+      "lane": "run",
       "label_ja": "決定試験（記録）: 第2版 不成立、特徴点法・早期振幅比 成立",
-      "label_en": "Decision test recorded: rebuilt not met",
+      "label_en": "Decision test (recorded): rebuilt fit fail",
       "numbers_ja": "採択 {v2_n}/{v2_of}、A・B 段は判定不能、C 段 {v2_dtC}。早期振幅比 {amp_dt}",
-      "numbers_en": "adopted {v2_n}/{v2_of}; tiers A, B undecidable, tier C {v2_dtC}; fiducial-point and amplitude ratio ({amp_dt}) met",
-      "source": "lab_log 追記12（決定試験・順序 2〜6）; 表1",
-      "source_short_ja": "追記12・表1", "source_short_en": "entry 12; Table 1",
-      "lab_log_headings": ["2026-09-06（追記12）"],
-      "post_hoc": false, "recorded_decision": true
+      "numbers_en": "adopted {v2_n}/{v2_of}; tiers A, B undecidable, tier C {v2_dtC}; fiducial-point and amplitude ratio ({amp_dt}) pass",
+      "source": "lab_log 追記12（決定試験・順序 2〜6）; 02_tables.md 表1（この集の表2）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-06（追記12）"
+      ],
+      "post_hoc": false,
+      "recorded_decision": true,
+      "source_en": "lab-log entry 12 (decision test, steps 2–6); table 1 of 02_tables.md (table 2 of this set)"
     },
     {
-      "id": "r3", "date": "2026-09-06", "lane": "run",
-      "label_ja": "基底と文献の条件を総当たり（31番・33番）",
-      "label_en": "Basis and literature sweeps (31, 33)",
-      "numbers_ja": "どの版も特徴点法 ΔT {lm_dt} に及ばない",
-      "numbers_en": "no variant reaches the fiducial-point ΔT {lm_dt}",
-      "source": "lab_log 追記13（31番）・追記16〜18（33番）; 表3・表4",
-      "source_short_ja": "追記13・18", "source_short_en": "entries 13, 18",
-      "lab_log_headings": ["2026-09-06（追記13）", "2026-09-06（追記18）"],
-      "post_hoc": true, "recorded_decision": false
+      "id": "r3",
+      "date": "2026-09-06",
+      "lane": "run",
+      "label_ja": "基底と公表された条件を総当たり",
+      "label_en": "Bases and published conditions swept",
+      "numbers_ja": "公表された条件の ΔT |ρ| 最大 {lit_best}（{lit_n} 名。同じ集団の特徴点法 {lit_ref}）",
+      "numbers_en": "largest ΔT |ρ| under published conditions {lit_best} (n = {lit_n}; fiducial-point in the same subjects {lit_ref})",
+      "source": "lab_log 追記13（31番・基底の総当たり）・追記16〜18（33番・公表された条件）; 02_tables.md 表3・表4（この集の表4・表5a）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-06（追記13）",
+        "2026-09-06（追記18）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false,
+      "source_en": "lab-log entries 13 (script 31, basis sweep) and 16–18 (script 33, published conditions); tables 3 and 4 of 02_tables.md (tables 4 and 5a of this set)"
     },
     {
-      "id": "r4", "date": "2026-09-14", "lane": "run",
-      "label_ja": "型別解析（48番）: P1〜P5 のうち P4 のみ はい",
-      "label_en": "By-type analysis (48): only P4 yes",
+      "id": "r4",
+      "date": "2026-09-14",
+      "lane": "run",
+      "label_ja": "型別解析: P1〜P5 のうち P4 のみ はい",
+      "label_en": "By-type analysis: of P1–P5 only P4 yes",
       "numbers_ja": "第2成分は特徴点より型3 で {offset} ms 遅い（A 段）",
       "numbers_en": "type 3, tier A: second component {offset} ms after the fiducial point",
-      "source": "lab_log 追記137（48番の結果）; 表5; 表6 の凍結版の行（特徴点との差）",
-      "source_short_ja": "追記137", "source_short_en": "entry 137",
-      "lab_log_headings": ["2026-09-14（追記137）"],
-      "post_hoc": true, "recorded_decision": false
+      "source": "lab_log 追記137（48番の結果）; 02_tables.md 表5（この集の表6a）; 表6 の凍結版の行（特徴点との差。この集の表8）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-14（追記137）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false,
+      "source_en": "lab-log entry 137 (results of script 48); table 5 of 02_tables.md (table 6a of this set); frozen-version row of table 6 (offset from the fiducial point; table 8 of this set)"
     },
     {
-      "id": "r5", "date": "2026-09-15", "lane": "run",
-      "label_ja": "合成脈波の診断: 短い到達で ΔT の順位が消える",
-      "label_en": "Synthetic beats: rank lost at short ΔT",
-      "source": "lab_log 追記141（合成脈波での診断）",
-      "source_short_ja": "追記141", "source_short_en": "entry 141",
-      "lab_log_headings": ["2026-09-15（追記141）"],
-      "post_hoc": true, "recorded_decision": false
+      "id": "r6",
+      "date": "2026-09-15",
+      "lane": "run",
+      "label_ja": "合成脈波の診断と、再当てはめ 5 型: P6〜P9 いいえ",
+      "label_en": "Synthetic diagnosis; 5-variant refit",
+      "numbers_ja": "合成脈波で読んだ主因（Δμ の下限）に張り付いた拍は無い。0.65T の打ち切りが |ρ| 最大（予測外）: 型3 ΔT A 段 {t6_A}・C 段 {t6_C}",
+      "numbers_en": "P6–P9 no (P10, a check, yes); no beat at the Δμ lower bound read from the synthetic beats; 0.65T cut highest |ρ| (not predicted): type 3 ΔT, tier A {t6_A}, tier C {t6_C}",
+      "source": "lab_log 追記141（合成脈波での診断。「Δμ の下限が主因」と読んだ）・追記144（節C を 5 型〈(0)(2)(4)(4b)(6)〉で 4,374 名に当てた。P6〜P9 いいえ・P10 はい。Δμ の下限率は全型で 0.000 で、合成からの読みは否定された。(6) は 0.65T の打ち切りに Δμ の下限 0.01 s を併せた版）; 02_tables.md 表6d（この集の表8b）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-15（追記141）",
+        "2026-09-15（追記144）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false,
+      "source_en": "lab-log entries 141 (diagnosis on synthetic beats, which read the Δμ lower bound as the main cause) and 144 (part C, 5 variants (0), (2), (4), (4b), (6), fitted to 4,374 subjects; P6–P9 no, P10 yes; the fraction of beats at the Δμ lower bound was 0.000 in every type, refuting the reading from the synthetic beats; (6) combines the 0.65T truncation with a Δμ lower bound of 0.01 s); table 6d of 02_tables.md (table 8b of this set)"
     },
     {
-      "id": "r6", "date": "2026-09-16", "lane": "run",
-      "label_ja": "再当てはめ 5・7・10 型（15〜16 日）: P6〜P9 いいえ",
-      "label_en": "Refits of 5, 7, 10 variants: P6–P9 no",
-      "numbers_ja": "貯留槽の項は縮退。0.65T が最良（型3 ΔT A {t65_A}・C {t65_C}）",
-      "numbers_en": "reservoir term degenerates; 0.65T cut best (type 3 ΔT, tier A {t65_A}, tier C {t65_C})",
-      "source": "lab_log 追記144（5 型）・追記146（7 型）・追記147（10 型）; 表6・表6b",
-      "source_short_ja": "追記144〜147", "source_short_en": "entries 144–147",
-      "lab_log_headings": ["2026-09-15（追記144）", "2026-09-16（追記146）", "2026-09-16（追記147）"],
-      "post_hoc": true, "recorded_decision": false
+      "id": "r6b",
+      "date": "2026-09-16",
+      "lane": "run",
+      "label_ja": "再当てはめ 7 型・10 型: 割合と項を足す案",
+      "label_en": "Refits, 7 and 10 variants",
+      "numbers_ja": "型3 ΔT C 段: 0.55T {t55_C}・0.65T {t65_C}・0.75T {t75_C}。項を足す (3)(4)(4c) は {add3_max} 以下",
+      "numbers_en": "type 3 ΔT, tier C: 0.55T {t55_C}, 0.65T {t65_C}, 0.75T {t75_C}; added terms (3), (4), (4c) ≤ {add3_max}",
+      "source": "lab_log 追記146（7 型）・追記147（10 型）; 02_tables.md 表6・表6b（この集の表8・補足表 S1）",
+      "source_en": "lab-log entries 146 (7 variants) and 147 (10 variants); tables 6 and 6b of 02_tables.md (table 8 and table S1 of this set)",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-16（追記146）",
+        "2026-09-16（追記147）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false
     },
     {
-      "id": "r7", "date": "2026-09-17", "lane": "run",
-      "label_ja": "14 型＋線形分離: 下降を外す・抑える案だけが効く",
-      "label_en": "14 variants: only decline-removing fits",
-      "numbers_ja": "項を足す案はどれも効かず（打ち切りと 1 次微分の領域は効く）、線形分離の後進波にはどの指標も載らない",
-      "numbers_en": "no added-term version works (truncation and the derivative domain do); no index follows the separated backward wave",
-      "source": "lab_log 追記152（50番 14 型・51番）; 表6・表7a",
-      "source_short_ja": "追記152", "source_short_en": "entry 152",
-      "lab_log_headings": ["2026-09-17（追記152）"],
-      "post_hoc": true, "recorded_decision": false
+      "id": "r7",
+      "date": "2026-09-17",
+      "lane": "run",
+      "label_ja": "14 型と、線形分離した後進波との照合",
+      "label_en": "14 variants; separated backward wave",
+      "numbers_ja": "型3 ΔT C 段: 項を足す 5 案 {add_max} 以下、外す・小さくする 5 案 {rem_min} 以上。後進波の到達との |ρ| {sep3_max} 以下（型3）",
+      "numbers_en": "type 3 ΔT, tier C: five added-term versions ≤ {add_max}, five exclude or down-weight versions ≥ {rem_min}; |ρ| with the separated backward-wave arrival ≤ {sep3_max} (type 3)",
+      "source": "lab_log 追記152（50番 14 型・51番 線形分離）; 02_tables.md 表6・表7a（この集の表8・補足表 S2a）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-17（追記152）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false,
+      "source_en": "lab-log entry 152 (script 50, 14 variants; script 51, linear wave separation); tables 6 and 7a of 02_tables.md (table 8 and table S2a of this set)"
     },
     {
-      "id": "r8", "date": "2026-09-22", "lane": "run",
-      "label_ja": "B 段と雑音: 0.65T は雑音に残り、微分領域は崩れる",
-      "label_en": "Tier B, noise: 0.65T cut robust to noise",
-      "numbers_ja": "C 段 ΔT 雑音 2%: {t65_n2} 対 {drv_n2}。RI はどの版も残らない",
-      "numbers_en": "derivative-domain fit degrades (tier C ΔT at 2% noise: {t65_n2} vs {drv_n2}); RI survives noise in no version",
-      "source": "lab_log 追記158（B 段 3 型と雑音 0.01・0.02）; 表6c",
-      "source_short_ja": "追記158・表6c", "source_short_en": "entry 158; Table 6c",
-      "lab_log_headings": ["2026-09-22（追記158）"],
-      "post_hoc": true, "recorded_decision": false
+      "id": "r8",
+      "date": "2026-09-22",
+      "lane": "run",
+      "label_ja": "B 段と雑音（振幅の 1%・2%）",
+      "label_en": "Tier B and added noise (1%, 2%)",
+      "numbers_ja": "型3 ΔT C 段、雑音なしから 2%: 0.65T {t65_n0} から {t65_n2}、1 次微分 {drv_n0} から {drv_n2}。RI（B・C 段、2%）は {ri_bc_n2} 以下",
+      "numbers_en": "type 3 ΔT, tier C, no noise to 2%: 0.65T {t65_n0} to {t65_n2}, derivative domain {drv_n0} to {drv_n2}; RI (tiers B, C; 2%) ≤ {ri_bc_n2}",
+      "source": "lab_log 追記158（B 段 3 型と雑音 0.01・0.02）; 02_tables.md 表6c（この集の表9）",
+      "source_short_ja": "",
+      "source_short_en": "",
+      "lab_log_headings": [
+        "2026-09-22（追記158）"
+      ],
+      "post_hoc": true,
+      "recorded_decision": false,
+      "source_en": "lab-log entry 158 (tier B over three fits; noise 0.01 and 0.02); table 6c of 02_tables.md (table 9 of this set)"
     }
   ]
 }

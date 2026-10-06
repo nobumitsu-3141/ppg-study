@@ -364,6 +364,15 @@ SPEC: dict[str, dict] = {
                 ids=[("fb", r"^凍結版"), ("trunc065", r"^拍長の 0\.65 倍"), ("deriv", r"1 次微分"),
                      ("landmark", r"特徴点法")],
                 carry="empty", multi=True),
+    "表6d": dict(keys=["label_ja", "stage", "type1", "type3", "type4", "all"],
+                kinds=["label", "stage", "rho", "rho", "rho", "rho"],
+                ids=[("dt_fb", r"^ΔT×PWV 凍結版"), ("dt_trunc065_dmu001", r"^ΔT×PWV 0\.65 倍"),
+                     ("dt_landmark", r"^ΔT×PWV （参考）"), ("ri_fb", r"^RI×抵抗 凍結版"),
+                     ("ri_deriv", r"^RI×抵抗 1 次微分"), ("ri_landmark", r"^RI×抵抗 （参考）")],
+                multi=True),
+    "表6e": dict(keys=["label_ja", "rule", "fb", "trunc065", "deriv", "landmark", "outcome"],
+                kinds=["label", "text", "text", "text", "text", "text", "text"],
+                ids=[("c6", r"^C6"), ("c7a", r"^C7a"), ("c7b", r"^C7b"), ("c8_dt", r"^C8 ΔT"), ("c8_ri", r"^C8 RI")]),
     "表7a": dict(keys=["type_ja", "method_ja", "n", "dt_diff_ms", "rho_pooled"],
                 kinds=["label", "label", "int", "ms", "num"], ids=None),
     "表7b": dict(keys=["label_ja", "dt_pwv_A", "dt_pwv_C", "ri_pvr_A", "ri_pvr_C", "adoption_rate"],
@@ -692,6 +701,9 @@ def parse_document(path: Path = SRC) -> dict:
         }
         if key == "表6c":
             post_6c(table)
+        if key == "表6d":
+            for r in table["rows"]:
+                r["stage"] = r["stage"]["stage"] if isinstance(r["stage"], dict) else r["stage"]
         tables[key] = table
 
     for key, t in tables.items():
@@ -800,6 +812,8 @@ def selftest(doc: dict) -> int:
         ("表6c 1 次微分 C 段 雑音 2%", lambda: (row(doc, "表6c", "deriv", stage="C")["dt_pwv"]["0.02"]["rho"], row(doc, "表6c", "deriv", stage="C")["dt_pwv"]["0"]["rho"]), (0.347, 0.687)),
         ("表6c 凍結版 通過率", lambda: ({k: row(doc, "表6c", "fb", stage="A")["pass_rate"][k] for k in NOISE_LEVELS}, row(doc, "表6c", "fb", stage="B")["pass_rate"]), ({"0": 0.901, "0.01": 0.881, "0.02": 0.862}, None)),
         ("表6c 特徴点法（同左）", lambda: (row(doc, "表6c", "landmark", stage="C")["dt_pwv"]["0.01"]["rho"], row(doc, "表6c", "landmark", stage="C")["ri_pvr"]["0.02"]["same_as_left"], row(doc, "表6c", "trunc065", stage="B")["ri_pvr"]["0.01"]["rho"], row(doc, "表6c", "trunc065", stage="B")["ri_pvr"]["0.01"]["bold"], T["表6c"]["row_count"]), (0.430, True, 0.266, False, 11)),
+        ("表6d 全例・型1（打ち切りと特徴点法）", lambda: (row(doc, "表6d", "dt_trunc065_dmu001", stage="C")["all"]["rho"], row(doc, "表6d", "dt_trunc065_dmu001", stage="C")["all"]["strata"], row(doc, "表6d", "dt_trunc065_dmu001", stage="A")["type1"]["rho"], row(doc, "表6d", "dt_landmark", stage="C")["all"]["rho"], row(doc, "表6d", "dt_fb", stage="C")["type1"].get("rho"), row(doc, "表6d", "ri_deriv", stage="C")["all"]["rho"], T["表6d"]["row_count"]), (0.559, "6/6", 0.193, 0.710, None, 0.394, 8)),
+        ("表6e C6・C7b・C8", lambda: ("−0.542" in row(doc, "表6e", "c6")["deriv"]["text"], row(doc, "表6e", "c6")["fb"]["text"], "−0.489" in row(doc, "表6e", "c7b")["trunc065"]["text"], "−3.9%" in row(doc, "表6e", "c8_dt")["deriv"]["text"], T["表6e"]["row_count"]), (True, "−0.124", True, True, 5)),
         ("表7a 型3 特徴点法", lambda: (row(doc, "表7a", "type3_landmark")["n"]["value"], row(doc, "表7a", "type3_landmark")["dt_diff_ms"]["value"], row(doc, "表7a", "type3_landmark")["rho_pooled"]["value"], row(doc, "表7a", "type1_pda_ppg")["dt_diff_ms"]["value"]), (2758, 114.0, -0.022, 257.8)),
         ("表7b 圧波形 ΔT A 段", lambda: (row(doc, "表7b", "pressure")["dt_pwv_A"]["rho"], row(doc, "表7b", "pressure")["dt_pwv_A"]["strata"], row(doc, "表7b", "pressure")["dt_pwv_A"]["bold"], row(doc, "表7b", "pressure")["adoption_rate"]["value"], row(doc, "表7b", "ppg")["adoption_rate"]["value"]), (0.486, "6/6", True, 84.5, 92.3)),
         ("規準の文", lambda: doc["meta"]["criterion"]["text"], "全6層で予測の符号を持ち、かつ中央値 |ρ| ≥ 0.30"),

@@ -46,6 +46,9 @@ FAMILY = {
     "ptt_control": ("control", "D"),
 }
 COLS = ("dt_pwv", "ri_pvr")
+# 陽性対照の要求値（docs/research/gate0_rules_v2.md「陽性対照 PTT が不成立、または中央値 |ρ| < 0.5 … 表全体を無効とする」）。
+# 02_tables.md には数値として現れない規則の値なので、出典を明記してここに置く
+PC_REQUIRED = 0.5
 
 # 図の中の語（和・英）。表1 の語をそのまま使う
 T = {
@@ -152,16 +155,22 @@ def build(lang: str, numbers: dict):
     tx = T[lang]
     stage_name = {k: v[lang] for k, v in LABELS["stages"].items()}
 
-    fig = plt.figure(figsize=(mm(150), mm(92)))
-    bottom = 0.37
+    # 縦の寸法（mm）。図の高さは脚注の行数から決める（枠の高さ 49.7 mm と上の余白 8.3 mm は固定）
+    footer = wrap_text(criterion_text(numbers, lang), lang) + "\n" + wrap_text(STAGE_NOTE[lang], lang)
+    footer_mm = (footer.count("\n") + 1) * 8 * 1.3 / 72 * 25.4 + 1.1
+    top_mm, plot_mm, xaxis_mm = 8.3, 49.7, 11.5            # 下: 目盛の数字と横軸の名、脚注との間
+    H_MM = top_mm + plot_mm + xaxis_mm + footer_mm
+    fig = plt.figure(figsize=(mm(150), mm(H_MM)))
+    bottom = (footer_mm + xaxis_mm) / H_MM
     left = 0.29 if lang == "ja" else 0.33      # 英文の行名は長いので左の余白を広く取る
-    gs = GridSpec(1, 2, figure=fig, left=left, right=0.985, top=0.91, bottom=bottom, wspace=0.14)
+    gs = GridSpec(1, 2, figure=fig, left=left, right=0.985, top=1 - top_mm / H_MM, bottom=bottom, wspace=0.14)
     axes = [fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1], sharey=None)]
-    titles = {"dt_pwv": "(a) " + L[lang]["dt_pwv"], "ri_pvr": "(b) " + L[lang]["ri_pvr"]}
+    # (a) の行には ΔT でない指標（早期振幅比・陽性対照）もあるので「指標 × 大動脈PWV」と書く
+    titles = {"dt_pwv": "(a) " + ("指標 × 大動脈PWV" if lang == "ja" else "Index × aortic PWV"), "ri_pvr": "(b) " + L[lang]["ri_pvr"]}
     drawn = []
     for ax, col in zip(axes, COLS):
         ax.set_xlim(0, 1.06)
-        ax.set_ylim(n - 0.4, -0.6)
+        ax.set_ylim(n, -0.6)                     # 最下行の下に規準線の札を置く間を取る（札が横軸の線に掛からないように）
         ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
         ax.set_xticklabels(["0", "0.2", "0.4", "0.6", "0.8", "1.0"])
         ax.set_yticks(range(n))
@@ -171,9 +180,11 @@ def build(lang: str, numbers: dict):
             ax.set_yticklabels([])
             ax.tick_params(axis="y", length=0)
         ax.set_title(titles[col], loc="center", fontsize=8)
-        ax.axvline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1)
-        ax.text(crit + 0.03, n - 0.55, criterion_label(meta, lang), ha="left", va="center",
+        # 参照の線は label を "ref:" で始める（注釈の白い地の下に隠れてよい線。common.text_line_overlaps）
+        ax.axvline(crit, color=PALETTE["grey"], lw=0.8, ls=(0, (4, 2)), zorder=1, label="ref:criterion")
+        ax.text(crit + 0.03, n - 0.33, criterion_label(meta, lang), ha="left", va="center",
                 fontsize=8, color=PALETTE["grey"])
+        markers, connectors = [], []
         for i, row in enumerate(rows):
             color = PALETTE[FAMILY[row["id"]][0]]
             marker = FAMILY[row["id"]][1]
@@ -182,14 +193,28 @@ def build(lang: str, numbers: dict):
             def put(x, filled, stage=None, ms=5.5):
                 ln, = ax.plot([x], [i], marker=marker, ms=ms, ls="none",
                               mfc=color if filled else "white", mec=color, mew=1.0, zorder=3)
+                markers.append(common.marker_box(ax, x, i, ms))
                 drawn.append({"id": row["id"], "col": col, "stage": stage, "x": float(ln.get_xdata()[0]),
                               "filled": filled})
                 return ln
 
             if cell.get("rho") is not None:
                 put(cell["rho"], _filled(cell, req))
-                ax.annotate(cell["strata"], (cell["rho"], i), xytext=(5, 0), textcoords="offset points",
-                            ha="left", va="center", fontsize=8, color=PALETTE["ink"])
+                if row["id"] == "ptt_control" and col == "dt_pwv":
+                    pc_req = PC_REQUIRED
+                    ax.plot([pc_req, pc_req], [i - 0.32, i + 0.32], color=PALETTE["control"], lw=0.9, ls=(0, (1, 1)), zorder=2,
+                            label="ref:required")
+                    ax.text(pc_req - 0.015, i - 0.30, ("要求 " if lang == "ja" else "required ") + f"{pc_req:.1f}",
+                            ha="right", va="center", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
+                # 層の数は記号の右に置く。右に置くと規準線に掛かり、左なら掛からないときは左に置く
+                r = fig.canvas.get_renderer()
+                placed = [t.get_window_extent(renderer=r) for t in ax.texts]
+                common.place_annotation(
+                    ax, cell["strata"], (cell["rho"], i), [(5, 0, "left"), (-5, 0, "right")],
+                    hard_boxes=placed + markers[:-1], hard_segments=connectors,
+                    soft_segments=[common.vline_segment(ax, crit)],
+                    xbounds=(ax.transData.transform((0, 0))[0], ax.bbox.x1),
+                    va="center", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
             elif "stages" in cell:
                 st = cell["stages"]
                 has_a = st.get("A", {}).get("rho") is not None
@@ -197,21 +222,23 @@ def build(lang: str, numbers: dict):
                 xc = st["C"]["rho"]
                 if has_a:
                     # A 段と C 段を細線で結ぶ
-                    ax.plot([xa, xc], [i, i], color=PALETTE["light"], lw=0.8, zorder=2)
+                    ax.plot([xa, xc], [i, i], color=PALETTE["light"], lw=0.8, zorder=2, label="connector")
+                    connectors.append(common.data_segment(ax, (xa, i), (xc, i)))
                     put(xa, _filled(st["A"], req), "A")
                     ax.annotate(f"A {st['A']['strata']}", (xa, i), xytext=(5, 0), textcoords="offset points",
-                                ha="left", va="center", fontsize=8, color=PALETTE["ink"])
+                                ha="left", va="center", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
                 put(xc, _filled(st["C"], req), "C")
                 if has_a:
-                    # 規準線に重なる点は値も書く（どちら側かを読めるように）
-                    c_lab = "C" if abs(xc - crit) >= 0.04 else f"C {xc:.3f}"
-                    ax.annotate(c_lab, (xc, i), xytext=(5, 0), textcoords="offset points",
-                                ha="left", va="center", fontsize=8, color=PALETTE["ink"],
-                                bbox=dict(fc="white", ec="none", pad=0.15))
+                    # 層の数を必ず添え、規準線に重なる点は値も書く（どちら側かを読めるように）
+                    c_st = st["C"].get("strata") or ""
+                    c_lab = f"C {c_st}".strip() if abs(xc - crit) >= 0.04 else f"C {xc:.3f} {c_st}".strip()
+                    # C 段の札は点の下に置く（右には A 段の点と札がある）
+                    ax.annotate(c_lab, (xc, i), xytext=(0, -6), textcoords="offset points",
+                                ha="center", va="top", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
                     if cell.get("adopted"):
                         ax.annotate(tx["accepted"].format(n=_fmt_n(cell["adopted"]["n"])), (xc, i),
                                     xytext=(-6, 0), textcoords="offset points",
-                                    ha="right", va="center", fontsize=8, color=PALETTE["ink"])
+                                    ha="right", va="center", fontsize=8, color=PALETTE["ink"], bbox=common.LABEL_BOX, zorder=4)
                 else:
                     # 第2版 歪みガウス: C 段のみ。採択数（ΔT の欄）か層の数（RI の欄）を添える
                     if cell.get("adopted"):
@@ -222,15 +249,15 @@ def build(lang: str, numbers: dict):
                     else:
                         s = tx["tierC_only"]
                     ax.annotate(s, (xc, i), xytext=(5, 0), textcoords="offset points",
-                                ha="left", va="center", fontsize=8, color=PALETTE["ink"], linespacing=1.1)
+                                ha="left", va="center", fontsize=8, color=PALETTE["ink"], linespacing=1.1,
+                                bbox=common.LABEL_BOX, zorder=4)
             elif cell.get("dash"):
                 ax.text(0.02, i, tx["dash"], ha="left", va="center", fontsize=8, color=PALETTE["grey"])
             elif cell.get("note"):
                 ax.text(0.02, i, tx["not_evaluated"], ha="left", va="center", fontsize=8, color=PALETTE["grey"],
-                        bbox=dict(fc="white", ec="none", pad=0.3), zorder=4)
-    fig.text((left + 0.985) / 2, bottom - 0.075, L[lang]["rho"], ha="center", va="top", fontsize=8)
-    footer = wrap_text(criterion_text(numbers, lang), lang) + "\n" + wrap_text(STAGE_NOTE[lang], lang)
-    fig.text(0.01, 0.012, footer, ha="left", va="bottom", fontsize=8, color=PALETTE["ink"], linespacing=1.3)
+                        bbox=common.LABEL_BOX, zorder=4)
+    fig.text((left + 0.985) / 2, bottom - 6.9 / H_MM, L[lang]["rho"], ha="center", va="top", fontsize=8)
+    fig.text(0.01, 1.1 / H_MM, footer, ha="left", va="bottom", fontsize=8, color=PALETTE["ink"], linespacing=1.3)
     return fig, drawn, crit
 
 
@@ -243,34 +270,42 @@ def legend_text(lang: str, numbers: dict) -> str:
     sk = next(r for r in t1["rows"] if r["id"] == "pda_v2_skewgauss")["dt_pwv"]["adopted"]
     sk_n, sk_of = _fmt_n(sk["n"]), _fmt_n(sk["of"])
     gm_n = _gamma_accepted(numbers)
+    # 陽性対照が 0.571 にとどまる理由とガンマ経路の張り付き（02_tables.md 表1 の注。lab_log 追記120・roadmap §9）
+    pc_para = next(p.replace("\n", "") for p in t1["postscript"] if p.startswith("陽性対照が "))
+    mp = re.search(r"([\d.]+)%（(\d+) 名）.*?周期を直すと ([\d.]+) になる.*?採用分の ([\d.]+)% .*?ΔT の A 段は ([\d.]+) になる", pc_para)
+    pc_en = (f"The positive control stays at its value because {mp.group(1)}% ({mp.group(2)} subjects) of the supplied transit times are "
+             f"one period short; corrected, it is {mp.group(3)} (post hoc; the table stays valid; lab_log entry 120). Of the fits accepted by "
+             f"the gamma route, {mp.group(4)}% lie on a search bound and widening the bounds gives {mp.group(5)} for ΔT in tier A "
+             "(script 27; roadmap_v1.md §9).")
     if lang == "ja":
         return "\n".join([
-            f"図1　判定の図 ― 表1 の年齢層内 Spearman |ρ| の中央値と規準線 {thr:.2f}",
+            f"図1　判定の図 ― 表2（02_tables.md 表1）の年齢層内 Spearman |ρ| の中央値と規準線 {thr:.2f}",
             "",
-            f"何を示すか: 決定試験（PWDB {n_subj} 名・6 層）で、表1 の 6 通りの指標の作り方ごとに、"
+            f"何を示すか: 決定試験（PWDB {n_subj} 名・6 層）で、表2 の 6 通りの指標の作り方ごとに、"
             "ΔT × 大動脈脈波伝播速度（a）と RI × 末梢血管抵抗（b）の年齢層内 Spearman 順位相関の絶対値の中央値を点で示す。"
             f"破線は実行前に凍結した規準（{meta['criterion']['text']}）。{meta['criterion']['sign_prediction']}"
             f"塗りつぶしは規準が求める全 {req} 層で予測の向き、白抜きはそれ以外。点の横の x/y は予測の向きを持った層の数／8 名以上の層の数。"
             f"第2版 歪みガウスは採択 {sk_n}/{sk_of} で A・B 段が判定できないので C 段のみ、第2版 ガンマは A 段（採択 {gm_n}）と C 段を細線で結んだ。"
             f"ガンマ経路の A 段は 8 名以上の層が 4 層のみなので分母が 4 で、全 {req} 層の規準は評価できない（lab_log 追記12）。"
             "陽性対照（モデル出力の脈波到達時間 × 大動脈脈波伝播速度）は表全体が有効かを確かめる行で、"
-            "規準は中央値 |ρ| ≥ 0.5 かつ全層で負（`gate0_rules_v2.md`。満たしたので表1 は有効）。"
+            f"規準は中央値 |ρ| ≥ {PC_REQUIRED:.1f} かつ全層で負（`gate0_rules_v2.md`。満たしたので表は有効。(a) の陽性対照の行の短い点線）。"
+            + pc_para + 
             "陽性対照に RI の欄は無く（—）、早期振幅比の RI は未検証。判定（成立・不成立）は図に書かず、表1 に示す。",
             "",
             "出典: `02_tables.md` 表1（`docs/research/roadmap_v1.md` §9 の判定の表。lab_log 追記12）。"
             "凍結版は 20番 `20_pwdb_validity.py`（`data/pwdb/pwdb_indices.csv`。lab_log 2026-09-03「研究0 の結果」）、"
             "特徴点法と陽性対照は 23番 `23_pwdb_landmarks.py`（lab_log 2026-09-03「判定の訂正」）、"
             "第2版と早期振幅比は 26番 `26_pwdb_compare.py`（`data/pwdb/pwdb_compare.csv`・`pwdb_compare_report.txt`。lab_log 追記12）。"
-            "27番 `27_threshold_sensitivity.py` は閾値の感度（表1 の値ではない）。"
+            "27番 `27_threshold_sensitivity.py` は閾値の感度（判定表の値ではない）。"
             "数値は `data/paper2_numbers.json` から台本 `build_fig_judgement.py` が読む。",
             "",
             "段の注釈: " + STAGE_NOTE["ja"],
         ])
     return "\n".join([
-        f"Figure 1. Decision figure: median within-age-stratum Spearman |ρ| of table 1 against the criterion line {thr:.2f}.",
+        f"Figure 1. Decision figure: median within-age-stratum Spearman |ρ| of table 2 (table 1 of 02_tables.md) against the criterion line {thr:.2f}.",
         "",
         f"What is shown: for the decision test (PWDB, {n_subj} virtual subjects, six age strata) and each of the six index "
-        "constructions of table 1, the median across strata of the absolute within-stratum Spearman rank correlation of "
+        "constructions of table 2, the median across strata of the absolute within-stratum Spearman rank correlation of "
         "ΔT with aortic PWV (a) and of RI with peripheral vascular resistance (b). The dashed line is the criterion frozen "
         f"before the run (predicted sign in all {meta['criterion']['strata_required']} strata and median |ρ| ≥ {thr:.2f}; "
         "ΔT × aortic PWV negative, RI × peripheral vascular resistance positive; magnitudes shown). Filled markers have the "
@@ -281,15 +316,15 @@ def legend_text(lang: str, numbers: dict) -> str:
         f"four strata had at least 8 subjects, hence the denominator 4, and the {req}-stratum criterion cannot be met there "
         "(lab_log entry 12). The positive control (model-derived pulse transit time × aortic PWV) tests whether the table is "
         "valid at all; its own requirement is median |ρ| ≥ 0.5 with the predicted sign in every stratum (`gate0_rules_v2.md`), "
-        "which it met. The positive control has no RI entry (—) and the RI of the early amplitude ratio was not evaluated. "
-        "Verdicts (pass or fail) are not written in the figure; they are given in table 1.",
+        "which it met (short dotted line on its row in (a)). The positive control has no RI entry (—) and the RI of the early amplitude ratio was not evaluated. "
+        "Verdicts (pass or fail) are not written in the figure; they are given in table 2. " + pc_en,
         "",
         "Source: table 1 of `02_tables.md` (the decision table of `docs/research/roadmap_v1.md` §9; lab_log entry 12). "
         "Frozen version: script 20 `20_pwdb_validity.py` (`data/pwdb/pwdb_indices.csv`; lab_log 2026-09-03, results of "
         "study 0). Fiducial-point analysis and positive control: script 23 `23_pwdb_landmarks.py` (lab_log 2026-09-03, "
         "correction of the verdict). Rebuilt version and early amplitude ratio: script 26 `26_pwdb_compare.py` "
         "(`data/pwdb/pwdb_compare.csv`, `pwdb_compare_report.txt`; lab_log entry 12); script 27 "
-        "`27_threshold_sensitivity.py` gives the threshold sensitivity, not the values of table 1. All numbers are read from "
+        "`27_threshold_sensitivity.py` gives the threshold sensitivity, not the values of the decision table. All numbers are read from "
         "`data/paper2_numbers.json` by `build_fig_judgement.py`.",
         "",
         "Tier note: " + STAGE_NOTE["en"],
@@ -360,6 +395,10 @@ def selftest() -> int:
         rep("文字どうしが重ならない", not ov, f"{ov[:3]}")
         outside = texts_outside(fig)
         rep("文字が図の枠からはみ出さない", not outside, f"{outside[:3]}")
+        cs = common.texts_crossing_spines(fig)
+        rep("枠の中の文字が軸の線に掛かっていない", not cs, f"{cs[:3]}")
+        tl = common.text_line_overlaps(fig)
+        rep("枠の中の文字を線が貫いていない（白い地で隠れる参照の線を除く）", not tl, f"{tl[:3]}")
         verdict_words = ["成立", "合格", " pass", "fail"]
         rep("判定の語（成立・不成立・pass・fail）を図に書いていない",
             not any(w in joined for w in verdict_words))

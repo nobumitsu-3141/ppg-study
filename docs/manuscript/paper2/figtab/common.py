@@ -76,9 +76,35 @@ def setup(lang: str = "ja", base_pt: float = 8.0) -> None:
         "ytick.major.width": 0.6,
         "lines.linewidth": 1.0,
         "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.02,
+        "savefig.pad_inches": 0.0,      # 余白を足さない（図幅 150 mm を超えないように）
         "axes.unicode_minus": False,
     })
+
+
+FIG_MAX_WIDTH_MM = 150.0
+
+
+def png_size_mm(path: Path, dpi: int = 600) -> tuple[float, float]:
+    """書き出した PNG の幅・高さ（mm）。"""
+    from PIL import Image
+    with Image.open(path) as im:
+        w, h = im.size
+    return w / dpi * 25.4, h / dpi * 25.4
+
+
+def table_no(key: str, lang: str) -> str:
+    """02_tables.md の表番号（表1・表6c など）を、この集の番号（表2・表9 など）に読み替える（labels.json の table_numbers）。"""
+    import json as _json
+    tn = _json.loads((HERE / "data" / "labels.json").read_text(encoding="utf-8"))["table_numbers"]
+    return tn[key][lang]
+
+
+def renumber(text: str) -> str:
+    """JSON から写した文の中の 02_tables.md の表番号を、この集の番号に読み替える（和文）。"""
+    import json as _json
+    import re as _re
+    tn = _json.loads((HERE / "data" / "labels.json").read_text(encoding="utf-8"))["table_numbers"]
+    return _re.sub(r"表(\d+[a-z]?)(?![a-z0-9])", lambda m: tn.get("表" + m.group(1), {"ja": m.group(0)})["ja"], text)
 
 
 def save(fig, name: str, lang: str, dpi: int = 600) -> list[Path]:
@@ -234,6 +260,171 @@ def text_marker_overlaps(fig, pad_pt: float = 0.3) -> list[str]:
     return sorted(set(hits))
 
 
+def texts_crossing_spines(fig, pad_pt: float = 0.3) -> list[str]:
+    """枠の中に置いた文字（注釈・札）が、見えている軸の線（spine）に掛かっていないか。
+
+    目盛の数字・軸の名・題は枠の外に置くものなので比べない（ax.texts に入る文字だけを見る）。
+    文字の矩形を pad_pt だけ縮め、軸の線の矩形（線の太さの幅）と交わるものを返す。
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    pad = pad_pt * fig.dpi / 72
+    hits = []
+    for ax in fig.axes:
+        if not ax.get_visible() or not getattr(ax, "axison", True):
+            continue
+        spines = [(k, sp.get_window_extent(renderer=r)) for k, sp in ax.spines.items() if sp.get_visible()]
+        for t in ax.texts:
+            if not t.get_text().strip() or not t.get_visible():
+                continue
+            b = t.get_window_extent(renderer=r)
+            x0, x1, y0, y1 = b.x0 + pad, b.x1 - pad, b.y0 + pad, b.y1 - pad
+            for k, sb in spines:
+                if x0 < sb.x1 and sb.x0 < x1 and y0 < sb.y1 and sb.y0 < y1:
+                    name = t.get_text().replace("\n", " ")[:24]
+                    hits.append(f"{name!r} × 軸の線（{k}）")
+    return sorted(set(hits))
+
+
+def _segment_hits_box(p, q, x0, y0, x1, y1) -> bool:
+    """線分 p–q が矩形 [x0,x1]×[y0,y1] と交わるか（Liang–Barsky の切り取り）。"""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    t0, t1 = 0.0, 1.0
+    for pk, qk in ((-dx, p[0] - x0), (dx, x1 - p[0]), (-dy, p[1] - y0), (dy, y1 - p[1])):
+        if pk == 0:
+            if qk < 0:
+                return False
+            continue
+        t = qk / pk
+        if pk < 0:
+            t0 = max(t0, t)
+        else:
+            t1 = min(t1, t)
+        if t0 > t1:
+            return False
+    return True
+
+
+def _masks_lines(t) -> bool:
+    """文字に白い地（bbox の塗り）があり、線の上に描かれるか。そうなら線は文字の下に隠れるので重なりと数えない。"""
+    patch = t.get_bbox_patch()
+    if patch is None:
+        return False
+    fc = matplotlib.colors.to_rgba(patch.get_facecolor())
+    return fc[3] > 0.99 and min(fc[:3]) > 0.99
+
+
+def text_line_overlaps(fig, pad_pt: float = 0.3) -> list[str]:
+    """枠の中の文字（注釈・札）を、同じ枠の線（規準線・結ぶ線など）が貫いていないか。
+
+    線は破線でも続いた線として比べる（控えめな側に倒す）。記号だけの線（ls なし）は text_marker_overlaps が見る。
+    参照の線（規準線・特徴点法の値の線。label を "ref:" で始める）は、文字に白い地があって線より上に描くもの
+    （_masks_lines）なら、線が文字の下に隠れるので数えない。
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    pad = pad_pt * fig.dpi / 72
+    hits = []
+
+    def drawn_lines(lines):
+        return [ln for ln in lines
+                if ln.get_visible() and ln.get_linestyle() not in ("None", "none", "", " ") and ln.get_linewidth() > 0]
+
+    # 図に直接置いた線（見出しの区切り線など）は、図の文字と、すべての枠の文字の両方と比べる
+    all_texts = list(fig.texts) + [t for ax in fig.axes for t in ax.texts]
+    for ln in drawn_lines(fig.lines):
+        xy = ln.get_transform().transform(ln.get_xydata())
+        for t in all_texts:
+            if not t.get_text().strip() or not t.get_visible():
+                continue
+            b = t.get_window_extent(renderer=r)
+            x0, x1, y0, y1 = b.x0 + pad, b.x1 - pad, b.y0 + pad, b.y1 - pad
+            if any(_segment_hits_box(xy[i], xy[i + 1], x0, y0, x1, y1) for i in range(len(xy) - 1)):
+                hits.append(f"{t.get_text().replace(chr(10), ' ')[:24]!r} × 図の線（{ln.get_label()}）")
+    for ax in fig.axes:
+        lines = drawn_lines(ax.get_lines())
+        for t in ax.texts:
+            if not t.get_text().strip() or not t.get_visible():
+                continue
+            b = t.get_window_extent(renderer=r)
+            x0, x1, y0, y1 = b.x0 + pad, b.x1 - pad, b.y0 + pad, b.y1 - pad
+            for ln in lines:
+                # 白い地の文字が規準線などの参照の線（label が "ref:" で始まる）の上にあるときは、線が隠れるので数えない。
+                # 点を結ぶ線は隠すと途切れて見えるので、白い地があっても重なりと数える
+                if _masks_lines(t) and t.get_zorder() > ln.get_zorder() and str(ln.get_label()).startswith("ref:"):
+                    continue
+                xy = ln.get_transform().transform(ln.get_xydata())
+                if any(_segment_hits_box(xy[i], xy[i + 1], x0, y0, x1, y1) for i in range(len(xy) - 1)):
+                    name = t.get_text().replace("\n", " ")[:24]
+                    hits.append(f"{name!r} × 線（{ln.get_label()}）")
+    return sorted(set(hits))
+
+
+# 枠の中の注釈に敷く白い地（参照の線が注釈を貫かないように、線を注釈の下に隠す）
+LABEL_BOX = dict(boxstyle="square,pad=0.12", fc="white", ec="none")
+
+
+def marker_box(ax, x: float, y: float, ms_pt: float, margin_pt: float = 0.6):
+    """データ座標 (x, y) に描いた大きさ ms_pt の記号の矩形（画素）。"""
+    fig = ax.figure
+    px, py = ax.transData.transform((x, y))
+    half = (ms_pt / 2 + margin_pt) * fig.dpi / 72
+    return matplotlib.transforms.Bbox([[px - half, py - half], [px + half, py + half]])
+
+
+def data_segment(ax, p, q):
+    """データ座標の線分を画素の線分にする。"""
+    return tuple(map(tuple, ax.transData.transform([p, q])))
+
+
+def vline_segment(ax, x: float):
+    """枠の高さいっぱいの縦線（axvline）の画素の線分。"""
+    px = ax.transData.transform((x, 0))[0]
+    return ((px, ax.bbox.y0), (px, ax.bbox.y1))
+
+
+def hline_segment(ax, y: float):
+    """枠の幅いっぱいの横線（axhline）の画素の線分。"""
+    py = ax.transData.transform((0, y))[1]
+    return ((ax.bbox.x0, py), (ax.bbox.x1, py))
+
+
+def place_annotation(ax, text: str, xy, candidates, *, hard_boxes=(), hard_segments=(), soft_segments=(),
+                     xbounds=None, pad_pt: float = 0.3, **kw):
+    """注釈を、候補の位置のうち、ほかの文字・記号・点を結ぶ線に掛からない（hard が 0 の）位置に置く。
+
+    候補は (dx_pt, dy_pt, ha) か (dx_pt, dy_pt, ha, 段) の並び。hard が 0 の候補のうち、段の小さいもの →
+    参照の線に掛かる数（soft）の少ないもの → 先に並べたもの、の順に採る（段は「記号から離す量」のような、
+    soft より優先する好みに使う。記号のすぐ横で線に掛かる位置を、線を避けて記号から離れた位置より先に採るため）。
+    hard_boxes は画素の矩形、hard_segments・soft_segments は画素の線分、xbounds は (左, 右) の画素。
+    戻り値は (注釈, 画素の矩形, hard の数)。hard が 0 にならなければ hard の最も少ない位置に置く
+    （自己検査が重なりとして拾う）。
+    """
+    fig = ax.figure
+    r = fig.canvas.get_renderer()
+    pad = pad_pt * fig.dpi / 72
+    scored = []
+    for k, c in enumerate(candidates):
+        dx, dy, ha = c[:3]
+        tier = c[3] if len(c) > 3 else 0
+        ann = ax.annotate(text, xy, xytext=(dx, dy), textcoords="offset points", ha=ha, **kw)
+        b = ann.get_window_extent(renderer=r)
+        ann.remove()
+        x0, x1, y0, y1 = b.x0 + pad, b.x1 - pad, b.y0 + pad, b.y1 - pad
+        hard = sum(1 for hb in hard_boxes if x0 < hb.x1 and hb.x0 < x1 and y0 < hb.y1 and hb.y0 < y1)
+        hard += sum(1 for p, q in hard_segments if _segment_hits_box(p, q, x0, y0, x1, y1))
+        if xbounds is not None and (b.x0 < xbounds[0] or b.x1 > xbounds[1]):
+            hard += 1
+        soft = sum(1 for p, q in soft_segments if _segment_hits_box(p, q, x0, y0, x1, y1))
+        scored.append((hard, tier, soft, k))
+        if hard == 0 and soft == 0:            # 段は並びの順に増える前提なので、これより良い候補は無い
+            break
+    hard, _tier, _soft, k = min(scored)
+    dx, dy, ha = candidates[k][:3]
+    ann = ax.annotate(text, xy, xytext=(dx, dy), textcoords="offset points", ha=ha, **kw)
+    return ann, ann.get_window_extent(renderer=r), hard
+
+
 # 段の注釈（CLAUDE.md §3: 段を出すときは毎回その場に 1 行）
 STAGE_NOTE = {
     "ja": "A 段＝その手法が採用した被験者だけ、B 段＝比べる全手法が採用した共通例、C 段＝採否を無視した全員",
@@ -244,7 +435,7 @@ STAGE_NOTE = {
 L = {
     "ja": {
         "rho": "年齢層内 Spearman |ρ| の中央値",
-        "dt_pwv": "ΔT × 大動脈脈波伝播速度",
+        "dt_pwv": "ΔT × 大動脈PWV",
         "ri_pvr": "RI × 末梢血管抵抗",
         "criterion": "規準 0.30",
         "landmark": "特徴点法（同梱）",

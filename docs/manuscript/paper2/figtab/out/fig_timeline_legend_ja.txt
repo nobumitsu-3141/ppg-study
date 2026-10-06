@@ -1,39 +1,56 @@
 図3　研究0（PWDB・決定試験）から改良の探索までの経過。上段は走らせる前に固定・予測したこと、下段は実行と、それが示したこと。
 
-示しているもの: 日付順の節目（上段 7・下段 8）。上段の箱は規則・閾値・予測を実行の前に固定した記録、下段の箱はその実行の結果。2026-09-03 と 09-06 の下段の箱は事前規準による判定の記録で、「成立」「不成立」はその記録を写したもの（この図は新しい判定をしない）。† の箱は決定試験の後の探索・事後の解析で、判定には用いない。日付の間隔は経過日数に比例しない。
+示しているもの: 日付順の節目（上段 7・下段 8）。上段の箱は規則・閾値・予測を実行の前に固定した記録、下段の箱はその実行の結果で、箱の 2 行目以降はその結果を表す数値。2026-09-03 と 09-06 の下段の箱は事前規準による判定の記録で、「成立」「不成立」はその記録を写したもの（この図は新しい判定をしない）。† の箱は決定試験の後の探索・事後の解析で、判定には用いない。日付の間隔は経過日数に比例しない。
 
-数値の出どころ（すべて 02_tables.md を機械で読んだ data/paper2_numbers.json から実行時に埋めた）:
+2026-09-15 の順序（この図に関わる同じ日の 5 つの記録。lab_log の追記番号の順）: 追記139 で拡張期の下降への手当ての候補を挙げ、その (3) が「当てはめの範囲を 0.65T までに切る、または 1 次微分の領域で当てはめる」（実データに当てる前）。追記141 で合成脈波の診断をし、Δμ の下限が主因と読んだ。追記143 で再当てはめ（節C）の予測 P6〜P10 を固定した。追記144 で 5 型を 4,374 名に当て、P6〜P9 はいいえ（P10 は配線の検算で はい）、Δμ の下限に張り付いた拍は 1 拍も無く、合成からの読みは否定された。予測していなかった (6) 0.65T の打ち切り（Δμ の下限 0.01 s と併用）が |ρ| 最大だった。追記145 で、主の割合を 0.65T のまま選び直さないと取り決めた（0.55T・0.75T は感度の記述だけ）。上段の 9/15 の箱の 2 行目はこの取り決めで、5 型の実行の後・9 型の実行の前に書いた。0.65 は追記139 の候補 (3) に由来し、同じ値は第2版の特徴点の探索で切痕を探す上限 `NOTCH_MAX_FRAC`（analysis/src/pda2.py）にもある。追記144・145 は 0.65 の出どころを「24番・追記139」と書いたが、24番（24_pwdb_pda_ablation.py）にあるのは 0.60·T で、0.65 は無い（lab_log 追記162 で訂正）。
+
+選び方による楽観: 9/16〜9/17 の箱の良い版は、当てた 14 型から事後に選んだので、その値は楽観側にある。
+
+数値の出どころ（すべて 02_tables.md を機械で読んだ data/paper2_numbers.json から実行時に埋めた。表の番号は 02_tables.md のもの）:
   crit = 0.30　← meta.criterion.min_median_abs_rho
-  fz_dt = 0.223　← 表1 行 `pda_frozen` dt_pwv.rho
-  fz_ri = 0.207　← 表1 行 `pda_frozen` ri_pvr.rho
-  lm_dt = 0.710　← 表1 行 `landmark` dt_pwv.rho
-  lm_ri = 0.504　← 表1 行 `landmark` ri_pvr.rho
-  amp_dt = 0.836　← 表1 行 `amp_ratio` dt_pwv.rho
-  v2_n = 2　← 表1 行 `pda_v2_skewgauss` dt_pwv.adopted.n
-  v2_of = 4,374　← 表1 行 `pda_v2_skewgauss` dt_pwv.adopted.of
-  v2_dtC = 0.167　← 表1 行 `pda_v2_skewgauss` dt_pwv.stages.C.rho
-  offset = +98.5　← 表6 行 `fb` dt_offset_vs_landmark_ms_A.value
-  t65_A = 0.828　← 表6 行 `trunc065` dt_pwv_A.rho
-  t65_C = 0.596　← 表6 行 `trunc065` dt_pwv_C.rho
-  t65_n2 = 0.454　← 表6c 行 `trunc065`（C 段） dt_pwv.0.02.rho
-  drv_n2 = 0.347　← 表6c 行 `deriv`（C 段） dt_pwv.0.02.rho
+  fz_dt = 0.223　← 02_tables.md 表1（この集の表2） 行 `pda_frozen` dt_pwv.rho
+  fz_ri = 0.207　← 02_tables.md 表1（この集の表2） 行 `pda_frozen` ri_pvr.rho
+  lm_dt = 0.710　← 02_tables.md 表1（この集の表2） 行 `landmark` dt_pwv.rho
+  lm_ri = 0.504　← 02_tables.md 表1（この集の表2） 行 `landmark` ri_pvr.rho
+  amp_dt = 0.836　← 02_tables.md 表1（この集の表2） 行 `amp_ratio` dt_pwv.rho
+  v2_n = 2　← 02_tables.md 表1（この集の表2） 行 `pda_v2_skewgauss` dt_pwv.adopted.n
+  v2_of = 4,374　← 02_tables.md 表1（この集の表2） 行 `pda_v2_skewgauss` dt_pwv.adopted.of
+  v2_dtC = 0.167　← 02_tables.md 表1（この集の表2） 行 `pda_v2_skewgauss` dt_pwv.stages.C.rho
+  lit_best = 0.578　← 02_tables.md 表4（この集の表5a） の参考を除く全行の dt_pwv.rho の最大
+  lit_ref = 0.705　← 02_tables.md 表4（この集の表5a） 行 `landmark_ref` dt_pwv.rho
+  lit_n = 624　← 02_tables.md 表4（この集の表5a） の前書きの数
+  offset = +98.5　← 02_tables.md 表6（この集の表8） 行 `fb` dt_offset_vs_landmark_ms_A.value
+  t6_A = 0.826　← 02_tables.md 表6d（この集の表8b） 行 `dt_trunc065_dmu001`（A 段） type3.rho
+  t6_C = 0.586　← 02_tables.md 表6d（この集の表8b） 行 `dt_trunc065_dmu001`（C 段） type3.rho
+  t55_C = 0.582　← 02_tables.md 表6（この集の表8） 行 `trunc055` dt_pwv_C.rho
+  t65_C = 0.596　← 02_tables.md 表6（この集の表8） 行 `trunc065` dt_pwv_C.rho
+  t75_C = 0.545　← 02_tables.md 表6（この集の表8） 行 `trunc075` dt_pwv_C.rho
+  add3_max = 0.272　← 02_tables.md 表6（この集の表8） の行 decay・reservoir・reservoir_tau015の dt_pwv_C.rho の最大
+  add_max = 0.272　← 02_tables.md 表6（この集の表8） の群 add の行（labels.json）の dt_pwv_C.rho の最大
+  rem_min = 0.545　← 02_tables.md 表6（この集の表8） の群 remove の行（labels.json）の dt_pwv_C.rho の最小
+  sep3_max = 0.059　← 02_tables.md 表7a（この集の補足表 S2a） のtype_id = type3の rho_pooled.value の絶対値の最大
+  t65_n0 = 0.596　← 02_tables.md 表6c（この集の表9） 行 `trunc065`（C 段） dt_pwv.0.rho
+  t65_n2 = 0.454　← 02_tables.md 表6c（この集の表9） 行 `trunc065`（C 段） dt_pwv.0.02.rho
+  drv_n0 = 0.687　← 02_tables.md 表6c（この集の表9） 行 `deriv`（C 段） dt_pwv.0.rho
+  drv_n2 = 0.347　← 02_tables.md 表6c（この集の表9） 行 `deriv`（C 段） dt_pwv.0.02.rho
+  ri_bc_n2 = 0.176　← 02_tables.md 表6c（この集の表9） の行 fb・trunc065・deriv、段 B・Cの ri_pvr.0.02.rho の最大
 
 節目の出典（docs/research/lab_log.md の見出しに照合済み）:
   2026-08-30　上段　研究0 を設計: PWDB の真値に ΔT・RI を当てる　← lab_log 2026-08-30（続き7）; roadmap_v1.md §3
   2026-09-03　上段　判定規準を固定: 全層で予測の向き、中央値 |ρ| ≧ 0.30　← lab_log 2026-09-03「研究0 の事前規準と、実行前に捕まえた列ずれ」; roadmap_v1.md §8
   2026-09-04　上段　第2版の規則と閾値を決定試験の前に凍結　← lab_log 2026-09-04（追記）「決定試験の前に閾値を凍結した」; gate0_rules_v2.md; pda2_thresholds_v2.md
   2026-09-14　上段　型別解析の予測 P1〜P5 を計算の前に固定　← lab_log 追記136（48番の設計・予測固定）
-  2026-09-15　上段　再当てはめの予測 P6〜P10 を固定。0.65T は選び直さない　← lab_log 追記143（節C の設計と予測）・追記145（打ち切りの割合の取り決め）
+  2026-09-15　上段　0.65T の打ち切りを候補に（実データの前）。予測 P6〜P10 を固定　← lab_log 追記139（第3版の候補 (3)「当てはめの範囲を 0.65T までに切る、または 1 次微分の領域で当てはめる」。実データに当てる前）・追記143（節C の設計と予測 P6〜P10）・追記145（打ち切りの割合の取り決め。5 型の実行〈追記144〉の後、9 型の実行の前）
   2026-09-16　上段　(7)(8)(9)(6e) と B 段を走らせる前に設計　← lab_log 追記149（改善候補の設計）・追記151（50番に (7)(8)(9)(6e) と B 段を足した）
   2026-09-17　上段　B 段と雑音の読み方を走らせる前に固定　← lab_log 追記153 §5（--b-stage・--noise の読み方の固定）
-  2026-09-03　下段　判定（記録）: 凍結版 不成立、特徴点法 成立　← lab_log 2026-09-03「研究0 の結果」「【判定の訂正】」; 表1
-  2026-09-06　下段　決定試験（記録）: 第2版 不成立、特徴点法・早期振幅比 成立　← lab_log 追記12（決定試験・順序 2〜6）; 表1
-  2026-09-06　下段　基底と文献の条件を総当たり（31番・33番）　← lab_log 追記13（31番）・追記16〜18（33番）; 表3・表4
-  2026-09-14　下段　型別解析（48番）: P1〜P5 のうち P4 のみ はい　← lab_log 追記137（48番の結果）; 表5; 表6 の凍結版の行（特徴点との差）
-  2026-09-15　下段　合成脈波の診断: 短い到達で ΔT の順位が消える　← lab_log 追記141（合成脈波での診断）
-  2026-09-16　下段　再当てはめ 5・7・10 型（15〜16 日）: P6〜P9 いいえ　← lab_log 追記144（5 型）・追記146（7 型）・追記147（10 型）; 表6・表6b
-  2026-09-17　下段　14 型＋線形分離: 下降を外す・抑える案だけが効く　← lab_log 追記152（50番 14 型・51番）; 表6・表7a
-  2026-09-22　下段　B 段と雑音: 0.65T は雑音に残り、微分領域は崩れる　← lab_log 追記158（B 段 3 型と雑音 0.01・0.02）; 表6c
+  2026-09-03　下段　判定（記録）: 凍結版 不成立、特徴点法 成立　← lab_log 2026-09-03「研究0 の結果」「【判定の訂正】」; 02_tables.md 表1（この集の表2）
+  2026-09-06　下段　決定試験（記録）: 第2版 不成立、特徴点法・早期振幅比 成立　← lab_log 追記12（決定試験・順序 2〜6）; 02_tables.md 表1（この集の表2）
+  2026-09-06　下段　基底と公表された条件を総当たり　← lab_log 追記13（31番・基底の総当たり）・追記16〜18（33番・公表された条件）; 02_tables.md 表3・表4（この集の表4・表5a）
+  2026-09-14　下段　型別解析: P1〜P5 のうち P4 のみ はい　← lab_log 追記137（48番の結果）; 02_tables.md 表5（この集の表6a）; 表6 の凍結版の行（特徴点との差。この集の表8）
+  2026-09-15　下段　合成脈波の診断と、再当てはめ 5 型: P6〜P9 いいえ　← lab_log 追記141（合成脈波での診断。「Δμ の下限が主因」と読んだ）・追記144（節C を 5 型〈(0)(2)(4)(4b)(6)〉で 4,374 名に当てた。P6〜P9 いいえ・P10 はい。Δμ の下限率は全型で 0.000 で、合成からの読みは否定された。(6) は 0.65T の打ち切りに Δμ の下限 0.01 s を併せた版）; 02_tables.md 表6d（この集の表8b）
+  2026-09-16　下段　再当てはめ 7 型・10 型: 割合と項を足す案　← lab_log 追記146（7 型）・追記147（10 型）; 02_tables.md 表6・表6b（この集の表8・補足表 S1）
+  2026-09-17　下段　14 型と、線形分離した後進波との照合　← lab_log 追記152（50番 14 型・51番 線形分離）; 02_tables.md 表6・表7a（この集の表8・補足表 S2a）
+  2026-09-22　下段　B 段と雑音（振幅の 1%・2%）　← lab_log 追記158（B 段 3 型と雑音 0.01・0.02）; 02_tables.md 表6c（この集の表9）
 
 台本と結果ファイル: 20番（20_pwdb_validity.py）・23番（23_pwdb_landmarks.py）・26番（26_pwdb_compare.py）・27番・31番・33番・48番（48_pwdb_by_waveform_type.py）・50番（50_reservoir_bench.py 節A・B・C）・51番（51_pwdb_wave_separation.py）。結果は docs/research/results/ の 33_literature_replica_report.txt・48_pwdb_by_waveform_type.txt・50_reservoir_bench.txt・50_reservoir_bench_C.txt・50_reservoir_bench_BC.txt・50_reservoir_bench_C14.txt・50_reservoir_bench_B3.txt・50_reservoir_bench_noise0.01.txt・50_reservoir_bench_noise0.02.txt・51_wave_separation.txt。このうち 48_pwdb_by_waveform_type.txt・50_reservoir_bench.txt・50_reservoir_bench_C14.txt・50_reservoir_bench_B3.txt・50_reservoir_bench_noise0.01.txt・50_reservoir_bench_noise0.02.txt・51_wave_separation.txt はこの作業木に無い（lab_log 追記137・144・152・158 は Mac 1 側の出力として記録している。図の数値は 02_tables.md を経由して取った）。
 

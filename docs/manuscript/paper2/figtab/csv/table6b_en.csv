@@ -1,4 +1,4 @@
-Waveform type,Width of aortic PWV [m/s],Width of peripheral vascular resistance,Strata with ≥ 8 subjects,Smallest stratum n
+Waveform type,Width of aortic PWV [m/s],Width of peripheral vascular resistance [Pa·s/m³],Strata with ≥ 8 subjects,Smallest stratum n
 "Type 1, notch present",0.114,3.71×10⁷,6 / 6,53
 "Type 3, inflection only",1.431,4.58×10⁷,6 / 6,405
 "Type 4, neither",0.934,2.48×10⁷,3 / 6,29

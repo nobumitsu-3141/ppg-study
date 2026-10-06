@@ -254,6 +254,26 @@ def value_cell(c: dict, suffix: str = "") -> Cell:
     return Cell({"ja": raw, "en": en_from_raw(raw)}, nums=[c["value"]], bold=c.get("bold", False))
 
 
+def renumber(text: str) -> str:
+    """02_tables.md の表番号（表1・表6c など）を、この集の番号（labels.json の table_numbers）に読み替える。
+    JSON から写した文章（注・前書き）にだけ当てる。この台本が書く文はこの集の番号で書いてある。"""
+    tn = LABELS["table_numbers"]
+
+    def sub(m):
+        k = "表" + m.group(1)
+        return tn[k]["ja"] if k in tn else m.group(0)
+    return re.sub(r"表(\d+[a-z]?)(?![a-z0-9])", sub, text)
+
+
+def para_starting(paras: list, head: str) -> str:
+    """注の段落のうち、head で始まるもの（太字の印は外して比べる）。無ければ例外。"""
+    for p in paras:
+        q = p.replace("\n", "")
+        if unbold(q).startswith(head):
+            return q
+    raise ValueError(f"注の段落が見つからない: {head}")
+
+
 def posthoc_notes(table_key_ja: str) -> list:
     """表4 以降に共通の脚注（探索・事後、判定には用いない）。"""
     # labels.json の注記（探索・事後。判定には用いない。主解析に用いるには新たな事前登録が要る）をそのまま使う
@@ -315,7 +335,7 @@ def source_note(t: dict, extra_ja: str = "", extra_en: str = "") -> dict:
 # 表1  事前に決めた解析項目の一覧（prespec_chronology.json ＋ 02_tables の数値）
 # ---------------------------------------------------------------------------
 
-VERDICT_EN = {"不成立": "fail", "成立": "pass", "合格": "pass"}
+VERDICT_EN = {"不成立": "fail", "成立": "pass", "合格": "passed"}
 
 # 行の順（課題の指定）。鍵は prespecified_items の name_ja に含まれる語
 T1_ORDER = ["凍結版", "第2版 歪みガウス", "第2版 ガンマ", "特徴点法（Charlton", "早期振幅比", "陽性対照",
@@ -370,7 +390,7 @@ T1_EN = {
         rule="2026-09-03: if not strongly negative, doubt the comparison itself. 2026-09-04: the whole table is void unless "
              "median |ρ| ≥ 0.50 with every stratum negative",
         frozen="2026-09-03 (script 23); 2026-09-04 (quantified in gate0_rules_v2)",
-        verdict="pass; the table is valid",
+        verdict="passed; the table is valid",
         source="lab_log 2026-09-03 (correction of the verdict); gate0_rules_v2.md; entries 11, 12 §0"),
     "p1 基準": dict(
         name="ΔT with p1 (Hellqvist's systolic peak) as the systolic reference",
@@ -506,7 +526,14 @@ def t1_results(N: dict) -> dict:
          "en": f"{e(unbold(c['dt_pwv']['raw']))}; against carotid–femoral PWV {m.group(1)} ({m.group(2)}/{m.group(3)}), a fail"},
         nums=rc(c["dt_pwv"]).nums + [float(m.group(1)), float(m.group(2)), float(m.group(3))])
     c = r1["ptt_control"]
-    out["陽性対照"] = Cell({"ja": c["dt_pwv"]["raw"], "en": e(c["dt_pwv"]["raw"])}, nums=rc(c["dt_pwv"]).nums)
+    mp = re.search(r"同梱の到達時間の ([\d.]+)%（(\d+) 名）で 1 周期の取り違えがあるためで、周期を直すと ([\d.]+) になる", post)
+    if not mp:
+        raise ValueError("表1 の注から陽性対照の周期の取り違えを取り出せない")
+    out["陽性対照"] = Cell(
+        {"ja": f"{c['dt_pwv']['raw']}。同梱の到達時間の {mp.group(1)}%（{mp.group(2)} 名）で周期の取り違えがあり、直すと {mp.group(3)}（事後。表は有効のまま）",
+         "en": f"{e(c['dt_pwv']['raw'])}; {mp.group(1)}% ({mp.group(2)}) of the supplied transit times are off by one period; corrected, "
+               f"{mp.group(3)} (post hoc; the table stays valid)"},
+        nums=rc(c["dt_pwv"]).nums + [float(mp.group(1)), float(mp.group(2)), float(mp.group(3))])
     m = re.search(r"p1 に置き換えた ΔT は ([\d.]+)（(\d)/(\d)）で、\s*同一の ([\d,]+) 名における自前の特徴点由来 ΔT ([\d.]+) に劣った", post)
     if not m:
         raise ValueError("表1 の注から p1 基準 ΔT の値を取り出せない")
@@ -529,9 +556,14 @@ def t1_results(N: dict) -> dict:
         nums += [float(digit), float(n), pct]
     out["波形の型の分布"] = Cell({"ja": "・".join(parts_ja), "en": "; ".join(parts_en)}, nums=nums)
     # 27番の「A 層・B 層」は感度解析の 2 つの部分（当てはめ直し無し／有り）で、被験者の段（tier A・B・C）ではない。
-    out["27番"] = Cell({"ja": "歪みガウス経路はどの閾値でも不成立。ガンマ経路は A 層・B 層とも閾値・条件で判定が割れる",
-                       "en": "The skew-Gaussian route fails at every threshold; the gamma route splits in both part A and part B"},
-                      nums=[])
+    mg = re.search(r"第2版 ガンマの採用分の ([\d.]+)% は探索範囲の境界に張り付き、範囲を広げると\s*ΔT の A 段は ([\d.]+) になる", post)
+    if not mg:
+        raise ValueError("表1 の注からガンマ経路の張り付きを取り出せない")
+    out["27番"] = Cell({"ja": "歪みガウス経路はどの閾値でも不成立。ガンマ経路は A 層・B 層とも閾値・条件で判定が割れる"
+                             f"（採用分の {mg.group(1)}% が探索範囲の境界にあり、範囲を広げると ΔT の A 段は {mg.group(2)}）",
+                       "en": "The skew-Gaussian route fails at every threshold; the gamma route splits in both part A and part B "
+                             f"({mg.group(1)}% of its accepted fits lie on a search bound; widening the bounds gives {mg.group(2)} for ΔT in tier A)"},
+                      nums=[float(mg.group(1)), float(mg.group(2))])
     r2 = {r["id"]: r for r in t["表2"]["rows"]}
     pd_ = lambda f: unbold(r2[f]["pda_dt"]["raw"])      # noqa: E731
     ld_ = lambda f: unbold(r2[f]["landmark_dt"]["raw"])  # noqa: E731
@@ -628,6 +660,19 @@ def build_table1(N: dict, P: dict) -> Table:
 # 表2  判定表（02 表1）
 # ---------------------------------------------------------------------------
 
+def pc_note(t: dict) -> dict:
+    """02 表1 の注（陽性対照が 0.571 にとどまる理由・第2版 ガンマの張り付き）。数値は注の文から取る。"""
+    para = para_starting(t["postscript"], "陽性対照が ")
+    m = re.search(r"([\d.]+)%（(\d+) 名）.*?周期を直すと ([\d.]+) になる.*?採用分の ([\d.]+)% .*?ΔT の A 段は ([\d.]+) になる", para)
+    if not m:
+        raise ValueError("表1 の注から陽性対照・ガンマの値を取り出せない")
+    return {"ja": renumber(para),
+            "en": f"The positive control stays at {next(r for r in t['rows'] if r['id'] == 'ptt_control')['dt_pwv']['rho']:.3f} because {m.group(1)}% ({m.group(2)} subjects) of the supplied "
+                  f"transit times are one period short; corrected, it is {m.group(3)} (post hoc, exploratory; the table stays valid; lab_log entry 120). "
+                  f"Of the fits accepted by the rebuilt gamma route, {m.group(4)}% lie on a search bound; widening the bounds gives {m.group(5)} for ΔT "
+                  "in tier A (script 27; `docs/research/roadmap_v1.md` §9)."}
+
+
 def build_table2(N: dict) -> Table:
     t = N["tables"]["表1"]
     meta = N["meta"]
@@ -656,10 +701,11 @@ def build_table2(N: dict) -> Table:
                             "'Not evaluated', the index was not evaluated; —, no such index."}),
             ("tier", {"ja": "第2版の 2 行は採択数が少なく段で分けて示す。" + STAGE_NOTE["ja"],
                       "en": "The two rebuilt-version rows accepted few beats and are given by tier. " + STAGE_NOTE["en"]}),
+            ("pc", pc_note(t)),
         ])
     for r in t["rows"]:
         lab = LABELS["methods"][r["id"]]
-        marker = "{tier}" if r["id"].startswith("pda_v2") else ""
+        marker = "{tier}" if r["id"].startswith("pda_v2") else ("{pc}" if r["id"] == "ptt_control" else "")
         v = r["verdict"]
         T.add(
             label_cell(lab["ja"] + marker, lab["en"] + marker, bold=r["label_bold"]),
@@ -680,7 +726,7 @@ def build_table3(N: dict) -> list[Table]:
     I = LABELS["indices"]
     F = LABELS["factors"]
     post = "\n".join(t2["postscript"])
-    ratio_lm = find_num(post, r"脈波伝播速度の列が心拍数の列の (\d+) 倍", 1)
+    ratio_lm = find_num(post, r"脈波伝播速度の行が心拍数の行の (\d+) 倍", 1)
     ratio_pda = find_num(post, r"分解法の ΔT では ([\d.]+) 倍", 1)
     r2 = {r["id"]: r for r in t2["rows"]}
     rho_hr = r2["heart_rate"]["pda_dt"]["raw"]
@@ -695,11 +741,11 @@ def build_table3(N: dict) -> list[Table]:
         notes=[
             ("src", {"ja": "出典: `02_tables.md` 表2（`docs/research/roadmap_v1.md` §9、lab_log 追記12。20番・23番・26番の因子別の表）。",
                      "en": "Source: table 2 of `02_tables.md` (`docs/research/roadmap_v1.md` §9; lab_log entry 12; factor tables of scripts 20, 23 and 26)."}),
-            ("bold", {"ja": f"太字は本文で対比する行・列（脈波伝播速度と心拍数）。特徴点法の ΔT では脈波伝播速度の列が心拍数の列の {ratio_lm} 倍であるのに対し、"
+            ("bold", {"ja": f"太字は本文で対比する行・列（脈波伝播速度と心拍数）。特徴点法の ΔT では脈波伝播速度の行が心拍数の行の {ratio_lm} 倍であるのに対し、"
                             f"分解法の ΔT では {ratio_pda} 倍にとどまる。順位では分解法の ΔT は心拍数（{unbold(rho_hr).split('（')[1].rstrip('）')}）が"
                             f"脈波伝播速度（{unbold(rho_pwv).split('（')[1].rstrip('）')}）を上回る。",
                       "en": f"Bold, the rows and columns contrasted in the text (pulse wave velocity and heart rate). For fiducial-point ΔT the pulse-wave-velocity "
-                            f"column is {ratio_lm} times the heart-rate column; for decomposition ΔT only {ratio_pda} times. In rank terms decomposition ΔT follows "
+                            f"row is {ratio_lm} times the heart-rate row; for decomposition ΔT only {ratio_pda} times. In rank terms decomposition ΔT follows "
                             f"heart rate ({unbold(rho_hr).split('（')[1].rstrip('）')}) more than pulse wave velocity ({unbold(rho_pwv).split('（')[1].rstrip('）')})."}),
         ])
     for r in t2["rows"]:
@@ -899,14 +945,31 @@ def type_label(r: dict, lang: str) -> str:
     return f"{base} ({fmt_int(r['n'])})"
 
 
-def build_table6(N: dict) -> list[Table]:
+def fiducial_all_dt(N: dict) -> str:
+    r = next(x for x in N["tables"]["表5"]["rows"] if x["id"] == "all")
+    return f"{r['landmark_dt_C']['rho']:.3f}"
+
+
+def fiducial_type_dt(N: dict, tid: str) -> str:
+    r = next(x for x in N["tables"]["表5"]["rows"] if x["id"] == tid)
+    return f"{r['landmark_dt_C']['rho']:.3f}"
+
+
+def build_table6(N: dict, P: dict) -> list[Table]:
     t, tb = N["tables"]["表5"], N["tables"]["表5b"]
     n_all = fmt_int(N["meta"]["n_subjects_decision_test"])
     pre = after_bold(t["preamble"][0])
+    m72 = re.search(r"同梱の特徴点がある (\d+) 名（(\d+) 名中）", t["postscript"][0])
+    if not m72:
+        raise ValueError("表5 の注から型4 の特徴点法の人数を取り出せない")
+    # 走らせる前に固定した型別の予測（lab_log 追記136）と結果（追記137）
+    ch = next(c for c in P["chronology"] if "追記136" in c["entry"])
+    pred_ja = re.sub(r"^追記136: ", "", ch["prediction_fixed_before_run"]).strip("「」")
+    mix = para_starting(t["postscript"], "第一に、全例の相関は型の混合を含む。")
     T = Table(
         "table6a", {"ja": "表6a", "en": "Table 6a"},
-        {"ja": "波形の型で分けた年齢層内 Spearman 順位相関（探索・事後）{posthoc}{src}{tier}{defs}{bold}。",
-         "en": "Within-age-stratum Spearman rank correlation by waveform type (exploratory, post hoc){posthoc}{src}{tier}{defs}{bold}."},
+        {"ja": "波形の型で分けた年齢層内 Spearman 順位相関（探索・事後）{posthoc}{src}{tier}{defs}{bold}{mix}{pred}。",
+         "en": "Within-age-stratum Spearman rank correlation by waveform type (exploratory, post hoc){posthoc}{src}{tier}{defs}{bold}{mix}{pred}."},
         {"ja": [c["header_ja"] for c in t["columns"]],
          "en": ["Waveform type (n)", "Fiducial-point ΔT, tier C", "Decomposition ΔT (frozen), tier A", "Early amplitude ratio, tier C",
                 "Fiducial-point RI, tier C", "Decomposition RI (frozen), tier A"]},
@@ -915,14 +978,29 @@ def build_table6(N: dict) -> list[Table]:
                                 "Section C of script 50 reproduces the fiducial-point values of types 1 and 3 from the same input.")),
             ("tier", {"ja": STAGE_NOTE["ja"] + "。特徴点由来の指標は採否の判定を持たないので常に C 段。",
                       "en": STAGE_NOTE["en"] + ". Fiducial-point indices carry no acceptance decision and are therefore always tier C."}),
-            ("defs", {"ja": pre + t["postscript"][0],
+            ("defs", {"ja": renumber(pre + t["postscript"][0]),
                       "en": f"Subjects as in the decision test ({n_all}); waveform type by `pda2.find_landmarks` (type 1, dicrotic notch and "
                             "diastolic peak present as extrema; type 3, no extrema, but the inflection point of the descending limb can stand in; "
                             "type 4, neither found). Six age strata, at least 8 subjects per stratum. Median |ρ|; in parentheses, the number of "
                             "strata with the predicted sign. The three left columns are ΔT × aortic PWV (predicted sign negative; positive for "
-                            "the early amplitude ratio), the two right columns RI × peripheral vascular resistance (positive)."}),
+                            "the early amplitude ratio), the two right columns RI × peripheral vascular resistance (positive). "
+                            f"Fiducial-point values of type 4 are computed on the {m72.group(1)} of {m72.group(2)} subjects with supplied "
+                            "fiducial points (lab_log entries 137, 138)."}),
             ("bold", {"ja": f"太字は規準（{N['meta']['criterion']['bold_rule']}）を満たす値。",
                       "en": f"Bold, criterion met (median |ρ| ≥ {N['meta']['criterion']['min_median_abs_rho']:.2f} with the predicted sign in every stratum)."}),
+            ("mix", {"ja": renumber(unbold(mix)).replace("第一に、", "", 1),
+                     "en": "The correlation in all subjects includes the mixing of types: fiducial-point ΔT is "
+                           f"{fiducial_all_dt(N)} in all subjects but {fiducial_type_dt(N, 'type1')} in type 1 and {fiducial_type_dt(N, 'type3')} "
+                           "in type 3. Within an age stratum, type 1 (notch retained) and type 3 (notch lost) separate and the type itself is a "
+                           "function of stiffness, so the difference between types raises the value in all subjects. This is part of the index "
+                           "reflecting stiffness, not a defect, but within a fixed type the association is weaker than in all subjects."}),
+            ("pred", {"ja": f"走らせる前に固定した予測（lab_log 追記136）: {pred_ja} 結果は {ch['result'].split('。')[0]}（lab_log 追記137）。",
+                      "en": "Predictions fixed before the run (lab_log entry 136): (P1) fiducial-point ΔT × aortic PWV has median |ρ| ≥ 0.30 and a "
+                            "negative sign in every stratum in both types 1 and 3; (P2) frozen ΔT (tier A) differs from fiducial-point ΔT by a median "
+                            "|difference| below 5 ms with |ρ| ≥ 0.30 in type 1, and by at least 20 ms with |ρ| below 0.30 in type 3; (P3) frozen RI "
+                            "(tier A) is within 0.01 of fiducial-point RI with |ρ| within 0.05 in type 1, and does not agree in type 3; (P4) type 4 has "
+                            "at most 3 strata with at least 8 subjects; (P5) the share of type 1 falls monotonically with age. Only P4 was met "
+                            "(P1, P2, P3 and P5 were not; lab_log entry 137)."}),
         ])
     for r in t["rows"]:
         digit = int(r["id"][-1]) if r["id"] != "all" else None
@@ -933,21 +1011,28 @@ def build_table6(N: dict) -> list[Table]:
         T.add(*cells)
 
     pre_b = after_bold(tb["preamble"][0])
+    mu = re.search(r"大動脈PWV は ([^、）]+)、末梢血管抵抗は ([^）。]+)", tb["preamble"][0])
+    if not mu:
+        raise ValueError("表5b の前書きから単位を取り出せない")
+    unit_pvr = mu.group(2)
+    hdr_b = [c["header_ja"] for c in tb["columns"]]
+    hdr_b = [h + f" [{unit_pvr}]" if h == "末梢血管抵抗の幅" else h for h in hdr_b]
     Tb = Table(
         "table6b", {"ja": "表6b", "en": "Table 6b"},
         {"ja": "真値そのものの層内のばらつき（範囲の制限。探索・事後・C 段）{posthoc}{src}{tier}{defs}。",
          "en": "Within-stratum spread of the true values themselves (restriction of range; exploratory, post hoc, tier C){posthoc}{src}{tier}{defs}."},
-        {"ja": [c["header_ja"] for c in tb["columns"]],
-         "en": ["Waveform type", "Width of aortic PWV [m/s]", "Width of peripheral vascular resistance", "Strata with ≥ 8 subjects", "Smallest stratum n"]},
+        {"ja": hdr_b,
+         "en": ["Waveform type", "Width of aortic PWV [m/s]", f"Width of peripheral vascular resistance [{unit_pvr}]", "Strata with ≥ 8 subjects", "Smallest stratum n"]},
         notes=posthoc_notes("表5b") + [
             ("src", source_note(tb)),
             ("tier", STAGE_NOTE),
             ("defs", {"ja": "型1 の値を「手法の失敗」と読んではいけない。型1 に絞ると年齢層の中で大動脈脈波伝播速度がほとんど動かなくなるためで、"
-                            "表6a の型1 の列はどの手法でも低い。四分位範囲の幅を年齢層ごとに出し、層をまたいだ中央値を示す（数値は PWDB の配布物の単位のまま）。"
-                            + tb["postscript"][1] + "太字は本文で対比する値。",
+                            "表6a の型1 の列はどの手法でも低い。四分位範囲の幅を年齢層ごとに出し、層をまたいだ中央値を示す"
+                            f"（数値は PWDB の配布物の単位のまま。大動脈PWV は {mu.group(1)}、末梢血管抵抗は {unit_pvr}）。"
+                            + renumber(tb["postscript"][1]) + "太字は本文で対比する値。",
                       "en": "Type-1 values must not be read as a failure of the methods: restricted to type 1, aortic PWV barely varies within an age "
                             "stratum. The interquartile range was taken per age stratum and its median across strata is shown (units as distributed "
-                            "with PWDB). This table was made after the weakness of type 1 was seen; no prediction was fixed and no test is made. "
+                            f"with PWDB: aortic PWV in {mu.group(1)}, peripheral vascular resistance in {unit_pvr}). This table was made after the weakness of type 1 was seen; no prediction was fixed and no test is made. "
                             "Bold, the values contrasted in the text."}),
         ])
     lab_en = {"type1": LABELS["types"]["type1"]["en"], "type3": LABELS["types"]["type3"]["en"],
@@ -1044,8 +1129,8 @@ T7_TEXT = {
     "trunc065": dict(
         what=("残差だけを拍長の 0.65 倍までで取る。探索範囲・起点・ピークは全長で計算。Δμ の下限は 0.08 s のまま",
               "Residual taken up to 0.65 of the beat only; bounds, starts, peaks use the full beat; Δμ bound unchanged"),
-        why=("追記139 の候補 (3)。0.65 は 24番・追記139 で実データを見る前に置いた値（追記145）",
-             "Candidate (3) of entry 139; 0.65 was set (script 24, entry 139) before real data were seen (entry 145)"),
+        why=("追記139 の候補 (3)。0.65 は実データに当てる前に置いた値で、切痕の探索上限と同じ値（追記139・145）",
+             "Candidate (3) of entry 139; 0.65 fixed before fitting real data; equals the notch search limit (entries 139, 145)"),
         pred=("「主の割合は 0.65T のまま。見てから選び直さない」（追記145）。(6b) は (6) と同じはず（追記144）",
               "'Main fraction stays 0.65T; not re-chosen after seeing the numbers' (entry 145); (6b) should equal (6) (entry 144)"),
         read=("ΔT は A 段・C 段とも規準を満たし特徴点法を上回る。RI は A 段だけ。打ち切りだけが効く（追記146・147）",
@@ -1141,6 +1226,31 @@ def build_table7(N: dict, P: dict) -> Table:
               text_cell(tx["pred"][0], tx["pred"][1], src=src),
               res,
               text_cell(tx["read"][0], tx["read"][1], src=src))
+    # 最後の段: B 段と雑音（02 表6c。問い・走らせる前の読み方・結果は 02 表6c の注と lab_log 追記149・153・158）
+    t6c = N["tables"]["表6c"]
+    rule_para = para_starting(t6c["postscript"], "走らせる前に決めた読み方と結果")
+    src_b = rule_para + " " + " ".join(t6c["preamble"]) + " (6b) (9) 3 148"
+    rb = lambda i, st: next(x for x in t6c["rows"] if x["id"] == i and x["stage"] == st)   # noqa: E731
+    ri_b = rb("trunc065", "B")["ri_pvr"]
+    pr_d = rb("deriv", "A")["pass_rate"]
+    nl = t6c["noise_levels"]
+    pr_raw = pr_d["raw"].split("／")
+    res_b = Cell({"ja": f"(6b) の RI B 段 {ri_b[nl[0]]['raw']}・雑音 1% {ri_b[nl[1]]['raw']}・2% {ri_b[nl[2]]['raw']}。"
+                        f"(9) の通過率 {pr_raw[0]}・{pr_raw[1]}・{pr_raw[2]}",
+                  "en": f"(6b) RI tier B {unbold(ri_b[nl[0]]['raw'])}; 1% {ri_b[nl[1]]['raw']}; 2% {ri_b[nl[2]]['raw']}. "
+                        f"(9) pass rate {pr_raw[0]}, {pr_raw[1]}, {pr_raw[2]}"},
+                 # (6b)・1%・2%・(9) の数は版と雑音の名であってデータではないが、文字列に現れる数の並びとして照合に含める
+                 nums=[6.0, ri_b[nl[0]]["rho"], 1.0, ri_b[nl[1]]["rho"], 2.0, ri_b[nl[2]]["rho"], 9.0] + [pr_d[x] for x in nl])
+    T.add(label_cell("(B) B 段と雑音（凍結版・(6b)・(9) の 3 版）", "(B) Tier B and noise (frozen, (6b), (9))"),
+          text_cell("3 版の共通の採用例（B 段）で比べ、拍に雑音 1%・2% を足して当て直す",
+                    "Common accepted subset of the three fits (tier B); refit with 1% and 2% white noise added", src=src_b),
+          text_cell("(6b) の RI は A 段でしか規準を満たさない（追記149 の問1）。雑音には当てていなかった（追記148）",
+                    "RI of (6b) met the criterion in tier A only (entry 149, question 1); noise untested (entry 148)", src=src_b),
+          text_cell("B 段≥0.30・全層で当てはめの良さ、差<0.10で採用の仕方。雑音 1% で <0.30 なら弱い（追記153）",
+                    "B ≥ 0.30 in all strata: fit quality; < 0.10 above frozen: selection; noise: < 0.30 at 1% (entry 153)", src=src_b),
+          res_b,
+          text_cell("RI は当てはめの良さと採用の仕方の両方で、雑音に残らない。1 次微分は 1% で該当せず、2% で下回る（追記158）",
+                    "RI: fit quality and selection both; not noise-robust. Derivative: rule unmet at 1%, pass rate below at 2% (entry 158)", src=src_b))
     return T
 
 
@@ -1154,12 +1264,20 @@ GROUP_KEY = {"下降を説明する項を足す": "add", "下降を当てはめ�
 def build_table8(N: dict) -> Table:
     t = N["tables"]["表6"]
     n_all = fmt_int(N["meta"]["n_subjects_decision_test"])
+    n3 = fmt_int(next(r for r in N["tables"]["表5"]["rows"] if r["id"] == "type3")["n"])
     post = "\n".join(t["postscript"])
     frac = find_num(post, r"主とする割合 ([\d.]+) は本解析の前に決めた値", 1)
+    omit = para_starting(t["postscript"], "表に載せていない 2 型と、選び方による楽観。")
+    mo = re.search(r"A 段 \(6\) ([\d.]+) 対 \(6b\) ([\d.]+)、\s*通過率 \(4b\) ([\d.]+) 対 \(4\) ([\d.]+)", omit)
+    mix = para_starting(t["postscript"], "参考行の特徴点法の")
+    if not mo:
+        raise ValueError("表6 の注から省いた 2 型の値を取り出せない")
+    lm_t3 = next(r for r in t["rows"] if r["id"] == "landmark")["dt_pwv_C"]["rho"]
     T = Table(
         "table8", {"ja": "表8", "en": "Table 8"},
-        {"ja": f"拡張期の下降の扱いを変えたときの型3 の関連（探索・事後・{n_all} 名）{{posthoc}}{{src}}{{tier}}{{defs}}{{bold}}。",
-         "en": f"Type-3 correlations when the handling of the diastolic decline is changed (exploratory, post hoc, {n_all} subjects){{posthoc}}{{src}}{{tier}}{{defs}}{{bold}}."},
+        {"ja": f"拡張期の下降の扱いを変えたときの型3 の関連（探索・事後。{n_all} 名を当てはめ直した中の型3・{n3} 名）{{posthoc}}{{src}}{{tier}}{{defs}}{{bold}}{{omit}}{{mix}}。",
+         "en": f"Type-3 correlations when the handling of the diastolic decline is changed (exploratory, post hoc; type 3, {n3} of the {n_all} "
+               f"subjects refitted){{posthoc}}{{src}}{{tier}}{{defs}}{{bold}}{{omit}}{{mix}}."},
         {"ja": [c["header_ja"] for c in t["columns"]],
          "en": ["Handling of the diastolic decline", "ΔT × PWV, tier A", "ΔT × PWV, tier C", "RI × resistance, tier A", "RI × resistance, tier C",
                 "Pass rate", "ΔT offset from the supplied fiducial point (tier A)"]},
@@ -1170,15 +1288,27 @@ def build_table8(N: dict) -> Table:
                             "(parameters on a bound, component height, difference in reflection coefficient between competing solutions), i.e. the fraction remaining in tier A."}),
             ("defs", {"ja": "同じ 4,374 名の同じ拍に当てはめ直したもの。2 カーネル模型には拡張期の下降を受ける項が無いので、下降の扱いだけを変えた版を、"
                             "下降を説明する項を足す案と、下降を当てはめの対象から外す・残差の中で小さくする案に分けて並べる。"
-                            f"主とする割合 {frac} は本解析の前に決めた値であり、これらの数値を見て選び直していない（lab_log 追記145）。"
+                            f"主とする割合 {frac} は本解析の前に決めた値であり（lab_log 追記139 の候補 (3)。実データに当てる前。同じ値は第2版の特徴点の探索で"
+                            "切痕を探す上限 `NOTCH_MAX_FRAC` にもある）、これらの数値を見て選び直していない（lab_log 追記145）。T は拍長。"
                             "右端の列は第2成分のピークと同梱の拡張期側の特徴点との差の中央値（正は第2成分が遅い）。",
                       "en": f"Refits of the same beats of the same {n_all} subjects. The two-kernel model has no term for the diastolic decline, so versions "
                             "that change only its handling are grouped into those that add a term for the decline and those that exclude it from the fit "
-                            f"or down-weight it in the residual. The main fraction {frac} was fixed before this analysis and was not re-chosen after seeing these "
-                            "numbers (lab_log entry 145). The last column is the median difference between the peak of the second component and the "
+                            f"or down-weight it in the residual. The main fraction {frac} was fixed before this analysis (candidate (3) of lab_log entry 139, "
+                            "before any real data were fitted; the same value is the upper limit of the notch search, `NOTCH_MAX_FRAC`, of the rebuilt "
+                            "fiducial-point detection) and was not re-chosen after seeing these numbers (lab_log entry 145). T, beat length. The last column is the median difference between the peak of the second component and the "
                             "diastolic fiducial point supplied with PWDB (positive, second component later)."}),
             ("bold", {"ja": f"太字は規準（{N['meta']['criterion']['bold_rule']}）を満たす値。",
                       "en": f"Bold, criterion met (median |ρ| ≥ {N['meta']['criterion']['min_median_abs_rho']:.2f} with the predicted sign in every stratum)."}),
+            ("omit", {"ja": renumber(unbold(omit)),
+                      "en": "Versions not shown and optimism of the selection. Section C fitted 14 versions. (4b) (reservoir term with the delay bound "
+                            "0.01 s) and (6) (0.65 truncation with the same bound) are omitted because relaxing the bound barely changes the values "
+                            f"(type 3, ΔT × aortic PWV, tier A: (6) {mo.group(1)} vs (6b) {mo.group(2)}; pass rate (4b) {mo.group(3)} vs (4) {mo.group(4)}; "
+                            "lab_log entries 144, 146). The better versions were chosen post hoc from 14, so their values are optimistic."}),
+            ("mix", {"ja": renumber(unbold(mix)),
+                     "en": f"The fiducial-point reference of {lm_t3:.3f} is the value within type 3. In all {n_all} subjects fiducial-point analysis "
+                           f"gives {fiducial_all_dt(N)} (table 2); it is lower within type 3 because the type itself depends on stiffness and the "
+                           "difference between types raises the value in all subjects (table 6a). Values of the truncated fit in all subjects and in "
+                           "type 1 are in table 8b. Bold is given only to values that meet the criterion."}),
         ],
         landscape=True)
     seen_group = None
@@ -1195,6 +1325,140 @@ def build_table8(N: dict) -> Table:
 
 
 # ---------------------------------------------------------------------------
+# 表8b  全例・型1・型4 での打ち切りと 1 次微分の領域（02 表6d）
+# ---------------------------------------------------------------------------
+
+T8B_EN = {
+    "dt_fb": "ΔT × aortic PWV, frozen fit",
+    "dt_trunc065_dmu001": "ΔT × aortic PWV, truncated at 0.65T (delay bound 0.01 s)",
+    "dt_landmark": "ΔT × aortic PWV, fiducial-point (supplied; reference)",
+    "ri_fb": "RI × resistance, frozen fit",
+    "ri_deriv": "RI × resistance, derivative domain",
+    "ri_landmark": "RI × resistance, fiducial-point (supplied; reference)",
+}
+
+
+def build_table8b(N: dict) -> Table:
+    t = N["tables"]["表6d"]
+    n = {r["id"]: fmt_int(r["n"]) for r in N["tables"]["表5"]["rows"]}
+    pre = " ".join(p.replace("\n", "") for p in t["preamble"])
+    m = re.search(r"A 段 ([\d.]+) 対 ([\d.]+)、C 段 ([\d.]+) 対 ([\d.]+)", pre)
+    if not m:
+        raise ValueError("表6d の前書きから (6) と (6b) の値を取り出せない")
+    reading = para_starting(t["postscript"], "全例では、打ち切った版の ΔT は")
+    T = Table(
+        "table8b", {"ja": "表8b", "en": "Table 8b"},
+        {"ja": "全例・型1・型4 での打ち切りと 1 次微分の領域（探索・事後）{posthoc}{src}{tier}{defs}{bold}{read}。",
+         "en": "Truncated and derivative-domain fits in all subjects and in types 1 and 4 (exploratory, post hoc){posthoc}{src}{tier}{defs}{bold}{read}."},
+        {"ja": ["指標・当てはめ", "段", f"型1（{n['type1']}）", f"型3（{n['type3']}）", f"型4（{n['type4']}）", f"全例（{n['all']}）"],
+         "en": ["Index, fit", "Tier", f"Type 1 ({n['type1']})", f"Type 3 ({n['type3']})", f"Type 4 ({n['type4']})", f"All ({n['all']})"]},
+        notes=posthoc_notes("表6d") + [
+            ("src", source_note(t)),
+            ("tier", {"ja": STAGE_NOTE["ja"] + "。—は記録に無い値。",
+                      "en": STAGE_NOTE["en"] + ". —, value not recorded."}),
+            ("defs", {"ja": "事前に決めた判定は全例で下したので、記録にある全例・型1・型4 の値を並べる。この実行の打ち切りは 0.65 倍の打ち切りに"
+                            "第2成分の位置の下限 0.01 s を組み合わせた版 (6) で、型3 では (6b) とほぼ同じ"
+                            f"（A 段 {m.group(1)} 対 {m.group(2)}、C 段 {m.group(3)} 対 {m.group(4)}。lab_log 追記146）。(6b) の全例の値は記録に無い。",
+                      "en": "The prespecified decision was made in all subjects, so the recorded values for all subjects and for types 1 and 4 are "
+                            "listed. The truncated fit of this run is version (6), the 0.65 truncation combined with the delay bound 0.01 s, which in "
+                            f"type 3 nearly equals (6b) (tier A {m.group(1)} vs {m.group(2)}, tier C {m.group(3)} vs {m.group(4)}; lab_log entry 146). "
+                            "No all-subject value of (6b) is recorded."}),
+            ("bold", {"ja": "太字は規準（|ρ| の中央値 ≥ 0.30 かつ全 6 層で予測の向き）を満たす値。型4 は 8 名以上の層が 3 層しかなく、全 6 層の規準は評価できない。",
+                      "en": "Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in all 6 strata). Type 4 has only 3 strata with at least "
+                            "8 subjects, so the 6-stratum criterion cannot be evaluated."}),
+            ("read", {"ja": renumber(unbold(reading)),
+                      "en": "In all subjects the truncated fit gives ΔT {c_all} (6/6) in tier C, above the frozen fit ({fb_all}) but below "
+                            "fiducial-point analysis in the same subjects ({lm_all}). Tier A in all subjects is {a_all} but does not meet the criterion "
+                            "in every stratum. In type 1 truncation stays low ({a_t1}, {c_t1}): within an age stratum aortic PWV varies about 1/12 as "
+                            "much as in type 3, so every method gives small values (table 6b). Truncation exceeded fiducial-point analysis in type 3 "
+                            "partly because the fiducial-point value within type 3 is lower than in all subjects (table 8, footnote). RI of the "
+                            "derivative domain is {ri_all} in all subjects, below fiducial-point analysis ({ri_lm})."}),
+        ],
+        landscape=True)
+    rows = {(r["id"], r["stage"]): r for r in t["rows"]}
+    fmt = lambda c: unbold(c["raw"]).split("（")[0]    # noqa: E731
+    T.notes[-1] = ("read", {"ja": T.notes[-1][1]["ja"], "en": T.notes[-1][1]["en"].format(
+        c_all=fmt(rows[("dt_trunc065_dmu001", "C")]["all"]), fb_all=fmt(rows[("dt_fb", "A")]["all"]),
+        lm_all=fmt(rows[("dt_landmark", "C")]["all"]), a_all=fmt(rows[("dt_trunc065_dmu001", "A")]["all"]),
+        a_t1=fmt(rows[("dt_trunc065_dmu001", "A")]["type1"]), c_t1=fmt(rows[("dt_trunc065_dmu001", "C")]["type1"]),
+        ri_all=fmt(rows[("ri_deriv", "C")]["all"]), ri_lm=fmt(rows[("ri_landmark", "C")]["all"]))})
+    for r in t["rows"]:
+        T.add(label_cell(r["label_ja"], T8B_EN[r["id"]]),
+              Cell({"ja": r["stage"], "en": r["stage"]}, nums=[], kind="label"),
+              rho_cell(r["type1"]), rho_cell(r["type3"]), rho_cell(r["type4"]), rho_cell(r["all"]))
+    return T
+
+
+# ---------------------------------------------------------------------------
+# 補足表 S3  追加の検査 C6・C7・C8（02 表6e）
+# ---------------------------------------------------------------------------
+
+S3_EN = {
+    "c6": dict(label="C6 Acceptance × aortic PWV, within-stratum ρ",
+               rule="ρ below −0.10: tier A leans to the low-PWV side",
+               fb="−0.124", trunc065="+0.026 (pass rate by PWV tertile 0.595, 0.278, 0.451)",
+               deriv="−0.542 (same, 0.777, 0.522, 0.361)", fiducial="—",
+               outcome="Frozen and derivative-domain fits lean; truncation does not"),
+    "c7a": dict(label="C7a First component minus forward-wave peak (median)",
+                rule="Within 20 ms: the first component is the forward wave",
+                fb="+34 to +50 ms in all 3 fits", trunc065="same as left", deriv="same as left", fiducial="—",
+                outcome="Not met by any fit; the first component sits at the PPG systolic peak (difference −5 to −8 ms, tier C)"),
+    "c7b": dict(label="C7b Time of the first component × aortic PWV, within-stratum ρ",
+                rule="|ρ| ≥ 0.30: part of the ΔT variation comes from the first component",
+                fb="−0.129 (tier C)", trunc065="−0.489 (tier C), −0.794 (tier A)", deriv="−0.729 (tier C)", fiducial="—",
+                outcome="Met by truncation and the derivative domain; in tier A of truncation the first component is 31 ms before the systolic peak"),
+    "c8_dt": dict(label="C8 Main effects of the factors on ΔT",
+                  rule="Negative PWV effect and smaller heart-rate and ejection-time effects than the frozen fit: those effects are reduced",
+                  fb="PWV −15.9% (−0.23), heart rate −16.8% (−0.58)",
+                  trunc065="PWV −40.9% (−0.56), heart rate −18.3% (−0.41), mean arterial pressure −11.9%",
+                  deriv="PWV −54.8% (−0.64), heart rate −3.9% (−0.18), mean arterial pressure −13.7%, stroke volume +15.6%",
+                  fiducial="PWV −21.1% (−0.40), heart rate −5.3%, stroke volume +20.4% (+0.60)",
+                  outcome="Met by the derivative domain; not by truncation (only the PWV effect grew)"),
+    "c8_ri": dict(label="C8 Main effects of the factors on RI",
+                  rule="Not fixed (descriptive)",
+                  fb="PWV largest (value not recorded)", trunc065="PWV +84%", deriv="PWV +86%", fiducial="PWV +46%",
+                  outcome="PWV has the largest effect in every fit; mean arterial pressure +24 to 35%"),
+}
+
+
+def build_tableS3(N: dict) -> Table:
+    t = N["tables"]["表6e"]
+    reading = para_starting(t["postscript"], "打ち切った版の ΔT の改善は")
+    T = Table(
+        "tableS3", {"ja": "補足表 S3", "en": "Table S3"},
+        {"ja": "追加の検査: 採否の偏り（C6）・第1成分の位置（C7）・因子ごとの主効果（C8）（型3・探索・事後）{posthoc}{src}{tier}{defs}{read}。",
+         "en": "Additional checks: acceptance bias (C6), position of the first component (C7) and main effects of the factors (C8) "
+               "(type 3; exploratory, post hoc){posthoc}{src}{tier}{defs}{read}."},
+        {"ja": [c["header_ja"] for c in t["columns"]],
+         "en": ["Check", "Reading fixed before the run", "Frozen", "Truncated at 0.65T (6b)", "Derivative domain (9)",
+                "Fiducial-point (supplied; reference)", "Result"]},
+        notes=posthoc_notes("表6e") + [
+            ("src", source_note(t)),
+            ("tier", STAGE_NOTE),
+            ("defs", {"ja": renumber(" ".join(p.replace("\n", "") for p in t["preamble"])),
+                      "en": "The readings were fixed before the run (lab_log entry 153 §5); results from lab_log entry 158 §2. C6 is the "
+                            "within-stratum Spearman ρ between acceptance (1, accepted; 0, not) and aortic PWV over all subjects (tier C). In C7, "
+                            "t1 is the peak time of the first component and the forward-wave peak comes from linear separation of the digital "
+                            "pressure and flow (script 51). C8 uses the main effects of table 3 (difference between the +1 SD and −1 SD means ÷ "
+                            "stratum mean, %; in parentheses the within-stratum ρ), type 3, tier C."}),
+            ("read", {"ja": renumber(unbold(reading)),
+                      "en": "The ΔT gain of the truncated fit is not explained by movement of the second component alone: the time of the "
+                            "first component also moves with aortic PWV (−0.489). Tier A of the derivative domain leans to the low-PWV side "
+                            "(−0.542), so its tier-A value (0.523) is below its tier-C value (0.687)."}),
+        ],
+        landscape=True, small=True)
+    for r in t["rows"]:
+        en = S3_EN[r["id"]]
+        cells = [label_cell(r["label_ja"], en["label"])]
+        for key, ek in (("rule", "rule"), ("fb", "fb"), ("trunc065", "trunc065"), ("deriv", "deriv"),
+                        ("landmark", "fiducial"), ("outcome", "outcome")):
+            ja = r[key]["text"] if isinstance(r[key], dict) and "text" in r[key] else r[key].get("raw", "")
+            cells.append(text_cell(ja, en[ek], src=ja))
+        T.add(*cells)
+    return T
+
+
+# ---------------------------------------------------------------------------
 # 表9  B 段と雑音（02 表6c）
 # ---------------------------------------------------------------------------
 
@@ -1205,10 +1469,17 @@ def build_table9(N: dict) -> Table:
     if not m:
         raise ValueError("表6c の前書きから B 段の人数を取り出せない")
     b_def = N["meta"]["stage_definitions"]["B"]["text"]
+    rule_para = para_starting(t["postscript"], "走らせる前に決めた読み方と結果")
+    mr = re.search(r"0\.30 以上かつ全層で予測の向きなら当てはめの良さ、凍結版の B 段との差が ([\d.]+) 未満なら採用の仕方.*?"
+                   r"結果は ([\d.]+)（6/6）・凍結版との差 ([\d.]+) で.*?C 段 ([\d.]+)、雑音で ([\d.]+)・([\d.]+) に落ちる.*?"
+                   r"1% では ([\d.]+)・([\d.]+) と\s*該当せず、2% で通過率 ([\d.]+) と", rule_para)
+    if not mr:
+        raise ValueError("表6c の注から読み方と結果の数値を取り出せない")
+    rule_nums = ["0.30"] + list(mr.groups())
     T = Table(
         "table9", {"ja": "表9", "en": "Table 9"},
-        {"ja": "B 段と、雑音を足した実行（型3・探索・事後）{posthoc}{src}{tier}{noise}{ref}{bold}。",
-         "en": "Tier B and runs with added noise (type 3; exploratory, post hoc){posthoc}{src}{tier}{noise}{ref}{bold}."},
+        {"ja": "B 段と、雑音を足した実行（型3・探索・事後）{posthoc}{src}{tier}{noise}{ref}{rule}{bold}。",
+         "en": "Tier B and runs with added noise (type 3; exploratory, post hoc){posthoc}{src}{tier}{noise}{ref}{rule}{bold}."},
         {"ja": [c["header_ja"] for c in t["columns"]],
          "en": ["Handling of the diastolic decline", "Tier", "ΔT × PWV, no noise", "1%", "2%", "RI × resistance, no noise", "1%", "2%",
                 "Pass rate, none / 1% / 2%"]},
@@ -1220,8 +1491,21 @@ def build_table9(N: dict) -> Table:
             ("noise", {"ja": "雑音は拍の峰から谷までの振幅に対する比を標準偏差とする白色ガウス雑音で、波形の型と特徴点は雑音を足す前の拍から付けた。",
                        "en": "Noise is white Gaussian noise whose SD is the stated fraction of the peak-to-trough amplitude of the beat; waveform type and "
                              "fiducial points were assigned on the beat before noise was added."}),
-            ("ref", {"ja": "同梱の特徴点法の C 段は雑音を足していない拍の値であり、雑音の列では同じ条件の比較になっていない。",
-                     "en": "The fiducial-point reference (tier C) is computed on the noise-free beats, so in the noise columns it is not a like-for-like comparison."}),
+            ("ref", {"ja": "同梱の特徴点法の C 段は雑音を足していない拍の値であり、雑音の列では同じ条件の比較になっていない"
+                           "（雑音を足した拍に特徴点法を当て直す比較は未実施）。B 段で値が動くのは共通例の集まりが変わるため。",
+                     "en": "The fiducial-point reference (tier C) is computed on the noise-free beats, so in the noise columns it is not a like-for-like "
+                           "comparison (refitting fiducial points on the noisy beats has not been done); its tier-B value moves only because the "
+                           "common subset changes."}),
+            ("rule", {"ja": renumber(unbold(rule_para)),
+                      "en": "Readings fixed before the run and results (lab_log entries 153 §5, 158). Tier B asks whether the RI of the truncated fit "
+                            "meets the criterion only in tier A because of fit quality or because of selection (entry 149, question 1). Rule: tier B of "
+                            f"the truncated fit at least {rule_nums[0]} in all strata, fit quality; within {rule_nums[1]} of the frozen fit's tier B, "
+                            f"selection; in between, both. Result {rule_nums[2]} (6/6), {rule_nums[3]} above the frozen fit: fit quality by the rule, "
+                            f"but tier B is a subset favourable to decomposition, tier C is {rule_nums[4]} and noise lowers it to {rule_nums[5]} and "
+                            f"{rule_nums[6]}, so it was read as both. Noise rule: at 1% noise, a pass rate of the derivative-domain fit below "
+                            f"{rule_nums[0]} or type-3 tier-C ΔT × aortic PWV below {rule_nums[0]} means fragile; at 1% the values were "
+                            f"{rule_nums[7]} and {rule_nums[8]} (not met); at 2% the pass rate fell to {rule_nums[9]}, below the same threshold. "
+                            "Bold used the stratum directions in the result files; the stratum counts are not copied into this table."}),
             ("bold", {"ja": f"太字は規準（{N['meta']['criterion']['bold_rule']}）を満たす値。",
                       "en": f"Bold, criterion met (median |ρ| ≥ {N['meta']['criterion']['min_median_abs_rho']:.2f} with the predicted sign in every stratum)."}),
         ],
@@ -1352,7 +1636,8 @@ def build_tableS2(N: dict) -> list[Table]:
 
 def build_all(N: dict, P: dict) -> list[Table]:
     return ([build_table1(N, P), build_table2(N)] + build_table3(N) + [build_table4(N)] + build_table5(N)
-            + build_table6(N) + [build_table7(N, P), build_table8(N), build_table9(N), build_tableS1(N)] + build_tableS2(N))
+            + build_table6(N, P) + [build_table7(N, P), build_table8(N), build_table8b(N), build_table9(N), build_tableS1(N)]
+            + build_tableS2(N) + [build_tableS3(N)])
 
 
 def load_prespec(path: Path = PRESPEC) -> dict:
@@ -1625,7 +1910,7 @@ def selftest() -> int:
     N0, P0 = load_numbers(), load_prespec()
     tables = build_all(N0, P0)
     fresh = build_all(load_numbers(), load_prespec())     # JSON を読み直して組み直したもの（照合の相手）
-    rep("表の数が 16（表1〜表9・S1・S2a・S2b）", len(tables) == 16, str(len(tables)))
+    rep("表の数が 18（表1〜表9・表8b・S1・S2a・S2b・S3）", len(tables) == 18, str(len(tables)))
     t1_verdict = {"凍結版": "pda_frozen", "第2版 歪みガウス": "pda_v2_skewgauss", "第2版 ガンマ": "pda_v2_gamma",
                   "特徴点法（Charlton": "landmark", "早期振幅比": "amp_ratio", "陽性対照": "ptt_control"}
     r1 = {r["id"]: r for r in N0["tables"]["表1"]["rows"]}
@@ -1717,7 +2002,7 @@ def selftest() -> int:
             # 書き出して読み直す
             paths = write_all(tables, lang, tmpd, tmpd / "out")
             texts, n_tables, hdr_bold = docx_texts(tmpd / f"tables_{lang}.docx")
-            rep("docx が開けて表の数が 16", n_tables == len(tables), str(n_tables))
+            rep("docx が開けて表の数が 18", n_tables == len(tables), str(n_tables))
             rep("docx の見出し行が太字", hdr_bold)
             csv_bad = []
             for T in tables:

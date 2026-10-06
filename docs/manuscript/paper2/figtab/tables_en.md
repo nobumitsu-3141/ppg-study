@@ -13,11 +13,11 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 | Rebuilt decomposition, gamma route (reported alongside) | Robustness check (table 2, row 3) | 'A pass of the gamma route alone is not written as a pass of PDA'; the proportion of parameters on a bound and the script-27 part-B (refitting) 'widen the search bounds' verdict are reported alongside [frozen 2026-09-04] | ΔT: accepted 103; tier A 0.798 (3/4 strata); tier C 0.556 (6/6). RI: tier A 0.609 (4/4); tier C 0.280 (6/6) | fail (the verdict splits across thresholds and conditions in script 27) | gate0_rules_v2.md; entries 12, 13 |
 | Fiducial-point analysis (indices supplied with PWDB, same waveforms): ΔT, RI; secondary SI, AGI_mod, AI, ΔT × carotid–femoral PWV | Control: only the index construction differs (table 2, row 4) | Same criterion imported from script 20. Reading fixed before the run: 'fiducial-point analysis also fails → the failure is not specific to PDA'; 'only fiducial-point analysis passes → the failure is specific to PDA'; 'model-derived PTT not strongly negative → doubt the comparison itself' [frozen 2026-09-03 (before script 23 was run)] | ΔT 0.710 (6/6); RI 0.504 (6/6). Secondary: SI 0.710 and AGI_mod 0.885 pass, AI 0.143 fails | pass (AI alone fails). The failure is specific to decomposition; the full withdrawal was retracted | lab_log 2026-09-03 (control experiment; correction of the verdict); roadmap §8; reproduced in entry 12 |
 | Early amplitude ratio Am_b/Am_p1 (Hellqvist 2024) × aortic PWV | Fourth method, exploratory (table 2, row 5) | 'If it passes and is at least equal to the median of fiducial-point ΔT (a difference within 0.05 counts as equal), the candidate primary index of study 2 switches to Am_b/Am_p1 and ΔT becomes secondary'; 'a 5–95% width below 0.05 is read as no discrimination' [frozen 2026-09-04] | 0.836 (6/6); against carotid–femoral PWV 0.758 (5/6), a fail | pass (fails against carotid–femoral PWV). Candidate primary index of study 2 switched to Am_b/Am_p1 | gate0_rules_v2.md; entry 12 §3-4 |
-| Positive control: model-derived pulse transit time × aortic PWV | Check of the analysis pipeline (table 2, row 6) | 2026-09-03: if not strongly negative, doubt the comparison itself. 2026-09-04: the whole table is void unless median \|ρ\| ≥ 0.50 with every stratum negative [frozen 2026-09-03 (script 23); 2026-09-04 (quantified in gate0_rules_v2)] | 0.571 (6/6) | pass; the table is valid | lab_log 2026-09-03 (correction of the verdict); gate0_rules_v2.md; entries 11, 12 §0 |
+| Positive control: model-derived pulse transit time × aortic PWV | Check of the analysis pipeline (table 2, row 6) | 2026-09-03: if not strongly negative, doubt the comparison itself. 2026-09-04: the whole table is void unless median \|ρ\| ≥ 0.50 with every stratum negative [frozen 2026-09-03 (script 23); 2026-09-04 (quantified in gate0_rules_v2)] | 0.571 (6/6); 22.2% (972) of the supplied transit times are off by one period; corrected, 0.986 (post hoc; the table stays valid) | passed; the table is valid | lab_log 2026-09-03 (correction of the verdict); gate0_rules_v2.md; entries 11, 12 §0 |
 | ΔT with p1 (Hellqvist's systolic peak) as the systolic reference | Exploratory (note to table 2) | 'If p1-based ΔT and our own fiducial-point ΔT differ greatly in type 3, replace the systolic reference of fiducial-point ΔT by p1' [frozen 2026-09-04] | 0.423 (5/6); in the same 4,269 subjects, below our own fiducial-point ΔT 0.536 | fail; p1 is not adopted (the rule's row does not apply) | gate0_rules_v2.md; entry 12 §3-5 |
 | DPS (difference of component widths, Goswami 2010) | Descriptive | 'If the DPS of the rebuilt skew-Gaussian route is monotonic in the true value, add it as a secondary index of study 2 (sign not decided post hoc; reported as description)' [frozen 2026-09-04] | The primary (skew-Gaussian) route accepted 2 beats, so tier A is not evaluable; tier-C values are reported as description only | descriptive only (the rule presupposes an accepted decomposition, so it is not applied) | gate0_rules_v2.md; entry 12 §3-7 |
 | Waveform-type distribution (script 26, table 2) and handling of types 3 and 4 | Condition for reading the verdict | 'If type 3 is frequent, the PDA verdict rests on type-1 beats and type 3 is read with fiducial points, p1 and the early amplitude ratio; report n of type 3 and the script-27 part-A "include type 3" verdict'; 'no ΔT-type index can be defined for type 4; report its n and discuss it with the early amplitude ratio only' [frozen 2026-09-04] | type 1 891 (20.4%); type 3 3,378 (77.2%); type 4 105 (2.4%) | read as the rule prescribes: the decomposition verdict rests on type-1 beats; type 3 read with fiducial points, p1 and the early amplitude ratio; type 4 with the early amplitude ratio only | gate0_rules_v2.md; entry 12 §1, §3-6 |
-| Threshold sensitivity analysis (script 27): part A, acceptance recomputed without refitting; part B, refitted on a fixed subset of 624 subjects under 14 conditions | Check that the conclusion is not a product of the thresholds | 'If every threshold gives the same answer, the conclusion is not a product of the thresholds; if it splits, write the range and do not write pass'. The part-B subset is fixed to subj_no % 7 == 0 and is not re-chosen after seeing results [frozen 2026-09-04 (lab_log: thresholds frozen before the decision test)] | The skew-Gaussian route fails at every threshold; the gamma route splits in both part A and part B | reflected in the two rebuilt-version rows of table 2 | pda2_thresholds_v2.md; entry 12 §2 |
+| Threshold sensitivity analysis (script 27): part A, acceptance recomputed without refitting; part B, refitted on a fixed subset of 624 subjects under 14 conditions | Check that the conclusion is not a product of the thresholds | 'If every threshold gives the same answer, the conclusion is not a product of the thresholds; if it splits, write the range and do not write pass'. The part-B subset is fixed to subj_no % 7 == 0 and is not re-chosen after seeing results [frozen 2026-09-04 (lab_log: thresholds frozen before the decision test)] | The skew-Gaussian route fails at every threshold; the gamma route splits in both part A and part B (87.4% of its accepted fits lie on a search bound; widening the bounds gives 0.119 for ΔT in tier A) | reflected in the two rebuilt-version rows of table 2 | pda2_thresholds_v2.md; entry 12 §2 |
 | Table 3: within-stratum main effect of each varied factor (descriptive) | Mechanism, descriptive | 'If the main factor moving ΔT is PWV and the main factor moving RI is MBP, the concept holds' [frozen 2026-09-03] | Decomposition ΔT: PWV −17.0 (−0.26), heart rate −10.9 (−0.54), aortic diameter −12.6 (−0.37)%. Fiducial-point ΔT: PWV −31.2, heart rate −2.6%. Decomposition RI: heart rate −40.3 (−0.37), PWV +33.7 (−0.17), mean arterial pressure +24.2 (−0.00)% | not as conceived: for decomposition ΔT the heart-rate effect is of the same order as that of pulse wave velocity, and the main factor of RI is not mean arterial pressure (MBP) | lab_log 2026-09-03 (results of study 0; correction of the verdict); entry 12; table 3 (02_tables table 2) |
 | Table 3b: one-factor-at-a-time sweep (descriptive) | Mechanism, descriptive | As above (values of the subjects in which one factor alone is varied) [frozen 2026-09-03] | The PWV row reverses most: ΔT 332.3 → 352.8 → 251.2 ms, RI 0.325 → 0.254 → 0.647 | the response is not monotonic (the correspondence of the components exchanges) | lab_log 2026-09-03 (results of study 0); table 3b (02_tables table 2b) |
 | Table 3c: true transit times from the model onset-time table (descriptive) | True values, descriptive | 'Compare the width of the true radial→finger transit time with the within-case SD of T2−T1 in VitalDB (≈18 ms)' [frozen 2026-09-03] | Aortic root→finger 96 ms (66–120 ms), radial→finger 8 ms (4–16 ms). ρ(aortic PWV, root→finger) −0.99 (6/6); ρ(decomposition ΔT, same) +0.19 (6/6) | the width of the true radial→finger transit time is narrower than the VitalDB within-case SD; decomposition ΔT barely tracks the true transit time | lab_log 2026-09-03 (results of study 0); table 3c (02_tables table 2c) |
@@ -37,13 +37,15 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 | Decomposition, rebuilt version, gamma route<sup>c</sup> | accepted 103; tier A 0.798 (3/4 strata); tier C 0.556 (6/6) | tier A 0.609 (4/4); tier C 0.280 (6/6) | fail |
 | **Fiducial-point analysis (same waveforms, database-supplied)** | **0.710 (6/6)** | **0.504 (6/6)** | **pass** |
 | **Early amplitude ratio Am_b/Am_p1** | **0.836 (6/6)** | not evaluated | **pass** |
-| Model-derived pulse transit time (positive control) | 0.571 (6/6) | — | pass |
+| Model-derived pulse transit time (positive control)<sup>d</sup> | 0.571 (6/6) | — | passed |
 
 <sup>a</sup> Source: table 1 of `02_tables.md` (`docs/research/roadmap_v1.md` §9; lab_log entry 12). Frozen version: script 20 `20_pwdb_validity.py`; fiducial-point analysis and positive control: script 23 `23_pwdb_landmarks.py`; rebuilt version and early amplitude ratio: scripts 26 `26_pwdb_compare.py` and 27 `27_threshold_sensitivity.py` (`data/pwdb/pwdb_compare.csv`, `pwdb_compare_report.txt`).
 
 <sup>b</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum). 'Not evaluated', the index was not evaluated; —, no such index.
 
 <sup>c</sup> The two rebuilt-version rows accepted few beats and are given by tier. Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+
+<sup>d</sup> The positive control stays at 0.571 because 22.2% (972 subjects) of the supplied transit times are one period short; corrected, it is 0.986 (post hoc, exploratory; the table stays valid; lab_log entry 120). Of the fits accepted by the rebuilt gamma route, 87.4% lie on a search bound; widening the bounds gives 0.119 for ΔT in tier A (script 27; `docs/research/roadmap_v1.md` §9).
 
 ## Table 3
 
@@ -60,7 +62,7 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 <sup>a</sup> Source: table 2 of `02_tables.md` (`docs/research/roadmap_v1.md` §9; lab_log entry 12; factor tables of scripts 20, 23 and 26).
 
-<sup>b</sup> Bold, the rows and columns contrasted in the text (pulse wave velocity and heart rate). For fiducial-point ΔT the pulse-wave-velocity column is 12 times the heart-rate column; for decomposition ΔT only 1.6 times. In rank terms decomposition ΔT follows heart rate (−0.54) more than pulse wave velocity (−0.26).
+<sup>b</sup> Bold, the rows and columns contrasted in the text (pulse wave velocity and heart rate). For fiducial-point ΔT the pulse-wave-velocity row is 12 times the heart-rate row; for decomposition ΔT only 1.6 times. In rank terms decomposition ΔT follows heart rate (−0.54) more than pulse wave velocity (−0.26).
 
 ## Table 3b
 
@@ -161,7 +163,7 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 ## Table 6a
 
-**Table 6a.** Within-age-stratum Spearman rank correlation by waveform type (exploratory, post hoc)<sup>a, b, c, d, e</sup>.
+**Table 6a.** Within-age-stratum Spearman rank correlation by waveform type (exploratory, post hoc)<sup>a, b, c, d, e, f, g</sup>.
 
 | Waveform type (n) | Fiducial-point ΔT, tier C | Decomposition ΔT (frozen), tier A | Early amplitude ratio, tier C | Fiducial-point RI, tier C | Decomposition RI (frozen), tier A |
 |---|---|---|---|---|---|
@@ -176,15 +178,19 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 <sup>c</sup> Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. Fiducial-point indices carry no acceptance decision and are therefore always tier C.
 
-<sup>d</sup> Subjects as in the decision test (4,374); waveform type by `pda2.find_landmarks` (type 1, dicrotic notch and diastolic peak present as extrema; type 3, no extrema, but the inflection point of the descending limb can stand in; type 4, neither found). Six age strata, at least 8 subjects per stratum. Median |ρ|; in parentheses, the number of strata with the predicted sign. The three left columns are ΔT × aortic PWV (predicted sign negative; positive for the early amplitude ratio), the two right columns RI × peripheral vascular resistance (positive).
+<sup>d</sup> Subjects as in the decision test (4,374); waveform type by `pda2.find_landmarks` (type 1, dicrotic notch and diastolic peak present as extrema; type 3, no extrema, but the inflection point of the descending limb can stand in; type 4, neither found). Six age strata, at least 8 subjects per stratum. Median |ρ|; in parentheses, the number of strata with the predicted sign. The three left columns are ΔT × aortic PWV (predicted sign negative; positive for the early amplitude ratio), the two right columns RI × peripheral vascular resistance (positive). Fiducial-point values of type 4 are computed on the 72 of 105 subjects with supplied fiducial points (lab_log entries 137, 138).
 
 <sup>e</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+<sup>f</sup> The correlation in all subjects includes the mixing of types: fiducial-point ΔT is 0.710 in all subjects but 0.343 in type 1 and 0.430 in type 3. Within an age stratum, type 1 (notch retained) and type 3 (notch lost) separate and the type itself is a function of stiffness, so the difference between types raises the value in all subjects. This is part of the index reflecting stiffness, not a defect, but within a fixed type the association is weaker than in all subjects.
+
+<sup>g</sup> Predictions fixed before the run (lab_log entry 136): (P1) fiducial-point ΔT × aortic PWV has median |ρ| ≥ 0.30 and a negative sign in every stratum in both types 1 and 3; (P2) frozen ΔT (tier A) differs from fiducial-point ΔT by a median |difference| below 5 ms with |ρ| ≥ 0.30 in type 1, and by at least 20 ms with |ρ| below 0.30 in type 3; (P3) frozen RI (tier A) is within 0.01 of fiducial-point RI with |ρ| within 0.05 in type 1, and does not agree in type 3; (P4) type 4 has at most 3 strata with at least 8 subjects; (P5) the share of type 1 falls monotonically with age. Only P4 was met (P1, P2, P3 and P5 were not; lab_log entry 137).
 
 ## Table 6b
 
 **Table 6b.** Within-stratum spread of the true values themselves (restriction of range; exploratory, post hoc, tier C)<sup>a, b, c, d</sup>.
 
-| Waveform type | Width of aortic PWV [m/s] | Width of peripheral vascular resistance | Strata with ≥ 8 subjects | Smallest stratum n |
+| Waveform type | Width of aortic PWV [m/s] | Width of peripheral vascular resistance [Pa·s/m³] | Strata with ≥ 8 subjects | Smallest stratum n |
 |---|---|---|---|---|
 | Type 1, notch present | **0.114** | 3.71×10⁷ | 6 / 6 | 53 |
 | Type 3, inflection only | **1.431** | 4.58×10⁷ | 6 / 6 | 405 |
@@ -197,7 +203,7 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 <sup>c</sup> Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
 
-<sup>d</sup> Type-1 values must not be read as a failure of the methods: restricted to type 1, aortic PWV barely varies within an age stratum. The interquartile range was taken per age stratum and its median across strata is shown (units as distributed with PWDB). This table was made after the weakness of type 1 was seen; no prediction was fixed and no test is made. Bold, the values contrasted in the text.
+<sup>d</sup> Type-1 values must not be read as a failure of the methods: restricted to type 1, aortic PWV barely varies within an age stratum. The interquartile range was taken per age stratum and its median across strata is shown (units as distributed with PWDB: aortic PWV in m/s, peripheral vascular resistance in Pa·s/m³). This table was made after the weakness of type 1 was seen; no prediction was fixed and no test is made. Bold, the values contrasted in the text.
 
 ## Table 7
 
@@ -212,12 +218,13 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 | (3) Free exponential decay term | A free exponential decay d·exp(−(t−t0)/τ) added (same form as A1 of script 24; 10 parameters) | Script-24 term, untested on PWDB (entry 139); failed in synthetic beats, but the decline dominates real data (entry 144 §4) | No numerical prediction: 'see how it behaves in real data' (entries 144, 145) | ΔT tier C 0.272 (6/6); RI tier C 0.258 (6/6); pass rate 0.591 | Only slightly better than the frozen fit; τ reaches its lower bound, degenerating like (4) (entry 146) |
 | (7) Output-side convolution of the two-component sum | Two-component sum replaced by its convolution with a unit-area exponential kernel (9 parameters); ΔT, RI from unconvolved peaks | Closest to the generation of the PWDB PPG (Charlton 2019, eq. A1), without the degenerate direction of (4) (entry 149) | Caveat: 'the PWDB PPG is generated in this form, so favoured in silico'; expected to work (entries 149, 152) | ΔT tier C 0.267 (2/6); RI tier C 0.361 (4/6); pass rate 0.728 | Fits waveform best yet ΔT tracks worse than frozen fit; freedom for the decline leaves component 2 undetermined (entry 152) |
 | (8) Two-stage: τ from the last 30%, deconvolve, then frozen fit | τ estimated from the last 30% of the beat, deconvolution x = y + τ·y′, then the frozen fit | Corresponds to reservoir studies that estimate the time constant from late diastole (entry 149) | 'Uses a derivative, so sensitive to noise'; no numerical prediction (entry 149) | ΔT tier C 0.012 (4/6); RI tier C 0.195 (6/6); pass rate 0.086 | Deconvolution overshoots, lifting diastole; the width of component 2 hits its upper bound; pass rate near the lowest (entry 152) |
-| (6b) Fit truncated at 0.65 of the beat length | Residual taken up to 0.65 of the beat only; bounds, starts, peaks use the full beat; Δμ bound unchanged | Candidate (3) of entry 139; 0.65 was set (script 24, entry 139) before real data were seen (entry 145) | 'Main fraction stays 0.65T; not re-chosen after seeing the numbers' (entry 145); (6b) should equal (6) (entry 144) | ΔT tier C **0.596 (6/6)**; RI tier C 0.107 (6/6); pass rate 0.413 | ΔT meets the criterion in tiers A and C, above fiducial-point analysis; RI only in tier A (entries 146, 147) |
+| (6b) Fit truncated at 0.65 of the beat length | Residual taken up to 0.65 of the beat only; bounds, starts, peaks use the full beat; Δμ bound unchanged | Candidate (3) of entry 139; 0.65 fixed before fitting real data; equals the notch search limit (entries 139, 145) | 'Main fraction stays 0.65T; not re-chosen after seeing the numbers' (entry 145); (6b) should equal (6) (entry 144) | ΔT tier C **0.596 (6/6)**; RI tier C 0.107 (6/6); pass rate 0.413 | ΔT meets the criterion in tiers A and C, above fiducial-point analysis; RI only in tier A (entries 146, 147) |
 | (6c) Truncated at 0.55 of the beat | Differs from (6b) only in the truncation fraction (0.55; Δμ bound 0.08 s unchanged) | Descriptive check that the conclusion is insensitive to the chosen fraction (entry 145, rule 2) | 'Even if 0.55 or 0.75 comes out better, the main fraction is written as 0.65T' (entry 145, rule 3) | ΔT tier C 0.582 (6/6); RI tier C 0.182 (3/6); pass rate 0.156 | Tier C at the level of 0.65, all strata in direction; lowest pass rate among the fractions (entry 147) |
 | (6d) Truncated at 0.75 of the beat | Differs from (6b) only in the truncation fraction (0.75) | As above (descriptive sensitivity check; the rules of entry 145) | As above (the rules of entry 145) | ΔT tier C 0.545 (6/6); RI tier C 0.149 (6/6); pass rate 0.726 | Same level in tier C, in direction; the highest pass rate among the fractions (entry 147) |
 | (6e) Truncated at an absolute 0.45 s (at most 0.90 of the beat) | Differs from (6b) only in how the cut is placed: absolute 0.45 s (at most 0.90 of the beat) | W1: cutting at a fraction of the beat makes the cut position a function of heart rate (entries 148, 149) | 'See whether cutting at an absolute time gives the same conclusion' (entry 149) | ΔT tier C **0.724 (6/6)**; RI tier C 0.110 (3/6); pass rate 0.187 | Same direction, same or higher level than the fractional cut; not a product of heart-rate dependence (entry 152) |
 | (9) Residual taken in the first-derivative domain | Residual taken between d/dt(g1+g2) and y′; model, bounds, starts and solution choice as in the frozen fit | Candidate (3) of entry 139, second half: the decline shrinks under differentiation, pulling component 2 less (entry 149) | 'Pass rate < 0.30 or type-3 tier-C ΔT < 0.30 at 0.01 noise → derivative domain noise-sensitive' (entry 153 §5) | ΔT tier C **0.687 (6/6)**; RI tier C **0.416 (6/6)**; pass rate 0.510 | Only version meeting tier-C criterion for both ΔT and RI; degrades at 2% noise, rejects stiff subjects (entries 152, 158) |
 | Fiducial-point analysis (database-supplied; reference) | No fit; ΔT and RI taken from the fiducial points supplied with PWDB (Charlton 2019, table A3 rules) | Control of the decision test (2026-09-03, 2026-09-06) | Settled in the decision test; script-48 P1 (criterion in types 1 and 3) missed for type 1 (entry 137) | ΔT tier C 0.430 (6/6); RI tier C 0.550 (6/6); pass rate — | Reference for type 3; tier B is a subset favourable to decomposition, hence below tier C (entry 158) |
+| (B) Tier B and noise (frozen, (6b), (9)) | Common accepted subset of the three fits (tier B); refit with 1% and 2% white noise added | RI of (6b) met the criterion in tier A only (entry 149, question 1); noise untested (entry 148) | B ≥ 0.30 in all strata: fit quality; < 0.10 above frozen: selection; noise: < 0.30 at 1% (entry 153) | (6b) RI tier B 0.381; 1% 0.266; 2% 0.168. (9) pass rate 0.510, 0.326, 0.290 | RI: fit quality and selection both; not noise-robust. Derivative: rule unmet at 1%, pass rate below at 2% (entry 158) |
 
 <sup>a</sup> Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
 
@@ -229,7 +236,7 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 ## Table 8
 
-**Table 8.** Type-3 correlations when the handling of the diastolic decline is changed (exploratory, post hoc, 4,374 subjects)<sup>a, b, c, d, e</sup>.
+**Table 8.** Type-3 correlations when the handling of the diastolic decline is changed (exploratory, post hoc; type 3, 3,378 of the 4,374 subjects refitted)<sup>a, b, c, d, e, f, g</sup>.
 
 | Handling of the diastolic decline | ΔT × PWV, tier A | ΔT × PWV, tier C | RI × resistance, tier A | RI × resistance, tier C | Pass rate | ΔT offset from the supplied fiducial point (tier A) |
 |---|---|---|---|---|---|---|
@@ -242,11 +249,11 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 | (7) Output-side convolution of the two-component sum | 0.042 (4/6) | 0.267 (2/6) | 0.381 (5/6) | 0.361 (4/6) | 0.728 | +84.7 ms |
 | (8) Two-stage: τ from the last 30%, deconvolve, then frozen fit | 0.102 (4/5) | 0.012 (4/6) | 0.060 (2/5) | 0.195 (6/6) | 0.086 | +80.3 ms |
 | **Exclude or down-weight the diastolic decline** | | | | | | |
-| **(6b) Fit truncated at 0.65 of the beat length** | **0.828 (6/6)** | **0.596 (6/6)** | **0.530 (6/6)** | 0.107 (6/6) | 0.413 | **+25.8 ms** |
+| (6b) Fit truncated at 0.65 of the beat length | **0.828 (6/6)** | **0.596 (6/6)** | **0.530 (6/6)** | 0.107 (6/6) | 0.413 | +25.8 ms |
 | (6c) Truncated at 0.55 of the beat | 0.728 (4/6) | 0.582 (6/6) | 0.444 (6/6) | 0.182 (3/6) | 0.156 | +44.5 ms |
 | (6d) Truncated at 0.75 of the beat | 0.662 (6/6) | 0.545 (6/6) | 0.326 (6/6) | 0.149 (6/6) | 0.726 | +78.7 ms |
 | (6e) Truncated at an absolute 0.45 s (at most 0.90 of the beat) | **0.711 (6/6)** | **0.724 (6/6)** | 0.461 (4/6) | 0.110 (3/6) | 0.187 | +42.0 ms |
-| **(9) Residual taken in the first-derivative domain** | **0.523 (6/6)** | **0.687 (6/6)** | **0.336 (6/6)** | **0.416 (6/6)** | 0.510 | +88.8 ms |
+| (9) Residual taken in the first-derivative domain | **0.523 (6/6)** | **0.687 (6/6)** | **0.336 (6/6)** | **0.416 (6/6)** | 0.510 | +88.8 ms |
 | Fiducial-point analysis (database-supplied; reference) | — | 0.430 (6/6) | — | 0.550 (6/6) | — | 0 (reference) |
 
 <sup>a</sup> Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
@@ -255,13 +262,44 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 <sup>c</sup> Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. Pass rate: the fraction accepted under the same convergence checks as the frozen version (parameters on a bound, component height, difference in reflection coefficient between competing solutions), i.e. the fraction remaining in tier A.
 
-<sup>d</sup> Refits of the same beats of the same 4,374 subjects. The two-kernel model has no term for the diastolic decline, so versions that change only its handling are grouped into those that add a term for the decline and those that exclude it from the fit or down-weight it in the residual. The main fraction 0.65 was fixed before this analysis and was not re-chosen after seeing these numbers (lab_log entry 145). The last column is the median difference between the peak of the second component and the diastolic fiducial point supplied with PWDB (positive, second component later).
+<sup>d</sup> Refits of the same beats of the same 4,374 subjects. The two-kernel model has no term for the diastolic decline, so versions that change only its handling are grouped into those that add a term for the decline and those that exclude it from the fit or down-weight it in the residual. The main fraction 0.65 was fixed before this analysis (candidate (3) of lab_log entry 139, before any real data were fitted; the same value is the upper limit of the notch search, `NOTCH_MAX_FRAC`, of the rebuilt fiducial-point detection) and was not re-chosen after seeing these numbers (lab_log entry 145). T, beat length. The last column is the median difference between the peak of the second component and the diastolic fiducial point supplied with PWDB (positive, second component later).
 
 <sup>e</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
 
+<sup>f</sup> Versions not shown and optimism of the selection. Section C fitted 14 versions. (4b) (reservoir term with the delay bound 0.01 s) and (6) (0.65 truncation with the same bound) are omitted because relaxing the bound barely changes the values (type 3, ΔT × aortic PWV, tier A: (6) 0.826 vs (6b) 0.828; pass rate (4b) 0.092 vs (4) 0.088; lab_log entries 144, 146). The better versions were chosen post hoc from 14, so their values are optimistic.
+
+<sup>g</sup> The fiducial-point reference of 0.430 is the value within type 3. In all 4,374 subjects fiducial-point analysis gives 0.710 (table 2); it is lower within type 3 because the type itself depends on stiffness and the difference between types raises the value in all subjects (table 6a). Values of the truncated fit in all subjects and in type 1 are in table 8b. Bold is given only to values that meet the criterion.
+
+## Table 8b
+
+**Table 8b.** Truncated and derivative-domain fits in all subjects and in types 1 and 4 (exploratory, post hoc)<sup>a, b, c, d, e, f</sup>.
+
+| Index, fit | Tier | Type 1 (891) | Type 3 (3,378) | Type 4 (105) | All (4,374) |
+|---|---|---|---|---|---|
+| ΔT × aortic PWV, frozen fit | A | 0.224 (4/6) | 0.220 (6/6) | 0.472 (3/3) | 0.223 (6/6) |
+| ΔT × aortic PWV, frozen fit | C | — | 0.207 (6/6) | — | 0.205 (6/6) |
+| ΔT × aortic PWV, truncated at 0.65T (delay bound 0.01 s) | A | 0.193 (3/6) | **0.826 (6/6)** | 0.540 (3/3) | 0.808 (5/6) |
+| ΔT × aortic PWV, truncated at 0.65T (delay bound 0.01 s) | C | 0.219 (4/6) | **0.586 (6/6)** | 0.598 (3/3) | **0.559 (6/6)** |
+| ΔT × aortic PWV, fiducial-point (supplied; reference) | C | 0.343 (4/6) | **0.430 (6/6)** | 0.796 (3/3) | **0.710 (6/6)** |
+| RI × resistance, frozen fit | C | — | 0.184 (4/6) | — | 0.171 (4/6) |
+| RI × resistance, derivative domain | C | — | **0.416 (6/6)** | — | **0.394 (6/6)** |
+| RI × resistance, fiducial-point (supplied; reference) | C | 0.481 (6/6) | **0.550 (6/6)** | 0.888 (3/3) | **0.504 (6/6)** |
+
+<sup>a</sup> Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+
+<sup>b</sup> Source: table 6d of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench.txt`); lab_log entry 144.
+
+<sup>c</sup> Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance. —, value not recorded.
+
+<sup>d</sup> The prespecified decision was made in all subjects, so the recorded values for all subjects and for types 1 and 4 are listed. The truncated fit of this run is version (6), the 0.65 truncation combined with the delay bound 0.01 s, which in type 3 nearly equals (6b) (tier A 0.826 vs 0.828, tier C 0.586 vs 0.596; lab_log entry 146). No all-subject value of (6b) is recorded.
+
+<sup>e</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in all 6 strata). Type 4 has only 3 strata with at least 8 subjects, so the 6-stratum criterion cannot be evaluated.
+
+<sup>f</sup> In all subjects the truncated fit gives ΔT 0.559 (6/6) in tier C, above the frozen fit (0.223) but below fiducial-point analysis in the same subjects (0.710). Tier A in all subjects is 0.808 but does not meet the criterion in every stratum. In type 1 truncation stays low (0.193, 0.219): within an age stratum aortic PWV varies about 1/12 as much as in type 3, so every method gives small values (table 6b). Truncation exceeded fiducial-point analysis in type 3 partly because the fiducial-point value within type 3 is lower than in all subjects (table 8, footnote). RI of the derivative domain is 0.394 in all subjects, below fiducial-point analysis (0.504).
+
 ## Table 9
 
-**Table 9.** Tier B and runs with added noise (type 3; exploratory, post hoc)<sup>a, b, c, d, e, f</sup>.
+**Table 9.** Tier B and runs with added noise (type 3; exploratory, post hoc)<sup>a, b, c, d, e, f, g</sup>.
 
 | Handling of the diastolic decline | Tier | ΔT × PWV, no noise | 1% | 2% | RI × resistance, no noise | 1% | 2% | Pass rate, none / 1% / 2% |
 |---|---|---|---|---|---|---|---|---|
@@ -285,9 +323,11 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 
 <sup>d</sup> Noise is white Gaussian noise whose SD is the stated fraction of the peak-to-trough amplitude of the beat; waveform type and fiducial points were assigned on the beat before noise was added.
 
-<sup>e</sup> The fiducial-point reference (tier C) is computed on the noise-free beats, so in the noise columns it is not a like-for-like comparison.
+<sup>e</sup> The fiducial-point reference (tier C) is computed on the noise-free beats, so in the noise columns it is not a like-for-like comparison (refitting fiducial points on the noisy beats has not been done); its tier-B value moves only because the common subset changes.
 
-<sup>f</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+<sup>f</sup> Readings fixed before the run and results (lab_log entries 153 §5, 158). Tier B asks whether the RI of the truncated fit meets the criterion only in tier A because of fit quality or because of selection (entry 149, question 1). Rule: tier B of the truncated fit at least 0.30 in all strata, fit quality; within 0.10 of the frozen fit's tier B, selection; in between, both. Result 0.381 (6/6), 0.197 above the frozen fit: fit quality by the rule, but tier B is a subset favourable to decomposition, tier C is 0.107 and noise lowers it to 0.266 and 0.168, so it was read as both. Noise rule: at 1% noise, a pass rate of the derivative-domain fit below 0.30 or type-3 tier-C ΔT × aortic PWV below 0.30 means fragile; at 1% the values were 0.326 and 0.337 (not met); at 2% the pass rate fell to 0.290, below the same threshold. Bold used the stratum directions in the result files; the stratum counts are not copied into this table.
+
+<sup>g</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
 
 ## Table S1
 
@@ -359,3 +399,25 @@ All numbers are read by `build_tables.py` from `data/paper2_numbers.json` (a mec
 <sup>d</sup> Restricted to type 3, ΔT of the pressure waveform is 0.400 (6/6) in tier A, meeting the criterion, and 0.227 (6/6) in tier C, not meeting it.
 
 <sup>e</sup> Bold, criterion met (median |ρ| ≥ 0.30 with the predicted sign in every stratum).
+
+## Table S3
+
+**Table S3.** Additional checks: acceptance bias (C6), position of the first component (C7) and main effects of the factors (C8) (type 3; exploratory, post hoc)<sup>a, b, c, d, e</sup>.
+
+| Check | Reading fixed before the run | Frozen | Truncated at 0.65T (6b) | Derivative domain (9) | Fiducial-point (supplied; reference) | Result |
+|---|---|---|---|---|---|---|
+| C6 Acceptance × aortic PWV, within-stratum ρ | ρ below −0.10: tier A leans to the low-PWV side | −0.124 | +0.026 (pass rate by PWV tertile 0.595, 0.278, 0.451) | −0.542 (same, 0.777, 0.522, 0.361) | — | Frozen and derivative-domain fits lean; truncation does not |
+| C7a First component minus forward-wave peak (median) | Within 20 ms: the first component is the forward wave | +34 to +50 ms in all 3 fits | same as left | same as left | — | Not met by any fit; the first component sits at the PPG systolic peak (difference −5 to −8 ms, tier C) |
+| C7b Time of the first component × aortic PWV, within-stratum ρ | \|ρ\| ≥ 0.30: part of the ΔT variation comes from the first component | −0.129 (tier C) | −0.489 (tier C), −0.794 (tier A) | −0.729 (tier C) | — | Met by truncation and the derivative domain; in tier A of truncation the first component is 31 ms before the systolic peak |
+| C8 Main effects of the factors on ΔT | Negative PWV effect and smaller heart-rate and ejection-time effects than the frozen fit: those effects are reduced | PWV −15.9% (−0.23), heart rate −16.8% (−0.58) | PWV −40.9% (−0.56), heart rate −18.3% (−0.41), mean arterial pressure −11.9% | PWV −54.8% (−0.64), heart rate −3.9% (−0.18), mean arterial pressure −13.7%, stroke volume +15.6% | PWV −21.1% (−0.40), heart rate −5.3%, stroke volume +20.4% (+0.60) | Met by the derivative domain; not by truncation (only the PWV effect grew) |
+| C8 Main effects of the factors on RI | Not fixed (descriptive) | PWV largest (value not recorded) | PWV +84% | PWV +86% | PWV +46% | PWV has the largest effect in every fit; mean arterial pressure +24 to 35% |
+
+<sup>a</sup> Exploratory, post hoc analysis; not used for the prespecified decision. Using an improved fit as a primary analysis would require a new preregistration.
+
+<sup>b</sup> Source: table 6e of `02_tables.md`; script 50 (`docs/research/results/50_reservoir_bench_B3.txt`); lab_log entries 153, 158.
+
+<sup>c</sup> Tier A, subjects accepted by the method itself; tier B, subjects accepted by every compared method; tier C, all subjects regardless of acceptance
+
+<sup>d</sup> The readings were fixed before the run (lab_log entry 153 §5); results from lab_log entry 158 §2. C6 is the within-stratum Spearman ρ between acceptance (1, accepted; 0, not) and aortic PWV over all subjects (tier C). In C7, t1 is the peak time of the first component and the forward-wave peak comes from linear separation of the digital pressure and flow (script 51). C8 uses the main effects of table 3 (difference between the +1 SD and −1 SD means ÷ stratum mean, %; in parentheses the within-stratum ρ), type 3, tier C.
+
+<sup>e</sup> The ΔT gain of the truncated fit is not explained by movement of the second component alone: the time of the first component also moves with aortic PWV (−0.489). Tier A of the derivative domain leans to the low-PWV side (−0.542), so its tier-A value (0.523) is below its tier-C value (0.687).

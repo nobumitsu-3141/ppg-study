@@ -1,39 +1,56 @@
 Figure 3. Course of the study from Study 0 (PWDB decision test) to the exploratory search for an improved fit. Upper lane: what was fixed or predicted before each run; lower lane: the runs and what they showed.
 
-What is shown: dated milestones (7 in the upper lane, 8 in the lower lane). Upper boxes record rules, thresholds and predictions fixed before the run; lower boxes record the result of that run. The lower boxes on 3 and 6 September 2026 report the prespecified decisions as recorded ('met' / 'not met' are copied from the record; the figure makes no new judgement). Boxes marked † are exploratory, post hoc analyses run after the decision test and are not used for the decision. Date spacing is not to scale.
+What is shown: dated milestones (7 in the upper lane, 8 in the lower lane). Upper boxes record rules, thresholds and predictions fixed before the run; lower boxes record the result of that run, with the numbers that show it from the second line on. The lower boxes on 3 and 6 September 2026 report the prespecified decisions as recorded ('pass' / 'fail' are copied from the record; the figure makes no new judgement). Boxes marked † are exploratory, post hoc analyses run after the decision test and are not used for the decision. Date spacing is not to scale.
 
-Numbers (all filled at run time from data/paper2_numbers.json, parsed mechanically from 02_tables.md):
+Order on 15 September 2026 (the five records of that day that bear on this figure, in the order of the lab-log entries): entry 139 listed candidate remedies for the diastolic decline, of which (3) was 'truncate the fit at 0.65T, or fit in the first-derivative domain' (before any real data were fitted). Entry 141 diagnosed the frozen fit on synthetic beats and read the Δμ lower bound as the main cause. Entry 143 fixed the predictions P6–P10 for the refit (part C). Entry 144 fitted five variants to the 4,374 subjects: P6–P9 no (P10, a wiring check, yes); no beat sat at the Δμ lower bound, so the reading from the synthetic beats was refuted; the unpredicted variant (6), the 0.65T truncation combined with a Δμ lower bound of 0.01 s, gave the highest |ρ|. Entry 145 agreed that the main fraction stays at 0.65T and is not re-selected (0.55T and 0.75T only as a sensitivity description); the second line of the upper box on 15 September is this agreement, written after the 5-variant run and before the 9-variant run. The value 0.65 comes from candidate (3) of entry 139; the same value is the notch search limit `NOTCH_MAX_FRAC` (analysis/src/pda2.py) of the rebuilt fiducial-point detection. Entries 144 and 145 gave its source as 'script 24 and entry 139', but script 24 (24_pwdb_pda_ablation.py) contains 0.60·T and not 0.65 (corrected in lab-log entry 162).
+
+Optimism from selection: the better versions in the boxes of 16–17 September were chosen post hoc from the 14 versions fitted, so their values are optimistic.
+
+Numbers (all filled at run time from data/paper2_numbers.json, parsed mechanically from 02_tables.md; table numbers are those of 02_tables.md):
   crit = 0.30  <- meta.criterion.min_median_abs_rho
-  fz_dt = 0.223  <- Table 1 row `pda_frozen` dt_pwv.rho
-  fz_ri = 0.207  <- Table 1 row `pda_frozen` ri_pvr.rho
-  lm_dt = 0.710  <- Table 1 row `landmark` dt_pwv.rho
-  lm_ri = 0.504  <- Table 1 row `landmark` ri_pvr.rho
-  amp_dt = 0.836  <- Table 1 row `amp_ratio` dt_pwv.rho
-  v2_n = 2  <- Table 1 row `pda_v2_skewgauss` dt_pwv.adopted.n
-  v2_of = 4,374  <- Table 1 row `pda_v2_skewgauss` dt_pwv.adopted.of
-  v2_dtC = 0.167  <- Table 1 row `pda_v2_skewgauss` dt_pwv.stages.C.rho
-  offset = +98.5  <- Table 6 row `fb` dt_offset_vs_landmark_ms_A.value
-  t65_A = 0.828  <- Table 6 row `trunc065` dt_pwv_A.rho
-  t65_C = 0.596  <- Table 6 row `trunc065` dt_pwv_C.rho
-  t65_n2 = 0.454  <- Table 6c row `trunc065` (tier C) dt_pwv.0.02.rho
-  drv_n2 = 0.347  <- Table 6c row `deriv` (tier C) dt_pwv.0.02.rho
+  fz_dt = 0.223  <- table 1 of 02_tables.md (table 2 of this set), row `pda_frozen`, dt_pwv.rho
+  fz_ri = 0.207  <- table 1 of 02_tables.md (table 2 of this set), row `pda_frozen`, ri_pvr.rho
+  lm_dt = 0.710  <- table 1 of 02_tables.md (table 2 of this set), row `landmark`, dt_pwv.rho
+  lm_ri = 0.504  <- table 1 of 02_tables.md (table 2 of this set), row `landmark`, ri_pvr.rho
+  amp_dt = 0.836  <- table 1 of 02_tables.md (table 2 of this set), row `amp_ratio`, dt_pwv.rho
+  v2_n = 2  <- table 1 of 02_tables.md (table 2 of this set), row `pda_v2_skewgauss`, dt_pwv.adopted.n
+  v2_of = 4,374  <- table 1 of 02_tables.md (table 2 of this set), row `pda_v2_skewgauss`, dt_pwv.adopted.of
+  v2_dtC = 0.167  <- table 1 of 02_tables.md (table 2 of this set), row `pda_v2_skewgauss`, dt_pwv.stages.C.rho
+  lit_best = 0.578  <- maximum of dt_pwv.rho over all non-reference rows of table 4 of 02_tables.md (table 5a of this set)
+  lit_ref = 0.705  <- table 4 of 02_tables.md (table 5a of this set), row `landmark_ref`, dt_pwv.rho
+  lit_n = 624  <- table 4 of 02_tables.md (table 5a of this set), number in the preamble
+  offset = +98.5  <- table 6 of 02_tables.md (table 8 of this set), row `fb`, dt_offset_vs_landmark_ms_A.value
+  t6_A = 0.826  <- table 6d of 02_tables.md (table 8b of this set), row `dt_trunc065_dmu001` (tier A), type3.rho
+  t6_C = 0.586  <- table 6d of 02_tables.md (table 8b of this set), row `dt_trunc065_dmu001` (tier C), type3.rho
+  t55_C = 0.582  <- table 6 of 02_tables.md (table 8 of this set), row `trunc055`, dt_pwv_C.rho
+  t65_C = 0.596  <- table 6 of 02_tables.md (table 8 of this set), row `trunc065`, dt_pwv_C.rho
+  t75_C = 0.545  <- table 6 of 02_tables.md (table 8 of this set), row `trunc075`, dt_pwv_C.rho
+  add3_max = 0.272  <- maximum of dt_pwv_C.rho over rows decay, reservoir, reservoir_tau015 of table 6 of 02_tables.md (table 8 of this set)
+  add_max = 0.272  <- maximum of dt_pwv_C.rho over rows of group add (labels.json) of table 6 of 02_tables.md (table 8 of this set)
+  rem_min = 0.545  <- minimum of dt_pwv_C.rho over rows of group remove (labels.json) of table 6 of 02_tables.md (table 8 of this set)
+  sep3_max = 0.059  <- largest absolute value of rho_pooled.value over type_id = type3 of table 7a of 02_tables.md (table s2a of this set)
+  t65_n0 = 0.596  <- table 6c of 02_tables.md (table 9 of this set), row `trunc065` (tier C), dt_pwv.0.rho
+  t65_n2 = 0.454  <- table 6c of 02_tables.md (table 9 of this set), row `trunc065` (tier C), dt_pwv.0.02.rho
+  drv_n0 = 0.687  <- table 6c of 02_tables.md (table 9 of this set), row `deriv` (tier C), dt_pwv.0.rho
+  drv_n2 = 0.347  <- table 6c of 02_tables.md (table 9 of this set), row `deriv` (tier C), dt_pwv.0.02.rho
+  ri_bc_n2 = 0.176  <- maximum of ri_pvr.0.02.rho over rows fb, trunc065, deriv; tiers B, C of table 6c of 02_tables.md (table 9 of this set)
 
 Milestone sources (cross-checked against the headings of docs/research/lab_log.md):
-  2026-08-30  upper  Study 0 designed: ΔT, RI vs PWDB truth  <- lab_log 2026-08-30（続き7）; roadmap_v1.md §3
-  2026-09-03  upper  Criterion frozen: median |ρ| ≥ 0.30  <- lab_log 2026-09-03「研究0 の事前規準と、実行前に捕まえた列ずれ」; roadmap_v1.md §8
-  2026-09-04  upper  Rebuilt-fit rules and thresholds frozen  <- lab_log 2026-09-04（追記）「決定試験の前に閾値を凍結した」; gate0_rules_v2.md; pda2_thresholds_v2.md
-  2026-09-14  upper  By-type analysis: P1–P5 fixed before run  <- lab_log 追記136（48番の設計・予測固定）
-  2026-09-15  upper  P6–P10 fixed; 0.65T cut not re-selected  <- lab_log 追記143（節C の設計と予測）・追記145（打ち切りの割合の取り決め）
-  2026-09-16  upper  (7)(8)(9)(6e) and tier B designed first  <- lab_log 追記149（改善候補の設計）・追記151（50番に (7)(8)(9)(6e) と B 段を足した）
-  2026-09-17  upper  Tier B, noise: reading fixed before run  <- lab_log 追記153 §5（--b-stage・--noise の読み方の固定）
-  2026-09-03  lower  Decision (recorded): frozen fit not met  <- lab_log 2026-09-03「研究0 の結果」「【判定の訂正】」; 表1
-  2026-09-06  lower  Decision test recorded: rebuilt not met  <- lab_log 追記12（決定試験・順序 2〜6）; 表1
-  2026-09-06  lower  Basis and literature sweeps (31, 33)  <- lab_log 追記13（31番）・追記16〜18（33番）; 表3・表4
-  2026-09-14  lower  By-type analysis (48): only P4 yes  <- lab_log 追記137（48番の結果）; 表5; 表6 の凍結版の行（特徴点との差）
-  2026-09-15  lower  Synthetic beats: rank lost at short ΔT  <- lab_log 追記141（合成脈波での診断）
-  2026-09-16  lower  Refits of 5, 7, 10 variants: P6–P9 no  <- lab_log 追記144（5 型）・追記146（7 型）・追記147（10 型）; 表6・表6b
-  2026-09-17  lower  14 variants: only decline-removing fits  <- lab_log 追記152（50番 14 型・51番）; 表6・表7a
-  2026-09-22  lower  Tier B, noise: 0.65T cut robust to noise  <- lab_log 追記158（B 段 3 型と雑音 0.01・0.02）; 表6c
+  2026-08-30  upper  Study 0 designed: ΔT, RI vs PWDB truth  <- lab log 2026-08-30 (continuation 7); roadmap_v1.md §3
+  2026-09-03  upper  Criterion frozen: median |ρ| ≥ 0.30  <- lab log 2026-09-03, 'Prespecified criterion of Study 0 and a column shift caught before the run'; roadmap_v1.md §8
+  2026-09-04  upper  Rebuilt-fit rules and thresholds frozen  <- lab log 2026-09-04 (addendum), 'Thresholds frozen before the decision test'; gate0_rules_v2.md; pda2_thresholds_v2.md
+  2026-09-14  upper  By-type analysis: P1–P5 fixed before run  <- lab-log entry 136 (design of script 48 and its predictions)
+  2026-09-15  upper  0.65T cut proposed; P6–P10 fixed  <- lab-log entries 139 (candidate (3) for a third version, 'truncate the fit at 0.65T, or fit in the first-derivative domain', before any real data were fitted), 143 (design of part C and predictions P6–P10) and 145 (agreement on the truncation fraction, written after the 5-variant run of entry 144 and before the 9-variant run)
+  2026-09-16  upper  (7)(8)(9)(6e) and tier B designed first  <- lab-log entries 149 (design of the candidate improvements) and 151 (versions (7), (8), (9), (6e) and tier B added to script 50)
+  2026-09-17  upper  Tier B, noise: reading fixed before run  <- lab-log entry 153 §5 (reading rules for --b-stage and --noise fixed before the run)
+  2026-09-03  lower  Decision (recorded): frozen fit fail  <- lab log 2026-09-03, 'Results of Study 0' and 'Correction of the decision'; table 1 of 02_tables.md (table 2 of this set)
+  2026-09-06  lower  Decision test (recorded): rebuilt fit fail  <- lab-log entry 12 (decision test, steps 2–6); table 1 of 02_tables.md (table 2 of this set)
+  2026-09-06  lower  Bases and published conditions swept  <- lab-log entries 13 (script 31, basis sweep) and 16–18 (script 33, published conditions); tables 3 and 4 of 02_tables.md (tables 4 and 5a of this set)
+  2026-09-14  lower  By-type analysis: of P1–P5 only P4 yes  <- lab-log entry 137 (results of script 48); table 5 of 02_tables.md (table 6a of this set); frozen-version row of table 6 (offset from the fiducial point; table 8 of this set)
+  2026-09-15  lower  Synthetic diagnosis; 5-variant refit  <- lab-log entries 141 (diagnosis on synthetic beats, which read the Δμ lower bound as the main cause) and 144 (part C, 5 variants (0), (2), (4), (4b), (6), fitted to 4,374 subjects; P6–P9 no, P10 yes; the fraction of beats at the Δμ lower bound was 0.000 in every type, refuting the reading from the synthetic beats; (6) combines the 0.65T truncation with a Δμ lower bound of 0.01 s); table 6d of 02_tables.md (table 8b of this set)
+  2026-09-16  lower  Refits, 7 and 10 variants  <- lab-log entries 146 (7 variants) and 147 (10 variants); tables 6 and 6b of 02_tables.md (table 8 and table S1 of this set)
+  2026-09-17  lower  14 variants; separated backward wave  <- lab-log entry 152 (script 50, 14 variants; script 51, linear wave separation); tables 6 and 7a of 02_tables.md (table 8 and table S2a of this set)
+  2026-09-22  lower  Tier B and added noise (1%, 2%)  <- lab-log entry 158 (tier B over three fits; noise 0.01 and 0.02); table 6c of 02_tables.md (table 9 of this set)
 
 Scripts and result files: scripts 20 (20_pwdb_validity.py), 23 (23_pwdb_landmarks.py), 26 (26_pwdb_compare.py), 27, 31, 33, 48 (48_pwdb_by_waveform_type.py), 50 (50_reservoir_bench.py, sections A, B, C) and 51 (51_pwdb_wave_separation.py). Results in docs/research/results/: 33_literature_replica_report.txt, 48_pwdb_by_waveform_type.txt, 50_reservoir_bench.txt, 50_reservoir_bench_C.txt, 50_reservoir_bench_BC.txt, 50_reservoir_bench_C14.txt, 50_reservoir_bench_B3.txt, 50_reservoir_bench_noise0.01.txt, 50_reservoir_bench_noise0.02.txt, 51_wave_separation.txt. Of these, 48_pwdb_by_waveform_type.txt, 50_reservoir_bench.txt, 50_reservoir_bench_C14.txt, 50_reservoir_bench_B3.txt, 50_reservoir_bench_noise0.01.txt, 50_reservoir_bench_noise0.02.txt, 51_wave_separation.txt are not in the present working tree (lab-log entries 137, 144, 152 and 158 record them as output on Mac 1; the numbers in the figure were taken through 02_tables.md).
 
